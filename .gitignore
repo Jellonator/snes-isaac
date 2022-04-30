@@ -7,3 +7,4 @@ include/palettes.bin
 include/*.bin
 include/sprites/
 include/palettes/
+*.png~

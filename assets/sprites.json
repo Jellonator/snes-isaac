@@ -4,5 +4,11 @@
         "palette": "base",
         "src": "assets/sprites/test.png",
         "depth": 4
+    },
+    {
+        "name": "headtest",
+        "palette": "base",
+        "src": "assets/sprites/headtest.png",
+        "depth": 16
     }
 ]

@@ -58,7 +58,6 @@ def write_image_tile(bin, image, palette, depth, tilex, tiley):
         for px in range(8):
             x = tilex * 8 + px
             color = image.getpixel((x, y))
-            # print((x, y), color)
             if color[3] == 0:
                 indices.append(0)
             elif color[3] != 255:
@@ -69,7 +68,7 @@ def write_image_tile(bin, image, palette, depth, tilex, tiley):
                     raise RuntimeError()
                 index = palette["indices"][rcol]
                 if index >= depth:
-                    print(index, depth, palette["indices"])
+                    print(index, depth, color, rcol, palette["indices"])
                     raise RuntimeError()
                 indices.append(index)
     # Write first two bitplanes intertwined
@@ -78,9 +77,9 @@ def write_image_tile(bin, image, palette, depth, tilex, tiley):
         value2 = 0
         for i in range(8):
             if indices[i + iy*8] & 1 != 0:
-                value1 |= 1 << i
+                value1 |= 1 << (7-i)
             if indices[i + iy*8] & 2 != 0:
-                value2 |= 1 << i
+                value2 |= 1 << (7-i)
         bin.write(struct.pack("<BB", value1, value2))
     if depth == 16:
         # Write second two bitplanes intertwined
@@ -89,9 +88,9 @@ def write_image_tile(bin, image, palette, depth, tilex, tiley):
             value2 = 0
             for i in range(8):
                 if indices[i + iy*8] & 4 != 0:
-                    value1 |= 1 << i
+                    value1 |= 1 << (7-i)
                 if indices[i + iy*8] & 8 != 0:
-                    value2 |= 1 << i
+                    value2 |= 1 << (7-i)
             bin.write(struct.pack("<BB", value1, value2))
 
 out_inc.write("sprites:\n")
@@ -112,7 +111,6 @@ for sprite in json_sprites:
     # Write to binary file
     spritebin = open(sprite_out_path, 'wb')
     palette = paletterefs[sprite["palette"]]
-    indices = []
     for ty in range(image.size[1] // 8):
         for tx in range(image.size[0] // 8):
             write_image_tile(spritebin, image, palette, sprite["depth"], tx, ty)

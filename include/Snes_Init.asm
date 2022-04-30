@@ -1,5 +1,4 @@
 .MACRO Snes_Init
- 	sei 	 	; Disabled interrupts
  	clc 	 	; clear carry to switch to native mode
  	xce 	 	; Xchange carry & emulation bit. native mode
  	rep 	#$18 	; Binary mode (decimal mode off), X/Y 16 bit
@@ -97,6 +96,5 @@
  	stz 	$420B   ; General DMA enable (bits 0-7)
  	stz 	$420C   ; Horizontal DMA (HDMA) enable (bits 0-7)
  	stz 	$420D	; Access cycle designation (slow/fast rom)
- 	cli 	 	; Enable interrupts
  	rts
  .ends

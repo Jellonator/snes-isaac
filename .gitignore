@@ -1,0 +1,9 @@
+*.obj
+*.smc
+bin/
+obj/
+include/assets.inc
+include/palettes.bin
+include/*.bin
+include/sprites/
+include/palettes/

@@ -1,14 +1,14 @@
 [
     {
-        "name": "test",
+        "name": "isaac",
         "palette": "base",
-        "src": "assets/sprites/test.png",
-        "depth": 4
+        "src": "assets/sprites/isaac.png",
+        "depth": 16
     },
     {
-        "name": "headtest",
-        "palette": "base",
-        "src": "assets/sprites/headtest.png",
+        "name": "basement",
+        "palette": "basement",
+        "src": "assets/sprites/basement.png",
         "depth": 16
     }
 ]

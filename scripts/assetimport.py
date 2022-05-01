@@ -31,11 +31,11 @@ for palette in json_palettes:
             indices[(col[0], col[1], col[2])] = i
     palette["indices"] = indices
 
-while len(json_palettes) < 16:
-    json_palettes.append({
-        "name": "pallete{}".format(len(json_palettes)),
-        "colors": [[0, 0, 0]] * 16
-    })
+# while len(json_palettes) < 16:
+#     json_palettes.append({
+#         "name": "pallete{}".format(len(json_palettes)),
+#         "colors": [[0, 0, 0]] * 16
+#     })
 
 out_inc.write("palettes:\n")
 for palette in json_palettes:
@@ -65,6 +65,7 @@ def write_image_tile(bin, image, palette, depth, tilex, tiley):
             else:
                 rcol = (color[0] >> 3, color[1] >> 3, color[2] >> 3)
                 if not rcol in palette["indices"]:
+                    print(color, rcol, palette["indices"])
                     raise RuntimeError()
                 index = palette["indices"][rcol]
                 if index >= depth:

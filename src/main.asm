@@ -1,5 +1,7 @@
 .include "Header.inc"
 .include "Snes_Init.asm"
+.include "layout.inc"
+.include "util.inc"
 
 .bank 0
 .section "MainCode"
@@ -157,39 +159,40 @@ tile_data_loop:
     ; re-enable rendering
     lda #%00001111
     sta $2100
-    cli ; Enable interrupts
+    cli ; Enable interrupts and joypad
     lda #$81
     sta $4200
-    lda #120 ; Store X position
-    sta $10
     lda #$E0
     sta $210E
     lda #$FF
     sta $210E
+    jsr PlayerInit
     jmp UpdateLoop
 
 UpdateLoop:
     wai
-    lda $10
-    inc A
-    sta $10
+    jsr PlayerUpdate
     jmp UpdateLoop
 
 VBlank:
     lda $4210
 
+    jsr ReadInput
+
     stz $2102
     stz $2103
-    lda $10
+    lda player.pos.x + 1
     sta $2104
-    lda #100
+    lda player.pos.y + 1
+    sec
+    sbc #10
     sta $2104
     stz $2104
     lda #%00110000
     sta $2104
-    lda $10
+    lda player.pos.x + 1
     sta $2104
-    lda #110
+    lda player.pos.y + 1
     sta $2104
     lda #$02
     sta $2104
@@ -211,6 +214,167 @@ clear_sprites_loop:
     sta $2104
 
     RTI
+
+PlayerInit:
+    rep #$20 ; 16 bit A
+    lda #16.w
+    sta player.stat_accel
+    lda #256.w
+    sta player.stat_speed
+    lda #0.w
+    sta player.speed.x
+    lda #0.w
+    sta player.speed.y
+    lda #((32 + 6 * 16 - 8) * 256).w
+    sta player.pos.x
+    lda #((64 + 4 * 16 - 8) * 256).w
+    sta player.pos.y
+    sep #$20 ; 8 bit A
+    rts
+
+ReadInput:
+    ; loop until controller allows itself to be read
+    lda $4212
+    and #$01
+    bne ReadInput
+
+    ; Read input
+    rep #$30 ; 16 bit AXY
+    ldx joy1raw
+    lda $4218
+    sta joy1raw
+    txa
+    eor joy1raw
+    and joy1raw
+    sta joy1press
+    txa
+    and joy1raw
+    sta joy1held
+    ; Not worried about controller validity for now
+
+    sep #$30 ; 8 bit AXY
+    rts
+
+PlayerUpdate:
+    rep #$30 ; 16 bit AXY
+
+    lda player.stat_speed
+    sta $00
+    ; check (LEFT OR RIGHT) AND (UP OR DOWN)
+    ; if so, multiply speed by 3/4; aka (A+A+A) >> 2
+    lda joy1held
+    ; LEFT or RIGHT. 00 = F; 01,10,11 = T
+    bit #$0C00
+    beq @skip_slow
+    bit #$0300
+    beq @skip_slow
+    lda player.stat_speed
+    asl
+    clc
+    adc $00
+    lsr
+    lsr
+    sta $00
+@skip_slow:
+
+    ldx player.speed.y
+    lda joy1held
+    bit #JOY_DOWN
+    bne @down
+    bit #JOY_UP
+    bne @up
+    txa
+    cmp #0
+    bpl @slowup ; If speed.y > 0
+
+    ; slowright
+    clc
+    adc player.stat_accel
+    AMINI $00
+    jmp @endy
+@slowup:
+    ; slowleft
+    sec
+    sbc player.stat_accel
+    AMAXI $00
+    jmp @endy
+@down:
+    ; right
+    txa
+    clc
+    adc player.stat_accel
+    AMIN $00
+    jmp @endy
+@up:
+    ; left
+    txa
+    sec
+    sbc player.stat_accel
+    eor #$FFFF
+    inc A
+    AMIN $00
+    eor #$FFFF
+    inc A
+@endy:
+    sta player.speed.y
+    
+    ldx player.speed.x
+    lda joy1held
+    bit #JOY_RIGHT
+    bne @right
+    bit #JOY_LEFT
+    bne @left
+    ; X stop
+    txa
+    cmp #0
+    bpl @slowleft ; If speed.x > 0
+
+    ; slowright
+    clc
+    adc player.stat_accel
+    AMINI $00
+    jmp @endx
+@slowleft:
+    ; slowleft
+    sec
+    sbc player.stat_accel
+    AMAXI $00
+    jmp @endx
+@right:
+    ; right
+    txa
+    clc
+    adc player.stat_accel
+    AMIN $00
+    jmp @endx
+@left:
+    ; left
+    txa
+    sec
+    sbc player.stat_accel
+    eor #$FFFF
+    inc A
+    AMIN $00
+    eor #$FFFF
+    inc A
+@endx:
+    sta player.speed.x
+
+    ; apply speed
+    lda player.pos.x
+    clc
+    adc player.speed.x
+    AMAXUI (32 - 4)*256
+    AMINUI (32 + 12*16 - 12)*256
+    sta player.pos.x
+    lda player.pos.y
+    clc
+    adc player.speed.y
+    AMAXUI (64 - 4)*256
+    AMINUI (64 + 8*16 - 12)*256
+    sta player.pos.y
+    sep #$30 ; 8 bit AXY
+    rts
 
 TileData:
 .dw $0002 $0004 $0004 $0004 $0004 $0004 $0004 $000C $000E $0004 $0004 $0004 $0004 $0004 $0004 $4002

@@ -56,3 +56,6 @@
     lda #\1
 +++++:
 .ENDM
+
+; bcs: A >= arg
+; bcc: A < arg

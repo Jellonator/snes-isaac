@@ -16,6 +16,7 @@
     stat_speed dw
     stat_accel dw
     stat_tear_delay dw
+    stat_tear_speed dw
     flags dw
 .endst
 

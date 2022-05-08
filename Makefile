@@ -3,7 +3,7 @@ Test.smc: src/main.asm Test.link
 	mkdir -p obj
 	python3 scripts/assetimport.py
 	wla-65816 -I include -o obj/main.obj src/main.asm
-	wlalink Test.link bin/Test.smc
+	wlalink -S Test.link bin/Test.smc
 
 clean:
 	rm -rf bin/

@@ -57,5 +57,7 @@
 +++++:
 .ENDM
 
+.define BYTES_PER_TILE16 32
+
 ; bcs: A >= arg
 ; bcc: A < arg

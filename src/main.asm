@@ -2,6 +2,7 @@
 .include "Snes_Init.asm"
 .include "layout.inc"
 .include "util.inc"
+.include "registers.inc"
 
 .bank 0
 .section "MainCode"
@@ -18,7 +19,7 @@ Start:
     sta $2122
     lda #%00000011
     sta $2122
-    ; Set up tilemap mode
+    ; Set tilemap mode 2
     lda #%00010001
     sta $2105
     lda #%01100000 ; tile data at $6000 (>>10)
@@ -28,76 +29,67 @@ Start:
     ; Set up sprite mode
     lda #%00000000
     sta $2101
-    ; copy palette to CGRAM
+    ; copy palettes to CGRAM
+    PEA $8001
+    PEA palettes@isaac.w
+    jsl CopyPalette
     rep #$20 ; 16 bit A
-    lda #32.w
-    sta $4305 ; 32 bytes for palette
-    lda #palettes@base.w
-    sta $4302 ; source address
-    sep #$20 ; 8 bit A
-    lda #$01
-    sta $4304 ; source bank
-    lda #$80
-    sta $2121 ; destination is first sprite palette
-    stz $4300 ; write to PPU, absolute address, auto increment, 1 byte at a time
-    lda #$22
-    sta $4301 ; Write to CGRAM
-    lda #$01
-    sta $420B ; Begin transfer
-    ; copy palette 2 to CGRAM
+    PLA
+    PLA
+    PEA $9001
+    PEA palettes@tear.w
+    jsl CopyPalette
     rep #$20 ; 16 bit A
-    lda #32.w
-    sta $4305
-    lda #palettes@basement.w
-    sta $4302
-    sep #$20 ; 8 bit A
-    lda #$01
-    sta $4304
-    lda #$00
-    sta $2121
-    stz $4300
-    lda #$22
-    sta $4301
-    lda #$01
-    sta $420B
+    PLA
+    PLA
+    PEA $0001
+    PEA palettes@basement.w
+    jsl CopyPalette
+    rep #$20 ; 16 bit A
+    PLA
+    PLA
     ; copy sprite to VRAM
-    rep #$20 ; 16 bit A
-    lda #1024.w
-    sta $4305
-    lda #sprites@isaac.w
-    sta $4302
-    lda #$0000
-    sta $2116
+    pea $0000
+    pea 32
     sep #$20 ; 8 bit A
     lda #$01
-    sta $4304
-    lda #$80
-    sta $2115
-    lda #$01
-    sta $4300 ; write to PPU, absolute address, auto increment, 2 bytes at a time
-    lda #$18
-    sta $4301
-    lda #$01
-    sta $420B
+    pha
+    pea sprites@isaac_head
+    jsl CopySprite
+    sep #$20 ; 8 bit A
+    pla
+    rep #$20 ; 16 bit A
+    pla
+    pla
+    pla
     ; copy tilemap to VRAM
-    rep #$20 ; 16 bit A
-    lda #8192.w
-    sta $4305
-    lda #sprites@basement.w
-    sta $4302
-    lda #$4000 ; put character data in $4000 of VRAM
-    sta $2116
+    pea $4000
+    pea 256
     sep #$20 ; 8 bit A
     lda #$01
-    sta $4304
-    lda #$80
-    sta $2115
+    pha
+    pea sprites@basement
+    jsl CopySprite
+    sep #$20 ; 8 bit A
+    pla
+    rep #$20 ; 16 bit A
+    pla
+    pla
+    pla
+    ; copy tear to VRAM
+    pea 16*32
+    pea 4
+    sep #$20 ; 8 bit A
     lda #$01
-    sta $4300
-    lda #$18
-    sta $4301
-    lda #$01
-    sta $420B
+    pha
+    pea sprites@isaac_tear
+    jsl CopySprite
+    sep #$20 ; 8 bit A
+    pla
+    rep #$20 ; 16 bit A
+    pla
+    pla
+    pla
 
     ; Set up tilemap. First, write empty in all slots
     rep #$30 ; 16 bit X, Y, Z
@@ -223,12 +215,14 @@ clear_sprites_loop:
 
 PlayerInit:
     rep #$20 ; 16 bit A
-    lda #16
+    lda #24
     sta player.stat_accel
     lda #256
     sta player.stat_speed
-    lda #12
+    lda #2;#30
     sta player.stat_tear_delay
+    lda #$0100
+    sta player.stat_tear_speed
     lda #0
     sta player.speed.x
     lda #0
@@ -246,7 +240,7 @@ ReadInput:
     ; loop until controller allows itself to be read
     lda $4212
     and #$01
-    bne ReadInput
+    bne ReadInput ;0.14% -> 1.2%
 
     ; Read input
     rep #$30 ; 16 bit AXY
@@ -410,7 +404,7 @@ PlayerShootTear:
     ; sta tear_array.1.pos.x,X
     ; lda player.pos.y
     ; sta tear_array.1.pos.y,X
-    lda #240
+    lda #90
     sta tear_array.1.lifetime,X
     stz tear_array.1.size,X
     lda #$0000
@@ -424,36 +418,42 @@ PlayerShootTear:
     bne @tear_down
 ;tear_up:
     lda player.speed.x
-    lsr
     sta tear_array.1.speed.x,X
-    lda #0;player.speed.y
-    lsr
+    lda player.speed.y
+    AMINI 64
+    AMAXI -128
     sec
-    sbc #256
+    sbc player.stat_tear_speed
     sta tear_array.1.speed.y,X
     jmp @vertical
 @tear_left:
     lda player.speed.y
     sta tear_array.1.speed.y,X
-    lda #0;player.speed.x
+    lda player.speed.x
+    AMINI 64
+    AMAXI -128
     sec
-    sbc #256
+    sbc player.stat_tear_speed
     sta tear_array.1.speed.x,X
     jmp @horizontal
 @tear_right:
     lda player.speed.y
     sta tear_array.1.speed.y,X
-    lda #0;player.speed.x
+    lda player.speed.x
+    AMAXI -64
+    AMAXI 128
     clc
-    adc #256
+    adc player.stat_tear_speed
     sta tear_array.1.speed.x,X
     jmp @horizontal
 @tear_down:
     lda player.speed.x
     sta tear_array.1.speed.x,X
-    lda #0;player.speed.y
+    lda player.speed.y
+    AMAXI -64
+    AMAXI 128
     clc
-    adc #256
+    adc player.stat_tear_speed
     sta tear_array.1.speed.y,X
     jmp @vertical
 @vertical:
@@ -512,9 +512,12 @@ DrawTears:
     lda tear_array.1.pos.x+1,X
     sta $2104
     lda tear_array.1.pos.y+1,X
+    sec
+    sbc #10
     sta $2104
-    stz $2104
-    lda #%00110000
+    lda #$21
+    sta $2104
+    lda #%00110010
     sta $2104
     rep #$20 ; 16 bit mode
     txa ; ++X
@@ -631,6 +634,79 @@ RemoveTearSlot:
     sta tear_array+14,X
 @skip_copy:
     rts
+
+; Copy palette to CGRAM
+; PUSH order:
+;   palette index  [db] $07
+;   source bank    [db] $06
+;   source address [dw] $04
+; MUST call with jsl
+CopyPalette:
+    rep #$20 ; 16 bit A
+    lda $04,s
+    sta $4302 ; source address
+    lda #32.w
+    sta $4305 ; 32 bytes for palette
+    sep #$20 ; 8 bit A
+    lda $06,s
+    sta $4304 ; source bank
+    lda $07,s
+    sta $2121 ; destination is first sprite palette
+    stz $4300 ; write to PPU, absolute address, auto increment, 1 byte at a time
+    lda #$22
+    sta $4301 ; Write to CGRAM
+    lda #$01
+    sta $420B ; Begin transfer
+    rtl
+
+; Copy sprite data to VRAM
+; Use this method if the sprite occupies an entire row in width,
+; or it is only 1 tile in height.
+; push order:
+;   vram address   [dw] $09
+;   num tiles      [dw] $07
+;   source bank    [db] $06
+;   source address [dw] $04
+; MUST call with jsl
+CopySprite:
+    rep #$20 ; 16 bit A
+    lda $07,s
+    asl ; multiply by 32 bytes per tile
+    asl
+    asl
+    asl
+    asl
+    sta $4305 ; number of bytes
+    lda $04,s
+    sta $4302 ; source address
+    lda $09,s
+    sta $2116 ; VRAM address
+    sep #$20 ; 8 bit A
+    lda $06,s
+    sta $4304 ; source bank
+    lda #$80
+    sta $2115 ; VRAM address increment flags
+    lda #$01
+    sta $4300 ; write to PPU, absolute address, auto increment, 2 bytes at a time
+    lda #$18
+    sta $4301 ; Write to VRAM
+    lda #$01
+    sta $420B ; begin transfer
+    rtl
+
+; Copy partial sprite data to VRAM.
+; Use this method if the sprite occupies more than 1 tile height and does not
+; occupy an entire sprite row in width.
+; push order:
+;   vram base index[dw]
+;   num tiles width[db], must be 1-16
+;   num tiles height[db], must be >1
+;   source bank[db]
+;   source address[dw]
+; MUST call with jsl
+CopySpritePartial:
+    rep #$20
+    rtl
 
 TileData:
 .dw $0002 $0004 $0004 $0004 $0004 $0004 $0004 $000C $000E $0004 $0004 $0004 $0004 $0004 $0004 $4002

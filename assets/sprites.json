@@ -1,14 +1,20 @@
 [
     {
-        "name": "isaac",
-        "palette": "base",
-        "src": "assets/sprites/isaac.png",
+        "name": "isaac_head",
+        "palette": "isaac",
+        "src": "assets/sprites/isaac_head.png",
         "depth": 16
     },
     {
         "name": "basement",
         "palette": "basement",
         "src": "assets/sprites/basement.png",
+        "depth": 16
+    },
+    {
+        "name": "isaac_tear",
+        "palette": "tear",
+        "src": "assets/sprites/tear_8px.png",
         "depth": 16
     }
 ]

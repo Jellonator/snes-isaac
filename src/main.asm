@@ -129,22 +129,6 @@ tile_data_loop:
     cpy #$0300 ; 32 * 12 tiles
     bne tile_data_loop
     sep #$30 ; 8 bit X, Y, Z
-    ; put a sprite in the center
-    stz $2102
-    stz $2103
-    lda #120
-    sta $2104
-    lda #104
-    sta $2104
-    stz $2104
-    stz $2104
-    lda #120
-    sta $2104
-    lda #114
-    sta $2104
-    lda #$02
-    sta $2104
-    stz $2104
     ; show sprites and layer 1
     lda #$11
     sta $212c
@@ -174,6 +158,11 @@ VBlank:
 
     jsr ReadInput
 
+    ; reset sprites
+    .ResetSpriteExt
+
+    ; Push player sprites
+    sep #$30 ; 8 bit axy
     stz $2102
     stz $2103
     lda player.pos.x + 1
@@ -193,24 +182,31 @@ VBlank:
     sta $2104
     lda #%00100000
     sta $2104
-
-    sep #$10 ; 8 bit x
-    ldx #2
-    lda #240
-clear_sprites_loop:
-    stz $2104
-    sta $2104
-    stz $2104
-    stz $2104
-    INX
-    cpx #128
-    bne clear_sprites_loop
-    lda #%00001010
-    sta $2104
-
+    lda #2
+    jsl PushSpriteExt
+    lda #2
+    jsl PushSpriteExt
     jsr DrawTears
-    sep #$30 ; 8 bit mode
-
+    ; clear all sprites after last used sprite
+    sep #$30 ; 8 bit axy
+    ldx last_used_sprite
+    cpx #128
+    beq @clear_sprites_end
+    lda #240
+@clear_sprites_loop:
+    stz $2104
+    sta $2104
+    stz $2104
+    stz $2104
+    inx
+    cpx #128
+    bne @clear_sprites_loop
+@clear_sprites_end:
+    ; copy ext data
+    .REPT 32 INDEX i
+        lda sprite_data_ext+i
+        sta $2104
+    .ENDR
     RTI
 
 PlayerInit:
@@ -502,8 +498,6 @@ PlayerShootTear:
 DrawTears:
     ; rts
     rep #$30 ; 16 bit mode
-    lda #8
-    sta $2102
     ldx #0
     cpx tear_bytes_used
     bcs @end
@@ -519,8 +513,11 @@ DrawTears:
     sta $2104
     lda #%00110010
     sta $2104
-    rep #$20 ; 16 bit mode
-    txa ; ++X
+    phx
+    lda #0
+    jsl PushSpriteExtZero
+    rep #$30 ; 16 bit mode
+    pla
     clc
     adc #_sizeof_tear_t
     tax
@@ -708,6 +705,41 @@ CopySpritePartial:
     rep #$20
     rtl
 
+PushSpriteExtZero:
+    sep #$30 ; 8 bit axy
+    lda last_used_sprite
+    inc A
+    sta last_used_sprite
+    rtl
+
+PushSpriteExt:
+    sta $00
+    sep #$30 ; 8 bit axy
+    lda last_used_sprite
+    lsr
+    lsr
+    tax
+    lda last_used_sprite
+    bit #2
+    beq @skip2
+    .REPT 4
+        asl $00
+    .ENDR
+@skip2:
+    bit #1
+    beq @skip1
+    .REPT 2
+        asl $00
+    .ENDR 
+@skip1:
+    lda $00
+    ora sprite_data_ext,X
+    sta sprite_data_ext,X
+    lda last_used_sprite
+    inc A
+    sta last_used_sprite
+    rtl
+
 TileData:
 .dw $0002 $0004 $0004 $0004 $0004 $0004 $0004 $000C $000E $0004 $0004 $0004 $0004 $0004 $0004 $4002
 .dw $0022 $0024 $0026 $0026 $0026 $0026 $0026 $002C $002E $0026 $0026 $0026 $0026 $0026 $4024 $4022
@@ -728,7 +760,13 @@ TileData:
 
 .bank 1
 .section "Graphics"
+.include "assets.inc
+.ends
 
-.include "assets.inc"
-
+.bank 2
+.section "ExtraData"
+EmptySpriteData:
+.REPT 128
+    .db $00 $F0 $00 $00
+.ENDR
 .ends

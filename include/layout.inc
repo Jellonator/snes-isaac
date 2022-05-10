@@ -4,6 +4,14 @@
 ; then one bit of subpixel may be added to the position instead
 ; Thus, speed is subpixels per frame
 
+.struct byte_t
+    data db
+.endst
+
+.struct wide_t
+    data dw
+.endst
+
 .struct position_t
     x dw
     y dw
@@ -37,7 +45,16 @@
     joy1raw dw
     joy1press dw
     joy1held dw
+    last_used_sprite db
+    sprite_data_ext instanceof byte_t 32
 .ende
+
+.MACRO .ResetSpriteExt
+    stz last_used_sprite
+    .REPT 32 INDEX i
+        stz sprite_data_ext+i
+    .ENDR
+.ENDM
 
 .define TEAR_ARRAY_MAX_COUNT 32
 .define TEAR_ARRAY_MAX_SIZE (TEAR_ARRAY_MAX_COUNT*_sizeof_tear_t)

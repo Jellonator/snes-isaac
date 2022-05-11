@@ -45,6 +45,7 @@
     joy1raw dw
     joy1press dw
     joy1held dw
+    is_game_update_running db
     last_used_sprite db
     sprite_data_ext instanceof byte_t 32
 .ende

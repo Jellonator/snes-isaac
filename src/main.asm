@@ -12,13 +12,13 @@ Start:
     Snes_Init
     lda #$01
     sta MEMSEL
-    jml $800000 + Start2
+    jml Start2
 
 Start2:
     ; Disable rendering temporarily
     sep #$20
     lda #%10000000
-    sta $2100
+    sta INIDISP
     ; Set background color
     lda #%11100000
     sta $2122
@@ -152,15 +152,25 @@ tile_data_loop:
 
 UpdateLoop:
     wai
+    sep #$30 ; 8 bit AXY
+    inc is_game_update_running
     rep #$30 ; 16 bit AXY
     jsr PlayerUpdate
     jsr UpdateTears
     jmp UpdateLoop
+    stz is_game_update_running
 
 VBlank:
-    jml $800000 + VBlank2
+    lda is_game_update_running
+    bne @continuevblank
+    rti
+@continuevblank:
+    jml VBlank2
 
 VBlank2:
+    sep #$20 ; 8 bit A
+    lda #%10000000
+    sta INIDISP
     sep #$30 ; 16 bit AXY
     lda $4210
 
@@ -213,33 +223,23 @@ VBlank2:
     sbc $00
     sta DMA0_SIZE 
     sep #$20 ; 8 bit A
-    lda $06,s
+    lda #$82
     sta DMA0_SRCH ; source bank
-    lda $07,s
     stz DMA0_CTL ; write to OAMRAM, absolute address, auto increment, 1 byte at a time
     lda #$04
     sta DMA0_DEST ; Write to OAMRAM
     lda #$01
     sta MDMAEN ; Begin transfer
-;     ldx last_used_sprite
-;     cpx #128
-;     beq @clear_sprites_end
-;     lda #240
-; @clear_sprites_loop:
-;     stz $2104
-;     sta $2104
-;     stz $2104
-;     stz $2104
-;     inx
-;     cpx #128
-;     bne @clear_sprites_loop
 @clear_sprites_end:
     ; copy ext data
     .REPT 32 INDEX i
         lda sprite_data_ext+i
         sta $2104
     .ENDR
-    RTI
+    sep #$20 ; 8 bit A
+    lda #%00001111
+    sta INIDISP
+    rti
 
 PlayerInit:
     rep #$20 ; 16 bit A
@@ -266,9 +266,11 @@ PlayerInit:
 
 ReadInput:
     ; loop until controller allows itself to be read
-    lda $4212
+    rep #$20 ; 8 bit A
+@read_input_loop:
+    lda HVBJOY
     and #$01
-    bne ReadInput ;0.14% -> 1.2%
+    bne @read_input_loop ;0.14% -> 1.2%
 
     ; Read input
     rep #$30 ; 16 bit AXY

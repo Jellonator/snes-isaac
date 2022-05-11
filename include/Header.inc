@@ -15,7 +15,7 @@
    NAME "Binding of Isaac SNES"  ; Program Title - can't be over 21 bytes,
    ;    "123456789012345678901"  ; use spaces for unused bytes of the name.
  
-   SLOWROM
+   FASTROM
    LOROM
  
    CARTRIDGETYPE $00             ; $00 = ROM only, see WLA documentation for others

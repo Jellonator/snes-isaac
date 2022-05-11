@@ -10,6 +10,11 @@
 Start:
     sei ; Disabled interrupts
     Snes_Init
+    lda #$01
+    sta MEMSEL
+    jml $800000 + Start2
+
+Start2:
     ; Disable rendering temporarily
     sep #$20
     lda #%10000000
@@ -153,6 +158,9 @@ UpdateLoop:
     jmp UpdateLoop
 
 VBlank:
+    jml $800000 + VBlank2
+
+VBlank2:
     sep #$30 ; 16 bit AXY
     lda $4210
 
@@ -189,18 +197,42 @@ VBlank:
     jsr DrawTears
     ; clear all sprites after last used sprite
     sep #$30 ; 8 bit axy
-    ldx last_used_sprite
+    lda last_used_sprite
     cpx #128
     beq @clear_sprites_end
-    lda #240
-@clear_sprites_loop:
-    stz $2104
-    sta $2104
-    stz $2104
-    stz $2104
-    inx
-    cpx #128
-    bne @clear_sprites_loop
+
+    rep #$20 ; 16 bit A
+    and #$FF
+    asl
+    asl
+    sta $00
+    lda #EmptySpriteData
+    sta DMA0_SRCL
+    lda #513 ; 512 - num_sprites*4
+    clc
+    sbc $00
+    sta DMA0_SIZE 
+    sep #$20 ; 8 bit A
+    lda $06,s
+    sta DMA0_SRCH ; source bank
+    lda $07,s
+    stz DMA0_CTL ; write to OAMRAM, absolute address, auto increment, 1 byte at a time
+    lda #$04
+    sta DMA0_DEST ; Write to OAMRAM
+    lda #$01
+    sta MDMAEN ; Begin transfer
+;     ldx last_used_sprite
+;     cpx #128
+;     beq @clear_sprites_end
+;     lda #240
+; @clear_sprites_loop:
+;     stz $2104
+;     sta $2104
+;     stz $2104
+;     stz $2104
+;     inx
+;     cpx #128
+;     bne @clear_sprites_loop
 @clear_sprites_end:
     ; copy ext data
     .REPT 32 INDEX i
@@ -498,14 +530,14 @@ PlayerShootTear:
 DrawTears:
     ; rts
     rep #$30 ; 16 bit mode
-    ldx #0
-    cpx tear_bytes_used
-    bcs @end
+    ldx tear_bytes_used
+    cpx #0
+    beq @end
 @iter:
     sep #$20 ; 8 bit A, 16 bit X
-    lda tear_array.1.pos.x+1,X
+    lda tear_array.1.pos.x+1-_sizeof_tear_t,X
     sta $2104
-    lda tear_array.1.pos.y+1,X
+    lda tear_array.1.pos.y+1-_sizeof_tear_t,X
     sec
     sbc #10
     sta $2104
@@ -514,15 +546,13 @@ DrawTears:
     lda #%00110010
     sta $2104
     phx
-    lda #0
     jsl PushSpriteExtZero
     rep #$30 ; 16 bit mode
     pla
-    clc
-    adc #_sizeof_tear_t
+    sec
+    sbc #_sizeof_tear_t
     tax
-    cpx tear_bytes_used ; X != tear_bytes_used
-    bcc @iter
+    bne @iter
 @end:
     rts
 
@@ -760,7 +790,7 @@ TileData:
 
 .bank 1
 .section "Graphics"
-.include "assets.inc
+.include "assets.inc"
 .ends
 
 .bank 2

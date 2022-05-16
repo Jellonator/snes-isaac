@@ -8,7 +8,7 @@
 .define BG3SC $2109
 .define BG4SC $210A
 .define BG12NBA $210B
-.define BG34 $210C
+.define BG34NBA $210C
 .define BG1HOFS $210D
 .define BG1VOFS $210E
 .define BG2HOFS $210F

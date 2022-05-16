@@ -15,7 +15,7 @@
         "depth": 16
     },
     {
-        "name": "ui",
+        "name": "UI",
         "src": "assets/sprites/UI.raw",
         "depth": 16
     }

@@ -25,11 +25,11 @@ Start2:
     lda #%00000011
     sta $2122
     ; Set tilemap mode 2
-    lda #%00010001
+    lda #%00100001
     sta $2105
     lda #%01100000 ; tile data at $6000 (>>10)
-    sta $2107
-    lda #%00000100 ; tile character data at $4000 (>>12)
+    sta $2108
+    lda #%01000000 ; tile character data at $4000 (>>12)
     sta $210B
     ; Set up sprite mode
     lda #%00000000
@@ -134,8 +134,8 @@ tile_data_loop:
     cpy #$0300 ; 32 * 12 tiles
     bne tile_data_loop
     sep #$30 ; 8 bit X, Y, Z
-    ; show sprites and layer 1
-    lda #$11
+    ; show sprites and layer 2
+    lda #%00010010
     sta $212c
     ; re-enable rendering
     lda #%00001111
@@ -144,30 +144,35 @@ tile_data_loop:
     lda #$81
     sta $4200
     lda #$E0
-    sta $210E
+    sta $2110
     lda #$FF
-    sta $210E
+    sta $2110
     jsr PlayerInit
     jmp UpdateLoop
 
 UpdateLoop:
     wai
-    sep #$30 ; 8 bit AXY
-    inc is_game_update_running
     rep #$30 ; 16 bit AXY
+    inc is_game_update_running
     jsr PlayerUpdate
     jsr UpdateTears
-    jmp UpdateLoop
+    rep #$30 ; 16 bit AXY
     stz is_game_update_running
+    jmp UpdateLoop
 
 VBlank:
+    jml VBlank2
+VBlank2:
+    rep #$30
+    pha
     lda is_game_update_running
-    bne @continuevblank
+    beq @continuevblank
+    pla
     rti
 @continuevblank:
-    jml VBlank2
-
-VBlank2:
+    pla
+    ; Since VBlank only actually executes while the game isn't updating, we
+    ; don't have to worry about storing previous state here
     sep #$20 ; 8 bit A
     lda #%10000000
     sta INIDISP
@@ -247,7 +252,7 @@ PlayerInit:
     sta player.stat_accel
     lda #256
     sta player.stat_speed
-    lda #2;#30
+    lda #24
     sta player.stat_tear_delay
     lda #$0100
     sta player.stat_tear_speed
@@ -259,9 +264,7 @@ PlayerInit:
     sta player.pos.x
     lda #((64 + 4 * 16 - 8) * 256)
     sta player.pos.y
-    sep #$20 ; 8 bit A
     stz tear_bytes_used
-    stz tear_bytes_used+1
     rts
 
 ReadInput:

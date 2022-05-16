@@ -8,7 +8,7 @@
     data db
 .endst
 
-.struct wide_t
+.struct word_t
     data dw
 .endst
 
@@ -71,6 +71,15 @@
 
 .DEFINE PLAYER_FLAG_EYE $0001
 
+.DEFINE SPRITE1_BASE_ADDR $0000
+.DEFINE SPRITE2_BASE_ADDR $1000
+.DEFINE BG1_TILE_BASE_ADDR $2000
+.DEFINE BG2_TILE_BASE_ADDR $2400
+.DEFINE BG3_TILE_BASE_ADDR $2800
+.DEFINE BG1_CHARACTER_BASE_ADDR $3000
+.DEFINE BG2_CHARACTER_BASE_ADDR $5000
+.DEFINE BG2_CHARITEM_BASE_ADDR $6000
+
 .ENUM $0000
 
 .ENDE
@@ -88,4 +97,8 @@
     player instanceof player_t
     tear_bytes_used dw ; number of bytes used of tear_array
     tear_array instanceof tear_t TEAR_ARRAY_MAX_COUNT
+.ENDE
+
+.ENUM $7E2000
+    uiData instanceof word_t 32*4
 .ENDE

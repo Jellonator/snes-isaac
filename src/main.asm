@@ -19,21 +19,22 @@ Start2:
     sep #$20
     lda #%10000000
     sta INIDISP
-    ; Set background color
-    lda #%11100000
-    sta $2122
-    lda #%00000011
-    sta $2122
     ; Set tilemap mode 2
     lda #%00100001
-    sta $2105
-    lda #%01100000 ; tile data at $6000 (>>10)
-    sta $2108
-    lda #%01000000 ; tile character data at $4000 (>>12)
-    sta $210B
+    sta BGMODE
+    lda #%00100000 ; BG1 tile data at $2000
+    sta BG1SC
+    lda #%00100100 ; BG2 tile data at $2400 (>>10)
+    sta BG2SC
+    lda #%00101000 ; BG3 tile data at $2800
+    sta BG3SC
+    lda #%01010011 ; character data: BG1=$3000, BG2=$5000 (>>12)
+    sta BG12NBA
+    lda #%01010011 ; character data: BG3=$3000
+    sta BG34NBA
     ; Set up sprite mode
     lda #%00000000
-    sta $2101
+    sta OBSEL
     ; copy palettes to CGRAM
     PEA $8001
     PEA palettes@isaac.w
@@ -53,11 +54,36 @@ Start2:
     rep #$20 ; 16 bit A
     PLA
     PLA
+    PEA $2001
+    PEA palettes@ui_light.w
+    jsl CopyPalette
+    rep #$20 ; 16 bit A
+    PLA
+    PLA
+    PEA $3001
+    PEA palettes@ui_gold.w
+    jsl CopyPalette
+    rep #$20 ; 16 bit A
+    PLA
+    PLA
+    PEA $4001
+    PEA palettes@ui_dark.w
+    jsl CopyPalette
+    rep #$20 ; 16 bit A
+    PLA
+    PLA
+    ; Set background color
+    sep #$20 ; 8 bit A
+    stz $2121
+    lda #%01100011
+    sta $2122
+    lda #%00001100
+    sta $2122
     ; copy sprite to VRAM
-    pea $0000
+    pea SPRITE1_BASE_ADDR
     pea 32
     sep #$20 ; 8 bit A
-    lda #$01
+    lda #bankbyte(sprites@isaac_head)
     pha
     pea sprites@isaac_head
     jsl CopySprite
@@ -68,10 +94,10 @@ Start2:
     pla
     pla
     ; copy tilemap to VRAM
-    pea $4000
+    pea BG2_CHARACTER_BASE_ADDR
     pea 256
     sep #$20 ; 8 bit A
-    lda #$01
+    lda #bankbyte(sprites@basement)
     pha
     pea sprites@basement
     jsl CopySprite
@@ -81,13 +107,13 @@ Start2:
     pla
     pla
     pla
-    ; copy tear to VRAM
-    pea 16*32
-    pea 4
+    ; copy UI to VRAM
+    pea BG1_CHARACTER_BASE_ADDR
+    pea 16*4
     sep #$20 ; 8 bit A
-    lda #$01
+    lda #bankbyte(sprites@UI)
     pha
-    pea sprites@isaac_tear
+    pea sprites@UI
     jsl CopySprite
     sep #$20 ; 8 bit A
     pla
@@ -95,10 +121,32 @@ Start2:
     pla
     pla
     pla
-
+    ; copy tear to VRAM
+    pea 16*32 ; VRAM address
+    pea 4 ; num tiles
+    sep #$20 ; 8 bit A
+    lda #bankbyte(sprites@isaac_tear)
+    pha
+    pea sprites@isaac_tear ; address
+    jsl CopySprite
+    sep #$20 ; 8 bit A
+    pla
+    rep #$20 ; 16 bit A
+    pla
+    pla
+    pla
+    ; Clear BG1 (UI)
+    pea BG1_TILE_BASE_ADDR
+    pea 32*32*2
+    jsl ClearVMem
+    rep #$20 ; 16 bit A
+    pla
+    pla
+    jsl ResetUIData
+    jsl UploadUiToVRam
     ; Set up tilemap. First, write empty in all slots
     rep #$30 ; 16 bit X, Y, Z
-    lda #$6000
+    lda #BG2_TILE_BASE_ADDR
     sta $2116
     lda #$0020
     ldx #$0000
@@ -110,7 +158,7 @@ tile_map_loop:
 
     ; now, copy data for room layout
     ; room is 16x12, game is 32x32
-    lda #$6000
+    lda #BG2_TILE_BASE_ADDR
     sta $2116
     ldx #$0000 ; rom tile data index
     ldy #$0000 ; vram tile data index
@@ -134,9 +182,9 @@ tile_data_loop:
     cpy #$0300 ; 32 * 12 tiles
     bne tile_data_loop
     sep #$30 ; 8 bit X, Y, Z
-    ; show sprites and layer 2
-    lda #%00010010
-    sta $212c
+    ; show sprites and BG1/BG2
+    lda #%00010011
+    sta SCRNDESTM
     ; re-enable rendering
     lda #%00001111
     sta $2100
@@ -740,6 +788,74 @@ CopySpritePartial:
     rep #$20
     rtl
 
+; Clear a section of VRAM
+; push order:
+;   vram address [dw] $06
+;   num bytes    [dw] $04
+; MUST call with jsl
+ClearVMem:
+    rep #$20 ; 16 bit A
+    lda $04,s
+    sta DMA0_SIZE ; number of bytes
+    lda #EmptyData
+    sta DMA0_SRCL ; source address
+    lda $06,s
+    sta $2116 ; VRAM address
+    sep #$20 ; 8 bit A
+    lda bankbyte(EmptyData)
+    sta DMA0_SRCH ; source bank
+    lda #$80
+    sta $2115 ; VRAM address increment flags
+    lda #%00001001
+    sta DMA0_CTL ; write to PPU, absolute address, no increment, 2 bytes at a time
+    lda #$18
+    sta DMA0_DEST ; Write to VRAM
+    lda #$01
+    sta MDMAEN ; begin transfer
+    rtl
+
+ResetUIData:
+    rep #$20 ; 16 bit A
+    lda #_sizeof_uiData
+    sta DMA0_SIZE ; number of bytes
+    lda #loword(DefaultUiData)
+    sta DMA0_SRCL ; source address
+    lda #loword(uiData)
+    sta WMADDL ; WRAM address
+    sep #$20 ; 8 bit A
+    lda #bankbyte(DefaultUiData)
+    sta DMA0_SRCH ; source bank
+    lda #bankbyte(uiData)
+    sta WMADDH
+    lda #%00000000
+    sta DMA0_CTL ; write to WRAM, absolute address, auto increment, 1 byte at a time
+    lda #$80
+    sta DMA0_DEST ; Write to VRAM
+    lda #$01
+    sta MDMAEN ; begin transfer
+    rtl
+
+UploadUiToVRam:
+    rep #$20 ; 16 bit A
+    lda #_sizeof_uiData
+    sta DMA0_SIZE ; number of bytes
+    lda #loword(uiData)
+    sta DMA0_SRCL ; source address
+    lda #BG1_TILE_BASE_ADDR
+    sta $2116 ; VRAM address
+    sep #$20 ; 8 bit A
+    lda #bankbyte(uiData)
+    sta DMA0_SRCH ; source bank
+    lda #$80
+    sta $2115 ; VRAM address increment flags
+    lda #%00000001
+    sta DMA0_CTL ; write to PPU, absolute address, auto increment, 2 bytes at a time
+    lda #$18
+    sta DMA0_DEST ; Write to VRAM
+    lda #$01
+    sta MDMAEN ; begin transfer
+    rtl
+
 PushSpriteExtZero:
     sep #$30 ; 8 bit axy
     lda last_used_sprite
@@ -800,8 +916,31 @@ TileData:
 
 .bank 2
 .section "ExtraData"
+EmptyData:
+    .dw $00
 EmptySpriteData:
-.REPT 128
-    .db $00 $F0 $00 $00
-.ENDR
+    .REPT 128
+        .db $00 $F0 $00 $00
+    .ENDR
+DefaultUiData:
+    .dw $0000 $0C02 $0C03 $0C03 $4C02
+    .dw $0C20 $0830 $0830 $0830 $0830 $0831 $0832
+    .REPT 20
+        .dw $0000
+    .ENDR
+    .dw $0000 $0C12 $0000 $0000 $4C12
+    .dw $0C21 $0832 $0832 $0C30 $0C33 $0000 $0000
+    .REPT 20
+        .dw $0000
+    .ENDR
+    .dw $0000 $0C12 $0000 $0000 $4C12
+    .dw $0C22
+    .REPT 26
+        .dw $0000
+    .ENDR
+    .dw $0000 $8C02 $8C03 $8C03 $CC02
+    .dw $0000
+    .REPT 26
+        .dw $0000
+    .ENDR
 .ends

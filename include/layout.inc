@@ -41,15 +41,6 @@
     flags dw
 .endst
 
-.enum $0100
-    joy1raw dw
-    joy1press dw
-    joy1held dw
-    is_game_update_running db
-    last_used_sprite db
-    sprite_data_ext instanceof byte_t 32
-.ende
-
 .MACRO .ResetSpriteExt
     stz last_used_sprite
     .REPT 32 INDEX i
@@ -59,13 +50,6 @@
 
 .define TEAR_ARRAY_MAX_COUNT 32
 .define TEAR_ARRAY_MAX_SIZE (TEAR_ARRAY_MAX_COUNT*_sizeof_tear_t)
-
-.enum $0200
-    player instanceof player_t
-    tear_bytes_used dw ; number of bytes used of tear_array
-    tear_array instanceof tear_t TEAR_ARRAY_MAX_COUNT
-.ende
-
 
 .DEFINE JOY_A $0080 ; RIGHT
 .DEFINE JOY_X $0040 ; UP
@@ -86,3 +70,22 @@
 .DEFINE JOY_SHOOT_DOWN JOY_B
 
 .DEFINE PLAYER_FLAG_EYE $0001
+
+.ENUM $0000
+
+.ENDE
+
+.ENUM $0100
+    joy1raw dw
+    joy1press dw
+    joy1held dw
+    is_game_update_running dw
+    last_used_sprite db
+    sprite_data_ext instanceof byte_t 32
+.ENDE
+
+.ENUM $0200
+    player instanceof player_t
+    tear_bytes_used dw ; number of bytes used of tear_array
+    tear_array instanceof tear_t TEAR_ARRAY_MAX_COUNT
+.ENDE

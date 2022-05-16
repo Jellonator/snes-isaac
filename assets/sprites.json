@@ -1,20 +1,22 @@
 [
     {
         "name": "isaac_head",
-        "palette": "isaac",
-        "src": "assets/sprites/isaac_head.png",
+        "src": "assets/sprites/isaac_head.raw",
         "depth": 16
     },
     {
         "name": "basement",
-        "palette": "basement",
-        "src": "assets/sprites/basement.png",
+        "src": "assets/sprites/basement.raw",
         "depth": 16
     },
     {
         "name": "isaac_tear",
-        "palette": "tear",
-        "src": "assets/sprites/tear_8px.png",
+        "src": "assets/sprites/tear_8px.raw",
+        "depth": 16
+    },
+    {
+        "name": "ui",
+        "src": "assets/sprites/UI.raw",
         "depth": 16
     }
 ]

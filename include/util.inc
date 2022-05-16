@@ -60,5 +60,23 @@
 
 .define BYTES_PER_TILE16 32
 
+.MACRO BEGININTERRUPT
+    phb
+    phd
+    rep #$30
+    pha
+    phx
+    phy
+.ENDM
+
+.MACRO ENDINTERRUPT
+    rep #$30
+    ply
+    plx
+    pla
+    pld
+    plb
+.ENDM
+
 ; bcs: A >= arg
 ; bcc: A < arg

@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+from email.mime import image
 import json
 import struct
 import os
@@ -18,25 +19,6 @@ json_sprites = json.load(open("assets/sprites.json"))
 
 out_inc = open("include/assets.inc", 'w')
 
-paletterefs = {}
-
-for palette in json_palettes:
-    paletterefs[palette["name"]] = palette
-    palette["colors"][0] = [0, 0, 0]
-    indices = {}
-    for i, col in enumerate(palette["colors"]):
-        if i == 0:
-            continue
-        if not (col[0], col[1], col[2]) in indices:
-            indices[(col[0], col[1], col[2])] = i
-    palette["indices"] = indices
-
-# while len(json_palettes) < 16:
-#     json_palettes.append({
-#         "name": "pallete{}".format(len(json_palettes)),
-#         "colors": [[0, 0, 0]] * 16
-#     })
-
 out_inc.write("palettes:\n")
 for palette in json_palettes:
     name = palette["name"]
@@ -44,34 +26,21 @@ for palette in json_palettes:
     out_inc.write("\t\t.incbin \"palettes/{}.bin\"\n".format(name))
     out_inc.write("\t\t@@end:\n");
     palettebin = open(os.path.join(PALETTE_PATH, "{}.bin".format(name)), 'wb')
-    for color in palette["colors"]:
-        r = color[0]
-        g = color[1]
-        b = color[2]
-        value = (b << 10) + (g << 5) + r
-        palettebin.write(struct.pack("<H", value))
+    with open(palette["src"], 'r') as hexfh:
+        for hexline in hexfh.readlines():
+            r = int(hexline[0:2], 16) >> 3
+            g = int(hexline[2:4], 16) >> 3
+            b = int(hexline[4:6], 16) >> 3
+            value = (b << 10) + (g << 5) + r
+            palettebin.write(struct.pack("<H", value))
 
-def write_image_tile(bin, image, palette, depth, tilex, tiley):
+def write_image_tile(bin, imageindices, depth, tilex, tiley, width):
     indices = []
     for py in range(8):
         y = tiley * 8 + py
         for px in range(8):
             x = tilex * 8 + px
-            color = image.getpixel((x, y))
-            if color[3] == 0:
-                indices.append(0)
-            elif color[3] != 255:
-                raise RuntimeError()
-            else:
-                rcol = (color[0] >> 3, color[1] >> 3, color[2] >> 3)
-                if not rcol in palette["indices"]:
-                    print(color, rcol, palette["indices"])
-                    raise RuntimeError()
-                index = palette["indices"][rcol]
-                if index >= depth:
-                    print(index, depth, color, rcol, palette["indices"])
-                    raise RuntimeError()
-                indices.append(index)
+            indices.append(imageindices[y * width + x])
     # Write first two bitplanes intertwined
     for iy in range(8):
         value1 = 0
@@ -97,11 +66,12 @@ def write_image_tile(bin, image, palette, depth, tilex, tiley):
 out_inc.write("sprites:\n")
 for sprite in json_sprites:
     name = sprite["name"]
-    image = Image.open(sprite["src"]).convert("RGBA")
-    if image.size[0] not in [8, 16, 32, 64, 128]:
-        raise RuntimeError("Invalid width {} in {}".format(image.size[0], sprite["src"]))
-    if image.size[1] not in [8, 16, 32, 64, 128]:
-        raise RuntimeError("Invalid height {} in {}".format(image.size[1], sprite["src"]))
+    # image = Image.open(sprite["src"]).convert("RGBA")
+    imagefh = open(sprite["src"], 'rb')
+    width, height = struct.unpack("<II", imagefh.read(8))
+    imagedata = imagefh.read()
+    if width % 8 != 0 or height % 8 != 0 or width*height != len(imagedata):
+        raise RuntimeError("Invalid image size {}x{} in {}".format(width*height, sprite["src"]))
     if sprite["depth"] not in [4, 16]:
         raise RuntimeError("Invalid depth {} for {}".format(sprite["depth"], sprite["src"]))
     sprite_out_path = os.path.join(SPRITE_PATH, "{}.bin".format(name))
@@ -111,8 +81,7 @@ for sprite in json_sprites:
     out_inc.write("\t\t@@end:\n")
     # Write to binary file
     spritebin = open(sprite_out_path, 'wb')
-    palette = paletterefs[sprite["palette"]]
-    for ty in range(image.size[1] // 8):
-        for tx in range(image.size[0] // 8):
-            write_image_tile(spritebin, image, palette, sprite["depth"], tx, ty)
+    for ty in range(height // 8):
+        for tx in range(width // 8):
+            write_image_tile(spritebin, imagedata, sprite["depth"], tx, ty, width)
 

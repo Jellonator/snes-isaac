@@ -1,12 +1,19 @@
-.BANK 0
+.BANK 0 SLOT "ROM"
 .SECTION "RENDER" FREE
+
+.MACRO .ResetSpriteExt
+    stz.w last_used_sprite
+    .REPT 32 INDEX i
+        stz.w sprite_data_ext+i
+    .ENDR
+.ENDM
 
 VBlank:
     jml VBlank2
 VBlank2:
     rep #$30
     pha
-    lda is_game_update_running
+    lda.w is_game_update_running
     beq @continuevblank
     pla
     rti
@@ -29,18 +36,18 @@ VBlank2:
     sep #$30 ; 8 bit axy
     stz $2102
     stz $2103
-    lda player.pos.x + 1
+    lda.w player.pos.x + 1
     sta $2104
-    lda player.pos.y + 1
+    lda.w player.pos.y + 1
     sec
     sbc #10
     sta $2104
     stz $2104
-    lda #%00110000
+    lda #%00100000
     sta $2104
-    lda player.pos.x + 1
+    lda.w player.pos.x + 1
     sta $2104
-    lda player.pos.y + 1
+    lda.w player.pos.y + 1
     sta $2104
     lda #$02
     sta $2104
@@ -53,7 +60,7 @@ VBlank2:
     jsr DrawTears
     ; clear all sprites after last used sprite
     sep #$30 ; 8 bit axy
-    lda last_used_sprite
+    lda.w last_used_sprite
     cpx #128
     beq @clear_sprites_end
 
@@ -79,15 +86,15 @@ VBlank2:
 @clear_sprites_end:
     ; copy ext data
     .REPT 32 INDEX i
-        lda sprite_data_ext+i
+        lda.w sprite_data_ext+i
         sta $2104
     .ENDR
     ; Check if minimap needs updating
     sep #$20 ; 8 bit A
-    lda numTilesToUpdate
+    lda.w numTilesToUpdate
     cmp #$FF
     bne @skipUpdateAllTiles
-    stz numTilesToUpdate
+    stz.w numTilesToUpdate
     jsr UpdateEntireMinimap
 @skipUpdateAllTiles:
     sep #$20 ; 8 bit A
@@ -112,7 +119,7 @@ UpdateMinimapLine:
     .ACCU 16
     .INDEX 16
     .REPT MAP_MAX_WIDTH
-        lda mapTileTypeTable,Y
+        lda.w mapTileTypeTable,Y
         and #$00FF
         asl
         tax
@@ -124,20 +131,20 @@ UpdateMinimapLine:
 
 DrawTears:
     rep #$30 ; 16 bit mode
-    ldx tear_bytes_used
+    ldx.w tear_bytes_used
     cpx #0
     beq @end
 @iter:
     sep #$20 ; 8 bit A, 16 bit X
-    lda tear_array.1.pos.x+1-_sizeof_tear_t,X
+    lda.w tear_array.1.pos.x+1-_sizeof_tear_t,X
     sta $2104
-    lda tear_array.1.pos.y+1-_sizeof_tear_t,X
+    lda.w tear_array.1.pos.y+1-_sizeof_tear_t,X
     sec
     sbc #10
     sta $2104
     lda #$21
     sta $2104
-    lda #%00110010
+    lda #%00100010
     sta $2104
     phx
     jsl PushSpriteExtZero
@@ -152,19 +159,19 @@ DrawTears:
 
 PushSpriteExtZero:
     sep #$30 ; 8 bit axy
-    lda last_used_sprite
+    lda.w last_used_sprite
     inc A
-    sta last_used_sprite
+    sta.w last_used_sprite
     rtl
 
 PushSpriteExt:
     sta $00
     sep #$30 ; 8 bit axy
-    lda last_used_sprite
+    lda.w last_used_sprite
     lsr
     lsr
     tax
-    lda last_used_sprite
+    lda.w last_used_sprite
     bit #2
     beq @skip2
     .REPT 4
@@ -178,11 +185,11 @@ PushSpriteExt:
     .ENDR 
 @skip1:
     lda $00
-    ora sprite_data_ext,X
-    sta sprite_data_ext,X
-    lda last_used_sprite
+    ora.w sprite_data_ext,X
+    sta.w sprite_data_ext,X
+    lda.w last_used_sprite
     inc A
-    sta last_used_sprite
+    sta.w last_used_sprite
     rtl
 
 .ENDS

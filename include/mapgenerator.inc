@@ -1,4 +1,4 @@
-.BANK 1
+.BANK 1 SLOT "ROM"
 .SECTION "MapGeneratorCode" FREE
 
 ; zeropage values
@@ -62,7 +62,7 @@
 ; Assumes tile is in X
 ; Tile type is stored in A
 .MACRO .BranchIfTileEmptyX ARGS label
-    lda mapTileTypeTable,X
+    lda.w mapTileTypeTable,X
     beq label ; if mapTileTypeTable[X] == 0
 .ENDM
 
@@ -70,7 +70,7 @@
 ; Assumes tile is in X
 ; Tile type is stored in A
 .MACRO .BranchIfTileFilledX ARGS label
-    lda mapTileTypeTable,X
+    lda.w mapTileTypeTable,X
     bne label ; if mapTileTypeTable[X] == 0
 .ENDM
 
@@ -78,10 +78,10 @@
 _PushTile:
     .ACCU 8
     .INDEX 8
-    ldx mapgenNumAvailableRooms
-    sta mapgenAvailableRooms,x
+    ldx.w mapgenNumAvailableRooms
+    sta.w mapgenAvailableRooms,x
     inx
-    stx mapgenNumAvailableRooms
+    stx.w mapgenNumAvailableRooms
     rts
 
 ; Initialize the tile at X
@@ -89,8 +89,8 @@ _AddTile:
     .ACCU 8
     .INDEX 8
     lda #ROOMTYPE_NORMAL
-    sta mapTileTypeTable,X
-    stz mapTileFlagsTable,X
+    sta.w mapTileTypeTable,X
+    stz.w mapTileFlagsTable,X
     ; TODO: get map tile slot
     rts
 
@@ -164,20 +164,19 @@ BeginMapGeneration:
     tax
     jsr _AddTile
     jsr _PushAdjacentEmptyTiles
-    tax
 
     lda #$FF
-    sta numTilesToUpdate
+    sta.w numTilesToUpdate
     ; END: reset data bank
     plb
     rtl
 
 _ClearMap:
     sep #$30 ; 8 bit
-    stz loword(numUsedMapSlots)
-    stz loword(numTilesToUpdate)
-    stz mapgenNumAvailableRooms
-    stz mapgenNumAvailableEndpointRooms
+    stz.w loword(numUsedMapSlots)
+    stz.w loword(numTilesToUpdate)
+    stz.w mapgenNumAvailableRooms
+    stz.w mapgenNumAvailableEndpointRooms
     .ClearWRam mapTileTypeTable, MAP_MAX_SIZE
     .ClearWRam mapTileFlagsTable, MAP_MAX_SIZE
     .ClearWRam mapTileSlotTable, MAP_MAX_SIZE

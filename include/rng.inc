@@ -1,17 +1,17 @@
-.BANK 0
+.BANK 0 SLOT "ROM"
 .SECTION "RNG" FREE
 
 ; macro for loop unrolling
 .MACRO .UpdateRng ARGS rngaddr, N
-    lda rngaddr
+    lda.w rngaddr
     .REPT N
         asl A
-        rol rngaddr+2
+        rol.w rngaddr+2
         bcc +++++
         eor #$A3
         +++++:
     .ENDR
-    sta rngaddr
+    sta.w rngaddr
 .ENDM
 
 ; Use if boolean value is needed for stage
@@ -47,25 +47,25 @@ RngGeneratorUpdate16:
 RngGeneratorUpdate32:
     rep #$30 ; 16 bit AXY
     .UpdateRng stageSeed, 32
-    ldy stageSeed+2
+    ldy.w stageSeed+2
     rtl
 
 _RngGeneratorInitStage:
     rep #$30 ; 16 bit AXY
     .UpdateRng gameSeed, 16
-    sta stageSeed.low
+    sta.w stageSeed.low
     .UpdateRng gameSeed, 16
-    sta stageSeed.high
+    sta.w stageSeed.high
     rts
 
 RngGameInitialize:
     ; TODO: use better method
     rep #$20 ; 16 bit A
     lda #$0001
-    sta gameSeed.low
-    sta gameSeed.high
-    sta gameSeedStored.low
-    sta gameSeedStored.high
+    sta.w gameSeed.low
+    sta.w gameSeed.high
+    sta.w gameSeedStored.low
+    sta.w gameSeedStored.high
     jsr _RngGeneratorInitStage
     rtl
 

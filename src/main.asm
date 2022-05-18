@@ -10,8 +10,8 @@
 .include "mapgenerator.inc"
 .include "render.inc"
 
-.BANK $00
-.ORGA $8000
+.BANK $00 SLOT "ROM"
+.ORG $0000
 .SECTION "MainCode" FORCE
 
 Start:
@@ -204,7 +204,7 @@ tile_data_loop:
     and #%0000000000111111
     cmp #32.w
     bcs tile_data_loop@copyzero
-    lda TileData.w,x
+    lda.l TileData.w,x
     inx
     inx
     jmp @store
@@ -238,17 +238,17 @@ tile_data_loop:
 UpdateLoop:
     wai
     rep #$30 ; 16 bit AXY
-    inc is_game_update_running
+    inc.w is_game_update_running
     jsr PlayerUpdate
     jsr UpdateTears
     jsr UpdateRest
     rep #$30 ; 16 bit AXY
-    stz is_game_update_running
+    stz.w is_game_update_running
     jmp UpdateLoop
 
 UpdateRest:
     rep #$30 ; 16 bit AXY
-    lda joy1press
+    lda.w joy1press
     BIT #JOY_SELECT
     beq @skip_regenerate_map
     jsl BeginMapGeneration
@@ -258,22 +258,22 @@ UpdateRest:
 PlayerInit:
     rep #$20 ; 16 bit A
     lda #24
-    sta player.stat_accel
+    sta.w player.stat_accel
     lda #256
-    sta player.stat_speed
+    sta.w player.stat_speed
     lda #24
-    sta player.stat_tear_delay
+    sta.w player.stat_tear_delay
     lda #$0100
-    sta player.stat_tear_speed
+    sta.w player.stat_tear_speed
     lda #0
-    sta player.speed.x
+    sta.w player.speed.x
     lda #0
-    sta player.speed.y
+    sta.w player.speed.y
     lda #((32 + 6 * 16 - 8) * 256)
-    sta player.pos.x
+    sta.w player.pos.x
     lda #((64 + 4 * 16 - 8) * 256)
-    sta player.pos.y
-    stz tear_bytes_used
+    sta.w player.pos.y
+    stz.w tear_bytes_used
     rts
 
 ReadInput:
@@ -286,16 +286,16 @@ ReadInput:
 
     ; Read input
     rep #$30 ; 16 bit AXY
-    ldx joy1raw
+    ldx.w joy1raw
     lda $4218
-    sta joy1raw
+    sta.w joy1raw
     txa
-    eor joy1raw
-    and joy1raw
-    sta joy1press
+    eor.w joy1raw
+    and.w joy1raw
+    sta.w joy1press
     txa
-    and joy1raw
-    sta joy1held
+    and.w joy1raw
+    sta.w joy1held
     ; Not worried about controller validity for now
 
     sep #$30 ; 8 bit AXY
@@ -304,17 +304,17 @@ ReadInput:
 PlayerUpdate:
     rep #$30 ; 16 bit AXY
 
-    lda player.stat_speed
+    lda.w player.stat_speed
     sta $00
     ; check (LEFT OR RIGHT) AND (UP OR DOWN)
     ; if so, multiply speed by 3/4; aka (A+A+A) >> 2
-    lda joy1held
+    lda.w joy1held
     ; LEFT or RIGHT. 00 = F; 01,10,11 = T
     bit #$0C00
     beq @skip_slow
     bit #$0300
     beq @skip_slow
-    lda player.stat_speed
+    lda.w player.stat_speed
     asl
     clc
     adc $00
@@ -323,8 +323,8 @@ PlayerUpdate:
     sta $00
 @skip_slow:
 
-    ldx player.speed.y
-    lda joy1held
+    ldx.w player.speed.y
+    lda.w joy1held
     bit #JOY_DOWN
     bne @down
     bit #JOY_UP
@@ -335,37 +335,37 @@ PlayerUpdate:
 
     ; slowright
     clc
-    adc player.stat_accel
+    adc.w player.stat_accel
     AMINI $00
     jmp @endy
 @slowup:
     ; slowleft
     sec
-    sbc player.stat_accel
+    sbc.w player.stat_accel
     AMAXI $00
     jmp @endy
 @down:
     ; right
     txa
     clc
-    adc player.stat_accel
+    adc.w player.stat_accel
     AMIN $00
     jmp @endy
 @up:
     ; left
     txa
     sec
-    sbc player.stat_accel
+    sbc.w player.stat_accel
     eor #$FFFF
     inc A
     AMIN $00
     eor #$FFFF
     inc A
 @endy:
-    sta player.speed.y
+    sta.w player.speed.y
     
-    ldx player.speed.x
-    lda joy1held
+    ldx.w player.speed.x
+    lda.w joy1held
     bit #JOY_RIGHT
     bne @right
     bit #JOY_LEFT
@@ -377,61 +377,61 @@ PlayerUpdate:
 
     ; slowright
     clc
-    adc player.stat_accel
+    adc.w player.stat_accel
     AMINI $00
     jmp @endx
 @slowleft:
     ; slowleft
     sec
-    sbc player.stat_accel
+    sbc.w player.stat_accel
     AMAXI $00
     jmp @endx
 @right:
     ; right
     txa
     clc
-    adc player.stat_accel
+    adc.w player.stat_accel
     AMIN $00
     jmp @endx
 @left:
     ; left
     txa
     sec
-    sbc player.stat_accel
+    sbc.w player.stat_accel
     eor #$FFFF
     inc A
     AMIN $00
     eor #$FFFF
     inc A
 @endx:
-    sta player.speed.x
+    sta.w player.speed.x
 
     ; apply speed
-    lda player.pos.x
+    lda.w player.pos.x
     clc
-    adc player.speed.x
+    adc.w player.speed.x
     AMAXUI (32 - 4)*256
     AMINUI (32 + 12*16 - 12)*256
-    sta player.pos.x
-    lda player.pos.y
+    sta.w player.pos.x
+    lda.w player.pos.y
     clc
-    adc player.speed.y
+    adc.w player.speed.y
     AMAXUI (64 - 4)*256
     AMINUI (64 + 8*16 - 12)*256
-    sta player.pos.y
+    sta.w player.pos.y
 ; handle player shoot
-    lda player.tear_timer
-    cmp player.stat_tear_delay ; if tear_timer < stat_tear_delay: ++tear_timer
+    lda.w player.tear_timer
+    cmp.w player.stat_tear_delay ; if tear_timer < stat_tear_delay: ++tear_timer
     bcc @tear_not_ready
     ; check inputs
-    lda joy1held
+    lda.w joy1held
     bit #(JOY_A|JOY_B|JOY_Y|JOY_X)
     beq @end_tear_code
     jsr PlayerShootTear
     jmp @end_tear_code
 @tear_not_ready:
     inc A
-    sta player.tear_timer
+    sta.w player.tear_timer
 @end_tear_code:
     sep #$30 ; 8 bit AXY
     rts
@@ -439,19 +439,19 @@ PlayerUpdate:
 PlayerShootTear:
     rep #$30 ; 16 bit AXY
     jsr GetTearSlot
-    lda player.flags
+    lda.w player.flags
     eor #PLAYER_FLAG_EYE
-    sta player.flags
+    sta.w player.flags
     ; lda player.pos.x
     ; sta tear_array.1.pos.x,X
     ; lda player.pos.y
     ; sta tear_array.1.pos.y,X
     lda #90
-    sta tear_array.1.lifetime,X
-    stz tear_array.1.size,X
+    sta.w tear_array.1.lifetime,X
+    stz.w tear_array.1.size,X
     lda #$0000
-    sta player.tear_timer
-    lda joy1held
+    sta.w player.tear_timer
+    lda.w joy1held
     bit #JOY_Y
     bne @tear_left
     bit #JOY_A
@@ -459,118 +459,118 @@ PlayerShootTear:
     bit #JOY_B
     bne @tear_down
 ;tear_up:
-    lda player.speed.x
-    sta tear_array.1.speed.x,X
-    lda player.speed.y
+    lda.w player.speed.x
+    sta.w tear_array.1.speed.x,X
+    lda.w player.speed.y
     AMINI 64
     AMAXI -128
     sec
-    sbc player.stat_tear_speed
-    sta tear_array.1.speed.y,X
+    sbc.w player.stat_tear_speed
+    sta.w tear_array.1.speed.y,X
     jmp @vertical
 @tear_left:
-    lda player.speed.y
-    sta tear_array.1.speed.y,X
-    lda player.speed.x
+    lda.w player.speed.y
+    sta.w tear_array.1.speed.y,X
+    lda.w player.speed.x
     AMINI 64
     AMAXI -128
     sec
-    sbc player.stat_tear_speed
-    sta tear_array.1.speed.x,X
+    sbc.w player.stat_tear_speed
+    sta.w tear_array.1.speed.x,X
     jmp @horizontal
 @tear_right:
-    lda player.speed.y
-    sta tear_array.1.speed.y,X
-    lda player.speed.x
+    lda.w player.speed.y
+    sta.w tear_array.1.speed.y,X
+    lda.w player.speed.x
     AMAXI -64
     AMAXI 128
     clc
-    adc player.stat_tear_speed
-    sta tear_array.1.speed.x,X
+    adc.w player.stat_tear_speed
+    sta.w tear_array.1.speed.x,X
     jmp @horizontal
 @tear_down:
-    lda player.speed.x
-    sta tear_array.1.speed.x,X
-    lda player.speed.y
+    lda.w player.speed.x
+    sta.w tear_array.1.speed.x,X
+    lda.w player.speed.y
     AMAXI -64
     AMAXI 128
     clc
-    adc player.stat_tear_speed
-    sta tear_array.1.speed.y,X
+    adc.w player.stat_tear_speed
+    sta.w tear_array.1.speed.y,X
     jmp @vertical
 @vertical:
-    lda player.flags
+    lda.w player.flags
     bit #PLAYER_FLAG_EYE
     bne @vertical_skip
-    lda player.pos.x
-    sta tear_array.1.pos.x,X
-    lda player.pos.y
+    lda.w player.pos.x
+    sta.w tear_array.1.pos.x,X
+    lda.w player.pos.y
     clc
     adc #256*4
-    sta tear_array.1.pos.y,X
+    sta.w tear_array.1.pos.y,X
     rts
 @vertical_skip:
-    lda player.pos.x
+    lda.w player.pos.x
     clc
     adc #256*8
-    sta tear_array.1.pos.x,X
-    lda player.pos.y
+    sta.w tear_array.1.pos.x,X
+    lda.w player.pos.y
     clc
     adc #256*4
-    sta tear_array.1.pos.y,X
+    sta.w tear_array.1.pos.y,X
     rts
 @horizontal:
-    lda player.flags
+    lda.w player.flags
     bit #PLAYER_FLAG_EYE
     bne @horizontal_skip
-    lda player.pos.x
+    lda.w player.pos.x
     clc
     adc #256*4
-    sta tear_array.1.pos.x,X
-    lda player.pos.y
-    sta tear_array.1.pos.y,X
+    sta.w tear_array.1.pos.x,X
+    lda.w player.pos.y
+    sta.w tear_array.1.pos.y,X
     rts
 @horizontal_skip:
-    lda player.pos.x
+    lda.w player.pos.x
     clc
     adc #256*4
-    sta tear_array.1.pos.x,X
-    lda player.pos.y
+    sta.w tear_array.1.pos.x,X
+    lda.w player.pos.y
     clc
-    adc #256*8
-    sta tear_array.1.pos.y,X
+    adc.w #256*8
+    sta.w tear_array.1.pos.y,X
     rts
 
 UpdateTears:
     rep #$30 ; 16 bit AXY
     ldx #$0000
-    cpx tear_bytes_used
+    cpx.w tear_bytes_used
     beq @end
     jmp @iter
 @iter_remove:
     jsr RemoveTearSlot
     ; No ++X, but do check that this is the end of the array
-    cpx tear_bytes_used ; X != tear_bytes_used
+    cpx.w tear_bytes_used ; X != tear_bytes_used
     bcs @end
 @iter:
-    lda tear_array.1.lifetime,X
+    lda.w tear_array.1.lifetime,X
     dec A
     cmp #0 ; if lifetime == 0, then remove
     beq @iter_remove
-    sta tear_array.1.lifetime,X
-    lda tear_array.1.pos.x,X
+    sta.w tear_array.1.lifetime,X
+    lda.w tear_array.1.pos.x,X
     clc
-    adc tear_array.1.speed.x,X
-    sta tear_array.1.pos.x,X
-    lda tear_array.1.pos.y,X
+    adc.w tear_array.1.speed.x,X
+    sta.w tear_array.1.pos.x,X
+    lda.w tear_array.1.pos.y,X
     clc
-    adc tear_array.1.speed.y,X
-    sta tear_array.1.pos.y,X
+    adc.w tear_array.1.speed.y,X
+    sta.w tear_array.1.pos.y,X
     txa ; ++X
     clc
     adc #_sizeof_tear_t
     tax
-    cpx tear_bytes_used ; X < tear_bytes_used
+    cpx.w tear_bytes_used ; X < tear_bytes_used
     bcc @iter
 @end:
     rts
@@ -579,7 +579,7 @@ UpdateTears:
 ; if there are no available slots, the tear with the lowest life will be chosen
 GetTearSlot:
     rep #$30 ; 16 bit AXY
-    lda tear_bytes_used
+    lda.w tear_bytes_used
     cmp #TEAR_ARRAY_MAX_SIZE
     bcc @has_empty_slots
 ; no empty slots available:
@@ -589,7 +589,7 @@ GetTearSlot:
     ldx #0 ; x is current index
     ldy #0 ; Y is best index
 @iter_tears:
-    lda tear_array.1.lifetime,X
+    lda.w tear_array.1.lifetime,X
     cmp $00
     bcs @skip_store
     sta $00
@@ -611,7 +611,7 @@ GetTearSlot:
     tax
     clc
     adc #_sizeof_tear_t
-    sta tear_bytes_used
+    sta.w tear_bytes_used
     rts
 
 ; Remove the tear at the index X
@@ -619,31 +619,31 @@ GetTearSlot:
 RemoveTearSlot:
     rep #$30 ; 16 bit AXY
     ; decrement number of used tears
-    lda tear_bytes_used
+    lda.w tear_bytes_used
     sec
     sbc #_sizeof_tear_t
-    sta tear_bytes_used
+    sta.w tear_bytes_used
     ; Check if X is the last available tear slot
-    cpx tear_bytes_used
+    cpx.w tear_bytes_used
     beq @skip_copy
     ; copy last tear slot to slot being removed
-    ldy tear_bytes_used
-    lda tear_array+0,Y
-    sta tear_array+0,X
-    lda tear_array+2,Y
-    sta tear_array+2,X
-    lda tear_array+4,Y
-    sta tear_array+4,X
-    lda tear_array+6,Y
-    sta tear_array+6,X
-    lda tear_array+8,Y
-    sta tear_array+8,X
-    lda tear_array+10,Y
-    sta tear_array+10,X
-    lda tear_array+12,Y
-    sta tear_array+12,X
-    lda tear_array+14,Y
-    sta tear_array+14,X
+    ldy.w tear_bytes_used
+    lda.w tear_array+0,Y
+    sta.w tear_array+0,X
+    lda.w tear_array+2,Y
+    sta.w tear_array+2,X
+    lda.w tear_array+4,Y
+    sta.w tear_array+4,X
+    lda.w tear_array+6,Y
+    sta.w tear_array+6,X
+    lda.w tear_array+8,Y
+    sta.w tear_array+8,X
+    lda.w tear_array+10,Y
+    sta.w tear_array+10,X
+    lda.w tear_array+12,Y
+    sta.w tear_array+12,X
+    lda.w tear_array+14,Y
+    sta.w tear_array+14,X
 @skip_copy:
     rts
 
@@ -828,34 +828,34 @@ EmptySpriteData:
         .db $00 $F0 $00 $00
     .ENDR
 DefaultUiData:
-    .dw $0000 $0C02 $0C03 $0C03 $4C02
-    .dw $0C20 $0830 $0830 $0830 $0830 $0831 $0832
+    .dw $0000 $2C02 $2C03 $2C03 $6C02
+    .dw $2C20 $2830 $2830 $2830 $2830 $2831 $2832
     .REPT 20
         .dw $0000
     .ENDR
-    .dw $0000 $0C12 $0000 $0000 $4C12
-    .dw $0C21 $0832 $0832 $0C30 $0C33 $0000 $0000
+    .dw $0000 $2C12 $0000 $0000 $6C12
+    .dw $2C21 $2832 $2832 $2C30 $2C33 $0000 $0000
     .REPT 20
         .dw $0000
     .ENDR
-    .dw $0000 $0C12 $0000 $0000 $4C12
-    .dw $0C22
+    .dw $0000 $2C12 $0000 $0000 $6C12
+    .dw $2C22
     .REPT 26
         .dw $0000
     .ENDR
-    .dw $0000 $8C02 $8C03 $8C03 $CC02
+    .dw $0000 $AC02 $AC03 $AC03 $EC02
     .dw $0000
     .REPT 26
         .dw $0000
     .ENDR
     @end:
 MapTiles:
-    .dw $0000 ; empty
-    .dw $0C08 ; normal
-    .dw $0C09 ; item
-    .dw $0C0A ; boss
-    .dw $0C0B ; shop
-    .dw $080C ; sacrifice
-    .dw $080D ; curse
-    .dw $0C0E ; secret
+    .dw $2000 ; empty
+    .dw $2C08 ; normal
+    .dw $2C09 ; item
+    .dw $2C0A ; boss
+    .dw $2C0B ; shop
+    .dw $280C ; sacrifice
+    .dw $280D ; curse
+    .dw $2C0E ; secret
 .ENDS

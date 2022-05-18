@@ -78,5 +78,35 @@
     plb
 .ENDM
 
+.MACRO .ChangeDataBank ARGS bank
+    PHB
+    LDA.B #bank
+    STA.B $01,s
+    PLB
+.ENDM
+
+.MACRO .ClearWRam ARGS ADDRL, NBYTES
+    rep #$20 ; 16 bit A
+    lda #NBYTES
+    sta DMA0_SIZE
+    lda #loword(EmptyData)
+    sta DMA0_SRCL
+    lda #loword(ADDRL)
+    sta WMADDL
+    sep #$20 ; 8 bit A
+    lda #bankbyte(EmptyData)
+    sta DMA0_SRCH
+    lda #bankbyte(ADDRL)
+    sta WMADDH
+    ; Absolute address, no increment, 1 byte at a time
+    lda #%00001000
+    sta DMA0_CTL
+    ; Write to WRAM
+    lda #$80
+    sta DMA0_DEST
+    lda #$01
+    sta MDMAEN
+.ENDM
+
 ; bcs: A >= arg
 ; bcc: A < arg

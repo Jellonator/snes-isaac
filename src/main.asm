@@ -1,11 +1,18 @@
 .include "Header.inc"
 .include "Snes_Init.asm"
+.include "defines.inc"
+.include "structs.inc"
 .include "layout.inc"
 .include "util.inc"
 .include "registers.inc"
 
-.bank 0
-.section "MainCode"
+.include "rng.inc"
+.include "mapgenerator.inc"
+.include "render.inc"
+
+.BANK $00
+.ORGA $8000
+.SECTION "MainCode" FORCE
 
 Start:
     sei ; Disabled interrupts
@@ -22,51 +29,52 @@ Start2:
     ; Set tilemap mode 2
     lda #%00100001
     sta BGMODE
-    lda #%00100000 ; BG1 tile data at $2000
+    lda #%00100100 ; BG1 tile data at $2400
     sta BG1SC
-    lda #%00100100 ; BG2 tile data at $2400 (>>10)
+    lda #%00101000 ; BG2 tile data at $2800 (>>10)
     sta BG2SC
-    lda #%00101000 ; BG3 tile data at $2800
+    lda #%00101100 ; BG3 tile data at $2C00
     sta BG3SC
     lda #%01010011 ; character data: BG1=$3000, BG2=$5000 (>>12)
     sta BG12NBA
-    lda #%01010011 ; character data: BG3=$3000
+    lda #%00000010 ; character data: BG3=$2000 (essentially $2000-$2400
+                   ; for character data, but can technically access up to $4000)
     sta BG34NBA
     ; Set up sprite mode
     lda #%00000000
     sta OBSEL
     ; copy palettes to CGRAM
-    PEA $8001
+    PEA $8000 + bankbyte(palettes@isaac.w)
     PEA palettes@isaac.w
     jsl CopyPalette
     rep #$20 ; 16 bit A
     PLA
     PLA
-    PEA $9001
+    PEA $9000 + bankbyte(palettes@tear.w)
     PEA palettes@tear.w
     jsl CopyPalette
     rep #$20 ; 16 bit A
     PLA
     PLA
-    PEA $0001
+    PEA $0000 + bankbyte(palettes@basement.w)
     PEA palettes@basement.w
     jsl CopyPalette
     rep #$20 ; 16 bit A
     PLA
     PLA
-    PEA $2001
+    PEA $2000 + bankbyte(palettes@ui_light.w)
     PEA palettes@ui_light.w
     jsl CopyPalette
     rep #$20 ; 16 bit A
     PLA
     PLA
-    PEA $3001
+    PEA $3000 + bankbyte(palettes@ui_gold.w)
     PEA palettes@ui_gold.w
     jsl CopyPalette
     rep #$20 ; 16 bit A
     PLA
     PLA
-    PEA $4001
+    PEA $4000 + bankbyte(palettes@ui_dark.w)
     PEA palettes@ui_dark.w
     jsl CopyPalette
     rep #$20 ; 16 bit A
@@ -121,6 +129,34 @@ Start2:
     pla
     pla
     pla
+    ; copy font to VRAM
+    pea BG1_CHARACTER_BASE_ADDR + 16*4*8*2
+    pea 16*3
+    sep #$20 ; 8 bit A
+    lda #bankbyte(sprites@UI_font)
+    pha
+    pea sprites@UI_font
+    jsl CopySprite
+    sep #$20 ; 8 bit A
+    pla
+    rep #$20 ; 16 bit A
+    pla
+    pla
+    pla
+    ; copy UI numbers to VRAM
+    pea BG1_CHARACTER_BASE_ADDR + 16*7*8*2
+    pea 16*1
+    sep #$20 ; 8 bit A
+    lda #bankbyte(sprites@UI_numbers)
+    pha
+    pea sprites@UI_numbers
+    jsl CopySprite
+    sep #$20 ; 8 bit A
+    pla
+    rep #$20 ; 16 bit A
+    pla
+    pla
+    pla
     ; copy tear to VRAM
     pea 16*32 ; VRAM address
     pea 4 ; num tiles
@@ -142,8 +178,7 @@ Start2:
     rep #$20 ; 16 bit A
     pla
     pla
-    jsl ResetUIData
-    jsl UploadUiToVRam
+    jsl InitializeUI
     ; Set up tilemap. First, write empty in all slots
     rep #$30 ; 16 bit X, Y, Z
     lda #BG2_TILE_BASE_ADDR
@@ -195,6 +230,8 @@ tile_data_loop:
     sta $2110
     lda #$FF
     sta $2110
+    rep #$30
+    jsl RngGameInitialize
     jsr PlayerInit
     jmp UpdateLoop
 
@@ -204,95 +241,19 @@ UpdateLoop:
     inc is_game_update_running
     jsr PlayerUpdate
     jsr UpdateTears
+    jsr UpdateRest
     rep #$30 ; 16 bit AXY
     stz is_game_update_running
     jmp UpdateLoop
 
-VBlank:
-    jml VBlank2
-VBlank2:
-    rep #$30
-    pha
-    lda is_game_update_running
-    beq @continuevblank
-    pla
-    rti
-@continuevblank:
-    pla
-    ; Since VBlank only actually executes while the game isn't updating, we
-    ; don't have to worry about storing previous state here
-    sep #$20 ; 8 bit A
-    lda #%10000000
-    sta INIDISP
-    sep #$30 ; 16 bit AXY
-    lda $4210
-
-    jsr ReadInput
-
-    ; reset sprites
-    .ResetSpriteExt
-
-    ; Push player sprites
-    sep #$30 ; 8 bit axy
-    stz $2102
-    stz $2103
-    lda player.pos.x + 1
-    sta $2104
-    lda player.pos.y + 1
-    sec
-    sbc #10
-    sta $2104
-    stz $2104
-    lda #%00110000
-    sta $2104
-    lda player.pos.x + 1
-    sta $2104
-    lda player.pos.y + 1
-    sta $2104
-    lda #$02
-    sta $2104
-    lda #%00100000
-    sta $2104
-    lda #2
-    jsl PushSpriteExt
-    lda #2
-    jsl PushSpriteExt
-    jsr DrawTears
-    ; clear all sprites after last used sprite
-    sep #$30 ; 8 bit axy
-    lda last_used_sprite
-    cpx #128
-    beq @clear_sprites_end
-
-    rep #$20 ; 16 bit A
-    and #$FF
-    asl
-    asl
-    sta $00
-    lda #EmptySpriteData
-    sta DMA0_SRCL
-    lda #513 ; 512 - num_sprites*4
-    clc
-    sbc $00
-    sta DMA0_SIZE 
-    sep #$20 ; 8 bit A
-    lda #$82
-    sta DMA0_SRCH ; source bank
-    stz DMA0_CTL ; write to OAMRAM, absolute address, auto increment, 1 byte at a time
-    lda #$04
-    sta DMA0_DEST ; Write to OAMRAM
-    lda #$01
-    sta MDMAEN ; Begin transfer
-@clear_sprites_end:
-    ; copy ext data
-    .REPT 32 INDEX i
-        lda sprite_data_ext+i
-        sta $2104
-    .ENDR
-    sep #$20 ; 8 bit A
-    lda #%00001111
-    sta INIDISP
-    rti
+UpdateRest:
+    rep #$30 ; 16 bit AXY
+    lda joy1press
+    BIT #JOY_SELECT
+    beq @skip_regenerate_map
+    jsl BeginMapGeneration
+@skip_regenerate_map:
+    rts
 
 PlayerInit:
     rep #$20 ; 16 bit A
@@ -580,35 +541,6 @@ PlayerShootTear:
     sta tear_array.1.pos.y,X
     rts
 
-DrawTears:
-    ; rts
-    rep #$30 ; 16 bit mode
-    ldx tear_bytes_used
-    cpx #0
-    beq @end
-@iter:
-    sep #$20 ; 8 bit A, 16 bit X
-    lda tear_array.1.pos.x+1-_sizeof_tear_t,X
-    sta $2104
-    lda tear_array.1.pos.y+1-_sizeof_tear_t,X
-    sec
-    sbc #10
-    sta $2104
-    lda #$21
-    sta $2104
-    lda #%00110010
-    sta $2104
-    phx
-    jsl PushSpriteExtZero
-    rep #$30 ; 16 bit mode
-    pla
-    sec
-    sbc #_sizeof_tear_t
-    tax
-    bne @iter
-@end:
-    rts
-
 UpdateTears:
     rep #$30 ; 16 bit AXY
     ldx #$0000
@@ -802,7 +734,7 @@ ClearVMem:
     lda $06,s
     sta $2116 ; VRAM address
     sep #$20 ; 8 bit A
-    lda bankbyte(EmptyData)
+    lda #bankbyte(EmptyData)
     sta DMA0_SRCH ; source bank
     lda #$80
     sta $2115 ; VRAM address increment flags
@@ -814,37 +746,45 @@ ClearVMem:
     sta MDMAEN ; begin transfer
     rtl
 
-ResetUIData:
+; Clear a section of WRAM
+; push order:
+;   wram address [dw] $07
+;   wram bank    [db] $06
+;   num bytes    [dw] $04
+; MUST call with jsl
+ClearWRam:
     rep #$20 ; 16 bit A
-    lda #_sizeof_uiData
-    sta DMA0_SIZE ; number of bytes
-    lda #loword(DefaultUiData)
-    sta DMA0_SRCL ; source address
-    lda #loword(uiData)
-    sta WMADDL ; WRAM address
+    lda $04,s
+    sta DMA0_SIZE
+    lda #loword(EmptyData)
+    sta DMA0_SRCL
+    lda $07,s
+    sta WMADDL
     sep #$20 ; 8 bit A
-    lda #bankbyte(DefaultUiData)
-    sta DMA0_SRCH ; source bank
-    lda #bankbyte(uiData)
+    lda #bankbyte(EmptyData)
+    sta DMA0_SRCH
+    lda $06,s
     sta WMADDH
-    lda #%00000000
-    sta DMA0_CTL ; write to WRAM, absolute address, auto increment, 1 byte at a time
+    ; Absolute address, no increment, 1 byte at a time
+    lda #%00001000
+    sta DMA0_CTL
+    ; Write to WRAM
     lda #$80
-    sta DMA0_DEST ; Write to VRAM
+    sta DMA0_DEST
     lda #$01
-    sta MDMAEN ; begin transfer
+    sta MDMAEN
     rtl
 
-UploadUiToVRam:
+InitializeUI:
     rep #$20 ; 16 bit A
-    lda #_sizeof_uiData
+    lda #_sizeof_DefaultUiData
     sta DMA0_SIZE ; number of bytes
-    lda #loword(uiData)
+    lda #loword(DefaultUiData)
     sta DMA0_SRCL ; source address
     lda #BG1_TILE_BASE_ADDR
     sta $2116 ; VRAM address
     sep #$20 ; 8 bit A
-    lda #bankbyte(uiData)
+    lda #bankbyte(DefaultUiData)
     sta DMA0_SRCH ; source bank
     lda #$80
     sta $2115 ; VRAM address increment flags
@@ -854,41 +794,6 @@ UploadUiToVRam:
     sta DMA0_DEST ; Write to VRAM
     lda #$01
     sta MDMAEN ; begin transfer
-    rtl
-
-PushSpriteExtZero:
-    sep #$30 ; 8 bit axy
-    lda last_used_sprite
-    inc A
-    sta last_used_sprite
-    rtl
-
-PushSpriteExt:
-    sta $00
-    sep #$30 ; 8 bit axy
-    lda last_used_sprite
-    lsr
-    lsr
-    tax
-    lda last_used_sprite
-    bit #2
-    beq @skip2
-    .REPT 4
-        asl $00
-    .ENDR
-@skip2:
-    bit #1
-    beq @skip1
-    .REPT 2
-        asl $00
-    .ENDR 
-@skip1:
-    lda $00
-    ora sprite_data_ext,X
-    sta sprite_data_ext,X
-    lda last_used_sprite
-    inc A
-    sta last_used_sprite
     rtl
 
 TileData:
@@ -907,17 +812,17 @@ TileData:
 .dw $0022 $8024 $8026 $8026 $8026 $8026 $8026 $802C $802E $8026 $8026 $8026 $8026 $8026 $C024 $4022
 .dw $8002 $8004 $8004 $8004 $8004 $8004 $8004 $800C $800E $8004 $8004 $8004 $8004 $8004 $8004 $C002
 
-.ends
+.ENDS
 
-.bank 1
-.section "Graphics"
+.bank $40
+.SECTION "Graphics"
 .include "assets.inc"
-.ends
+.ENDS
 
-.bank 2
-.section "ExtraData"
+.bank $41
+.SECTION "ExtraData"
 EmptyData:
-    .dw $00
+    .dw $0000
 EmptySpriteData:
     .REPT 128
         .db $00 $F0 $00 $00
@@ -943,4 +848,14 @@ DefaultUiData:
     .REPT 26
         .dw $0000
     .ENDR
-.ends
+    @end:
+MapTiles:
+    .dw $0000 ; empty
+    .dw $0C08 ; normal
+    .dw $0C09 ; item
+    .dw $0C0A ; boss
+    .dw $0C0B ; shop
+    .dw $080C ; sacrifice
+    .dw $080D ; curse
+    .dw $0C0E ; secret
+.ENDS

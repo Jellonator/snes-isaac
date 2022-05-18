@@ -18,5 +18,15 @@
         "name": "UI",
         "src": "assets/sprites/UI.raw",
         "depth": 16
+    },
+    {
+        "name": "UI_numbers",
+        "src": "assets/sprites/uinumbers.raw",
+        "depth": 16
+    },
+    {
+        "name": "UI_font",
+        "src": "assets/sprites/font.raw",
+        "depth": 16
     }
 ]

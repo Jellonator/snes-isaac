@@ -11,8 +11,9 @@
 VBlank:
     jml VBlank2
 VBlank2:
-    rep #$30
+    rep #$30 ; 16 bit AXY
     pha
+    .ChangeDataBank $00
     lda.w is_game_update_running
     beq @continuevblank
     pla

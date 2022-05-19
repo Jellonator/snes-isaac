@@ -1,7 +1,7 @@
 .define TEAR_ARRAY_MAX_COUNT 32
 .define TEAR_ARRAY_MAX_SIZE (TEAR_ARRAY_MAX_COUNT*_sizeof_tear_t)
 
-.RAMSECTION "V1" BANK 0 SLOT "MainMemory"
+.RAMSECTION "V1" BANK $7E SLOT "MainMemory"
     ; joypad inputs
     joy1raw dw
     joy1press dw

@@ -2,11 +2,11 @@
 .SECTION "MapGeneratorCode" FREE
 
 ; zeropage values
-.ENUM $0002
+.ENUM $0010
     start_pos INSTANCEOF maptilepos_t
-    mapgenNumAvailableRooms db
-    mapgenNumAvailableEndpointRooms db
-    mapgenAvailableRooms INSTANCEOF maptilepos_t MAX_MAP_SLOTS
+    mapgenNumAvailableTiles db
+    mapgenNumAvailableEndpointTiles db
+    mapgenAvailableTiles INSTANCEOF maptilepos_t MAX_MAP_SLOTS
 .ENDE
 
 ; Check if tile pos is valid; that is, Y<10
@@ -74,18 +74,44 @@
     bne label ; if mapTileTypeTable[X] == 0
 .ENDM
 
-; push tile in A to available rooms
-_PushTile:
+; Branch if tile is already in the available rooms table
+; Assumes tile is in X
+; Tile flag is stored in A
+.MACRO .BranchIfTileAlreadyInAvailableTilesX ARGS label
+    lda.w mapTileFlagsTable,X
+    bit #MAPTILE_AVAILABLE
+    bne label
+.ENDM
+
+; Removes the room at mapgenAvailableTiles[X]
+; Consumes Y and A
+_RemoveAvailableTileX:
     .ACCU 8
     .INDEX 8
-    ldx.w mapgenNumAvailableRooms
-    sta.w mapgenAvailableRooms,x
-    inx
-    stx.w mapgenNumAvailableRooms
+    ldy.b mapgenNumAvailableTiles
+    dey
+    sty.b mapgenNumAvailableTiles
+    lda.w mapgenAvailableTiles,Y
+    sta.b mapgenAvailableTiles,X
+    rts
+
+; push tile in X to available rooms
+; consumes A and Y
+_PushAvailableTileX:
+    .ACCU 8
+    .INDEX 8
+    ldy.b mapgenNumAvailableTiles
+    iny
+    stx.b mapgenAvailableTiles,Y
+    sty.b mapgenNumAvailableTiles
+    lda.w mapTileFlagsTable,X
+    ora #MAPTILE_AVAILABLE
+    sta.w mapTileFlagsTable,X
     rts
 
 ; Initialize the tile at X
-_AddTile:
+; consumes A
+_InitializeRoomX:
     .ACCU 8
     .INDEX 8
     lda #ROOMTYPE_NORMAL
@@ -94,14 +120,18 @@ _AddTile:
     ; TODO: get map tile slot
     rts
 
-_PushAdjacentEmptyTiles:
+; Push tiles adjacent to A
+; consumes X
+_PushAdjacentEmptyTilesA:
     .ACCU 8
     .INDEX 8
     .BranchIfTileOnRightBorderA @skipRight
         inc A
         tax
         .BranchIfTileFilledX @@skipPush
-            jsr _PushTile
+        .BranchIfTileAlreadyInAvailableTilesX @@skipPush
+            jsr _PushAvailableTileX
+            txa
         @@skipPush:
         dec A
     @skipRight:
@@ -109,7 +139,9 @@ _PushAdjacentEmptyTiles:
         dec A
         tax
         .BranchIfTileFilledX @@skipPush
-            jsr _PushTile
+        .BranchIfTileAlreadyInAvailableTilesX @@skipPush
+            jsr _PushAvailableTileX
+            txa
         @@skipPush:
         inc A
     @skipLeft:
@@ -118,7 +150,9 @@ _PushAdjacentEmptyTiles:
         adc #$10
         tax
         .BranchIfTileFilledX @@skipPush
-            jsr _PushTile
+        .BranchIfTileAlreadyInAvailableTilesX @@skipPush
+            jsr _PushAvailableTileX
+            txa
         @@skipPush:
         sec
         sbc #$10
@@ -128,7 +162,9 @@ _PushAdjacentEmptyTiles:
         sbc #$10
         tax
         .BranchIfTileFilledX @@skipPush
-            jsr _PushTile
+        .BranchIfTileAlreadyInAvailableTilesX @@skipPush
+            jsr _PushAvailableTileX
+            txa
         @@skipPush:
         clc
         adc #$10
@@ -141,14 +177,14 @@ BeginMapGeneration:
 @retry:
     jsr _ClearMap
     ; Map generator primarily operates on RAM, so we change data bank to $7E
-    .ChangeDataBank #$7E
+    .ChangeDataBank $7E
     ; First, choose starting tile
     jsl RngGeneratorUpdate4
     sep #$30 ; 8 bit AXY
     and #$07
     clc
     adc #4 ; X: [4-11]
-    sta start_pos
+    sta.b start_pos
     jsl RngGeneratorUpdate4
     sep #$30 ; 8 bit AXY
     and #$07
@@ -159,11 +195,47 @@ BeginMapGeneration:
     asl
     asl
     clc
-    adc start_pos
-    sta start_pos
+    adc.b start_pos
+    sta.b start_pos
     tax
-    jsr _AddTile
-    jsr _PushAdjacentEmptyTiles
+    jsr _InitializeRoomX
+    lda.b start_pos
+    jsr _PushAdjacentEmptyTilesA
+    ldy #16 ; make 10 tiles
+@loop_add_tiles: ; do {
+        ; First, get random tile
+        jsl RngGeneratorUpdate8
+        .ACCU 16 ; Rng changes A to 16
+            ; .ChangeDataBank $00
+            sta.l DIVU_DIVIDEND
+            sep #$30 ; 8 bit AXY
+            lda.b mapgenNumAvailableTiles
+            sta.l DIVU_DIVISOR
+            ; Have to wait 16 cycles for division to finish
+            dey ;  2
+            phy ; +3 = 5
+            ply ; +4 = 9
+            phy ; +3 = 12
+            nop
+            nop
+            lda.l DIVU_REMAINDER ; Only need low byte
+            ; .ChangeDataBank $7E
+        sta $04 ; $04 is index into mapgenAvailableTiles
+        ; Get tilepos_t
+        ldy $04
+        ldx.b mapgenAvailableTiles,Y
+        stx $05 ; $05 is tilepos_t
+        ; Remove available room
+        ldx $04
+        jsr _RemoveAvailableTileX
+        ; Push room
+        ldx $05
+        jsr _InitializeRoomX
+        lda $05
+        jsr _PushAdjacentEmptyTilesA
+    ply
+    cpy #0
+    bne @loop_add_tiles ; } while (--Y != 0);
 
     lda #$FF
     sta.w numTilesToUpdate
@@ -173,10 +245,10 @@ BeginMapGeneration:
 
 _ClearMap:
     sep #$30 ; 8 bit
-    stz.w loword(numUsedMapSlots)
-    stz.w loword(numTilesToUpdate)
-    stz.w mapgenNumAvailableRooms
-    stz.w mapgenNumAvailableEndpointRooms
+    stz.w numUsedMapSlots
+    stz.w numTilesToUpdate
+    stz.b mapgenNumAvailableTiles
+    stz.b mapgenNumAvailableEndpointTiles
     .ClearWRam mapTileTypeTable, MAP_MAX_SIZE
     .ClearWRam mapTileFlagsTable, MAP_MAX_SIZE
     .ClearWRam mapTileSlotTable, MAP_MAX_SIZE

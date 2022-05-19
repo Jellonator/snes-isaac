@@ -83,6 +83,104 @@
     bne label
 .ENDM
 
+; i = 0, j = len(tiles)-1
+; while (i <= j) {
+;   if (isEndpoint(tiles[i]) {
+;       // i is endpoint, j may or may not be endpoint
+;       ++i;
+;   }
+;   else if (isEndpoint(tiles[j])) {
+;       // i is not endpoint, j is endpoint
+;       swap(&tiles[i], &tiles[j]);
+;       ++i;
+;       --j;
+;   }
+;   else {
+;       // i is not endpoint, j is not endpoint
+;       --j;
+;   }
+; }
+; if (isEndpoint(tiles[i])) {
+;   numEndpoints = i+1;
+; }
+; else {
+;   numEndpoints = i;
+; }
+_CalculateAvailableEndpointTiles:
+    .ACCU 8
+    .INDEX 8
+    stz.b mapgenNumAvailableEndpointTiles
+    lda.b mapgenNumAvailableTiles
+    beq @end
+    stz $00 ; $00=i
+    dec A
+    ; beq @endloop ; len == 1
+    sta $01 ; $01=j
+@loop:
+    ; Count rooms adjacent to i
+    ldy $00
+    lda.w mapgenAvailableTiles,Y
+    jsr _CountAdjacentFilledRoomsA
+    ldy $03
+    cpy #1 ; Check that there is exactly ONE room next to i
+    beq @isEndpoint_i
+    ; Count rooms adjacent to j
+    ldy $01
+    lda.w mapgenAvailableTiles,Y
+    jsr _CountAdjacentFilledRoomsA
+    ldy $03
+    cpy #1 ; Check that there is exactly ONE room next to j
+    beq @isEndpoint_j
+    ; neither i nor j are endpoints
+    dec $01
+    jmp @continue
+@isEndpoint_i:
+    ; i is endpoint
+    inc.b mapgenNumAvailableEndpointTiles
+    inc $00
+    jmp @continue
+@isEndpoint_j:
+    ; j is endpoint but i is not, so swap and inc i/dec j
+    inc.b mapgenNumAvailableEndpointTiles
+    ldx $00
+    lda.b mapgenAvailableTiles,X
+    sta $07
+    ldx $01
+    lda.b mapgenAvailableTiles,X
+    sta $08
+    lda $07
+    ldx $01
+    sta.b mapgenAvailableTiles,X
+    lda $08
+    ldx $00
+    sta.b mapgenAvailableTiles,X
+    ; pha
+    ; lda.w mapgenAvailableTiles,Y
+    ; sta.b mapgenAvailableTiles,X
+    ; pla
+    ; sta.w mapgenAvailableTiles,Y
+    inc $00
+    dec $01
+    ; jmp @continue <- it is here in spirit
+@continue:
+    ; Repeat if (j >= i)
+    lda $00
+    cmp $01
+    bcc @loop
+@endloop:
+    ; lda $00
+    ; sta.b mapgenNumAvailableEndpointTiles
+    ; Count rooms adjacent to i
+    ldy $00
+    lda.w mapgenAvailableTiles,Y
+    jsr _CountAdjacentFilledRoomsA
+    ldy $03
+    cpy #1 ; Check that there is exactly ONE room next to i
+    bne @end
+    inc.b mapgenNumAvailableEndpointTiles
+@end:
+    rts
+
 ; Removes the room at mapgenAvailableTiles[X]
 ; Consumes Y and A
 _RemoveAvailableTileX:
@@ -101,8 +199,8 @@ _PushAvailableTileX:
     .ACCU 8
     .INDEX 8
     ldy.b mapgenNumAvailableTiles
-    iny
     stx.b mapgenAvailableTiles,Y
+    iny
     sty.b mapgenNumAvailableTiles
     lda.w mapTileFlagsTable,X
     ora #MAPTILE_AVAILABLE
@@ -120,6 +218,45 @@ _InitializeRoomX:
     ; TODO: get map tile slot
     rts
 
+; Count tiles adjacent to A
+; consumes X
+; Stores result into $03
+_CountAdjacentFilledRoomsA:
+    .ACCU 8
+    .INDEX 8
+    sta $02
+    stz $03
+    .BranchIfTileOnRightBorderA +
+        inc A
+        tax
+        .BranchIfTileEmptyX +
+            inc $03
+    +:
+    lda $02
+    .BranchIfTileOnLeftBorderA +
+        dec A
+        tax
+        .BranchIfTileEmptyX +
+            inc $03
+    +:
+    lda $02
+    .BranchIfTileOnBottomBorderA +
+        clc
+        adc #$10
+        tax
+        .BranchIfTileEmptyX +
+            inc $03
+    +:
+    lda $02
+    .BranchIfTileOnTopBorderA +
+        sec
+        sbc #$10
+        tax
+        .BranchIfTileEmptyX +
+            inc $03
+    +:
+    rts
+
 ; Push tiles adjacent to A
 ; consumes X
 _PushAdjacentEmptyTilesA:
@@ -131,8 +268,8 @@ _PushAdjacentEmptyTilesA:
         .BranchIfTileFilledX @@skipPush
         .BranchIfTileAlreadyInAvailableTilesX @@skipPush
             jsr _PushAvailableTileX
-            txa
         @@skipPush:
+        txa
         dec A
     @skipRight:
     .BranchIfTileOnLeftBorderA @skipLeft
@@ -141,8 +278,8 @@ _PushAdjacentEmptyTilesA:
         .BranchIfTileFilledX @@skipPush
         .BranchIfTileAlreadyInAvailableTilesX @@skipPush
             jsr _PushAvailableTileX
-            txa
         @@skipPush:
+        txa
         inc A
     @skipLeft:
     .BranchIfTileOnBottomBorderA @skipBottom
@@ -152,8 +289,8 @@ _PushAdjacentEmptyTilesA:
         .BranchIfTileFilledX @@skipPush
         .BranchIfTileAlreadyInAvailableTilesX @@skipPush
             jsr _PushAvailableTileX
-            txa
         @@skipPush:
+        txa
         sec
         sbc #$10
     @skipBottom:
@@ -164,8 +301,8 @@ _PushAdjacentEmptyTilesA:
         .BranchIfTileFilledX @@skipPush
         .BranchIfTileAlreadyInAvailableTilesX @@skipPush
             jsr _PushAvailableTileX
-            txa
         @@skipPush:
+        txa
         clc
         adc #$10
     @skipTop:
@@ -203,21 +340,24 @@ BeginMapGeneration:
     jsr _PushAdjacentEmptyTilesA
     ldy #16 ; make 10 tiles
 @loop_add_tiles: ; do {
+    phy
+        ; Determine endpoint tiles
+        jsr _CalculateAvailableEndpointTiles
         ; First, get random tile
         jsl RngGeneratorUpdate8
         .ACCU 16 ; Rng changes A to 16
             ; .ChangeDataBank $00
             sta.l DIVU_DIVIDEND
             sep #$30 ; 8 bit AXY
+            lda.b mapgenNumAvailableEndpointTiles
+            bne @dontUseAllTiles
             lda.b mapgenNumAvailableTiles
+        @dontUseAllTiles:
             sta.l DIVU_DIVISOR
             ; Have to wait 16 cycles for division to finish
-            dey ;  2
-            phy ; +3 = 5
-            ply ; +4 = 9
-            phy ; +3 = 12
-            nop
-            nop
+            .REPT 8
+                nop
+            .ENDR
             lda.l DIVU_REMAINDER ; Only need low byte
             ; .ChangeDataBank $7E
         sta $04 ; $04 is index into mapgenAvailableTiles
@@ -234,6 +374,7 @@ BeginMapGeneration:
         lda $05
         jsr _PushAdjacentEmptyTilesA
     ply
+    dey
     cpy #0
     bne @loop_add_tiles ; } while (--Y != 0);
 

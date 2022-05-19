@@ -257,6 +257,9 @@ UpdateRest:
 
 PlayerInit:
     rep #$20 ; 16 bit A
+    stz.w joy1held
+    stz.w joy1press
+    stz.w joy1raw
     lda #24
     sta.w player.stat_accel
     lda #256

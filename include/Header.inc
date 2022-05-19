@@ -6,6 +6,7 @@
     SLOT 2 $2000 $6000 "Registers" ; register slot
     SLOT 3 $8000 $8000 "ROM" ; ROM slot
     SLOT 4 $2000 $E000 "ExtraMemory" ; Non-mirrored RAM slot
+    SLOT 5 $0000 $8000 "SRAM" ; SRAM slot
 .ENDME
 
 .ROMBANKMAP

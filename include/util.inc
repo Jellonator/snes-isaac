@@ -79,10 +79,9 @@
 .ENDM
 
 .MACRO .ChangeDataBank ARGS bank
-    PHB
-    LDA.B #bank
-    STA.B $01,s
-    PLB
+    pea bank + ($0100*(bank))
+    plb
+    plb
 .ENDM
 
 .MACRO .ClearWRam ARGS ADDRL, NBYTES

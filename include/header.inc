@@ -1,4 +1,3 @@
-
 .MEMORYMAP
     DEFAULTSLOT 3
     SLOT 0 $0000 $0100 "ZeroMemory" ; Zero page RAM
@@ -32,28 +31,5 @@
     LICENSEECODE $00
     VERSION $00
 .ENDSNES
-
-.SNESNATIVEVECTOR
-    COP EmptyHandler
-    BRK EmptyHandler
-    ABORT EmptyHandler
-    NMI VBlank
-    IRQ EmptyHandler
-.ENDNATIVEVECTOR
-
-.SNESEMUVECTOR
-    COP EmptyHandler
-    ABORT EmptyHandler
-    NMI EmptyHandler
-    RESET Start
-    IRQBRK EmptyHandler
-.ENDEMUVECTOR
-
-.BANK $00 SLOT "ROM"
-.ORG $0000
-.SECTION "EmptyVectors" SEMIFREE
-EmptyHandler:
-    rti
-.ENDS
 
 .EMPTYFILL $00

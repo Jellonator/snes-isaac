@@ -338,7 +338,7 @@ BeginMapGeneration:
     jsr _InitializeRoomX
     lda.b start_pos
     jsr _PushAdjacentEmptyTilesA
-    ldy #16 ; make 10 tiles
+    ldy #64
 @loop_add_tiles: ; do {
     phy
         ; Determine endpoint tiles

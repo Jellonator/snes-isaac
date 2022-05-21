@@ -44,7 +44,7 @@ VBlank2:
     sbc #10
     sta $2104
     stz $2104
-    lda #%00100000
+    lda #%00101000
     sta $2104
     lda.w player.pos.x + 1
     sta $2104
@@ -52,7 +52,7 @@ VBlank2:
     sta $2104
     lda #$02
     sta $2104
-    lda #%00100000
+    lda #%00101000
     sta $2104
     lda #2
     jsl PushSpriteExt
@@ -145,7 +145,7 @@ DrawTears:
     sta $2104
     lda #$21
     sta $2104
-    lda #%00100010
+    lda #%00101010
     sta $2104
     phx
     jsl PushSpriteExtZero

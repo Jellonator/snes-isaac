@@ -1,2 +1,5 @@
 [objects]
 obj/main.obj
+obj/init.obj
+obj/player.obj
+obj/layout.obj

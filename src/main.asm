@@ -44,13 +44,13 @@ Start2:
     lda #%00000000
     sta OBSEL
     ; copy palettes to CGRAM
-    PEA $8000 + bankbyte(palettes@isaac.w)
+    PEA $C000 + bankbyte(palettes@isaac.w)
     PEA palettes@isaac.w
     jsl CopyPalette
     rep #$20 ; 16 bit A
     PLA
     PLA
-    PEA $9000 + bankbyte(palettes@tear.w)
+    PEA $D000 + bankbyte(palettes@tear.w)
     PEA palettes@tear.w
     jsl CopyPalette
     rep #$20 ; 16 bit A
@@ -217,9 +217,30 @@ tile_data_loop:
     cpy #$0300 ; 32 * 12 tiles
     bne tile_data_loop
     sep #$30 ; 8 bit X, Y, Z
-    ; show sprites and BG1/BG2
+    ; show sprites and BG2 on main screen
     lda #%00010011
     sta SCRNDESTM
+    ; show BG1 on sub screen
+    lda #%00000001
+    sta SCRNDESTS
+    ; Setup color math and windowing
+    lda #%00000010
+    sta CGWSEL
+    lda #%01110111
+    sta CGADSUB
+    lda #%00000001
+    sta SCRNDESTMW
+    stz SCRNDESTSW
+    stz WH0
+    lda #$80
+    sta WH1
+    sta WH2
+    lda #$FF
+    sta WH3
+    stz W34SEL
+    stz WOBJSEL
+    lda #%00001011
+    sta W12SEL
     ; re-enable rendering
     lda #%00001111
     sta $2100

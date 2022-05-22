@@ -1,11 +1,13 @@
 .MEMORYMAP
     DEFAULTSLOT 3
     SLOT 0 $0000 $0100 "ZeroMemory" ; Zero page RAM
-    SLOT 1 $0100 $1E00 "MainMemory" ; RAM mirror slot
+    SLOT 1 $0100 $1D00 "SharedMemory" ; RAM mirror slot
     SLOT 2 $2000 $6000 "Registers" ; register slot
     SLOT 3 $8000 $8000 "ROM" ; ROM slot
     SLOT 4 $2000 $E000 "ExtraMemory" ; Non-mirrored RAM slot
-    SLOT 5 $0000 $8000 "SRAM" ; SRAM slot
+    SLOT 5 $0000 $10000 "FullMemory" ; Full RAM slot
+    SLOT 6 $0000 $8000 "SRAM" ; SRAM slot
+    SLOT 7 $1F00 $0100 "Stack" ; Stack slot, ensuring at least 256 bytes reserved for stack
 .ENDME
 
 .ROMBANKMAP

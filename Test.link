@@ -3,3 +3,6 @@ obj/main.obj
 obj/init.obj
 obj/player.obj
 obj/layout.obj
+obj/mapgenerator.obj
+obj/render.obj
+obj/rng.obj

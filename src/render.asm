@@ -1,4 +1,6 @@
-.BANK 0 SLOT "ROM"
+.include "base.inc"
+
+.BANK $00 SLOT "ROM"
 .SECTION "RENDER" FREE
 
 .MACRO .ResetSpriteExt
@@ -27,8 +29,6 @@ VBlank2:
     sta INIDISP
     sep #$30 ; 16 bit AXY
     lda $4210
-
-    jsr ReadInput
 
     ; reset sprites
     .ResetSpriteExt
@@ -101,6 +101,7 @@ VBlank2:
     sep #$20 ; 8 bit A
     lda #%00001111
     sta INIDISP
+    jsr ReadInput
     rti
 
 UpdateEntireMinimap:

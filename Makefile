@@ -8,10 +8,18 @@ AFLAGS   := -I include
 ALDFLAGS := -S
 PY       := python3
 
-SOURCES  := main.asm init.asm player.asm layout.asm
+SOURCES  := main.asm\
+			init.asm\
+			player.asm\
+			layout.asm\
+			mapgenerator.asm\
+			render.asm\
+			rng.asm
+
 OBJECTS  := $(SOURCES:%.asm=$(OBJDIR)/%.obj)
 PALETTES := $(wildcard assets/palettes/*.hex)
 SPRITES  := $(wildcard assets/sprites/*.raw)
+INCLUDES := $(wildcard include/*.inc) include/assets.inc
 
 Test.smc: Test.link $(OBJECTS)
 	mkdir -p $(BINDIR)
@@ -23,7 +31,7 @@ include/assets.inc: $(PALETTES) $(SPRITES) assets/palettes.json assets/sprites.j
 	mkdir -p include/sprites/
 	$(PY) scripts/assetimport.py
 
-$(OBJDIR)/%.obj: $(SRCDIR)/%.asm include/assets.inc
+$(OBJDIR)/%.obj: $(SRCDIR)/%.asm $(INCLUDES)
 	mkdir -p $(OBJDIR)
 	$(AC) $(AFLAGS) -o $@ $<
 
@@ -34,8 +42,3 @@ clean:
 	rm -rf include/palettes/
 	rm -rf include/sprites/
 	rm include/assets.inc
-
-.phony: print
-print:
-	echo $(SOURCES)
-	echo $(OBJECTS)

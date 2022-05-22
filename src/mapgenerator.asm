@@ -1,4 +1,6 @@
-.BANK 1 SLOT "ROM"
+.include "base.inc"
+
+.BANK $01 SLOT "ROM"
 .SECTION "MapGeneratorCode" FREE
 
 ; zeropage values

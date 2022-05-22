@@ -1,4 +1,6 @@
-.BANK 0 SLOT "ROM"
+.include "base.inc"
+
+.BANK $00 SLOT "ROM"
 .SECTION "RNG" FREE
 
 ; macro for loop unrolling

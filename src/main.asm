@@ -1,9 +1,5 @@
 .include "base.inc"
 
-.include "rng.inc"
-.include "mapgenerator.inc"
-.include "render.inc"
-
 .BANK $00 SLOT "ROM"
 .ORG $0000
 .SECTION "MainCode" FORCE

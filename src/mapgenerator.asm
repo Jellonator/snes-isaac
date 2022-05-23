@@ -313,10 +313,10 @@ _PushAdjacentEmptyTilesA:
 BeginMapGeneration:
     phb ; push Databank
     sep #$30 ; 8 bit
-@retry:
-    jsr _ClearMap
     ; Map generator primarily operates on RAM, so we change data bank to $7E
     .ChangeDataBank $7E
+@retry:
+    jsr _ClearMap
     ; First, choose starting tile
     jsl RngGeneratorUpdate4
     sep #$30 ; 8 bit AXY
@@ -387,14 +387,18 @@ BeginMapGeneration:
     rtl
 
 _ClearMap:
+    phd
+    pea $4300
+    pld
     sep #$30 ; 8 bit
     stz.w numUsedMapSlots
     stz.w numTilesToUpdate
-    stz.b mapgenNumAvailableTiles
-    stz.b mapgenNumAvailableEndpointTiles
-    .ClearWRam mapTileTypeTable, MAP_MAX_SIZE
-    .ClearWRam mapTileFlagsTable, MAP_MAX_SIZE
-    .ClearWRam mapTileSlotTable, MAP_MAX_SIZE
+    stz.w mapgenNumAvailableTiles
+    stz.w mapgenNumAvailableEndpointTiles
+    .ClearWRam_ZP mapTileTypeTable, MAP_MAX_SIZE
+    .ClearWRam_ZP mapTileFlagsTable, MAP_MAX_SIZE
+    .ClearWRam_ZP mapTileSlotTable, MAP_MAX_SIZE
+    pld
     rts
 
 .ENDS

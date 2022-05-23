@@ -22,6 +22,13 @@
     high dw
 .ENDST
 
+.STRUCT object_t
+    pos_x db
+    pos_y db
+    tileid db
+    flags db ; vhoopppN
+.ENDST
+
 .ENUMID 0
 .ENUMID HEALTH_NULL
 .ENUMID HEALTH_REDHEART_EMPTY

@@ -107,5 +107,93 @@
     sta MDMAEN
 .ENDM
 
+.MACRO .ClearWRam_ZP ARGS ADDRL, NBYTES
+    rep #$20 ; 16 bit A
+    lda #NBYTES
+    sta.b <DMA0_SIZE
+    lda #loword(EmptyData)
+    sta.b <DMA0_SRCL
+    lda #loword(ADDRL)
+    sta.l WMADDL
+    sep #$20 ; 8 bit A
+    lda #bankbyte(EmptyData)
+    sta.b <DMA0_SRCH
+    lda #bankbyte(ADDRL)
+    sta.l WMADDH
+    ; Absolute address, no increment, 1 byte at a time
+    lda #%00001000
+    sta.b <DMA0_CTL
+    ; Write to WRAM
+    lda #$80
+    sta.b <DMA0_DEST
+    lda #$01
+    sta.l MDMAEN
+.ENDM
+
+.MACRO .InitializeObjectIndices
+    stz.w objectIndex
+.ENDM
+
+.MACRO .SetCurrentObjectS
+    .BREAKPOINT
+    lda.w objectIndex
+    lsr
+    lsr
+    tay
+    and #3
+    tax
+    tya
+    lsr
+    lsr
+    tay
+    lda.l SpriteIndexToExtMaskS,X
+    and #$FF
+    ora.w objectDataExt,Y
+    sta.w objectDataExt,Y
+.ENDM
+
+.MACRO .SetCurrentObjectX
+    lda.w objectIndex
+    lsr
+    lsr
+    tay
+    and #3
+    tax
+    tya
+    lsr
+    lsr
+    tay
+    lda.l SpriteIndexToExtMaskX,X
+    and #$FF
+    ora.w objectDataExt,Y
+    sta.w objectDataExt,Y
+.ENDM
+
+.MACRO .SetCurrentObjectXS
+    lda.w objectIndex
+    lsr
+    lsr
+    tay
+    and #3
+    tax
+    tya
+    lsr
+    lsr
+    tay
+    lda.l SpriteIndexToExtMaskXS,X
+    and #$FF
+    ora.w objectDataExt,Y
+    sta.w objectDataExt,Y
+.ENDM
+
+.MACRO .IncrementObjectIndex
+    ldx.w objectIndex
+    inx
+    inx
+    inx
+    inx
+    stx.w objectIndex
+.ENDM
+
 ; bcs: A >= arg
 ; bcc: A < arg

@@ -3,6 +3,30 @@
 .BANK $00 SLOT "ROM"
 .SECTION "Player" FREE
 
+PlayerInit:
+    rep #$20 ; 16 bit A
+    stz.w joy1held
+    stz.w joy1press
+    stz.w joy1raw
+    lda #24
+    sta.w player.stat_accel
+    lda #256
+    sta.w player.stat_speed
+    lda #24
+    sta.w player.stat_tear_delay
+    lda #$0100
+    sta.w player.stat_tear_speed
+    lda #0
+    sta.w player.speed.x
+    lda #0
+    sta.w player.speed.y
+    lda #((32 + 6 * 16 - 8) * 256)
+    sta.w player.pos.x
+    lda #((64 + 4 * 16 - 8) * 256)
+    sta.w player.pos.y
+    stz.w tear_bytes_used
+    rts
+
 PlayerUpdate:
     rep #$30 ; 16 bit AXY
 
@@ -136,6 +160,26 @@ PlayerUpdate:
     sta.w player.tear_timer
 @end_tear_code:
     sep #$30 ; 8 bit AXY
+    ; update render data
+    lda.w player.pos.x+1
+    sta.w objectData.1.pos_x
+    sta.w objectData.2.pos_x
+    lda.w player.pos.y+1
+    sta.w objectData.2.pos_y
+    sec
+    sbc #10
+    sta.w objectData.1.pos_y
+    stz.w objectData.1.tileid
+    lda #$02
+    sta.w objectData.2.tileid
+    lda #%00101000
+    sta.w objectData.1.flags
+    sta.w objectData.2.flags
+    rep #$30 ; 16 bit AXY
+    .SetCurrentObjectS
+    .IncrementObjectIndex
+    .SetCurrentObjectS
+    .IncrementObjectIndex
     rts
 
 PlayerShootTear:
@@ -243,8 +287,6 @@ PlayerShootTear:
     sta.w tear_array.1.pos.y,X
     rts
 
-
-
 UpdateTears:
     rep #$30 ; 16 bit AXY
     ldx #$0000
@@ -270,6 +312,21 @@ UpdateTears:
     clc
     adc.w tear_array.1.speed.y,X
     sta.w tear_array.1.pos.y,X
+    ; send to OAM
+    sep #$20 ; 8A, 16XY
+    ldy.w objectIndex
+    lda.w tear_array.1.pos.x+1,X
+    sta.w objectData.1.pos_x,Y
+    lda.w tear_array.1.pos.y+1,X
+    sta.w objectData.1.pos_y,Y
+    lda #$21
+    sta.w objectData.1.tileid,Y
+    lda #%00101010
+    sta.w objectData.1.flags,Y
+    rep #$20 ;16AXY
+    phx
+    .IncrementObjectIndex
+    plx
     txa ; ++X
     clc
     adc #_sizeof_tear_t

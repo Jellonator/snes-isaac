@@ -1,7 +1,7 @@
 OBJDIR   := obj
 BINDIR   := bin
 SRCDIR   := src
-BINFILE  := Test.smc
+BINFILE  := Test.sfc
 AC       := wla-65816
 ALINK    := wlalink
 AFLAGS   := -I include
@@ -23,7 +23,7 @@ INCLUDES := $(wildcard include/*.inc) include/assets.inc
 
 Test.smc: Test.link $(OBJECTS)
 	mkdir -p $(BINDIR)
-	$(ALINK) $(ALDFLAGS) Test.link bin/Test.smc
+	$(ALINK) $(ALDFLAGS) Test.link $(BINDIR)/$(BINFILE)
 
 include/assets.inc: $(PALETTES) $(SPRITES) assets/palettes.json assets/sprites.json
 	echo MAKING ASSET INC

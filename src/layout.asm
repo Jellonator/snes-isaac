@@ -28,17 +28,11 @@
     tear_array INSTANCEOF tear_t TEAR_ARRAY_MAX_COUNT
 .ENDS
 
-.STRUCT object_t
-    pos_x db
-    pos_y db
-    tileid db
-    flags db ; vhoopppN
-.ENDS
-
 ; Data that is transferred to OAM
-.RAMSECTION "OAMData"  BANK $7E SLOT "SharedMemory"
+.RAMSECTION "OAMData" BANK $7E SLOT "SharedMemory"
     objectData INSTANCEOF object_t 128
     objectDataExt dsb 32 ; 2 bits per object: Xs
+    objectIndex dw
 .ENDS
 
 .RAMSECTION "MapDataExt" BANK $7E SLOT "ExtraMemory" SEMIFREE

@@ -304,6 +304,8 @@ UpdateTears:
     cmp #0 ; if lifetime == 0, then remove
     beq @iter_remove
     sta.w tear_array.1.lifetime,X
+    AMINUI 8
+    sta.w $00
     lda.w tear_array.1.pos.x,X
     clc
     adc.w tear_array.1.speed.x,X
@@ -318,6 +320,8 @@ UpdateTears:
     lda.w tear_array.1.pos.x+1,X
     sta.w objectData.1.pos_x,Y
     lda.w tear_array.1.pos.y+1,X
+    sec
+    sbc $00
     sta.w objectData.1.pos_y,Y
     lda #$21
     sta.w objectData.1.tileid,Y

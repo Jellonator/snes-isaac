@@ -14,7 +14,9 @@ SOURCES  := main.asm\
 			layout.asm\
 			mapgenerator.asm\
 			render.asm\
-			rng.asm
+			rng.asm\
+			map.asm\
+			bindata.asm
 
 OBJECTS  := $(SOURCES:%.asm=$(OBJDIR)/%.obj)
 PALETTES := $(wildcard assets/palettes/*.hex)

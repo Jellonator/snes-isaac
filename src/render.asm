@@ -1,17 +1,16 @@
 .include "base.inc"
 
 .BANK $00 SLOT "ROM"
-.SECTION "RENDER" FREE
-
-; .MACRO .ResetSpriteExt
-;     stz.w last_used_sprite
-;     .REPT 32 INDEX i
-;         stz.w sprite_data_ext+i
-;     .ENDR
-; .ENDM
+.SECTION "RenderInterrupt" FREE
 
 VBlank:
     jml VBlank2
+
+.ENDS
+
+.BANK $01 SLOT "ROM"
+.SECTION "RenderCode" FREE
+
 VBlank2:
     rep #$30 ; 16 bit AXY
     pha
@@ -88,69 +87,6 @@ UpdateMinimapLine:
         iny
     .ENDR
     rts
-
-; DrawTears:
-;     rep #$30 ; 16 bit mode
-;     ldx.w tear_bytes_used
-;     cpx #0
-;     beq @end
-; @iter:
-;     sep #$20 ; 8 bit A, 16 bit X
-;     lda.w tear_array.1.pos.x+1-_sizeof_tear_t,X
-;     sta $2104
-;     lda.w tear_array.1.pos.y+1-_sizeof_tear_t,X
-;     sec
-;     sbc #10
-;     sta $2104
-;     lda #$21
-;     sta $2104
-;     lda #%00101010
-;     sta $2104
-;     phx
-;     jsl PushSpriteExtZero
-;     rep #$30 ; 16 bit mode
-;     pla
-;     sec
-;     sbc #_sizeof_tear_t
-;     tax
-;     bne @iter
-; @end:
-;     rts
-
-; PushSpriteExtZero:
-;     sep #$30 ; 8 bit axy
-;     lda.w last_used_sprite
-;     inc A
-;     sta.w last_used_sprite
-;     rtl
-
-; PushSpriteExt:
-;     sta $00
-;     sep #$30 ; 8 bit axy
-;     lda.w last_used_sprite
-;     lsr
-;     lsr
-;     tax
-;     lda.w last_used_sprite
-;     bit #2
-;     beq @skip2
-;     .REPT 4
-;         asl $00
-;     .ENDR
-; @skip2:
-;     bit #1
-;     beq @skip1
-;     .REPT 2
-;         asl $00
-;     .ENDR 
-; @skip1:
-;     lda $00
-;     ora.w sprite_data_ext,X
-;     sta.w sprite_data_ext,X
-;     lda.w last_used_sprite
-;     inc A
-;     sta.w last_used_sprite
-;     rtl
 
 ; Copy palette to CGRAM
 ; PUSH order:

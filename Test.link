@@ -6,3 +6,5 @@ obj/layout.obj
 obj/mapgenerator.obj
 obj/render.obj
 obj/rng.obj
+obj/bindata.obj
+obj/map.obj

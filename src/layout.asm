@@ -20,6 +20,8 @@
     numUsedMapSlots db
     mapTileTypeTable INSTANCEOF byte_t MAP_MAX_SIZE
     mapTileFlagsTable INSTANCEOF byte_t MAP_MAX_SIZE
+    loadedMapSlot db
+    loadedMapAddressOffset dw
 .ENDS
 
 .RAMSECTION "GameData" BANK $7E SLOT "SharedMemory"
@@ -37,6 +39,6 @@
 
 .RAMSECTION "MapDataExt" BANK $7E SLOT "ExtraMemory" SEMIFREE
     mapTileSlotTable INSTANCEOF byte_t MAP_MAX_SIZE
-    mapSlots INSTANCEOF mapinfo_t MAX_MAP_SLOTS
+    roomInfoSlots INSTANCEOF roominfo_t MAX_MAP_SLOTS
     tilesToUpdate INSTANCEOF byte_t MAP_MAX_SIZE
 .ENDS

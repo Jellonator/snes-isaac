@@ -217,7 +217,23 @@ _InitializeRoomX:
     lda #ROOMTYPE_NORMAL
     sta.w mapTileTypeTable,X
     stz.w mapTileFlagsTable,X
-    ; TODO: get map tile slot
+    phy ; Y [db]
+    phx ; tile position [db]
+    lda.w numUsedMapSlots
+    inc.w numUsedMapSlots
+    sta.w mapTileSlotTable,X
+    pha ; room slot [db]
+    lda #bankbyte(RoomDefinitionTest)
+    pha ; room definition bank [db]
+    pea loword(RoomDefinitionTest) ; room definiton address [dw]
+    jsl InitializeRoomSlot
+    sep #$30 ; 16 bit AXY
+    pla ; [db]
+    pla ; [db]
+    pla ; [db]
+    pla ; [db]
+    plx ; [db]
+    ply ; [db]
     rts
 
 ; Count tiles adjacent to A

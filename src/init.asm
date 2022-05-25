@@ -1,6 +1,6 @@
 .include "header.inc"
 
-.BANK $00 SLOT "ROM"
+.BANK $01 SLOT "ROM"
 .SECTION "Snes_Init" SEMIFREE
 Init:
 	sep #$30  ; X,Y,A are 8 bit numbers
@@ -88,7 +88,7 @@ Init:
 	stz $420B ; General DMA enable (bits 0-7)
 	stz $420C ; Horizontal DMA (HDMA) enable (bits 0-7)
 	stz $420D ; Access cycle designation (slow/fast rom)
-	rts
+	rtl
 .ends
 
 .SNESNATIVEVECTOR
@@ -109,7 +109,9 @@ Init:
 
 .BANK $00 SLOT "ROM"
 .ORG $0000
-.SECTION "EmptyVectors" SEMIFREE
+.SECTION "EmptyHandler" SEMIFREE
+
 EmptyHandler:
     rti
+
 .ENDS

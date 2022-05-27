@@ -67,6 +67,12 @@ Start2:
     rep #$20 ; 16 bit A
     PLA
     PLA
+    PEA $1000 + bankbyte(palettes@basement2.w)
+    PEA palettes@basement2.w
+    jsl CopyPalette
+    rep #$20 ; 16 bit A
+    PLA
+    PLA
     PEA $2000 + bankbyte(palettes@ui_light.w)
     PEA palettes@ui_light.w
     jsl CopyPalette

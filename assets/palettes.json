@@ -12,6 +12,10 @@
         "src": "assets/palettes/basement.hex"
     },
     {
+        "name": "basement2",
+        "src": "assets/palettes/basement2.hex"
+    },
+    {
         "name": "ui_dark",
         "src": "assets/palettes/ui_dark.hex"
     },

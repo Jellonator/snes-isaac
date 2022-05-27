@@ -3,3 +3,4 @@
 .include "structs.inc"
 .include "util.inc"
 .include "registers.inc"
+.include "ramlayout.inc"

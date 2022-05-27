@@ -5,7 +5,7 @@ BINFILE  := Test.sfc
 AC       := wla-65816
 ALINK    := wlalink
 AFLAGS   := -I include
-ALDFLAGS := -S
+ALDFLAGS := -S -v
 PY       := python3
 
 SOURCES  := main.asm\
@@ -16,7 +16,8 @@ SOURCES  := main.asm\
 			render.asm\
 			rng.asm\
 			map.asm\
-			bindata.asm
+			bindata.asm\
+			vqueue.asm
 
 OBJECTS  := $(SOURCES:%.asm=$(OBJDIR)/%.obj)
 PALETTES := $(wildcard assets/palettes/*.hex)

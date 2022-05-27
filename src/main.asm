@@ -259,6 +259,7 @@ tile_data_loop:
     rep #$30
     jsl RngGameInitialize
     jsr PlayerInit
+    jsl ClearVQueue
     jmp UpdateLoop
 
 UpdateLoop:
@@ -297,6 +298,12 @@ UpdateRest:
     BIT #JOY_SELECT
     beq @skip_regenerate_map
     jsl BeginMapGeneration
+    sep #$30 ; 8 bit AXY
+    lda #0
+    pha
+    jsl LoadRoomSlotIntoLevel
+    sep #$30 ; 8 bit AXY
+    pla
 @skip_regenerate_map:
     rts
 

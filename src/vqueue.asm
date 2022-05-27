@@ -30,7 +30,6 @@ ProcessVQueue:
     sta.w MDMAEN
     ; while (--vqueueNumOps != 0);
     dec.w vqueueNumOps
-    lda.w vqueueNumOps
     bne @process_vqueue_loop
 @process_vqueue_end:
     rep #$30 ; 16b AXY

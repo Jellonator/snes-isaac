@@ -40,6 +40,7 @@ InitializeRoomSlot:
     ldy #roomdefinition_t.tileData
 @tile_copy_loop: ; do {
     lda [$0A],Y
+    ; lda #5
     sta.l roomInfoSlots.1.tileTypeTable,X
     ; TODO: proper variant handling
     lda #0
@@ -66,13 +67,20 @@ LoadRoomSlotIntoLevel:
     sta.w loadedMapSlot
     rep #$30 ; 16 bit AXY
     ldx MULTS_RESULT_LOW
-    stx.w loadedMapAddressOffset
-    ; load tiles
+    txa
+    clc
+    adc #loword(roomInfoSlots)
+    sta.w loadedMapAddressOffset
+; load tiles
     ; Copy default data to vqueueBinData
     .CopyROMToVQueueBin EmptyRoomTiles, 16*16*2
     ; Create operations. 12 are required to copy whole map.
     ; This will also Update the vqueueBinData offset
     rep #$30 ; 16 bit AXY
+    lda.w vqueueBinOffset
+    clc
+    adc #16*2*2 + 2*2
+    sta $00
     .VQueueOpToA
     tax
     lda.w vqueueNumOps
@@ -108,7 +116,49 @@ LoadRoomSlotIntoLevel:
     iny ; ++Y
     cpy #12
     bne @loop_op_copy
-    ; Update tile data
+; Update tile data
+    lda.w loadedMapAddressOffset
+    clc
+    adc #roominfo_t.tileTypeTable
+    sta $10 ; $10 = src tile
+    clc
+    adc #roominfo_t.tileVariantTable-roominfo_t.tileTypeTable
+    sta $18 ; $18 = src variant
+    lda #$7F
+    sta $02 ; $00 = dest bin
+    lda #$7E
+    sta $12
+    sta $1A
+    ; Begin iteration
+    sep #$10 ; 8b XY
+    lda #ROOM_TILE_HEIGHT
+    sta $04 ; $04 = Y iterations
+@loop_tile_y: ; do {
+    lda #ROOM_TILE_WIDTH
+    sta $06 ; $06 = X iterations
+    @loop_tile_x:
+        lda [$10]
+        asl
+        tax
+        lda.w BlockVariantAddresses,X
+        sta $08
+        lda [$18]
+        asl
+        tay
+        lda ($08),Y
+        sta [$00]
+        inc $10
+        inc $18
+        inc $00
+        inc $00
+        dec $06
+        bne @loop_tile_x
+    lda $00 ; bin += 8b
+    clc
+    adc #8
+    sta $00
+    dec $04 ; } while (--iy);
+    bne @loop_tile_y
     rtl
 
 .ENDS
@@ -131,11 +181,12 @@ BlockVariantAddresses:
 BlockEmptyVariants:
     .dw $002A
 BlockRockVariants:
-    .dw $00A0
+    .dw ($00A0 | 1024*1)
 BlockRockTintedVariants:
-    .dw $00A2
+    .dw ($00A2 | 1024*1)
 BlockPoopVariants:
-    .dw $0080
+    .dw ($0080 | 1024*1)
+
 
 .DSTRUCT RoomDefinitionTest INSTANCEOF roomdefinition_t VALUES
     doorMask:   .db DOOR_MASK

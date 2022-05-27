@@ -71,7 +71,7 @@ for sprite in json_sprites:
     width, height = struct.unpack("<II", imagefh.read(8))
     imagedata = imagefh.read()
     if width % 8 != 0 or height % 8 != 0 or width*height != len(imagedata):
-        raise RuntimeError("Invalid image size {}x{} in {}".format(width*height, sprite["src"]))
+        raise RuntimeError("Invalid image size {}x{} in {}".format(width, height, sprite["src"]))
     if sprite["depth"] not in [4, 16]:
         raise RuntimeError("Invalid depth {} for {}".format(sprite["depth"], sprite["src"]))
     sprite_out_path = os.path.join(SPRITE_PATH, "{}.bin".format(name))

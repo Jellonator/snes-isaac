@@ -214,6 +214,7 @@ _PushAvailableTileX:
 _InitializeRoomX:
     .ACCU 8
     .INDEX 8
+    pha ; A [db]
     lda #ROOMTYPE_NORMAL
     sta.w mapTileTypeTable,X
     stz.w mapTileFlagsTable,X
@@ -221,19 +222,20 @@ _InitializeRoomX:
     phx ; tile position [db]
     lda.w numUsedMapSlots
     inc.w numUsedMapSlots
-    sta.w mapTileSlotTable,X
+    sta.w loword(mapTileSlotTable),X
     pha ; room slot [db]
     lda #bankbyte(RoomDefinitionTest)
     pha ; room definition bank [db]
     pea loword(RoomDefinitionTest) ; room definiton address [dw]
     jsl InitializeRoomSlot
-    sep #$30 ; 16 bit AXY
+    sep #$30 ; 8 bit AXY
     pla ; [db]
     pla ; [db]
     pla ; [db]
     pla ; [db]
     plx ; [db]
     ply ; [db]
+    pla ; [db]
     rts
 
 ; Count tiles adjacent to A

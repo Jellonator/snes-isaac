@@ -84,6 +84,29 @@
     plb
 .ENDM
 
+.MACRO .CopyROMToVQueueBin ARGS ROMADDR, NBYTES
+    rep #$20 ; 16 bit A
+    lda #NBYTES
+    sta DMA0_SIZE
+    lda #loword(ROMADDR)
+    sta DMA0_SRCL
+    lda.w vqueueBinOffset
+    sta WMADDL
+    sep #$20 ; 8 bit A
+    lda #bankbyte(ROMADDR)
+    sta DMA0_SRCH
+    lda #$7F
+    sta WMADDH
+    ; Absolute address, no increment, 1 byte at a time
+    lda #%00000000
+    sta DMA0_CTL
+    ; Write to WRAM
+    lda #$80
+    sta DMA0_DEST
+    lda #$01
+    sta MDMAEN
+.ENDM
+
 .MACRO .ClearWRam ARGS ADDRL, NBYTES
     rep #$20 ; 16 bit A
     lda #NBYTES
@@ -193,6 +216,42 @@
     inx
     inx
     stx.w objectIndex
+.ENDM
+
+; Clobbers A
+.MACRO .VQueueOpToA
+    lda.w vqueueNumOps
+    asl
+    asl
+    asl
+    clc
+    adc.w vqueueNumOps
+.ENDM
+
+; Clobbers A
+.MACRO .VQueueOpIncX
+    txa
+    clc
+    adc #9
+    tax
+.ENDM
+
+.MACRO .VQueueBinToX
+    ldx.w vqueueBinOffset
+.ENDM
+
+; Clobbers A
+.MACRO .VQueuePushBinA ARGS amount
+    lda.w vqueueBinOffset
+    adc amount
+    sta.w vqueueBinOffset
+.ENDM
+
+; Clobbers A
+.MACRO .VQueuePushBinI ARGS amount
+    lda.w vqueueBinOffset
+    adc #amount
+    sta.w vqueueBinOffset
 .ENDM
 
 ; bcs: A >= arg

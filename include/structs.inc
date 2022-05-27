@@ -97,3 +97,13 @@
     tileData INSTANCEOF byte_t ROOM_TILE_COUNT
     ; objectDefinitions INSTANCEOF objectdef_t *
 .ENDST
+
+; Defines structure for VQueue operation
+; Laid out such that operations can be easily performed with MVP
+.STRUCT vqueueop_t
+    vramAddr dw
+    param db
+    bAddr db
+    aAddr dl
+    numBytes dw
+.ENDST

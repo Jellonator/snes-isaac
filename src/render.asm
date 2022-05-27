@@ -12,15 +12,20 @@ VBlank:
 .SECTION "RenderCode" FREE
 
 VBlank2:
+    sei ; disable interrupts
+    phb
     rep #$30 ; 16 bit AXY
     pha
     .ChangeDataBank $00
     lda.w is_game_update_running
     beq @continuevblank
     pla
+    plb
+    cli ; enable interrupts
     rti
 @continuevblank:
-    pla
+    pla ; compensate for earlier pha
+    inc.w is_game_update_running
     ; Since VBlank only actually executes while the game isn't updating, we
     ; don't have to worry about storing previous state here
     sep #$20 ; 8 bit A
@@ -55,10 +60,13 @@ VBlank2:
     stz.w numTilesToUpdate
     jsr UpdateEntireMinimap
 @skipUpdateAllTiles:
+    jsl ProcessVQueue
     sep #$20 ; 8 bit A
+    pla ; compensate for phb earlier
     lda #%00001111
     sta INIDISP
     jsr ReadInput
+    cli ; enable interrupts
     rti
 
 UpdateEntireMinimap:
@@ -110,6 +118,7 @@ CopyPalette:
     sta $4301 ; Write to CGRAM
     lda #$01
     sta $420B ; Begin transfer
+    stz.w is_game_update_running
     rtl
 
 ; Copy sprite data to VRAM
@@ -159,6 +168,7 @@ CopySprite:
 ; MUST call with jsl
 CopySpritePartial:
     rep #$20
+    ; TODO
     rtl
 
 ; Clear a section of VRAM

@@ -8,3 +8,4 @@ obj/render.obj
 obj/rng.obj
 obj/bindata.obj
 obj/map.obj
+obj/vqueue.obj

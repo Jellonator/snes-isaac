@@ -224,9 +224,10 @@ _InitializeRoomX:
     inc.w numUsedMapSlots
     sta.w loword(mapTileSlotTable),X
     pha ; room slot [db]
-    lda #bankbyte(RoomDefinitionTest)
-    pha ; room definition bank [db]
-    pea loword(RoomDefinitionTest) ; room definiton address [dw]
+    ; lda #bankbyte(RoomDefinitionTest)
+    ; pha ; room definition bank [db]
+    ; pea loword(RoomDefinitionTest) ; room definiton address [dw]
+    jsr _PushRandomRoomFromPool
     jsl InitializeRoomSlot
     sep #$30 ; 8 bit AXY
     pla ; [db]
@@ -403,6 +404,32 @@ BeginMapGeneration:
     ; END: reset data bank
     plb
     rtl
+
+_PushRandomRoomFromPool:
+    rep #$30 ; 16b AXY
+    ply
+    jsl RngGeneratorUpdate8
+    sta.l DIVU_DIVIDEND
+    sep #$20 ; 8b A
+    lda.l RoomPoolDefinitions@basement ; pool size
+    sta.l DIVU_DIVISOR
+    .REPT 7
+        NOP ; (7 * 2 cycle)
+    .ENDR
+    rep #$20 ; 16b A (3 cycle)
+    lda.l DIVU_REMAINDER
+    asl
+    clc
+    adc.l DIVU_REMAINDER
+    tax
+    sep #$20 ; 8b A
+    lda.l RoomPoolDefinitions@basement+3,X ; bank
+    pha
+    rep #$20 ; 16b A
+    lda.l RoomPoolDefinitions@basement+1,X ; addr
+    pha
+    phy
+    rts
 
 _ClearMap:
     phd

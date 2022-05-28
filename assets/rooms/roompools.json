@@ -1,0 +1,15 @@
+[
+    {
+        "id": "basement",
+        "rooms": [
+            "empty.tmx",
+            "basement/b1.tmx",
+            "basement/b2.tmx",
+            "basement/b3.tmx",
+            "basement/b4.tmx",
+            "basement/b5.tmx",
+            "basement/b6.tmx",
+            "basement/b7.tmx"
+        ]
+    }
+]

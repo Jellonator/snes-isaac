@@ -29,6 +29,7 @@
     objectIndex dw
     ; VQueue data
     vqueueNumOps dw
+    vqueueNumMiniOps dw
     vqueueBinOffset dw
     ; end
     rawMemorySizeShared db
@@ -47,6 +48,7 @@
     ; VQueue data
     vqueueOps INSTANCEOF vqueueop_t VQUEUE_MAX_SIZE
     vqueueBinData INSTANCEOF byte_t $4000 ; 16K of potential DMA data
+    vqueueMiniOps INSTANCEOF vqueueminiop_t VQUEUE_MAX_SIZE
     ; end
     rawMemorySize7F db
 .ENDE

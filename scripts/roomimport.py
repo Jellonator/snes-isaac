@@ -5,6 +5,8 @@ import os
 import pytiled_parser
 from pathlib import Path
 
+MAX_POOL_SIZE = 255
+
 tiledIdsToGameIds = {
     -1: 0,
     0: 0,
@@ -22,6 +24,8 @@ json_roompools = json.load(open(ROOMPOOL_IN))
 
 rooms = set()
 for pool in json_roompools:
+    if len(pool["rooms"]) > MAX_POOL_SIZE:
+        print("Warning: too many rooms in pool {}".format(pool["name"]))
     for room in pool["rooms"]:
         rooms.add(room)
 
@@ -65,7 +69,7 @@ out_inc.write(".SECTION \"RoomPoolDefinitions\" SUPERFREE\n")
 out_inc.write("RoomPoolDefinitions:\n")
 for pool in json_roompools:
     out_inc.write("\t@{}:\n".format(pool["id"]))
-    out_inc.write("\t\t.dw {}\n".format(len(pool["rooms"])))
+    out_inc.write("\t\t.db {}\n".format(len(pool["rooms"])))
     out_inc.write("\t\t@@rooms:\n")
     for room in pool["rooms"]:
         out_inc.write("\t\t\t.dl {}\n".format(roomPathToId[room]))

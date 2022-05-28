@@ -4,6 +4,7 @@ bin/
 obj/
 include/assets.inc
 include/palettes.bin
+include/roompools.inc
 include/*.bin
 include/sprites/
 include/palettes/

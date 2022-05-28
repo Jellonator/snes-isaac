@@ -5,6 +5,8 @@
 .include "assets.inc"
 .ENDS
 
+.include "roompools.inc"
+
 .bank $41
 .SECTION "ExtraData"
 EmptyData:

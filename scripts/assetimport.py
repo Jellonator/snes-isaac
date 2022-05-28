@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 
-from email.mime import image
 import json
 import struct
 import os

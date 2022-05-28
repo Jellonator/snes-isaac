@@ -107,3 +107,8 @@
     aAddr dl
     numBytes dw
 .ENDST
+
+.STRUCT vqueueminiop_t
+    vramAddr dw
+    value dw
+.ENDST

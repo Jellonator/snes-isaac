@@ -19,6 +19,7 @@
     mapTileFlagsTable INSTANCEOF byte_t MAP_MAX_SIZE
     loadedMapSlot db
     loadedMapAddressOffset dw
+    loadedRoomIndex INSTANCEOF maptilepos_t
     ; game data
     player INSTANCEOF player_t
     tear_bytes_used dw ; number of bytes used of tear_array
@@ -47,8 +48,8 @@
 .ENUM $7F0000
     ; VQueue data
     vqueueOps INSTANCEOF vqueueop_t VQUEUE_MAX_SIZE
+    vqueueMiniOps INSTANCEOF vqueueminiop_t 255
     vqueueBinData INSTANCEOF byte_t $4000 ; 16K of potential DMA data
-    vqueueMiniOps INSTANCEOF vqueueminiop_t VQUEUE_MAX_SIZE
     ; end
     rawMemorySize7F db
 .ENDE

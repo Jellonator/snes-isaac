@@ -4,7 +4,7 @@
 .SECTION "MapGeneratorCode" FREE
 
 ; zeropage values
-.ENUM $0010
+.ENUM $0040
     start_pos INSTANCEOF maptilepos_t
     mapgenNumAvailableTiles db
     mapgenNumAvailableEndpointTiles db
@@ -355,6 +355,7 @@ BeginMapGeneration:
     clc
     adc.b start_pos
     sta.b start_pos
+    sta.w loadedRoomIndex
     tax
     jsr _InitializeRoomX
     lda.b start_pos

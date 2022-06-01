@@ -259,9 +259,9 @@ tile_data_loop:
     lda #$81
     sta $4200
     lda #$E0
-    sta $2110
+    sta BG2VOFS
     lda #$FF
-    sta $2110
+    sta BG2VOFS
     rep #$30
     jsl RngGameInitialize
     jsr PlayerInit

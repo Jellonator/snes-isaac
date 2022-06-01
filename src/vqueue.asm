@@ -8,6 +8,7 @@ ClearVQueue:
     stz.w vqueueNumOps
     lda #loword(vqueueBinData)
     sta.w vqueueBinOffset
+    stz.w vqueueNumMiniOps
     rtl
 
 ProcessVQueue:
@@ -36,5 +37,21 @@ ProcessVQueue:
     stz.w vqueueNumOps
     lda.w #loword(vqueueBinData)
     sta.w vqueueBinOffset
+; Process miniqueue
+    lda.w vqueueNumMiniOps
+    beq @process_mini_end
+    asl
+    asl
+    sta.w DMA0_SIZE
+    lda #%0000100 + 256*lobyte(VMADDR)
+    sta.w DMA0_CTL
+    lda #loword(vqueueMiniOps)
+    sta.w DMA0_SRCL
+    sep #$20 ; 8b A
+    lda #bankbyte(vqueueMiniOps)
+    sta DMA0_SRCH
+    lda #$01
+    sta.w MDMAEN
+@process_mini_end:
     rtl
 .ENDS

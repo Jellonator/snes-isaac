@@ -91,6 +91,10 @@ UpdateMinimapLine:
         asl
         tax
         lda.l MapTiles,X
+        cpy loadedRoomIndex
+        bne +
+        ORA #$0020
+        +:
         sta VMDATA
         iny
     .ENDR

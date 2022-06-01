@@ -132,19 +132,68 @@ PlayerUpdate:
 @endx:
     sta.w player.speed.x
 
+.DEFINE TempLimitLeft $00
+.DEFINE TempLimitRight $02
+.DEFINE TempLimitTop $04
+.DEFINE TempLimitBottom $06
+    ldx #(ROOM_LEFT - 4)*256
+    ldy #(ROOM_RIGHT - 12)*256
+    stx $00 ; left
+    sty $02 ; right
+    lda player.pos.y
+    cmp #(ROOM_CENTER_Y - 8 - ROOM_DOOR_RADIUS)*256
+    bmi +
+    cmp #(ROOM_CENTER_Y - 8 + ROOM_DOOR_RADIUS)*256
+    bpl +
+    ldx #(ROOM_LEFT - 4 - 16)*256
+    ldy #(ROOM_RIGHT - 12 + 16)*256
+    stx $00 ; left
+    sty $02 ; right
++:
+
+    ldx #(ROOM_TOP - 4)*256
+    ldy #(ROOM_BOTTOM - 12)*256
+    stx $04 ; top
+    sty $06 ; bottom
+    lda player.pos.x
+    cmp #(ROOM_CENTER_X - 8 - ROOM_DOOR_RADIUS)*256
+    bmi +
+    cmp #(ROOM_CENTER_X - 8 + ROOM_DOOR_RADIUS)*256
+    bpl +
+    ldx #(ROOM_TOP - 4 - 16)*256
+    ldy #(ROOM_BOTTOM - 12 + 16)*256
+    stx $04 ; top
+    sty $06 ; bottom
++:
+
+    cmp #(ROOM_LEFT - 4)*256
+    bcc +
+    cmp #(ROOM_RIGHT - 12 + 1)*256
+    bcs +
+    bra ++
++:
+    ldx #(ROOM_CENTER_Y - 8 - ROOM_DOOR_RADIUS)*256
+    ldy #(ROOM_CENTER_Y - 8 + ROOM_DOOR_RADIUS - 1)*256
+    stx $04 ; top
+    sty $06 ; bottom
+++:
+
+    lda player.pos.y
+    cmp #(ROOM_TOP - 4)*256
+    bcc +
+    cmp #(ROOM_BOTTOM - 12 + 1)*256
+    bcs +
+    bra ++
++:
+    ldx #(ROOM_CENTER_X - 8 - ROOM_DOOR_RADIUS)*256
+    ldy #(ROOM_CENTER_X - 8 + ROOM_DOOR_RADIUS - 1)*256
+    stx $00 ; left
+    sty $02 ; right
+++:
+
     ; apply speed
-    lda.w player.pos.x
-    clc
-    adc.w player.speed.x
-    AMAXUI (32 - 4)*256
-    AMINUI (32 + 12*16 - 12)*256
-    sta.w player.pos.x
-    lda.w player.pos.y
-    clc
-    adc.w player.speed.y
-    AMAXUI (64 - 4)*256
-    AMINUI (64 + 8*16 - 12)*256
-    sta.w player.pos.y
+    jsr PlayerMoveHorizontal
+    jsr PlayerMoveVertical
 ; handle player shoot
     lda.w player.tear_timer
     cmp.w player.stat_tear_delay ; if tear_timer < stat_tear_delay: ++tear_timer
@@ -410,6 +459,269 @@ RemoveTearSlot:
     lda.w tear_array+14,Y
     sta.w tear_array+14,X
 @skip_copy:
+    rts
+
+.DEFINE TempTileX $08
+.DEFINE TempTileY $0A
+.DEFINE TempTileX2 $0C
+.DEFINE TempTileY2 $0E
+.DEFINE TempTemp1 $10
+.DEFINE TempTemp2 $12
+
+; Clobbers A
+.MACRO .BranchIfTileXYOOB ARGS XMEM, YMEM, LABEL
+    lda XMEM
+    cmp #12
+    bcs LABEL
+    lda YMEM
+    cmp #8
+    bcs LABEL
+.ENDM
+
+.MACRO .TileXYToIndexA ARGS XMEM, YMEM, TEMPMEM
+    lda YMEM
+    asl
+    asl
+    sta TEMPMEM
+    asl
+    clc
+    adc TEMPMEM
+    adc XMEM
+.ENDM
+
+.MACRO .PositionToIndex_A
+    xba
+    and #$00F0
+    lsr
+    lsr
+    lsr
+    lsr
+.ENDM
+
+.MACRO .IndexToPosition_A
+    asl
+    asl
+    asl
+    asl
+    xba
+.ENDM
+
+PlayerMoveHorizontal:
+    .ACCU 16
+    .INDEX 16
+    lda.w player.speed.x
+    beq @skipmove
+    clc
+    adc.w player.pos.x
+    AMAXU $00
+    AMINU $02
+    sta.w player.pos.x
+    lda.w player.speed.x
+    cmp #0
+    bmi PlayerMoveLeft
+    jmp PlayerMoveRight
+@skipmove:
+    rts
+
+PlayerMoveLeft:
+    .ACCU 16
+    .INDEX 16
+; Get Tile X from player left
+    lda.w player.pos.x
+    clc
+    adc #(PLAYER_HITBOX_LEFT - ROOM_LEFT)*256
+    .PositionToIndex_A
+    sta TempTileX
+; Get Tile Y (top)
+    lda player.pos.y
+    clc
+    adc #(PLAYER_HITBOX_TOP - ROOM_TOP)*256
+    .PositionToIndex_A
+    sta TempTileY
+; Get Tile Y (bottom)
+    lda player.pos.y
+    clc
+    adc #(PLAYER_HITBOX_BOTTOM - ROOM_TOP)*256
+    .PositionToIndex_A
+    sta TempTileY2
+; Get Tile Index
+    .BranchIfTileXYOOB TempTileX, TempTileY, @end
+    .TileXYToIndexA TempTileX, TempTileY, TempTemp1
+; Determine if tile is solid
+    adc.w loadedMapAddressOffset
+    tax
+    .TileXYToIndexA TempTileX, TempTileY2, TempTemp2
+    adc.w loadedMapAddressOffset
+    tay
+    lda.l roominfo_t.tileTypeTable+$7E0000,X ; top
+    tyx
+    ora.l roominfo_t.tileTypeTable+$7E0000,X ; bottom
+    and #$00FF
+    beq @end
+; get position that player would be when flush against wall
+    lda TempTileX
+    .IndexToPosition_A
+    clc
+    adc #(ROOM_LEFT + 16 - PLAYER_HITBOX_LEFT)*256
+; apply position
+    AMAXU player.pos.x
+    sta.w player.pos.x
+@end:
+    rts
+
+PlayerMoveRight:
+    .ACCU 16
+    .INDEX 16
+; Get Tile X from player left
+    lda.w player.pos.x
+    clc
+    adc #(PLAYER_HITBOX_RIGHT - ROOM_LEFT)*256-1
+    .PositionToIndex_A
+    sta TempTileX
+; Get Tile Y (top)
+    lda player.pos.y
+    clc
+    adc #(PLAYER_HITBOX_TOP - ROOM_TOP)*256
+    .PositionToIndex_A
+    sta TempTileY
+; Get Tile Y (bottom)
+    lda player.pos.y
+    clc
+    adc #(PLAYER_HITBOX_BOTTOM - ROOM_TOP)*256
+    .PositionToIndex_A
+    sta TempTileY2
+; Get Tile Index
+    .BranchIfTileXYOOB TempTileX, TempTileY, @end
+    .TileXYToIndexA TempTileX, TempTileY, TempTemp1
+; Determine if tile is solid
+    adc.w loadedMapAddressOffset
+    tax
+    .TileXYToIndexA TempTileX, TempTileY2, TempTemp2
+    adc.w loadedMapAddressOffset
+    tay
+    lda.l roominfo_t.tileTypeTable+$7E0000,X ; top
+    tyx
+    ora.l roominfo_t.tileTypeTable+$7E0000,X ; bottom
+    and #$00FF
+    beq @end
+; get position that player would be when flush against wall
+    lda TempTileX
+    .IndexToPosition_A
+    clc
+    adc #(ROOM_LEFT - PLAYER_HITBOX_RIGHT)*256-1
+; apply position
+    AMINU player.pos.x
+    sta.w player.pos.x
+@end:
+    rts
+
+PlayerMoveVertical:
+    .ACCU 16
+    .INDEX 16
+    lda.w player.speed.y
+    beq @skipmove
+    clc
+    adc.w player.pos.y
+    AMAXU $04
+    AMINU $06
+    sta.w player.pos.y
+    lda.w player.speed.y
+    cmp #0
+    bmi PlayerMoveUp
+    jmp PlayerMoveDown
+@skipmove:
+    rts
+
+PlayerMoveUp:
+    .ACCU 16
+    .INDEX 16
+; Get Tile Y from player top
+    lda.w player.pos.y
+    clc
+    adc #(PLAYER_HITBOX_TOP - ROOM_TOP)*256
+    .PositionToIndex_A
+    sta TempTileY
+; Get Tile X (left)
+    lda player.pos.x
+    clc
+    adc #(PLAYER_HITBOX_LEFT - ROOM_LEFT)*256
+    .PositionToIndex_A
+    sta TempTileX
+; Get Tile X (right)
+    lda player.pos.x
+    clc
+    adc #(PLAYER_HITBOX_RIGHT - ROOM_LEFT)*256
+    .PositionToIndex_A
+    sta TempTileX2
+; Get Tile Index
+    .BranchIfTileXYOOB TempTileX, TempTileY, @end
+    .TileXYToIndexA TempTileX, TempTileY, TempTemp1
+; Determine if tile is solid
+    adc.w loadedMapAddressOffset
+    tax
+    .TileXYToIndexA TempTileX2, TempTileY, TempTemp2
+    adc.w loadedMapAddressOffset
+    tay
+    lda.l roominfo_t.tileTypeTable+$7E0000,X ; top
+    tyx
+    ora.l roominfo_t.tileTypeTable+$7E0000,X ; bottom
+    and #$00FF
+    beq @end
+; get position that player would be when flush against wall
+    lda TempTileY
+    .IndexToPosition_A
+    clc
+    adc #(ROOM_TOP + 16 - PLAYER_HITBOX_TOP)*256
+; apply position
+    AMAXU player.pos.y
+    sta.w player.pos.y
+@end:
+    rts
+
+PlayerMoveDown:
+    .ACCU 16
+    .INDEX 16
+; Get Tile Y from player bottom
+    lda.w player.pos.y
+    clc
+    adc #(PLAYER_HITBOX_BOTTOM - ROOM_TOP)*256-1
+    .PositionToIndex_A
+    sta TempTileY
+; Get Tile X (left)
+    lda player.pos.x
+    clc
+    adc #(PLAYER_HITBOX_LEFT - ROOM_LEFT)*256
+    .PositionToIndex_A
+    sta TempTileX
+; Get Tile X (right)
+    lda player.pos.x
+    clc
+    adc #(PLAYER_HITBOX_RIGHT - ROOM_LEFT)*256
+    .PositionToIndex_A
+    sta TempTileX2
+; Get Tile Index
+    .BranchIfTileXYOOB TempTileX, TempTileY, @end
+    .TileXYToIndexA TempTileX, TempTileY, TempTemp1
+; Determine if tile is solid
+    adc.w loadedMapAddressOffset
+    tax
+    .TileXYToIndexA TempTileX2, TempTileY, TempTemp2
+    adc.w loadedMapAddressOffset
+    tay
+    lda.l roominfo_t.tileTypeTable+$7E0000,X ; top
+    tyx
+    ora.l roominfo_t.tileTypeTable+$7E0000,X ; bottom
+    and #$00FF
+    beq @end
+; get position that player would be when flush against wall
+    lda TempTileY
+    .IndexToPosition_A
+    clc
+    adc #(ROOM_TOP - PLAYER_HITBOX_BOTTOM)*256 - 1
+; apply position
+    AMINU player.pos.y
+    sta.w player.pos.y
+@end:
     rts
 
 .ENDS

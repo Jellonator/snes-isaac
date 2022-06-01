@@ -110,5 +110,5 @@
 
 .STRUCT vqueueminiop_t
     vramAddr dw
-    value dw
+    data dw
 .ENDST

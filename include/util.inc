@@ -2,6 +2,8 @@
 ; if argument > A, set A to argument
 ; as a general rule, macro labels should begin with @@@@@
 ; that way, these labels don't mess with those in code
+
+; Maximum of A register and memory location, signed
 .MACRO AMAX
     cmp \1
     bpl @@@@@\.\@
@@ -9,6 +11,7 @@
 @@@@@\.\@:
 .ENDM
 
+; Minimum of A register and memory location, signed
 .MACRO AMIN
     cmp \1
     bmi @@@@@\.\@
@@ -16,6 +19,7 @@
 @@@@@\.\@:
 .ENDM
 
+; Maximum of A register and immediate value, signed
 .MACRO AMAXI
     cmp #\1
     bpl @@@@@\.\@
@@ -23,6 +27,7 @@
 @@@@@\.\@:
 .ENDM
 
+; Minimum of A register and immediate value, signed
 .MACRO AMINI
     cmp #\1
     bmi @@@@@\.\@
@@ -30,6 +35,7 @@
 @@@@@\.\@:
 .ENDM
 
+; Maximum of A register and memory location, unsigned
 .MACRO AMAXU
     cmp \1
     bcs @@@@@\.\@
@@ -37,6 +43,7 @@
 @@@@@\.\@:
 .ENDM
 
+; Minimum of A register and memory location, unsigned
 .MACRO AMINU
     cmp \1
     bcc @@@@@\.\@
@@ -44,6 +51,7 @@
 @@@@@\.\@:
 .ENDM
 
+; Maximum of A register and immediate value, unsigned
 .MACRO AMAXUI
     cmp #\1
     bcs @@@@@\.\@
@@ -51,10 +59,32 @@
 @@@@@\.\@:
 .ENDM
 
+; Minimum of A register and immediate value, unsigned
 .MACRO AMINUI
     cmp #\1
     bcc @@@@@\.\@
     lda #\1
+@@@@@\.\@:
+.ENDM
+
+; Calculate the absolute value of A
+; ONLY use after an instruction that loads the value into A (checks N flag)
+; e.g.: ADC, SBC, DEC, INC, AND, ORA, EOR, ASL, LSR, ROL, ROR, LDA, PLA, TXA, and TYA
+; some other instructions also set the N flag but may either refer to a
+; different register (e.g. LDX), or don't reflect the current value of A (e.g. CMP)
+.MACRO ABS_A16_POSTLOAD
+    bpl @@@@@\.\@
+    eor #FFFF
+    inc
+@@@@@\.\@:
+.ENDM
+
+; Calculate the absolute value of A
+; ONLY use after an instruction that loads the value into A (checks N flag)
+.MACRO ABS_A8_POSTLOAD
+    bpl @@@@@\.\@
+    eor #FF
+    inc
 @@@@@\.\@:
 .ENDM
 

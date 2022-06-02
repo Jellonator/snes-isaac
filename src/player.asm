@@ -194,7 +194,6 @@ PlayerUpdate:
     ; move
     jsr PlayerMoveHorizontal
     jsr PlayerMoveVertical
-    jsr PlayerCheckEnterRoom
 ; handle player shoot
     rep #$30 ; 16b AXY
     lda.w player.tear_timer
@@ -779,8 +778,8 @@ PlayerCheckEnterRoom:
     lda #(ROOM_CENTER_Y - 8)*256
     sta player.pos.y
     lda #BG2_TILE_ADDR_OFFS_X
-    eor gameRoomScrollTileOffset
-    sta gameRoomScrollTileOffset
+    eor gameRoomBG2Offset
+    sta gameRoomBG2Offset
     sep #$20 ; 8 bit A
     lda loadedRoomIndex
     sta TempTemp2
@@ -794,8 +793,8 @@ PlayerCheckEnterRoom:
     lda #(ROOM_CENTER_Y - 8)*256
     sta player.pos.y
     lda #BG2_TILE_ADDR_OFFS_X
-    eor gameRoomScrollTileOffset
-    sta gameRoomScrollTileOffset
+    eor gameRoomBG2Offset
+    sta gameRoomBG2Offset
     sep #$20 ; 8 bit A
     lda loadedRoomIndex
     sta TempTemp2
@@ -809,8 +808,8 @@ PlayerCheckEnterRoom:
     lda #(ROOM_CENTER_X - 8)*256
     sta player.pos.x
     lda #BG2_TILE_ADDR_OFFS_Y
-    eor gameRoomScrollTileOffset
-    sta gameRoomScrollTileOffset
+    eor gameRoomBG2Offset
+    sta gameRoomBG2Offset
     sep #$20 ; 8 bit A
     lda loadedRoomIndex
     sta TempTemp2
@@ -826,8 +825,8 @@ PlayerCheckEnterRoom:
     lda #(ROOM_CENTER_X - 8)*256
     sta player.pos.x
     lda #BG2_TILE_ADDR_OFFS_Y
-    eor gameRoomScrollTileOffset
-    sta gameRoomScrollTileOffset
+    eor gameRoomBG2Offset
+    sta gameRoomBG2Offset
     sep #$20 ; 8 bit A
     lda loadedRoomIndex
     sta TempTemp2
@@ -839,8 +838,6 @@ PlayerCheckEnterRoom:
 @initialize:
 ; Set player speed to 0
     sep #$30 ; 16 bit A
-    stz player.speed.x
-    stz player.speed.y
 ; Load room
     sep #$30 ; 8 bit AXY
     ldx loadedRoomIndex
@@ -857,82 +854,103 @@ PlayerCheckEnterRoom:
     ora vqueueMiniOps.1.data,X
     sta vqueueMiniOps.1.data,X
     .VQueuePushMiniopForIndex TempTemp2
+    stz player.speed.x
+    stz player.speed.y
     rts
+
+_MakeWaitScrollSub1:
+    .GetObjectPos_X
+    rts
+
+_MakeWaitScrollSub2:
+    .PutObjectPos_X
+    rts
+
+.MACRO .MakeWaitScroll ARGS SREG, SVAR, AMT, NFRAMES, SAMT, TEMP1, SPRVAL
+    wai
+    jsl ProcessVQueue
+    rep #$20 ; 16 bit A
+    sep #$10 ; 8 bit XY
+    lda #NFRAMES
+    sta TEMP1
+    @loopWait:
+    ; First, move objects
+        .IF SPRVAL != object_t.pos_x
+            sep #$20 ; 8 bit A
+        .ENDIF
+        rep #$10 ; 16 bit XY
+        ldx #0
+        cpx objectIndex
+        beq @loopSpriteEnd
+        @loopSprite:
+            .IF SPRVAL == object_t.pos_x
+                jsr _MakeWaitScrollSub1
+                sec
+                sbc #(AMT - SAMT)/NFRAMES
+                jsr _MakeWaitScrollSub2
+            .ELSE
+                lda objectData+SPRVAL,X
+                sec
+                sbc #(AMT - SAMT)/NFRAMES
+                sta objectData+SPRVAL,X
+            .ENDIF
+            inx
+            inx
+            inx
+            inx
+            cpx objectIndex
+            bne @loopSprite
+        @loopSpriteEnd:
+        .IF SPRVAL != object_t.pos_x
+            rep #$20 ; 16 bit A
+        .ENDIF
+        sep #$10 ; 8 bit XY
+    ; Wait for VBlank
+        wai
+    ; Scroll
+        lda SVAR
+        clc
+        adc #AMT/NFRAMES
+        and #$01FF
+        sta SVAR
+        ldx SVAR
+        stx SREG
+        ldx SVAR+1
+        stx SREG
+    ; Upload objects to OAM
+        stz OAMADDR
+        lda #512+32
+        sta DMA0_SIZE
+        lda.w #objectData
+        sta DMA0_SRCL
+        sep #$20 ; 8 bit A
+        lda #0
+        sta DMA0_SRCH
+        ; Absolute address, auto increment, 1 byte at a time
+        lda #%00000000
+        sta DMA0_CTL
+        ; Write to OAM
+        lda #$04
+        sta DMA0_DEST
+        lda #$01
+        sta MDMAEN
+        rep #$20 ; 16 bit A
+    ; loop
+        dec TEMP1
+        bne @loopWait
+    rts
+.ENDM
 
 WaitScrollLeft:
-    wai
-    jsl ProcessVQueue
-    rep #$20 ; 16 bit A
-    sep #$10 ; 8 bit XY
-    .REPT 32 INDEX i
-        wai
-        lda gameRoomScrollX
-        sec
-        sbc #256/32
-        and #$01FF
-        sta gameRoomScrollX
-        ldx gameRoomScrollX
-        stx BG2HOFS
-        ldx gameRoomScrollX+1
-        stx BG2HOFS
-    .ENDR
-    rts
+    .MakeWaitScroll BG2HOFS, gameRoomScrollX, (-256), 32, (-64), TempTemp1, object_t.pos_x
 
 WaitScrollRight:
-    wai
-    jsl ProcessVQueue
-    rep #$20 ; 16 bit A
-    sep #$10 ; 8 bit XY
-    .REPT 32 INDEX i
-        wai
-        lda gameRoomScrollX
-        clc
-        adc #256/32
-        and #$01FF
-        sta gameRoomScrollX
-        ldx gameRoomScrollX
-        stx BG2HOFS
-        ldx gameRoomScrollX+1
-        stx BG2HOFS
-    .ENDR
-    rts
+    .MakeWaitScroll BG2HOFS, gameRoomScrollX, 256, 32, 64, TempTemp1, object_t.pos_x
 
 WaitScrollUp:
-    wai
-    jsl ProcessVQueue
-    rep #$20 ; 16 bit A
-    sep #$10 ; 8 bit XY
-    .REPT 32 INDEX i
-        wai
-        lda gameRoomScrollY
-        sec
-        sbc #256/32
-        and #$01FF
-        sta gameRoomScrollY
-        ldx gameRoomScrollY
-        stx BG2VOFS
-        ldx gameRoomScrollY+1
-        stx BG2VOFS
-    .ENDR
-    rts
+    .MakeWaitScroll BG2VOFS, gameRoomScrollY, (-256), 32, (-128), TempTemp1, object_t.pos_y
 
 WaitScrollDown:
-    wai
-    jsl ProcessVQueue
-    rep #$20 ; 16 bit A
-    sep #$10 ; 8 bit XY
-    .REPT 32 INDEX i
-        wai
-        lda gameRoomScrollY
-        clc
-        adc #256/32
-        and #$01FF
-        sta gameRoomScrollY
-        ldx gameRoomScrollY
-        stx BG2VOFS
-        ldx gameRoomScrollY+1
-        stx BG2VOFS
-    .ENDR
-    rts
+    .MakeWaitScroll BG2VOFS, gameRoomScrollY, 256, 32, 128, TempTemp1, object_t.pos_y
 
 .ENDS

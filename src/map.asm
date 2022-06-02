@@ -97,6 +97,8 @@ LoadRoomSlotIntoLevel:
     asl
     clc
     adc #BG2_TILE_BASE_ADDR
+    clc
+    adc.w gameRoomScrollTileOffset
     sta.l vqueueOps.1.vramAddr,X
     lda #(%00000001 + ($0100 * $18))
     sta.l vqueueOps.1.param,X ; both param and bAddr

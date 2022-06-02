@@ -1,7 +1,7 @@
 .MEMORYMAP
     DEFAULTSLOT 3
     SLOT 0 $0000 $0100 "ZeroMemory" ; Zero page RAM
-    SLOT 1 $0100 $1D00 "SharedMemory" ; RAM mirror slot
+    SLOT 1 $0100 $1D00 "SharedMemory" ; RAM mirror slot (excluding $200 of stack space)
     SLOT 2 $2000 $6000 "Registers" ; register slot
     SLOT 3 $8000 $8000 "ROM" ; ROM slot
     SLOT 4 $2000 $E000 "ExtraMemory" ; Non-mirrored RAM slot

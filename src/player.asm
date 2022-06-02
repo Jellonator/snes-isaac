@@ -191,10 +191,12 @@ PlayerUpdate:
     sty $02 ; right
 ++:
 
-    ; apply speed
+    ; move
     jsr PlayerMoveHorizontal
     jsr PlayerMoveVertical
+    jsr PlayerCheckEnterRoom
 ; handle player shoot
+    rep #$30 ; 16b AXY
     lda.w player.tear_timer
     cmp.w player.stat_tear_delay ; if tear_timer < stat_tear_delay: ++tear_timer
     bcc @tear_not_ready
@@ -465,8 +467,8 @@ RemoveTearSlot:
 .DEFINE TempTileY $0A
 .DEFINE TempTileX2 $0C
 .DEFINE TempTileY2 $0E
-.DEFINE TempTemp1 $10
-.DEFINE TempTemp2 $12
+.DEFINE TempTemp1 $14
+.DEFINE TempTemp2 $16
 
 ; Clobbers A
 .MACRO .BranchIfTileXYOOB ARGS XMEM, YMEM, LABEL
@@ -722,6 +724,123 @@ PlayerMoveDown:
     AMINU player.pos.y
     sta.w player.pos.y
 @end:
+    rts
+
+.MACRO .VQueuePushMiniopForIndex ARGS ROOMINDEX
+; First, set VRAM address
+    lda vqueueNumMiniOps
+    asl
+    asl
+    tax
+    inc vqueueNumMiniOps
+    lda ROOMINDEX
+    and #$0F
+    sta.l vqueueMiniOps.1.vramAddr,X
+    lda ROOMINDEX
+    and #$F0
+    asl
+    clc
+    adc #BG1_TILE_BASE_ADDR + 32 - MAP_MAX_WIDTH
+    clc
+    adc.l vqueueMiniOps.1.vramAddr,X
+    sta.l vqueueMiniOps.1.vramAddr,X
+; Second, set value
+    phx
+    lda ROOMINDEX
+    and #$00FF
+    tay
+    lda.w mapTileTypeTable,Y
+    and #$00FF
+    asl
+    tax
+    lda.l MapTiles,X
+    plx
+    sta.l vqueueMiniOps.1.data,X
+.ENDM
+
+PlayerCheckEnterRoom:
+    rep #$30 ; 16b AXY
+    lda player.pos.x
+    cmp #(ROOM_LEFT - 16)*256
+    bcc @left
+    cmp #(ROOM_RIGHT)*256
+    bcs @right
+    lda player.pos.y
+    cmp #(ROOM_TOP - 16)*256
+    bcc @up
+    lda player.pos.y
+    cmp #(ROOM_BOTTOM)*256
+    bcs @down
+    rts
+@left:
+    .ACCU 16
+    lda #(ROOM_RIGHT - PLAYER_HITBOX_RIGHT)*256
+    sta player.pos.x
+    lda #(ROOM_CENTER_Y - 8)*256
+    sta player.pos.y
+    sep #$20 ; 8 bit A
+    lda loadedRoomIndex
+    sta TempTemp2
+    dec loadedRoomIndex
+    bra @initialize
+@right:
+    .ACCU 16
+    lda #(ROOM_LEFT - PLAYER_HITBOX_LEFT)*256
+    sta player.pos.x
+    lda #(ROOM_CENTER_Y - 8)*256
+    sta player.pos.y
+    sep #$20 ; 8 bit A
+    lda loadedRoomIndex
+    sta TempTemp2
+    inc loadedRoomIndex
+    bra @initialize
+@up:
+    .ACCU 16
+    lda #(ROOM_BOTTOM - 12)*256
+    sta player.pos.y
+    lda #(ROOM_CENTER_X - 8)*256
+    sta player.pos.x
+    sep #$20 ; 8 bit A
+    lda loadedRoomIndex
+    sta TempTemp2
+    sec
+    sbc #MAP_MAX_WIDTH
+    sta loadedRoomIndex
+    bra @initialize
+@down:
+    .ACCU 16
+    lda #(ROOM_TOP - 4)*256
+    sta player.pos.y
+    lda #(ROOM_CENTER_X - 8)*256
+    sta player.pos.x
+    sep #$20 ; 8 bit A
+    lda loadedRoomIndex
+    sta TempTemp2
+    clc
+    adc #MAP_MAX_WIDTH
+    sta loadedRoomIndex
+    ; bra @initialize
+@initialize:
+; Set player speed to 0
+    sep #$30 ; 16 bit A
+    stz player.speed.x
+    stz player.speed.y
+; Load room
+    sep #$30 ; 8 bit AXY
+    ldx loadedRoomIndex
+    lda.l mapTileSlotTable,X
+    pha
+    jsl LoadRoomSlotIntoLevel
+    sep #$30 ; 8 bit AXY
+    pla
+    rep #$30 ; 16 bit AXY
+; Update map using vqueue
+; Note: TempTemp2 contains old tile index
+    .VQueuePushMiniopForIndex loadedRoomIndex
+    lda #$0020
+    ora vqueueMiniOps.1.data,X
+    sta vqueueMiniOps.1.data,X
+    .VQueuePushMiniopForIndex TempTemp2
     rts
 
 .ENDS

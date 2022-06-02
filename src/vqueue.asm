@@ -40,10 +40,11 @@ ProcessVQueue:
 ; Process miniqueue
     lda.w vqueueNumMiniOps
     beq @process_mini_end
+    stz.w vqueueNumMiniOps
     asl
     asl
     sta.w DMA0_SIZE
-    lda #%0000100 + 256*lobyte(VMADDR)
+    lda #%0000100 + (256*lobyte(VMADDR))
     sta.w DMA0_CTL
     lda #loword(vqueueMiniOps)
     sta.w DMA0_SRCL

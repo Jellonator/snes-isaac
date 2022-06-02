@@ -271,7 +271,8 @@ tile_data_loop:
     jsl ClearVQueue
     ; Initialize other variables
     rep #$30
-    stz gameRoomScrollTileOffset
+    lda #BG2_TILE_BASE_ADDR
+    sta gameRoomBG2Offset
     stz gameRoomScrollX
     lda #-32
     sta gameRoomScrollY
@@ -302,6 +303,8 @@ UpdateLoop:
     jsr PlayerUpdate
     jsr UpdateTears
     jsr UpdateRest
+    ; Finally, check if room should be changed
+    jsr PlayerCheckEnterRoom
     ; End update code
     rep #$30 ; 16 bit AXY
     stz.w is_game_update_running

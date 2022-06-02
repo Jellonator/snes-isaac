@@ -33,7 +33,7 @@
     vqueueNumMiniOps dw
     vqueueBinOffset dw
     ; Room scroll data
-    gameRoomScrollTileOffset dw ; % 000000y0 000x0000
+    gameRoomBG2Offset dw ; % 000000y0 000x0000
     gameRoomScrollX dw
     gameRoomScrollY dw
     ; end

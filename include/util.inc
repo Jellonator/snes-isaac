@@ -188,7 +188,6 @@
 .ENDM
 
 .MACRO .SetCurrentObjectS
-    .BREAKPOINT
     lda.w objectIndex
     lsr
     lsr
@@ -220,6 +219,88 @@
     and #$FF
     ora.w objectDataExt,Y
     sta.w objectDataExt,Y
+.ENDM
+
+.MACRO .GetObjectPos_X
+    phy
+    phx
+    txa
+    lsr
+    lsr
+    lsr
+    lsr
+    tay ; Y is index into objectDataExt [0,31]
+    lda $01,S
+    and #3
+    tax ; X is index into SpriteIndexToExtMaskX [0,3]
+    lda.l SpriteIndexToExtMaskX,X
+    and #$FF
+    and.w objectDataExt,Y ; Get X mask
+    beq @@@@@\.\@pos
+@@@@@\.\@neg:
+    plx
+    lda objectData.1.pos_x,X
+    and #$FF
+    eor #$FFFF
+    sec
+    adc #1
+    bra @@@@@\.\@end
+@@@@@\.\@pos:
+    plx
+    lda objectData.1.pos_x,X
+    and #$FF
+@@@@@\.\@end:
+    ply
+.ENDM
+
+; Put the value A into the sprite at index X
+.MACRO .PutObjectPos_X
+; push
+    phy
+    pha
+    phx
+; Y is index into objectDataExt [0,31]
+    txa
+    lsr
+    lsr
+    lsr
+    lsr
+    tay
+; X is index into SpriteIndexToExtMaskX [0,3]
+    lda $01,S
+    and #3
+    tax
+; Check if A is positive or negative
+    lda $03,S
+    bpl @@@@@\.\@pos
+@@@@@\.\@neg:
+    lda.l SpriteIndexToExtMaskX,X
+    and #$FF
+    ora.w objectDataExt,Y
+    sta.w objectDataExt,Y
+    lda $03,S
+    eor #$FFFF
+    sec
+    adc #1
+    sep #$20 ; 8b A
+    plx
+    sta objectData.1.pos_x,X
+    rep #$20 ; 16b A
+    bra @@@@@\.\@end
+@@@@@\.\@pos:
+    lda.l SpriteIndexToExtMaskX,X
+    eor #$FFFF
+    ora #$FF00
+    and.w objectDataExt,Y
+    sta.w objectDataExt,Y
+    lda $03,S
+    sep #$20 ; 8b A
+    plx
+    sta objectData.1.pos_x,X
+    rep #$20 ; 16b A
+@@@@@\.\@end:
+    pla
+    ply
 .ENDM
 
 .MACRO .SetCurrentObjectXS

@@ -263,9 +263,19 @@ tile_data_loop:
     lda #$FF
     sta BG2VOFS
     rep #$30
+    ; init rng
     jsl RngGameInitialize
+    ; init player
     jsr PlayerInit
+    ; init vqueue
     jsl ClearVQueue
+    ; Initialize other variables
+    rep #$30
+    stz gameRoomScrollTileOffset
+    stz gameRoomScrollX
+    lda #-32
+    sta gameRoomScrollY
+    ; estoy loopin
     jmp UpdateLoop
 
 UpdateLoop:

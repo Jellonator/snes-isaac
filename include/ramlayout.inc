@@ -32,6 +32,10 @@
     vqueueNumOps dw
     vqueueNumMiniOps dw
     vqueueBinOffset dw
+    ; Room scroll data
+    gameRoomScrollTileOffset dw ; % 000000y0 000x0000
+    gameRoomScrollX dw
+    gameRoomScrollY dw
     ; end
     rawMemorySizeShared db
 .ENDE

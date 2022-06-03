@@ -1,5 +1,18 @@
 ; I wish I could use RAMSECTIONs but god do they make compile times slow
 
+; $00-$3F is reserved for temporary variables
+; $40 should mostly be used for commonly used variables,
+; or long pointers for use with [DIRECT],Y addressing
+.ENUM $40
+    currentRoomAddress dl
+    currentRoomTileTypeTableAddress dl
+    currentRoomTileVariantTableAddress dl
+    currentConsideredTileX dw
+    currentConsideredTileY dw
+    ; end
+    rawMemorySizeZP db
+.ENDE
+
 .ENUM $0100
     ; joypad inputs
     joy1raw dw
@@ -18,7 +31,6 @@
     mapTileTypeTable INSTANCEOF byte_t MAP_MAX_SIZE
     mapTileFlagsTable INSTANCEOF byte_t MAP_MAX_SIZE
     loadedMapSlot db
-    loadedMapAddressOffset dw
     loadedRoomIndex INSTANCEOF maptilepos_t
     ; game data
     player INSTANCEOF player_t

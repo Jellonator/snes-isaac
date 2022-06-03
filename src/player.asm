@@ -581,15 +581,13 @@ PlayerMoveLeft:
 ; Get Tile Index
     .BranchIfTileXYOOB TempTileX, TempTileY, @end
     .TileXYToIndexA TempTileX, TempTileY, TempTemp1
-; Determine if tile is solid
-    adc.w currentRoomAddress
-    tax
-    .TileXYToIndexA TempTileX, TempTileY2, TempTemp2
-    adc.w currentRoomAddress
     tay
-    lda.l roominfo_t.tileTypeTable+$7E0000,X ; top
-    tyx
-    ora.l roominfo_t.tileTypeTable+$7E0000,X ; bottom
+    .TileXYToIndexA TempTileX, TempTileY2, TempTemp2
+    tax
+; Determine if tile is solid
+    lda [currentRoomTileTypeTableAddress],Y ; top
+    txy
+    ora [currentRoomTileTypeTableAddress],y ; bottom
     and #$00FF
     beq @end
 ; get position that player would be when flush against wall
@@ -627,15 +625,13 @@ PlayerMoveRight:
 ; Get Tile Index
     .BranchIfTileXYOOB TempTileX, TempTileY, @end
     .TileXYToIndexA TempTileX, TempTileY, TempTemp1
-; Determine if tile is solid
-    adc.w currentRoomAddress
-    tax
-    .TileXYToIndexA TempTileX, TempTileY2, TempTemp2
-    adc.w currentRoomAddress
     tay
-    lda.l roominfo_t.tileTypeTable+$7E0000,X ; top
-    tyx
-    ora.l roominfo_t.tileTypeTable+$7E0000,X ; bottom
+    .TileXYToIndexA TempTileX, TempTileY2, TempTemp2
+    tax
+; Determine if tile is solid
+    lda [currentRoomTileTypeTableAddress],Y ; top
+    txy
+    ora [currentRoomTileTypeTableAddress],y ; bottom
     and #$00FF
     beq @end
 ; get position that player would be when flush against wall
@@ -690,15 +686,13 @@ PlayerMoveUp:
 ; Get Tile Index
     .BranchIfTileXYOOB TempTileX, TempTileY, @end
     .TileXYToIndexA TempTileX, TempTileY, TempTemp1
-; Determine if tile is solid
-    adc.w currentRoomAddress
-    tax
-    .TileXYToIndexA TempTileX2, TempTileY, TempTemp2
-    adc.w currentRoomAddress
     tay
-    lda.l roominfo_t.tileTypeTable+$7E0000,X ; top
-    tyx
-    ora.l roominfo_t.tileTypeTable+$7E0000,X ; bottom
+    .TileXYToIndexA TempTileX2, TempTileY, TempTemp2
+    tax
+; Determine if tile is solid
+    lda [currentRoomTileTypeTableAddress],Y ; top
+    txy
+    ora [currentRoomTileTypeTableAddress],y ; bottom
     and #$00FF
     beq @end
 ; get position that player would be when flush against wall
@@ -736,15 +730,13 @@ PlayerMoveDown:
 ; Get Tile Index
     .BranchIfTileXYOOB TempTileX, TempTileY, @end
     .TileXYToIndexA TempTileX, TempTileY, TempTemp1
-; Determine if tile is solid
-    adc.w currentRoomAddress
-    tax
-    .TileXYToIndexA TempTileX2, TempTileY, TempTemp2
-    adc.w currentRoomAddress
     tay
-    lda.l roominfo_t.tileTypeTable+$7E0000,X ; top
-    tyx
-    ora.l roominfo_t.tileTypeTable+$7E0000,X ; bottom
+    .TileXYToIndexA TempTileX2, TempTileY, TempTemp2
+    tax
+; Determine if tile is solid
+    lda [currentRoomTileTypeTableAddress],Y ; top
+    txy
+    ora [currentRoomTileTypeTableAddress],y ; bottom
     and #$00FF
     beq @end
 ; get position that player would be when flush against wall

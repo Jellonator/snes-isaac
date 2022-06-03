@@ -123,38 +123,31 @@ LoadRoomSlotIntoLevel:
     cpy #12
     bne @loop_op_copy
 ; Update tile data
-    lda.b currentRoomAddress
-    clc
-    adc #roominfo_t.tileTypeTable
-    sta $10 ; $10 = src tile
-    clc
-    adc #roominfo_t.tileVariantTable-roominfo_t.tileTypeTable
-    sta $18 ; $18 = src variant
     lda #$7F
     sta $02 ; $00 = dest bin
-    lda #$7E
-    sta $12
     sta $1A
     ; Begin iteration
     sep #$10 ; 8b XY
     lda #ROOM_TILE_HEIGHT
     sta $04 ; $04 = Y iterations
+    ldy #0
 @loop_tile_y: ; do {
     lda #ROOM_TILE_WIDTH
     sta $06 ; $06 = X iterations
     @loop_tile_x:
-        lda [$10]
+        lda [currentRoomTileTypeTableAddress],Y
         asl
         tax
         lda.w BlockVariantAddresses,X
         sta $08
-        lda [$18]
+        lda [currentRoomTileVariantTableAddress],Y
         asl
+        tyx
         tay
         lda ($08),Y
+        txy
         sta [$00]
-        inc $10
-        inc $18
+        iny
         inc $00
         inc $00
         dec $06
@@ -172,29 +165,22 @@ LoadRoomSlotIntoLevel:
 HandleTileChanged:
     .ACCU 16
     .INDEX 16
+    .TileXYToIndexA currentConsideredTileX, currentConsideredTileY, $04
+    tay
+    lda [currentRoomTileTypeTableAddress],Y ; get TYPE
+    and #$00FF
+    asl
+    tax
+    lda.w BlockVariantAddresses,X
+    sta $00
+    lda [currentRoomTileVariantTableAddress],Y ; get VARIANT
+    and #$00FF
+    asl
+    tay
     lda vqueueNumMiniOps
     asl
     asl
     tax
-    .TileXYToIndexA currentConsideredTileX, currentConsideredTileY, $04
-    sta $02
-    clc
-    adc #roominfo_t.tileTypeTable
-    tay
-    lda [currentRoomAddress],Y ; get TYPE
-    and #$00FF
-    asl
-    tay
-    lda BlockVariantAddresses,Y
-    sta $00
-    lda $02
-    clc
-    adc #roominfo_t.tileVariantTable
-    tay
-    lda [currentRoomAddress],Y ; get VARIANT
-    and #$00FF
-    asl
-    tay
     lda ($00),Y ; A now contains the actual tile value
     sta vqueueMiniOps.1.data,X
     lda currentConsideredTileY

@@ -365,5 +365,26 @@
     sta.w vqueueBinOffset
 .ENDM
 
+; Clobbers A
+.MACRO .BranchIfTileXYOOB ARGS XMEM, YMEM, LABEL
+    lda XMEM
+    cmp #12
+    bcs LABEL
+    lda YMEM
+    cmp #8
+    bcs LABEL
+.ENDM
+
+.MACRO .TileXYToIndexA ARGS XMEM, YMEM, TEMPMEM
+    lda YMEM
+    asl
+    asl
+    sta TEMPMEM
+    asl
+    clc
+    adc TEMPMEM
+    adc XMEM
+.ENDM
+
 ; bcs: A >= arg
 ; bcc: A < arg

@@ -70,7 +70,13 @@ LoadRoomSlotIntoLevel:
     txa
     clc
     adc #loword(roomInfoSlots)
-    sta.w loadedMapAddressOffset
+    sta.b currentRoomAddress
+    clc
+    adc #roominfo_t.tileTypeTable
+    sta.b currentRoomTileTypeTableAddress
+    clc
+    adc #roominfo_t.tileVariantTable - roominfo_t.tileTypeTable
+    sta.b currentRoomTileVariantTableAddress
 ; load tiles
     ; Copy default data to vqueueBinData
     .CopyROMToVQueueBin EmptyRoomTiles, 16*16*2
@@ -117,7 +123,7 @@ LoadRoomSlotIntoLevel:
     cpy #12
     bne @loop_op_copy
 ; Update tile data
-    lda.w loadedMapAddressOffset
+    lda.b currentRoomAddress
     clc
     adc #roominfo_t.tileTypeTable
     sta $10 ; $10 = src tile
@@ -161,6 +167,52 @@ LoadRoomSlotIntoLevel:
     bne @loop_tile_y
     rtl
 
+; Update the VRAM tile in currentConsideredTile
+; Clobbers A, X, and Y
+HandleTileChanged:
+    .ACCU 16
+    .INDEX 16
+    lda vqueueNumMiniOps
+    asl
+    asl
+    tax
+    .TileXYToIndexA currentConsideredTileX, currentConsideredTileY, $04
+    sta $02
+    clc
+    adc #roominfo_t.tileTypeTable
+    tay
+    lda [currentRoomAddress],Y ; get TYPE
+    and #$00FF
+    asl
+    tay
+    lda BlockVariantAddresses,Y
+    sta $00
+    lda $02
+    clc
+    adc #roominfo_t.tileVariantTable
+    tay
+    lda [currentRoomAddress],Y ; get VARIANT
+    and #$00FF
+    asl
+    tay
+    lda ($00),Y ; A now contains the actual tile value
+    sta vqueueMiniOps.1.data,X
+    lda currentConsideredTileY
+    asl
+    asl
+    asl
+    asl
+    asl
+    clc
+    adc gameRoomBG2Offset
+    clc
+    adc currentConsideredTileX
+    clc
+    adc #2 + 2*32
+    sta vqueueMiniOps.1.vramAddr,X
+    inc vqueueNumMiniOps
+    rts
+
 .ENDS
 
 .BANK $00 SLOT "ROM"
@@ -185,8 +237,9 @@ BlockRockVariants:
 BlockRockTintedVariants:
     .dw ($00A2 | 1024*1)
 BlockPoopVariants:
-    .dw ($0080 | 1024*1)
-
+    .dw ($0080 | 1024*1) ; 0: full
+    .dw ($0082 | 1024*1) ; 1: slightly damaged
+    .dw ($0084 | 1024*1) ; 2: mostly damaged
 
 .DSTRUCT RoomDefinitionTest INSTANCEOF roomdefinition_t VALUES
     doorMask:   .db DOOR_MASK

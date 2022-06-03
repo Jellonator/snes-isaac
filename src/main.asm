@@ -270,6 +270,11 @@ tile_data_loop:
     ; init vqueue
     jsl ClearVQueue
     ; Initialize other variables
+    sep #$30
+    lda #$7E
+    sta currentRoomAddress+2
+    sta currentRoomTileTypeTableAddress+2
+    sta currentRoomTileVariantTableAddress+2
     rep #$30
     lda #BG2_TILE_BASE_ADDR
     sta gameRoomBG2Offset

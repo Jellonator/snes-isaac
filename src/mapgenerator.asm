@@ -4,7 +4,7 @@
 .SECTION "MapGeneratorCode" FREE
 
 ; zeropage values
-.ENUM $0040
+.ENUM $0060
     start_pos INSTANCEOF maptilepos_t
     mapgenNumAvailableTiles db
     mapgenNumAvailableEndpointTiles db

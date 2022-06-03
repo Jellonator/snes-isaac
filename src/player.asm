@@ -1,5 +1,29 @@
 .include "base.inc"
 
+.DEFINE TempTileX $08
+.DEFINE TempTileY $0A
+.DEFINE TempTileX2 $0C
+.DEFINE TempTileY2 $0E
+.DEFINE TempTemp1 $14
+.DEFINE TempTemp2 $16
+
+.MACRO .PositionToIndex_A
+    xba
+    and #$00F0
+    lsr
+    lsr
+    lsr
+    lsr
+.ENDM
+
+.MACRO .IndexToPosition_A
+    asl
+    asl
+    asl
+    asl
+    xba
+.ENDM
+
 .BANK $01 SLOT "ROM"
 .SECTION "Player" FREE
 
@@ -337,33 +361,7 @@ PlayerShootTear:
     sta.w tear_array.1.pos.y,X
     rts
 
-UpdateTears:
-    rep #$30 ; 16 bit AXY
-    ldx #$0000
-    cpx.w tear_bytes_used
-    beq @end
-    jmp @iter
-@iter_remove:
-    jsr RemoveTearSlot
-    ; No ++X, but do check that this is the end of the array
-    cpx.w tear_bytes_used ; X != tear_bytes_used
-    bcs @end
-@iter:
-    lda.w tear_array.1.lifetime,X
-    dec A
-    cmp #0 ; if lifetime == 0, then remove
-    beq @iter_remove
-    sta.w tear_array.1.lifetime,X
-    AMINUI 8
-    sta.w $00
-    lda.w tear_array.1.pos.x,X
-    clc
-    adc.w tear_array.1.speed.x,X
-    sta.w tear_array.1.pos.x,X
-    lda.w tear_array.1.pos.y,X
-    clc
-    adc.w tear_array.1.speed.y,X
-    sta.w tear_array.1.pos.y,X
+_UpdateTearPost:
     ; send to OAM
     sep #$20 ; 8A, 16XY
     ldy.w objectIndex
@@ -377,7 +375,86 @@ UpdateTears:
     sta.w objectData.1.tileid,Y
     lda #%00101010
     sta.w objectData.1.flags,Y
-    rep #$20 ;16AXY
+    rts
+
+_UpdateTearTile:
+    .ACCU 16
+    .INDEX 16
+    cmp #BLOCK_POOP
+    bne +
+; handle poop
+    sep #$20 ; 8 bit A
+    lda [currentRoomTileVariantTableAddress],Y
+    cmp #2
+    beq @removeTile
+    inc A
+    sta [currentRoomTileVariantTableAddress],Y
+    rep #$20 ; 16 bit A
+    jsr HandleTileChanged
+    rts
+@removeTile:
+    sep #$20 ; 8 bit A
+    lda #0
+    sta [currentRoomTileVariantTableAddress],Y
+    sta [currentRoomTileTypeTableAddress],Y
+    rep #$20 ; 16 bit A
+    jsr HandleTileChanged
+    rts
++:
+    rts
+
+UpdateTears:
+    rep #$30 ; 16 bit AXY
+    ldx #$0000
+    cpx.w tear_bytes_used
+    bne @iter
+    rts
+@iter_remove:
+    jsr RemoveTearSlot
+    ; No ++X, but do check that this is the end of the array
+    cpx.w tear_bytes_used ; X < tear_bytes_used
+    bcc @iter
+    jmp @end
+@iter:
+; Handle lifetime
+    lda.w tear_array.1.lifetime,X
+    dec A
+    cmp #0 ; if lifetime == 0, then remove
+    beq @iter_remove
+    sta.w tear_array.1.lifetime,X
+    AMINUI 8
+    sta.w $00 ; $00 is tear height
+; Apply speed to position
+    lda.w tear_array.1.pos.x,X
+    clc
+    adc.w tear_array.1.speed.x,X
+    sta.w tear_array.1.pos.x,X
+    clc
+    adc #(4-ROOM_LEFT)*256
+    .PositionToIndex_A
+    sta currentConsideredTileX
+    lda.w tear_array.1.pos.y,X
+    clc
+    adc.w tear_array.1.speed.y,X
+    sta.w tear_array.1.pos.y,X
+    clc
+    adc #(-ROOM_TOP)*256
+    .PositionToIndex_A
+    sta currentConsideredTileY
+; Check tile
+    .BranchIfTileXYOOB currentConsideredTileX, currentConsideredTileY, @iter_remove
+    .TileXYToIndexA currentConsideredTileX, currentConsideredTileY, TempTemp1
+    tay
+    lda [currentRoomTileTypeTableAddress],Y
+    and #$00FF
+    cmp #0
+    beq @skipTileHandler
+    jsr _UpdateTearTile
+    bra @iter_remove
+@skipTileHandler:
+; Update rest of tear info
+    jsr _UpdateTearPost
+    rep #$30 ; 16AXY
     phx
     .IncrementObjectIndex
     plx
@@ -386,7 +463,8 @@ UpdateTears:
     adc #_sizeof_tear_t
     tax
     cpx.w tear_bytes_used ; X < tear_bytes_used
-    bcc @iter
+    bcs @end
+    jmp @iter
 @end:
     rts
 
@@ -462,51 +540,6 @@ RemoveTearSlot:
 @skip_copy:
     rts
 
-.DEFINE TempTileX $08
-.DEFINE TempTileY $0A
-.DEFINE TempTileX2 $0C
-.DEFINE TempTileY2 $0E
-.DEFINE TempTemp1 $14
-.DEFINE TempTemp2 $16
-
-; Clobbers A
-.MACRO .BranchIfTileXYOOB ARGS XMEM, YMEM, LABEL
-    lda XMEM
-    cmp #12
-    bcs LABEL
-    lda YMEM
-    cmp #8
-    bcs LABEL
-.ENDM
-
-.MACRO .TileXYToIndexA ARGS XMEM, YMEM, TEMPMEM
-    lda YMEM
-    asl
-    asl
-    sta TEMPMEM
-    asl
-    clc
-    adc TEMPMEM
-    adc XMEM
-.ENDM
-
-.MACRO .PositionToIndex_A
-    xba
-    and #$00F0
-    lsr
-    lsr
-    lsr
-    lsr
-.ENDM
-
-.MACRO .IndexToPosition_A
-    asl
-    asl
-    asl
-    asl
-    xba
-.ENDM
-
 PlayerMoveHorizontal:
     .ACCU 16
     .INDEX 16
@@ -549,10 +582,10 @@ PlayerMoveLeft:
     .BranchIfTileXYOOB TempTileX, TempTileY, @end
     .TileXYToIndexA TempTileX, TempTileY, TempTemp1
 ; Determine if tile is solid
-    adc.w loadedMapAddressOffset
+    adc.w currentRoomAddress
     tax
     .TileXYToIndexA TempTileX, TempTileY2, TempTemp2
-    adc.w loadedMapAddressOffset
+    adc.w currentRoomAddress
     tay
     lda.l roominfo_t.tileTypeTable+$7E0000,X ; top
     tyx
@@ -595,10 +628,10 @@ PlayerMoveRight:
     .BranchIfTileXYOOB TempTileX, TempTileY, @end
     .TileXYToIndexA TempTileX, TempTileY, TempTemp1
 ; Determine if tile is solid
-    adc.w loadedMapAddressOffset
+    adc.w currentRoomAddress
     tax
     .TileXYToIndexA TempTileX, TempTileY2, TempTemp2
-    adc.w loadedMapAddressOffset
+    adc.w currentRoomAddress
     tay
     lda.l roominfo_t.tileTypeTable+$7E0000,X ; top
     tyx
@@ -658,10 +691,10 @@ PlayerMoveUp:
     .BranchIfTileXYOOB TempTileX, TempTileY, @end
     .TileXYToIndexA TempTileX, TempTileY, TempTemp1
 ; Determine if tile is solid
-    adc.w loadedMapAddressOffset
+    adc.w currentRoomAddress
     tax
     .TileXYToIndexA TempTileX2, TempTileY, TempTemp2
-    adc.w loadedMapAddressOffset
+    adc.w currentRoomAddress
     tay
     lda.l roominfo_t.tileTypeTable+$7E0000,X ; top
     tyx
@@ -704,10 +737,10 @@ PlayerMoveDown:
     .BranchIfTileXYOOB TempTileX, TempTileY, @end
     .TileXYToIndexA TempTileX, TempTileY, TempTemp1
 ; Determine if tile is solid
-    adc.w loadedMapAddressOffset
+    adc.w currentRoomAddress
     tax
     .TileXYToIndexA TempTileX2, TempTileY, TempTemp2
-    adc.w loadedMapAddressOffset
+    adc.w currentRoomAddress
     tay
     lda.l roominfo_t.tileTypeTable+$7E0000,X ; top
     tyx

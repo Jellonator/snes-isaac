@@ -11,6 +11,10 @@
     mapgenAvailableTiles INSTANCEOF maptilepos_t MAX_MAP_SLOTS
 .ENDE
 
+.DEFINE TempDoorMask $20
+.DEFINE TempAddr $22
+.DEFINE TempValue $27
+
 ; Check if tile pos is valid; that is, Y<10
 ; Assume tile is in A
 .MACRO .CheckTilePosValidA
@@ -210,33 +214,94 @@ _PushAvailableTileX:
     rts
 
 ; Initialize the tile at X
-; consumes A
 _InitializeRoomX:
     .ACCU 8
     .INDEX 8
-    pha ; A [db]
+    pha ; >1
+; set up map data
     lda #ROOMTYPE_NORMAL
     sta.w mapTileTypeTable,X
     stz.w mapTileFlagsTable,X
-    phy ; Y [db]
-    phx ; tile position [db]
     lda.w numUsedMapSlots
-    inc.w numUsedMapSlots
     sta.w loword(mapTileSlotTable),X
-    pha ; room slot [db]
-    ; lda #bankbyte(RoomDefinitionTest)
-    ; pha ; room definition bank [db]
-    ; pea loword(RoomDefinitionTest) ; room definiton address [dw]
-    jsr _PushRandomRoomFromPool
+    inc.w numUsedMapSlots
+; set up room slot data
+    phx ; >1
+    tax ; X now contains tile slot
+    lda $01,S
+    sta roomSlotMapPos,X
+    lda #ROOMTYPE_NORMAL
+    sta roomSlotRoomType,X
+    lda #ROOM_SIZE_REGULAR
+    sta roomSlotRoomSize,X
+    plx ; <1
+; end
+    pla ; <1
+    rts
+
+; Setup the room at tile position X
+_SetupRoomX:
+    .INDEX 8
+    .ACCU 8
+    phy ; >1
+    pha ; >1
+    lda mapTileSlotTable,X
+    phx ; >1 $02,S contains tile position [db]
+    pha ; >1 $01,S contains room slot [db]
+; First, determine door mask
+    stz TempDoorMask
+    lda $02,s
+    .BranchIfTileOnLeftBorderA +
+        dex
+        .BranchIfTileEmptyX +
+            lda TempDoorMask
+            ora #DOOR_DEF_LEFT
+            sta TempDoorMask
+    +:
+    lda $02,s
+    .BranchIfTileOnRightBorderA +
+        inc A
+        tax
+        .BranchIfTileEmptyX +
+            lda TempDoorMask
+            ora #DOOR_DEF_RIGHT
+            sta TempDoorMask
+    +:
+    lda $02,s
+    .BranchIfTileOnTopBorderA +
+        sec
+        sbc #MAP_MAX_WIDTH
+        tax
+        .BranchIfTileEmptyX +
+            lda TempDoorMask
+            ora #DOOR_DEF_UP
+            sta TempDoorMask
+    +:
+    lda $02,s
+    .BranchIfTileOnBottomBorderA +
+        clc
+        adc #MAP_MAX_WIDTH
+        tax
+        .BranchIfTileEmptyX +
+            lda TempDoorMask
+            ora #DOOR_DEF_DOWN
+            sta TempDoorMask
+    +:
+    lda $01,s
+    tax
+    lda TempDoorMask
+    sta roomSlotDoorMask,X
+; Set up actual room
+    jsr _PushRandomRoomFromPool ; >3
     jsl InitializeRoomSlot
-    sep #$30 ; 8 bit AXY
-    pla ; [db]
-    pla ; [db]
-    pla ; [db]
-    pla ; [db]
-    plx ; [db]
-    ply ; [db]
-    pla ; [db]
+    rep #$20 ; 16b A
+    pla ; <2
+    pla ; <2
+    sep #$30 ; 8b AXY
+; end
+    plx ; <1
+    pla ; <1
+    ply ; <1
     rts
 
 ; Count tiles adjacent to A
@@ -399,7 +464,16 @@ BeginMapGeneration:
     dey
     cpy #0
     bne @loop_add_tiles ; } while (--Y != 0);
-
+; Setup rooms
+    sep #$30 ; 8b AXY
+    ldy numUsedMapSlots
+@loop_setup_tiles:
+    ldx loword(roomSlotMapPos-1),Y
+    jsr _SetupRoomX
+    sep #$30 ; 8b AXY
+    dey
+    bne @loop_setup_tiles
+; end
     lda #$FF
     sta.w numTilesToUpdate
     ; END: reset data bank
@@ -408,28 +482,70 @@ BeginMapGeneration:
 
 _PushRandomRoomFromPool:
     rep #$30 ; 16b AXY
-    ply
+; Get RNG value
     jsl RngGeneratorUpdate8
     sta.l DIVU_DIVIDEND
-    sep #$20 ; 8b A
-    lda.l RoomPoolDefinitions@basement ; pool size
-    sta.l DIVU_DIVISOR
-    .REPT 7
-        NOP ; (7 * 2 cycle)
-    .ENDR
-    rep #$20 ; 16b A (3 cycle)
-    lda.l DIVU_REMAINDER
+; Put pointer in X
+; For efficiency, X starts at size*3, and accesses use X-3
+    lda.l RoomPoolDefinitions@basement.numRooms ; byte 0 is size
+    and #$FF
+    sta TempValue
     asl
     clc
-    adc.l DIVU_REMAINDER
+    adc.l TempValue
     tax
     sep #$20 ; 8b A
+    ldy #0 ; Y counts number of valid rooms
+    dec TempValue ; TempValue is index of current element (i.e. X/3 - 1)
+; Find rooms with matching door mask, and put their indices into tempData
+@loop:
+    rep #$20 ; 16b A
+    lda.l RoomPoolDefinitions@basement.roomList-3,X
+    sta TempAddr
+    sep #$20 ; 8b A
+    lda.l RoomPoolDefinitions@basement.roomList+2-3,X
+    sta TempAddr+2
+    ; Ensure that RoomMask is a subset of DefMask
+    ; Need to check that RoomMask & DefMask = RoomMask
+    ; Need to check that (RoomMask)(DefMask) xor (RoomMask)(1) = 0
+    ; (RoomMask)(1 xor DefMask) = 0
+    lda [TempAddr] ; get DefMask
+    ; eor #$0F
+    and TempDoorMask
+    cmp TempDoorMask
+    bne @skip
+    lda TempValue
+    sta.w loword(tempData),Y
+    iny
+@skip:
+    dec TempValue
+    dex
+    dex
+    dex
+    bne @loop
+; Apply RNG (rand() % Y)
+    tya
+    sta.l DIVU_DIVISOR
+    .REPT 8
+        NOP ; (8 * 2 cycle)
+    .ENDR
+    rep #$20 ; 16b A
+    lda.l DIVU_REMAINDER ; index into tempData
+    tax
+    stz.w loword(tempData)+1,X ; Need to make next byte 0 so that it doesn't get added to 16b result
+    lda.w loword(tempData),X
+    asl
+    clc
+    adc.w loword(tempData),X
+    tax ; X now contains index into RoomPoolDefinitions@basement.roomList
+    sep #$20 ; 8b A
     lda.l RoomPoolDefinitions@basement+3,X ; bank
-    pha
+    ply ; <2 pull return address
+    pha ; >1
     rep #$20 ; 16b A
     lda.l RoomPoolDefinitions@basement+1,X ; addr
-    pha
-    phy
+    pha ; >2
+    phy ; >2 push return address
     rts
 
 _ClearMap:
@@ -444,6 +560,7 @@ _ClearMap:
     .ClearWRam_ZP mapTileTypeTable, MAP_MAX_SIZE
     .ClearWRam_ZP mapTileFlagsTable, MAP_MAX_SIZE
     .ClearWRam_ZP mapTileSlotTable, MAP_MAX_SIZE
+    .ClearWRam_ZP _mapDoorHorizontalEmptyBuf, (MAP_MAX_SIZE*2 + MAP_MAX_WIDTH + MAP_MAX_HEIGHT)
     pld
     rts
 

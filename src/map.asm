@@ -30,21 +30,21 @@ InitializeRoomSlot:
     sep #$20 ; 8 bit A, 16 bit XY
     ; write tile position
     lda $08,s
-    sta.l roomInfoSlots.1.tilePos,X
+    ; sta.l roomSlotTiles.1.tilePos,X
     ; TODO: set door flags
     ; write room size
     ldy #$01
     lda [$0A],Y
-    sta.l roomInfoSlots.1.roomSize,X
+    ; sta.l roomSlotTiles.1.roomSize,X
     ; Copy tile data, applying variants
     ldy #roomdefinition_t.tileData
 @tile_copy_loop: ; do {
     lda [$0A],Y
     ; lda #5
-    sta.l roomInfoSlots.1.tileTypeTable,X
+    sta.l roomSlotTiles.1.tileTypeTable,X
     ; TODO: proper variant handling
     lda #0
-    sta.l roomInfoSlots.1.tileVariantTable,X
+    sta.l roomSlotTiles.1.tileVariantTable,X
     ; while (++Y != ROOM_TILE_COUNT);
     iny
     inx
@@ -69,7 +69,7 @@ LoadRoomSlotIntoLevel:
     ldx MULTS_RESULT_LOW
     txa
     clc
-    adc #loword(roomInfoSlots)
+    adc #loword(roomSlotTiles)
     sta.b currentRoomAddress
     clc
     adc #roominfo_t.tileTypeTable
@@ -228,7 +228,7 @@ BlockPoopVariants:
     .dw ($0084 | 1024*1) ; 2: mostly damaged
 
 .DSTRUCT RoomDefinitionTest INSTANCEOF roomdefinition_t VALUES
-    doorMask:   .db DOOR_MASK
+    doorMask:   .db DOOR_DEF_MASK
     roomSize:   .db ROOM_SIZE_REGULAR
     numObjects: .db 0
     tileData:

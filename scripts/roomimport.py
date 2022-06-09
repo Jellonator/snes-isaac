@@ -40,12 +40,25 @@ for room in rooms:
     room_id = room.replace('.tmx', '').replace('/', '_')
     roomPathToId[room] = "RoomDefinitions@{}".format(room_id)
     room_path = os.path.join("assets/rooms", room)
+    tilemap = pytiled_parser.parser.parse_map(Path(room_path))
     out_inc.write("\t.DSTRUCT @{} INSTANCEOF roomdefinition_t VALUES\n".format(room_id))
-    out_inc.write("\t\tdoorMask:   .db DOOR_MASK\n")
+    dirls = []
+    if tilemap.properties["up"]:
+        dirls.append("DOOR_DEF_UP")
+    if tilemap.properties["left"]:
+        dirls.append("DOOR_DEF_LEFT")
+    if tilemap.properties["right"]:
+        dirls.append("DOOR_DEF_RIGHT")
+    if tilemap.properties["down"]:
+        dirls.append("DOOR_DEF_DOWN")
+    if len(dirls) == 0:
+        mask = "0"
+    else:
+        mask = '|'.join(dirls)
+    out_inc.write("\t\tdoorMask:   .db {}\n".format(mask))
     out_inc.write("\t\troomSize:   .db ROOM_SIZE_REGULAR\n")
     out_inc.write("\t\tnumObjects: .db 0\n")
     out_inc.write("\t\ttileData:\n")
-    tilemap = pytiled_parser.parser.parse_map(Path(room_path))
     if len(tilemap.layers) > 1:
         print("Warning: too many tile layers in {}".format(room_path))
     elif len(tilemap.layers) == 0:
@@ -68,10 +81,12 @@ out_inc.write(".BANK $02 SLOT \"ROM\"\n")
 out_inc.write(".SECTION \"RoomPoolDefinitions\" SUPERFREE\n")
 out_inc.write("RoomPoolDefinitions:\n")
 for pool in json_roompools:
-    out_inc.write("\t@{}:\n".format(pool["id"]))
-    out_inc.write("\t\t.db {}\n".format(len(pool["rooms"])))
-    out_inc.write("\t\t@@rooms:\n")
+    out_inc.write("\t.DSTRUCT @{} INSTANCEOF roompooldef_t VALUES\n".format(pool["id"]))
+    # out_inc.write("\t@{}:\n".format(pool["id"]))
+    out_inc.write("\t\tnumRooms: .db {}\n".format(len(pool["rooms"])))
+    # out_inc.write("\t\t\t.db {}\n".format(len(pool["rooms"])))
+    # out_inc.write("\t\t@@rooms:\n")
+    out_inc.write("\t.ENDST\n")
     for room in pool["rooms"]:
-        out_inc.write("\t\t\t.dl {}\n".format(roomPathToId[room]))
-    out_inc.write("\t\t\t@@end:\n")
+        out_inc.write("\t\t.dl {}\n".format(roomPathToId[room]))
 out_inc.write(".ENDS\n")

@@ -271,8 +271,7 @@ tile_data_loop:
     jsl ClearVQueue
     ; Initialize other variables
     sep #$30
-    lda #$7E
-    sta currentRoomAddress+2
+    lda #bankbyte(mapTileSlotTable)
     sta currentRoomTileTypeTableAddress+2
     sta currentRoomTileVariantTableAddress+2
     rep #$30

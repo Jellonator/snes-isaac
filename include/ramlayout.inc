@@ -4,7 +4,7 @@
 ; $40 should mostly be used for commonly used variables,
 ; or long pointers for use with [DIRECT],Y addressing
 .ENUM $40
-    currentRoomAddress dl
+    currentRoomSlot db
     currentRoomTileTypeTableAddress dl
     currentRoomTileVariantTableAddress dl
     currentConsideredTileX dw
@@ -67,7 +67,7 @@
     _mapDoorHorizontalEmptyBuf ds MAP_MAX_HEIGHT
     mapDoorHorizontal ds MAP_MAX_SIZE ; For index i: Connects room i with room i+1
     _mapDoorVerticalEmptyBuf ds MAP_MAX_WIDTH
-    mapDoorVERTICAL ds MAP_MAX_SIZE ; For index i: Connects room i with room i+MAP_MAX_WIDTH
+    mapDoorVertical ds MAP_MAX_SIZE ; For index i: Connects room i with room i+MAP_MAX_WIDTH
     ; mapDoor variables are a bit larger than necessary for efficiency's sake
     tempData ds 256 ; Temp data that can be used for whatever purpose
     ; end

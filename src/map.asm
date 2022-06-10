@@ -63,16 +63,13 @@ LoadRoomSlotIntoLevel:
     lda #hibyte(_sizeof_roominfo_t)
     sta MULTS_A
     lda $04,s
+    sta currentRoomSlot
     sta MULTS_B
     sta.w loadedMapSlot
     rep #$30 ; 16 bit AXY
-    ldx MULTS_RESULT_LOW
-    txa
+    lda MULTS_RESULT_LOW
     clc
-    adc #loword(roomSlotTiles)
-    sta.b currentRoomAddress
-    clc
-    adc #roominfo_t.tileTypeTable
+    adc #loword(roomSlotTiles) + roominfo_t.tileTypeTable
     sta.b currentRoomTileTypeTableAddress
     clc
     adc #roominfo_t.tileVariantTable - roominfo_t.tileTypeTable
@@ -84,6 +81,7 @@ LoadRoomSlotIntoLevel:
     ; This will also Update the vqueueBinData offset
     rep #$30 ; 16 bit AXY
     lda.w vqueueBinOffset
+    sta $10 ; $10 is copy of bin offset
     clc
     adc #16*2*2 + 2*2
     sta $00
@@ -158,6 +156,73 @@ LoadRoomSlotIntoLevel:
     sta $00
     dec $04 ; } while (--iy);
     bne @loop_tile_y
+; update doors
+    sep #$30 ; 8b AXY
+    ldx currentRoomSlot
+    lda.l roomSlotMapPos,X
+    tay
+    tax ; X now contains map position
+    lda.l mapDoorVertical-MAP_MAX_WIDTH,X ; top door
+    beq +
+        rep #$30 ; 16b AXY
+        ; TODO: choose door
+        ldx $10 ; X is now bin offset
+        lda #$000C
+        sta.l $7F0000 + ( 7 * 2),X
+        lda #$000E
+        sta.l $7F0000 + ( 8 * 2),X
+        lda #$002C
+        sta.l $7F0000 + (23 * 2),X
+        lda #$002E
+        sta.l $7F0000 + (24 * 2),X
+        sep #$30 ; 8b AXY
+        tyx
+    +:
+    lda.l mapDoorVertical,X ; bottom door
+    beq +
+        rep #$30 ; 16b AXY
+        ldx $10 ; X is now bin offset
+        lda #$802C
+        sta.l $7F0000 + ((16*(2 + ROOM_TILE_HEIGHT) +  7) * 2),X
+        lda #$802E
+        sta.l $7F0000 + ((16*(2 + ROOM_TILE_HEIGHT) +  8) * 2),X
+        lda #$800C
+        sta.l $7F0000 + ((16*(2 + ROOM_TILE_HEIGHT) + 23) * 2),X
+        lda #$800E
+        sta.l $7F0000 + ((16*(2 + ROOM_TILE_HEIGHT) + 24) * 2),X
+        sep #$30 ; 8b AXY
+        tyx
+    +:
+    lda.l mapDoorHorizontal-1,X ; left door
+    beq +
+        rep #$30 ; 16b AXY
+        ldx $10 ; X is now bin offset
+        lda #$0040
+        sta.l $7F0000 + ((16*(2 + 3) +  0) * 2),X
+        lda #$0042
+        sta.l $7F0000 + ((16*(2 + 3) +  1) * 2),X
+        lda #$0060
+        sta.l $7F0000 + ((16*(2 + 3) + 16) * 2),X
+        lda #$0062
+        sta.l $7F0000 + ((16*(2 + 3) + 17) * 2),X
+        sep #$30 ; 8b AXY
+        tyx
+    +:
+    lda.l mapDoorHorizontal,X ; right door
+    beq +
+        rep #$30 ; 16b AXY
+        lda #$002C
+        ldx $10 ; X is now bin offset
+        lda #$4042
+        sta.l $7F0000 + ((16*(2 + 3) + 14) * 2),X
+        lda #$4040
+        sta.l $7F0000 + ((16*(2 + 3) + 15) * 2),X
+        lda #$4062
+        sta.l $7F0000 + ((16*(2 + 3) + 30) * 2),X
+        lda #$4060
+        sta.l $7F0000 + ((16*(2 + 3) + 31) * 2),X
+        sep #$30 ; 8b AXY
+    +:
     rtl
 
 ; Update the VRAM tile in currentConsideredTile
@@ -245,20 +310,20 @@ BlockPoopVariants:
 .ENDST
 
 EmptyRoomTiles:
-.dw $0002 $0004 $0004 $0004 $0004 $0004 $0004 $000C $000E $0004 $0004 $0004 $0004 $0004 $0004 $4002
-.dw $0022 $0024 $0026 $0026 $0026 $0026 $0026 $002C $002E $0026 $0026 $0026 $0026 $0026 $4024 $4022
+.dw $0002 $0004 $0004 $0004 $0004 $0004 $0004 $0004 $0004 $0004 $0004 $0004 $0004 $0004 $0004 $4002
+.dw $0022 $0024 $0026 $0026 $0026 $0026 $0026 $0026 $0026 $0026 $0026 $0026 $0026 $0026 $4024 $4022
 ;              [                                                                       ]
 .dw $0022 $0006 $0008 $000A $000A $000A $000A $000A $000A $000A $000A $000A $000A $4008 $4006 $4022
 .dw $0022 $0006 $0028 $002A $002A $002A $002A $002A $002A $002A $002A $002A $002A $4028 $4006 $4022
 .dw $0022 $0006 $0028 $002A $002A $002A $002A $002A $002A $002A $002A $002A $002A $4028 $4006 $4022
-.dw $0040 $0042 $0028 $002A $002A $002A $002A $002A $002A $002A $002A $002A $002A $4028 $4042 $4040
-.dw $0060 $0062 $0028 $002A $002A $002A $002A $002A $002A $002A $002A $002A $002A $4028 $4062 $4060
+.dw $0022 $0006 $0028 $002A $002A $002A $002A $002A $002A $002A $002A $002A $002A $4028 $4006 $4022
+.dw $0022 $0006 $0028 $002A $002A $002A $002A $002A $002A $002A $002A $002A $002A $4028 $4006 $4022
 .dw $0022 $0006 $0028 $002A $002A $002A $002A $002A $002A $002A $002A $002A $002A $4028 $4006 $4022
 .dw $0022 $0006 $0028 $002A $002A $002A $002A $002A $002A $002A $002A $002A $002A $4028 $4006 $4022
 .dw $0022 $0006 $8008 $800A $800A $800A $800A $800A $800A $800A $800A $800A $800A $C008 $4006 $4022
 ;              [                                                                       ]
-.dw $0022 $8024 $8026 $8026 $8026 $8026 $8026 $802C $802E $8026 $8026 $8026 $8026 $8026 $C024 $4022
-.dw $8002 $8004 $8004 $8004 $8004 $8004 $8004 $800C $800E $8004 $8004 $8004 $8004 $8004 $8004 $C002
+.dw $0022 $8024 $8026 $8026 $8026 $8026 $8026 $8026 $8026 $8026 $8026 $8026 $8026 $8026 $C024 $4022
+.dw $8002 $8004 $8004 $8004 $8004 $8004 $8004 $8004 $8004 $8004 $8004 $8004 $8004 $8004 $8004 $C002
 .dw $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000
 .dw $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000
 .dw $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000

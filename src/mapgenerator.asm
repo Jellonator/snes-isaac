@@ -251,6 +251,7 @@ _SetupRoomX:
 ; First, determine door mask
     stz TempDoorMask
     lda $02,s
+    tay
     .BranchIfTileOnLeftBorderA +
         dex
         .BranchIfTileEmptyX +
@@ -266,6 +267,10 @@ _SetupRoomX:
             lda TempDoorMask
             ora #DOOR_DEF_RIGHT
             sta TempDoorMask
+            ; setup door to right
+            ; TODO: improve algorithm
+            lda #DOORTYPE_OPEN
+            sta.w loword(mapDoorHorizontal),Y
     +:
     lda $02,s
     .BranchIfTileOnTopBorderA +
@@ -286,6 +291,10 @@ _SetupRoomX:
             lda TempDoorMask
             ora #DOOR_DEF_DOWN
             sta TempDoorMask
+            ; setup door to bottom
+            ; TODO: improve algorithm
+            lda #DOORTYPE_OPEN
+            sta.w loword(mapDoorVertical),Y
     +:
     lda $01,s
     tax
@@ -476,7 +485,6 @@ BeginMapGeneration:
 ; end
     lda #$FF
     sta.w numTilesToUpdate
-    ; END: reset data bank
     plb
     rtl
 

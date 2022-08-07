@@ -34,19 +34,18 @@ Start2:
     ; Set tilemap mode 2
     lda #%00100001
     sta BGMODE
-    lda #%00100100 ; BG1 tile data at $2400
+    lda #(BG1_TILE_BASE_ADDR >> 8) | %00
     sta BG1SC
-    lda #%00101000 ; BG2 tile data at $2800 (>>10)
+    lda #(BG2_TILE_BASE_ADDR >> 8) | %00
     sta BG2SC
-    lda #%00101100 ; BG3 tile data at $2C00
+    lda #(BG3_TILE_BASE_ADDR >> 8) | %00
     sta BG3SC
-    lda #%01010011 ; character data: BG1=$3000, BG2=$5000 (>>12)
+    lda #(BG1_CHARACTER_BASE_ADDR >> 12) | (BG2_CHARACTER_BASE_ADDR >> 8)
     sta BG12NBA
-    lda #%00000010 ; character data: BG3=$2000 (essentially $2000-$2400
-                   ; for character data, but can technically access up to $4000)
+    lda #(BG3_CHARACTER_BASE_ADDR >> 12)
     sta BG34NBA
     ; Set up sprite mode
-    lda #%00000000
+    lda #%00000000 | (SPRITE1_BASE_ADDR >> 13) | ((SPRITE2_BASE_ADDR - SPRITE1_BASE_ADDR - $1000) >> 9)
     sta OBSEL
     ; copy palettes to CGRAM
     PEA $C000 + bankbyte(palettes@isaac.w)
@@ -93,11 +92,11 @@ Start2:
     PLA
     ; Set background color
     sep #$20 ; 8 bit A
-    stz $2121
+    stz CGADDR
     lda #%01100011
-    sta $2122
+    sta CGDATA
     lda #%00001100
-    sta $2122
+    sta CGDATA
     ; copy sprite to VRAM
     pea SPRITE1_BASE_ADDR
     pea 32
@@ -169,7 +168,7 @@ Start2:
     pla
     pla
     ; copy tear to VRAM
-    pea 16*32 ; VRAM address
+    pea SPRITE1_BASE_ADDR + 16*32 ; VRAM address
     pea 4 ; num tiles
     sep #$20 ; 8 bit A
     lda #bankbyte(sprites@isaac_tear)
@@ -193,11 +192,11 @@ Start2:
     ; Set up tilemap. First, write empty in all slots
     rep #$30 ; 16 bit X, Y, Z
     lda #BG2_TILE_BASE_ADDR
-    sta $2116
+    sta VMADDR
     lda #$0020
     ldx #$0000
 tile_map_loop:
-    sta $2118
+    sta VMDATA
     inx
     cpx #$0400 ; overwrite entire tile map
     bne tile_map_loop
@@ -205,7 +204,7 @@ tile_map_loop:
     ; now, copy data for room layout
     ; room is 16x12, game is 32x32
     lda #BG2_TILE_BASE_ADDR
-    sta $2116
+    sta VMADDR
     ldx #$0000 ; rom tile data index
     ldy #$0000 ; vram tile data index
 tile_data_loop:
@@ -222,7 +221,7 @@ tile_data_loop:
 @copyzero:
     lda #$0020
 @store:
-    sta $2118
+    sta VMDATA
     iny
     iny
     cpy #$0300 ; 32 * 12 tiles
@@ -254,10 +253,10 @@ tile_data_loop:
     sta W12SEL
     ; re-enable rendering
     lda #%00001111
-    sta $2100
+    sta INIDISP
     cli ; Enable interrupts and joypad
     lda #$81
-    sta $4200
+    sta NMITIMEN
     lda #$E0
     sta BG2VOFS
     lda #$FF
@@ -271,8 +270,7 @@ tile_data_loop:
     jsl ClearVQueue
     ; Initialize other variables
     sep #$30
-    lda #$7E
-    sta currentRoomAddress+2
+    lda #bankbyte(mapTileSlotTable)
     sta currentRoomTileTypeTableAddress+2
     sta currentRoomTileVariantTableAddress+2
     rep #$30

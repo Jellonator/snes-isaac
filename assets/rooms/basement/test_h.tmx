@@ -4,18 +4,18 @@
   <property name="down" type="bool" value="false"/>
   <property name="left" type="bool" value="true"/>
   <property name="right" type="bool" value="true"/>
-  <property name="up" type="bool" value="true"/>
+  <property name="up" type="bool" value="false"/>
  </properties>
  <tileset firstgid="1" source="../Isaac.tsx"/>
  <layer id="1" name="Tile Layer 1" width="12" height="8">
   <data encoding="csv">
-17,17,17,17,1,1,1,1,17,17,17,17,
-17,17,1,1,1,1,1,1,1,1,17,17,
+17,17,17,17,17,17,17,17,17,17,17,17,
+17,1,1,1,1,1,1,1,1,1,1,17,
 1,1,1,1,1,1,1,1,1,1,1,1,
 1,1,1,1,1,1,1,1,1,1,1,1,
-1,1,1,17,1,17,17,1,17,1,1,1,
-1,1,17,17,1,17,17,1,17,17,1,1,
-17,17,17,17,1,17,17,1,17,17,17,17,
+1,1,1,1,1,1,1,1,1,1,1,1,
+1,1,1,1,1,1,1,1,1,1,1,1,
+17,1,1,1,1,1,1,1,1,1,1,17,
 17,17,17,17,17,17,17,17,17,17,17,17
 </data>
  </layer>

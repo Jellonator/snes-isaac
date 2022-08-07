@@ -123,3 +123,17 @@
     vramAddr dw
     data dw
 .ENDST
+
+; aligned to 16 bytes
+.STRUCT entitycommon_t
+    type db
+    state db
+    variant db
+    timer db
+    posx dw
+    posy dw
+    velocx dw
+    velocy dw
+    health dw
+    ext ds 2
+.ENDST

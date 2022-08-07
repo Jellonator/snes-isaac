@@ -49,6 +49,9 @@
     gameRoomBG2Offset dw ; % 000000y0 000x0000
     gameRoomScrollX dw
     gameRoomScrollY dw
+    ; Commonly used entity data,
+    ; aligned for direct page locality
+    entities INSTANCEOF entitycommon_t ACTIVE_ENTITY_MAX
     ; end
     rawMemorySizeShared db
 .ENDE

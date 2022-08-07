@@ -17,7 +17,8 @@ SOURCES  := main.asm\
 			rng.asm\
 			map.asm\
 			bindata.asm\
-			vqueue.asm
+			vqueue.asm\
+			test.asm
 
 OBJECTS  := $(SOURCES:%.asm=$(OBJDIR)/%.obj)
 PALETTES := $(wildcard assets/palettes/*.hex)

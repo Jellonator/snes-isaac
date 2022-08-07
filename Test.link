@@ -9,3 +9,4 @@ obj/rng.obj
 obj/bindata.obj
 obj/map.obj
 obj/vqueue.obj
+obj/test.obj

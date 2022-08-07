@@ -262,10 +262,6 @@ PlayerShootTear:
     lda.w player.flags
     eor #PLAYER_FLAG_EYE
     sta.w player.flags
-    ; lda player.pos.x
-    ; sta tear_array.1.pos.x,X
-    ; lda player.pos.y
-    ; sta tear_array.1.pos.y,X
     lda #90
     sta.w tear_array.1.lifetime,X
     stz.w tear_array.1.size,X

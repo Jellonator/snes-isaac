@@ -75,9 +75,6 @@
 
 ; Structure which defines existing room layout
 .STRUCT roominfo_t
-    tilePos INSTANCEOF maptilepos_t
-    doorMask db
-    roomSize db
     tileTypeTable INSTANCEOF byte_t ROOM_TILE_COUNT
     tileVariantTable INSTANCEOF byte_t ROOM_TILE_COUNT
 .ENDST
@@ -98,6 +95,18 @@
     ; objectDefinitions INSTANCEOF objectdef_t *
 .ENDST
 
+.STRUCT roompooldef_t
+    numRooms db
+    roomList ds 0
+.ENDST
+
+.STRUCT floordefinition_t
+    numRooms db
+    numRoomsRand db
+    mapWidthLimit db
+    mapHeightLimit db
+.ENDST
+
 ; Defines structure for VQueue operation
 ; Laid out such that operations can be easily performed with MVP
 .STRUCT vqueueop_t
@@ -108,7 +117,23 @@
     numBytes dw
 .ENDST
 
+; VQueue mini operation
+; Used directly with DMA transfer to VADDR and VDATA
 .STRUCT vqueueminiop_t
     vramAddr dw
     data dw
+.ENDST
+
+; aligned to 16 bytes
+.STRUCT entitycommon_t
+    type db
+    state db
+    variant db
+    timer db
+    posx dw
+    posy dw
+    velocx dw
+    velocy dw
+    health dw
+    ext ds 2
 .ENDST

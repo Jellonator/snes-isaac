@@ -3,7 +3,7 @@
 ; This is ONLY to ensure that the game is staying within memory limits
 
 .RAMSECTION "ZP" BANK $7E SLOT "ZeroMemory" FREE
-    rawMemoryZP ds (rawMemorySizeZP-$40)
+    rawMemoryZP ds (rawMemorySizeZP); -$40) we consider first $40 bytes to be taken
 .ENDS
 
 .RAMSECTION "Shared" BANK $7E SLOT "SharedMemory" FREE

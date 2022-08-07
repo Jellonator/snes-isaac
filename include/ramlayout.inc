@@ -4,7 +4,7 @@
 ; $40 should mostly be used for commonly used variables,
 ; or long pointers for use with [DIRECT],Y addressing
 .ENUM $40
-    currentRoomAddress dl
+    currentRoomSlot db
     currentRoomTileTypeTableAddress dl
     currentRoomTileVariantTableAddress dl
     currentConsideredTileX dw
@@ -13,6 +13,7 @@
     rawMemorySizeZP db
 .ENDE
 
+; Bank used for somewhat commonly used variables that need to be in bank 0
 .ENUM $0100
     ; joypad inputs
     joy1raw dw
@@ -48,19 +49,37 @@
     gameRoomBG2Offset dw ; % 000000y0 000x0000
     gameRoomScrollX dw
     gameRoomScrollY dw
+    ; Commonly used entity data,
+    ; aligned for direct page locality
+    entities INSTANCEOF entitycommon_t ACTIVE_ENTITY_MAX
     ; end
     rawMemorySizeShared db
 .ENDE
 
+; Should contain data that is either large or not often used.
+; For more efficient bank usage, this bank is mostly used for bank/game data
 .ENUM $7E2000
     ; map data
     mapTileSlotTable INSTANCEOF byte_t MAP_MAX_SIZE
-    roomInfoSlots INSTANCEOF roominfo_t MAX_MAP_SLOTS
+    roomSlotTiles INSTANCEOF roominfo_t MAX_MAP_SLOTS
+    roomSlotDoorMask ds MAX_MAP_SLOTS
+    roomSlotMapPos INSTANCEOF maptilepos_t MAX_MAP_SLOTS
+    roomSlotRoomType ds MAX_MAP_SLOTS
+    roomSlotRoomSize ds MAX_MAP_SLOTS
     tilesToUpdate INSTANCEOF byte_t MAP_MAX_SIZE
+    _mapDoorHorizontalEmptyBuf ds MAP_MAX_HEIGHT
+    mapDoorHorizontal ds MAP_MAX_SIZE ; For index i: Connects room i with room i+1
+    _mapDoorVerticalEmptyBuf ds MAP_MAX_WIDTH
+    mapDoorVertical ds MAP_MAX_SIZE ; For index i: Connects room i with room i+MAP_MAX_WIDTH
+    ; mapDoor variables are a bit larger than necessary for efficiency's sake
+    tempData ds 256 ; Temp data that can be used for whatever purpose
     ; end
     rawMemorySize7E db
 .ENDE
 
+; Should contain data that is either large or not often used
+; For more efficient bank usage, this bank is mostly used for video memory management
+; Perhaps will be used for decompressed animated sprites?
 .ENUM $7F0000
     ; VQueue data
     vqueueOps INSTANCEOF vqueueop_t VQUEUE_MAX_SIZE

@@ -28,5 +28,10 @@
         "name": "UI_font",
         "src": "assets/sprites/font.raw",
         "depth": 16
+    },
+    {
+        "name": "UI_ascii_font",
+        "src": "assets/sprites/font_ascii.raw",
+        "depth": 4
     }
 ]

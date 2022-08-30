@@ -4,3 +4,4 @@
 .include "util.inc"
 .include "registers.inc"
 .include "ramlayout.inc"
+.include "chaintable.inc"

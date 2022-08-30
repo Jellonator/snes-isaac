@@ -2,6 +2,7 @@
 
 import json
 import os
+from typing import Tuple
 import pytiled_parser
 from pathlib import Path
 
@@ -13,6 +14,10 @@ tiledIdsToGameIds = {
     16: 1,
     17: 2,
     8: 3,
+}
+
+tiledIdsToObjectIds = {
+    0: "ENTITY_TYPE_ATTACK_FLY"
 }
 
 ROOMPOOL_OUT = "include/roompools.inc"
@@ -34,6 +39,12 @@ out_inc.write(".SECTION \"RoomDefinitions\" SUPERFREE\n")
 out_inc.write("RoomDefinitions:\n")
 
 roomPathToId = {}
+
+def getTilesetForGid(map: pytiled_parser.TiledMap, gid: int) -> Tuple[pytiled_parser.Tileset, int]:
+    for tileset in map.tilesets.values():
+        if gid >= tileset.firstgid and gid < tileset.firstgid + tileset.tile_count:
+            return (tileset, gid - tileset.firstgid)
+    raise RuntimeError("Invalid GID {} in map".format(gid))
 
 for room in rooms:
     # could probably improve this heehoo
@@ -57,14 +68,24 @@ for room in rooms:
         mask = '|'.join(dirls)
     out_inc.write("\t\tdoorMask:   .db {}\n".format(mask))
     out_inc.write("\t\troomSize:   .db ROOM_SIZE_REGULAR\n")
-    out_inc.write("\t\tnumObjects: .db 0\n")
+    tilelayers = [x for x in tilemap.layers if isinstance(x, pytiled_parser.TileLayer)]
+    objectlayers = [x for x in tilemap.layers if isinstance(x, pytiled_parser.ObjectLayer)]
+    objects = []
+    if len(objectlayers) > 1:
+        print("Warning: too many object layers in {}".format(room_path))
+    elif len(objectlayers) == 0:
+        # print("Warning: no object layers in {}".format(room_path))
+        pass
+    else:
+        objects = objectlayers[0].tiled_objects
+    out_inc.write("\t\tnumObjects: .db {}\n".format(len(objects)))
     out_inc.write("\t\ttileData:\n")
-    if len(tilemap.layers) > 1:
+    if len(tilelayers) > 1:
         print("Warning: too many tile layers in {}".format(room_path))
-    elif len(tilemap.layers) == 0:
+    elif len(tilelayers) == 0:
         print("Warning: no tile layers in {}".format(room_path))
     else:
-        layer = tilemap.layers[0]
+        layer = tilelayers[0]
         for row in layer.data:
             out_inc.write("\t\t.db")
             for value in row:
@@ -72,9 +93,18 @@ for room in rooms:
                 if gid in tiledIdsToGameIds:
                     out_inc.write(" {}".format(tiledIdsToGameIds[gid]))
                 else:
-                    print("Warning: unrecognized GID {} in {}".format(gid, room_path), data)
+                    print("Warning: unrecognized GID {} in {}".format(gid, room_path))
             out_inc.write("\n")
     out_inc.write("\t.ENDST\n")
+    for obj in objects:
+        if isinstance(obj, pytiled_parser.tiled_object.TiledObject):
+            _tileset, tileid = getTilesetForGid(tilemap, obj.gid)
+            x = int(obj.coordinates.x)
+            y = int(obj.coordinates.y - obj.size.height)
+            out_inc.write("\t\t.DSTRUCT INSTANCEOF objectdef_t VALUES\n")
+            out_inc.write("\t\t\tx: .db {}\n\t\t\ty: .db {}\n".format(x, y))
+            out_inc.write("\t\t\tobjectType: .dw {}\n".format(tiledIdsToObjectIds[tileid]))
+            out_inc.write("\t\t.ENDST\n")
 out_inc.write(".ENDS\n")
 
 out_inc.write(".BANK $02 SLOT \"ROM\"\n")

@@ -386,5 +386,28 @@
     adc XMEM
 .ENDM
 
-; bcs: A >= arg
-; bcc: A < arg
+.FUNCTION IS_POW2(x) !(x & (x - 1))
+
+.MACRO .CheapModA8 ARGS num
+    .IF num == 1
+    .ELIF num > 0 && num <= (2^7) && IS_POW2(num)
+        and.b #(num - 1)
+    .ELSE
+        .FAIL "CheapModA8: invalid num"
+    .ENDIF
+.ENDM
+
+.MACRO .CheapModA16 ARGS num
+    ; .PRINT num "\n"
+    ; .PRINT num-1 "\n"
+    ; .PRINT num & (num - 1)  "\n"
+    ; .PRINT (num & (num - 1))==0 "\n"
+    ; .PRINT IS_POW2(num) "\n"
+    ; .PRINT 2^15  "\n"
+    .IF num == 1
+    .ELIF num > 1 && num <= (2^15) && IS_POW2(num)
+        and.w #(num - 1)
+    .ELSE
+        .FAIL "CheapModA16: invalid num"
+    .ENDIF
+.ENDM

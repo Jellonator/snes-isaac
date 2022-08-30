@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.8" tiledversion="1.8.5" orientation="orthogonal" renderorder="right-down" width="12" height="8" tilewidth="16" tileheight="16" infinite="0" nextlayerid="2" nextobjectid="1">
+<map version="1.9" tiledversion="1.9.1" orientation="orthogonal" renderorder="right-down" width="12" height="8" tilewidth="16" tileheight="16" infinite="0" nextlayerid="3" nextobjectid="5">
  <properties>
   <property name="down" type="bool" value="true"/>
   <property name="left" type="bool" value="true"/>
@@ -7,6 +7,7 @@
   <property name="up" type="bool" value="true"/>
  </properties>
  <tileset firstgid="1" source="../Isaac.tsx"/>
+ <tileset firstgid="65" source="../Objects.tsx"/>
  <layer id="1" name="Tile Layer 1" width="12" height="8">
   <data encoding="csv">
 1,1,1,1,1,1,1,1,1,1,1,1,
@@ -19,4 +20,10 @@
 1,1,1,1,1,1,1,1,1,1,1,1
 </data>
  </layer>
+ <objectgroup id="2" name="Object Layer 1">
+  <object id="1" gid="65" x="80" y="64" width="16" height="16"/>
+  <object id="2" gid="65" x="96" y="64" width="16" height="16"/>
+  <object id="3" gid="65" x="96" y="80" width="16" height="16"/>
+  <object id="4" gid="65" x="80" y="80" width="16" height="16"/>
+ </objectgroup>
 </map>

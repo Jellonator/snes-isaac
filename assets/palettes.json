@@ -26,5 +26,9 @@
     {
         "name": "ui_light",
         "src": "assets/palettes/ui_light.hex"
+    },
+    {
+        "name": "enemy_attack_fly",
+        "src": "assets/sprites/enemy/attack_fly.hex"
     }
 ]

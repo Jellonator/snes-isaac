@@ -33,5 +33,10 @@
         "name": "UI_ascii_font",
         "src": "assets/sprites/font_ascii.raw",
         "depth": 4
+    },
+    {
+        "name": "enemy_attack_fly",
+        "src": "assets/sprites/enemy/attack_fly.raw",
+        "depth": 16
     }
 ]

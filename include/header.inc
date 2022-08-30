@@ -21,8 +21,9 @@
 
 .SNESHEADER
     ID "SNES"
-    ; Program title, 21 byttes
-    NAME "Binding of Isaac SNES"
+    ; Program title, 21 bytes
+    NAME "Super BindingOfIsaac "
+         ;                     ;
     ; FASTROM + LoROM
     FASTROM
     LOROM

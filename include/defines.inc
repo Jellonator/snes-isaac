@@ -160,5 +160,12 @@
 ; tile collision info
 ; .DEFINE TILE_HITBOX_MARGIN 2
 
+; sprite table info
+.DEFINE SPRITE_TABLE_SIZE 64
+.DEFINE SPRITE_TABLE_CELLAR_SIZE 16
+.DEFINE SPRITE_TABLE_TOTAL_SIZE (SPRITE_TABLE_SIZE + SPRITE_TABLE_CELLAR_SIZE)
+
 ; Entity info
-.DEFINE ACTIVE_ENTITY_MAX 64 ; projectiles, enemies, objects, etc.
+.DEFINE ACTIVE_ENTITY_MAX 24 ; enemies and other objects which may consume multiple sprite slots
+
+.DEFINE ENTITY_TYPE_ATTACK_FLY 1

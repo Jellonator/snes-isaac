@@ -17,8 +17,7 @@ SOURCES  := main.asm\
 			rng.asm\
 			map.asm\
 			bindata.asm\
-			vqueue.asm\
-			test.asm
+			vqueue.asm
 
 OBJECTS  := $(SOURCES:%.asm=$(OBJDIR)/%.obj)
 PALETTES := $(wildcard assets/palettes/*.hex)
@@ -46,3 +45,4 @@ clean:
 	rm -rf include/palettes/
 	rm -rf include/sprites/
 	rm include/assets.inc
+	rm include/roompools.inc

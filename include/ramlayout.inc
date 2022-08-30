@@ -73,6 +73,10 @@
     mapDoorVertical ds MAP_MAX_SIZE ; For index i: Connects room i with room i+MAP_MAX_WIDTH
     ; mapDoor variables are a bit larger than necessary for efficiency's sake
     tempData ds 256 ; Temp data that can be used for whatever purpose
+    ; sprite allocation data
+    spriteTableKey dsw SPRITE_TABLE_TOTAL_SIZE
+    spriteTablePtr dsw SPRITE_TABLE_TOTAL_SIZE
+    spriteTableValue dsw SPRITE_TABLE_TOTAL_SIZE
     ; end
     rawMemorySize7E db
 .ENDE

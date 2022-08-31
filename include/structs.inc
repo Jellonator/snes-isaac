@@ -124,6 +124,14 @@
     data dw
 .ENDST
 
+; Entity Info
+
+.STRUCT entityspriteinfo_t
+    sprite_addr dw
+    sprite_bank db
+    nframes db
+.ENDST
+
 ; aligned to 16 bytes
 .STRUCT entitycommon_t
     type db
@@ -136,4 +144,10 @@
     velocy dw
     health dw
     ext ds 2
+.ENDST
+
+; 2-byte structure for extra data contained in sprite table
+.STRUCT spritetab_t
+    spritemem db ; sprite memory index
+    count db ; number of users
 .ENDST

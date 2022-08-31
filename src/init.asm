@@ -382,6 +382,7 @@ tile_data_loop:
     phb
     .ChangeDataBank bankbyte(spriteTableKey)
     jsl table_clear_sprite
+    jsl spriteman_init
     plb
     ; Initialize other variables
     sep #$30

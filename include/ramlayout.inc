@@ -76,7 +76,8 @@
     ; sprite allocation data
     spriteTableKey dsw SPRITE_TABLE_TOTAL_SIZE
     spriteTablePtr dsw SPRITE_TABLE_TOTAL_SIZE
-    spriteTableValue dsw SPRITE_TABLE_TOTAL_SIZE
+    spriteTableValue INSTANCEOF spritetab_t SPRITE_TABLE_TOTAL_SIZE
+    spriteQueueTabNext ds SPRITE_QUEUE_SIZE
     ; end
     rawMemorySize7E db
 .ENDE

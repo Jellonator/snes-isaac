@@ -3,8 +3,6 @@
 .BANK $01 SLOT "ROM"
 .SECTION "Main"
 
-.MakeChainTableStatic loword(spriteTableKey),loword(spriteTablePtr),SPRITE_TABLE_SIZE,SPRITE_TABLE_CELLAR_SIZE,"_sprite"
-
 UpdateLoop:
     rep #$30 ; 16 bit AXY
     inc.w is_game_update_running

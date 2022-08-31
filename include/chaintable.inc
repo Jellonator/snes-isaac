@@ -31,8 +31,9 @@
         bne @loop
         rtl
 
-    ; insert A into table
-    table_insert{postfix}:
+    ; insert A into table, allowing duplicates
+    ; Returns new slot as X
+    table_insert_dup{postfix}:
         rep #$30
         sta.b $00
     ; get pointer offset from A
@@ -63,6 +64,68 @@
         ; X->ptr = Y
         tya
         sta.w ptrTable,X
+        rtl
+
+    ; insert A into table, ensuring no duplicates are inserted.
+    ; Returns new or found slot as X
+    ; Also, Y will be >0 if the value already existed; otherwise 0.
+    table_insert_unique{postfix}:
+        rep #$30
+        sta.b $00
+        ; get pointer offset from A
+        .CheapModA16 nBuckets
+        asl
+        tax ; X = (A % N) * 2
+        ; lda.b $00
+    ; Find value
+        lda.w valueTable,X
+        beq @nofirst
+        cmp.b $00
+        beq @foundx
+        lda.b $00
+        ldy.w ptrTable,X ; Y = X->ptr
+        bmi @nullx ; X's ptr was null
+    @loop1:
+        cmp.w valueTable,Y
+        beq @foundy ; found value, return Y
+        ldx.w ptrTable,Y
+        bmi @nully ; Y's ptr was null
+        cmp.w valueTable,X
+        beq @foundx ; found value, return X
+        ldy.w ptrTable,X
+        bmi @nullx ; X's ptr was null
+        bra @loop1
+    @nofirst:
+        lda.b $00
+        sta.w valueTable,X
+        ldy #0
+        rtl
+    @foundx:
+        ldy #1
+        rtl
+    @foundy:
+        tyx
+        rtl
+    ; Value not found, insert value into cellar (hopefully)
+    @nully:
+        tyx
+    @nullx:
+        ldy.w #2 * (nBuckets + nCellar)
+    @loop2:
+        dey
+        dey
+        lda.w valueTable,Y
+        bne @loop2
+        ; found value
+        lda.b $00
+        sta.w valueTable,Y
+        ; Y->ptr = X->ptr (both are already -1, no need to set)
+        ; lda.w ptrTable,X
+        ; sta.w ptrTable,Y
+        ; X->ptr = Y
+        tya
+        sta.w ptrTable,X
+        ldy #0
         rtl
 
     ; Returns table offset in X

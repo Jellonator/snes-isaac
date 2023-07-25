@@ -67,7 +67,7 @@
 ; VRAM slots
 ; VRAM is 64KB of 16b words addressed $0000-$7FFF
 
-; sprite OBJ page 1; granularity is (X % $2000) words
+; sprite OBJ page 0; granularity is (X % $2000) words
 ; Each 'page' is $1000 words
 .DEFINE SPRITE1_BASE_ADDR $6000
 ; sprite OBJ page 1; should be offset by $1000-$4000 words from page 0
@@ -136,7 +136,7 @@
 .DEFINE MAP_MAX_WIDTH 16
 .DEFINE MAP_MAX_HEIGHT 10
 .DEFINE MAP_MAX_SIZE (MAP_MAX_WIDTH*MAP_MAX_HEIGHT)
-.DEFINE MAX_MAP_SLOTS 160
+.DEFINE MAX_MAP_SLOTS 64
 .DEFINE MAP_ZPBUF_ADDR (256-MAX_MAP_SLOTS) ; 96/$60
 
 ; VQueue info
@@ -170,6 +170,9 @@
 .ENUMID SPRITE_QUEUE_SIZE
 
 ; Entity info
-.DEFINE ACTIVE_ENTITY_MAX 24 ; enemies and other objects which may consume multiple sprite slots
+; Number of objects stored per room
+.DEFINE ENTITY_STORE_COUNT 24
+; Enemies and other objects which may consume multiple sprite slots
+.DEFINE ACTIVE_ENTITY_MAX 64
 
 .DEFINE ENTITY_TYPE_ATTACK_FLY 1

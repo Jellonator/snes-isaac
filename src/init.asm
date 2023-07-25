@@ -395,6 +395,14 @@ tile_data_loop:
     stz gameRoomScrollX
     lda #-32
     sta gameRoomScrollY
+    ; clear entity table
+    sep #$30
+    ldx #0
+@loop_entity_table_clear:
+    stz entity_type,X
+    inx
+    cpx #ACTIVE_ENTITY_MAX
+    bne @loop_entity_table_clear
     ; estoy loopin
     jmp UpdateLoop
 

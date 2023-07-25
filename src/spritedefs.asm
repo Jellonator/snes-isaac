@@ -1,5 +1,8 @@
 .include "base.inc"
 
+.BANK $00 SLOT "ROM"
+.SECTION "SpriteDefs"
+
 .DEFINE currid 1
 SpriteDefs:
 .MACRO .DefineSprite ARGS spritename, baseaddr, ntiles, nframes
@@ -17,4 +20,6 @@ SpriteDefs:
     .REDEFINE currid (currid + nframes)
 .ENDM
 
-.DefineSprite "enemy.attack_fly", sprites@enemy_attack_fly, 1, 2
+.DefineSprite "sprite.enemy.attack_fly", sprites@enemy_attack_fly, 1, 2
+
+.ENDS

@@ -20,3 +20,8 @@ visualizing explosion, blood effects, etc.
 
 Since a given effect probably only needs one of a few colors
 (blood - reds, bomb - grays, etc. + regular bg color), using 2bbp is feasible
+
+## Conjoined transformation
+
+Getting 3+ shooting familiars either 'conjoins' them to the player, or conjoins
+them all together.

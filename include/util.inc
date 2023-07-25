@@ -411,3 +411,24 @@
         .FAIL "CheapModA16: invalid num"
     .ENDIF
 .ENDM
+
+.MACRO .MultiplyStatic ARGS num
+    .IF num == 1
+    .ELIF num == 2
+        asl
+    .ELIF num == 4
+        asl
+        asl
+    .ELIF num == 8
+        asl
+        asl
+        asl
+    .ELIF num == 16
+        asl
+        asl
+        asl
+        asl
+    .ELSE
+        .FAIL "CheapModA16: invalid num"
+    .ENDIF
+.ENDM

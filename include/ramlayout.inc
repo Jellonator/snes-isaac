@@ -49,9 +49,18 @@
     gameRoomBG2Offset dw ; % 000000y0 000x0000
     gameRoomScrollX dw
     gameRoomScrollY dw
-    ; Commonly used entity data,
-    ; aligned for direct page locality
-    entities INSTANCEOF entitycommon_t ACTIVE_ENTITY_MAX
+    ; Commonly used entity data
+    entity_type ds ACTIVE_ENTITY_MAX
+    entity_state ds ACTIVE_ENTITY_MAX
+    entity_variant ds ACTIVE_ENTITY_MAX
+    entity_timer ds ACTIVE_ENTITY_MAX
+    ; entity_data INSTANCEOF entityextdata_t ACTIVE_ENTITY_MAX
+    entity_posx dsw ACTIVE_ENTITY_MAX
+    entity_posy dsw ACTIVE_ENTITY_MAX
+    entity_velocx dsw ACTIVE_ENTITY_MAX
+    entity_velocy dsw ACTIVE_ENTITY_MAX
+    entity_health dsw ACTIVE_ENTITY_MAX
+    entity_gfxptr dsw ACTIVE_ENTITY_MAX
     ; end
     rawMemorySizeShared db
 .ENDE

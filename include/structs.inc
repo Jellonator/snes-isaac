@@ -73,10 +73,21 @@
     value db ; lower 4 bits for X, upper 4 bits for Y
 .ENDST
 
-; Structure which defines existing room layout
+; Serialized entity data
+.STRUCT entitystore_t
+    x db
+    y db
+    type db
+    variant db
+    ext dw
+.ENDST
+
+; Actual generated room data, laid out in RAM
 .STRUCT roominfo_t
     tileTypeTable INSTANCEOF byte_t ROOM_TILE_COUNT
     tileVariantTable INSTANCEOF byte_t ROOM_TILE_COUNT
+    ; entityStoreTable INSTANCEOF entitystore_t ENTITY_STORE_COUNT
+    roomDefinition dw
 .ENDST
 
 ; Structure which defines object spawning rules
@@ -86,7 +97,7 @@
     objectType dw
 .ENDST
 
-; Structure which defines how a room may be laid out
+; Defines how a room should be generated
 .STRUCT roomdefinition_t
     doorMask db
     roomSize db
@@ -132,18 +143,24 @@
     nframes db
 .ENDST
 
+.STRUCT entitytypeinfo_t
+    init_func dw
+    tick_func dw
+    free_func dw
+    padding dw
+.ENDST
+
 ; aligned to 16 bytes
-.STRUCT entitycommon_t
-    type db
-    state db
-    variant db
-    timer db
+.STRUCT entityextdata_t
     posx dw
     posy dw
     velocx dw
     velocy dw
     health dw
-    ext ds 2
+    gfxptr dw
+    res1 dw
+    res2 dw
+    ext ds 16
 .ENDST
 
 ; 2-byte structure for extra data contained in sprite table

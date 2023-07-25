@@ -27,6 +27,8 @@ InitializeRoomSlot:
     rep #$30 ; 16 bit AXY
     lda.l MULTS_RESULT_LOW
     tax
+    lda $04,s
+    sta.l roomSlotTiles.1.roomDefinition,X
     sep #$20 ; 8 bit A, 16 bit XY
     ; write tile position
     lda $08,s
@@ -56,6 +58,8 @@ InitializeRoomSlot:
 ; Push order:
 ;   room slot index         [db] $04
 LoadRoomSlotIntoLevel:
+    ; first, clear existing level
+    jsl entity_free_all
     sep #$20 ; 8 bit A
     ; Turn slot index into slot address in X
     lda #lobyte(_sizeof_roominfo_t)
@@ -68,6 +72,10 @@ LoadRoomSlotIntoLevel:
     sta.w loadedMapSlot
     rep #$30 ; 16 bit AXY
     lda MULTS_RESULT_LOW
+    tax
+    lda.l roomSlotTiles.1.roomDefinition,X
+    sta.b $0A ; $0A: roomDefinition
+    txa
     clc
     adc #loword(roomSlotTiles) + roominfo_t.tileTypeTable
     sta.b currentRoomTileTypeTableAddress
@@ -223,6 +231,49 @@ LoadRoomSlotIntoLevel:
         sta.l $7F0000 + ((16*(2 + 3) + 31) * 2),X
         sep #$30 ; 8b AXY
     +:
+; spawn entities
+    rep #$30 ; 16B AXY
+    lda $0A
+    tax
+    lda.l $020000 + roomdefinition_t.numObjects,X
+    and #$00FF
+    tay ; Y = num entities
+    beq @end
+    txa
+    clc
+    adc #_sizeof_roomdefinition_t
+    tax
+@loop:
+    lda $020000 + objectdef_t.objectType,X
+    phy
+    phx
+    jsl entity_create
+    rep #$30
+    tya
+    asl
+    tay
+    plx
+    lda $020000 + objectdef_t.x,X ; X coord
+    and #$00FF
+    clc
+    adc #ROOM_LEFT
+    xba
+    sta.w entity_posx,Y
+    lda $020000 + objectdef_t.y,X ; Y coord
+    and #$00FF
+    clc
+    adc #ROOM_TOP
+    xba
+    sta.w entity_posy,Y
+    ply
+    dey
+    beq @end
+    inx
+    inx
+    inx
+    inx
+    bra @loop
+@end:
     rtl
 
 ; Update the VRAM tile in currentConsideredTile

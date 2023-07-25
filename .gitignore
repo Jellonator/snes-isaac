@@ -10,3 +10,5 @@ include/sprites/
 include/palettes/
 *.png~
 *.tiled-session
+scripts/venv
+*.code-workspace

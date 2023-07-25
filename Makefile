@@ -19,7 +19,8 @@ SOURCES  := main.asm\
 			bindata.asm\
 			vqueue.asm\
 			spriteslot.asm\
-			spritedefs.asm
+			spritedefs.asm\
+			entity.asm
 
 OBJECTS  := $(SOURCES:%.asm=$(OBJDIR)/%.obj)
 PALETTES := $(wildcard assets/palettes/*.hex)

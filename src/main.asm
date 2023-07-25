@@ -27,6 +27,7 @@ UpdateLoop:
     jsr PlayerUpdate
     jsr UpdateTears
     jsr UpdateRest
+    jsl entity_tick_all
     ; Finally, check if room should be changed
     jsr PlayerCheckEnterRoom
     ; End update code

@@ -150,16 +150,14 @@
     padding dw
 .ENDST
 
-; aligned to 16 bytes
-.STRUCT entityextdata_t
-    posx dw
-    posy dw
-    velocx dw
-    velocy dw
+; Character entity data; aligned to 32 bytes
+.STRUCT entitycharacterdata_t
+    scratch ds 4
+    reserved ds 4
     health dw
-    gfxptr dw
-    res1 dw
-    res2 dw
+    status_effects ds 4
+    velocx db
+    velocy db
     ext ds 16
 .ENDST
 

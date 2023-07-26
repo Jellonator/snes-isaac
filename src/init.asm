@@ -401,7 +401,7 @@ tile_data_loop:
 @loop_entity_table_clear:
     stz entity_type,X
     inx
-    cpx #ACTIVE_ENTITY_MAX
+    cpx #ENTITY_TOTAL_MAX
     bne @loop_entity_table_clear
     ; estoy loopin
     jmp UpdateLoop

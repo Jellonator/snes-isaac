@@ -29,6 +29,7 @@ spriteman_init:
 ; Bank needs to be $7E
 .MACRO .spriteman_get_raw_slot_lite
     sep #$30 ; 8b AXY
+    ; ret = *queue->next
     ldx.w loword(spriteQueueTabNext)+SPRITE_LIST_EMPTY
     lda.w loword(spriteQueueTabNext),X
     ; queue->next = queue->next->next (skip X)
@@ -59,6 +60,16 @@ spriteman_free_raw_slot:
     .spriteman_free_raw_slot_lite
     plb
     rtl
+
+SpriteSlotIndexTable:
+    .REPT 64 INDEX i
+        .db ((i & $7) * 2) + ((i & $38) * 4)
+    .ENDR
+
+SpriteSlotMemTable:
+    .REPT 64 INDEX i
+        .dw ((((i & $7) * 2) + ((i & $38) * 4)) * 16) + SPRITE2_BASE_ADDR
+    .ENDR
 
 ; Allocate a 16x16 sprite slot
 ; Loads sprite id stored in A
@@ -99,15 +110,16 @@ spriteman_new_sprite_ref:
     clc
     adc #2
     sta.w vqueueNumOps
-; vramaddr[0] = spritemem * 4 + SPRITE2_BASE_ADDR
+; vramaddr[0] = spritemem.x * 32 + spritemem.y * 64 + SPRITE2_BASE_ADDR
     lda loword(spriteTableValue.1.spritemem),Y
     and #$00FF
     asl
-    asl
-    clc
-    adc #SPRITE2_BASE_ADDR
+    phx
+    tax
+    lda.l SpriteSlotMemTable,X
+    plx
     sta.l vqueueOps.1.vramAddr,X
-; vramaddr[1] = spritemem * 4 + SPRITE2_BASE_ADDR + $100
+; vramaddr[1] = spritemem * 16 + SPRITE2_BASE_ADDR + $100
     clc
     adc #$100
     sta.l vqueueOps.2.vramAddr,X

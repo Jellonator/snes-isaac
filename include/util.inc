@@ -428,6 +428,18 @@
         asl
         asl
         asl
+    .ELIF num == 32
+        asl
+        asl
+        asl
+        asl
+        asl
+    .ELIF num == 64
+        asl
+        asl
+        asl
+        asl
+        asl
     .ELSE
         .FAIL "CheapModA16: invalid num"
     .ENDIF

@@ -173,6 +173,8 @@
 ; Number of objects stored per room
 .DEFINE ENTITY_STORE_COUNT 24
 ; Enemies and other objects which may consume multiple sprite slots
-.DEFINE ACTIVE_ENTITY_MAX 64
+.DEFINE ENTITY_TOTAL_MAX 64
+; Character entities which may have health, status effects, custom sprites, etc.
+.DEFINE ENTITY_CHARACTER_MAX 24
 
-.DEFINE ENTITY_TYPE_ATTACK_FLY 1
+.DEFINE ENTITY_TYPE_ATTACK_FLY 128

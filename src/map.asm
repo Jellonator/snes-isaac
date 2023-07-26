@@ -249,22 +249,17 @@ LoadRoomSlotIntoLevel:
     phx
     jsl entity_create
     rep #$30
-    tya
-    asl
-    tay
     plx
+    sep #$20 ; 8B A
     lda $020000 + objectdef_t.x,X ; X coord
-    and #$00FF
     clc
     adc #ROOM_LEFT
-    xba
     sta.w entity_posx,Y
     lda $020000 + objectdef_t.y,X ; Y coord
-    and #$00FF
     clc
     adc #ROOM_TOP
-    xba
     sta.w entity_posy,Y
+    rep #$20 ; 16B A
     ply
     dey
     beq @end

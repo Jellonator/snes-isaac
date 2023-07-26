@@ -10,7 +10,7 @@ SpriteDefs:
     .EXPORT {spritename}
     .REPT nframes INDEX i
         .DSTRUCT INSTANCEOF entityspriteinfo_t VALUES
-            sprite_addr: .dw loword(baseaddr) + ntiles*i*128 ; 128b per 16x tile
+            sprite_addr: .dw loword(baseaddr) + ntiles*i*64 ; 128b per 16x tile
             sprite_bank: .db bankbyte(baseaddr)
             nframes: .db nframes
         .ENDST

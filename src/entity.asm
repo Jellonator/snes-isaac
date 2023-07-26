@@ -10,57 +10,98 @@
 ; * Y will be entity index (16B)
 ; * A,X,Y will be 16B
 
-; .REPT ACTIVE_ENTITY_MAX INDEX i
+; Input: Y as current entity index
+; Output: X as index into entity_data
+; Clobbers: A
+.MACRO .EntityIndexYToExtX
+    tya
+    .MultiplyStatic 32
+    tax
+.ENDM
 
-; .ENDR
+; Input: Y as current entity index
+; Output: DP as pointer into entity_data
+; Clobbers: A
+.MACRO .EntityIndexYToDP
+    tya
+    .MultiplyStatic 32
+    clc
+    adc #entity_data
+    phd
+    tcd
+.ENDM
+
+; Undoes .EntityIndexYToDP
+.MACRO .END_EntityIndexYToDP
+    pld
+.ENDM
 
 _e_null:
     rts
 
+.DEFINE _fly_fgxptr (entitycharacterdata_t.ext + $00)
+
 _e_basic_fly_init:
     .ACCU 16
     .INDEX 16
-    lda #sprite.enemy.attack_fly
+    .EntityIndexYToDP
+    ; load sprite
+    lda #sprite.enemy.attack_fly.0
     jsl spriteman_new_sprite_ref
     rep #$30
-    lda $01,S
-    .MultiplyStatic 2
-    tay ; Y = 2*ptr
     txa
-    sta.w entity_gfxptr,Y
+    sta.b _fly_fgxptr
+    ; load frame 2
+    lda #sprite.enemy.attack_fly.1
+    jsl spriteman_new_sprite_ref
+    rep #$30
+    txa
+    sta.b _fly_fgxptr+2
+    ; end
+    .END_EntityIndexYToDP
     rts
 
 _e_basic_fly_tick:
     .ACCU 16
     .INDEX 16
-    tya
-    .MultiplyStatic 2
-    tay
-    ldx.w entity_gfxptr,Y
+    .EntityIndexYToDP
+    ; load & set gfx
+    lda #0
     sep #$20 ; 8B A
+    ldx.b _fly_fgxptr
+    lda.w entity_timer,Y
+    dec A
+    sta.w entity_timer,Y
+    and #$04
+    beq +
+    ldx.b _fly_fgxptr+2
+    +:
     lda.w loword(spriteTableValue + spritetab_t.spritemem),X
+    phx
+    tax
+    lda.l SpriteSlotIndexTable,X
+    plx
     ldx.w objectIndex
     sta.w objectData.1.tileid,X
-    lda.w entity_posx+1,Y
+    lda.w entity_posx,Y
     sta.w objectData.1.pos_x,X
-    lda.w entity_posy+1,Y
+    lda.w entity_posy,Y
     sta.w objectData.1.pos_y,X
     lda #%00101001
     sta.w objectData.1.flags,X
+    .END_EntityIndexYToDP
     ; inc object index
+    rep #$30
     .SetCurrentObjectS
     .IncrementObjectIndex
     ; end
-    rep #$30 ; 16B AXY
     rts
 
 _e_basic_fly_free:
     .ACCU 16
     .INDEX 16
-    tya
-    asl
-    tay
-    lda.w entity_gfxptr,Y
+    .EntityIndexYToExtX
+    lda.w entity_data + _fly_fgxptr,X
     tax
     jsl spriteman_unref
     rts
@@ -134,7 +175,7 @@ entity_free_all:
     rep #$20
 @skip_ent:
     iny
-    cpy #ACTIVE_ENTITY_MAX
+    cpy #ENTITY_TOTAL_MAX
     bne @loop
 @end:
     plb
@@ -157,7 +198,7 @@ entity_tick_all:
     ply
 @skip_ent:
     iny
-    cpy #ACTIVE_ENTITY_MAX
+    cpy #ENTITY_TOTAL_MAX
     bne @loop
 @end:
     plb
@@ -170,7 +211,14 @@ EntityDefinitions:
         tick_func: .dw _e_null
         free_func: .dw _e_null
     .ENDST
-    ; 1 : Attack fly
+    .REPT (128 - 0 - 1) INDEX i
+        .DSTRUCT @null_pad{i} INSTANCEOF entitytypeinfo_t VALUES
+            init_func: .dw _e_null
+            tick_func: .dw _e_null
+            free_func: .dw _e_null
+        .ENDST
+    .ENDR
+    ; 128 : Attack fly
     .DSTRUCT @attack_fly INSTANCEOF entitytypeinfo_t VALUES
         init_func: .dw _e_basic_fly_init
         tick_func: .dw _e_basic_fly_tick

@@ -50,17 +50,13 @@
     gameRoomScrollX dw
     gameRoomScrollY dw
     ; Commonly used entity data
-    entity_type ds ACTIVE_ENTITY_MAX
-    entity_state ds ACTIVE_ENTITY_MAX
-    entity_variant ds ACTIVE_ENTITY_MAX
-    entity_timer ds ACTIVE_ENTITY_MAX
-    ; entity_data INSTANCEOF entityextdata_t ACTIVE_ENTITY_MAX
-    entity_posx dsw ACTIVE_ENTITY_MAX
-    entity_posy dsw ACTIVE_ENTITY_MAX
-    entity_velocx dsw ACTIVE_ENTITY_MAX
-    entity_velocy dsw ACTIVE_ENTITY_MAX
-    entity_health dsw ACTIVE_ENTITY_MAX
-    entity_gfxptr dsw ACTIVE_ENTITY_MAX
+    entity_type ds ENTITY_TOTAL_MAX
+    entity_state ds ENTITY_TOTAL_MAX
+    entity_variant ds ENTITY_TOTAL_MAX
+    entity_timer ds ENTITY_TOTAL_MAX
+    entity_posx ds ENTITY_TOTAL_MAX
+    entity_posy ds ENTITY_TOTAL_MAX
+    entity_data INSTANCEOF entitycharacterdata_t ENTITY_CHARACTER_MAX
     ; end
     rawMemorySizeShared db
 .ENDE
@@ -86,7 +82,7 @@
     spriteTableKey dsw SPRITE_TABLE_TOTAL_SIZE
     spriteTablePtr dsw SPRITE_TABLE_TOTAL_SIZE
     spriteTableValue INSTANCEOF spritetab_t SPRITE_TABLE_TOTAL_SIZE
-    spriteQueueTabNext ds SPRITE_QUEUE_SIZE
+    spriteQueueTabNext ds SPRITE_QUEUE_SIZE+1
     ; end
     rawMemorySize7E db
 .ENDE

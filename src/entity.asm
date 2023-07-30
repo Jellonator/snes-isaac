@@ -36,10 +36,35 @@
     pld
 .ENDM
 
+; Insert entity into spatial partition slot
+; Inputs:
+;   A: The entity ID
+;   X: The spatial slot
+; Clobbers: Y
+InsertHitbox:
+    .REPT SPATIAL_LAYER_COUNT INDEX i
+        ldy.w spatial_partition.{i+1},X
+        bne +
+        sta.w spatial_partition.{i+1},X
+        rts
+        +:
+    .ENDR
+    rts
+
+; Remove entity from spatial partition slot
+; Inputs:
+;   A: The entity ID
+;   X: The spatial slot
+EraseHitbox:
+    .EraseHitboxLite
+    rts
+
 _e_null:
     rts
 
-.DEFINE _fly_fgxptr (entitycharacterdata_t.ext + $00)
+.DEFINE _fly_xl (entitycharacterdata_t.ext + $00)
+.DEFINE _fly_yl (entitycharacterdata_t.ext + $02)
+.DEFINE _fly_fgxptr (entitycharacterdata_t.ext + $04)
 
 _e_basic_fly_init:
     .ACCU 16
@@ -65,14 +90,123 @@ _e_basic_fly_tick:
     .ACCU 16
     .INDEX 16
     .EntityIndexYToDP
-    ; load & set gfx
+; move
+    sep #$30 ; 8B AXY
+    ; TO PLAYER
+    lda.w entity_posx,Y
+    lsr
+    sta.b $02
+    lda.w player.pos.x+1
+    lsr
+    sec
+    sbc.b $02
+    bmi +
+    adc #15
+    +:
+    and #$F0
+    sta.b $02
+    lda.w entity_posy,Y
+    lsr
+    sta.b $03
+    lda.w player.pos.y+1
+    lsr
+    sec
+    sbc.b $03
+    bmi +
+    adc #15
+    +:
+    lsr
+    lsr
+    lsr
+    lsr
+    ora.b $02
+    tax
+    rep #$20
+    lda.l VecNormTableB_X,X
+    and #$00FF
+    cmp #$80
+    php
+    lsr
+    lsr
+    plp
+    bcc +
+    ora #$FFC0
+    +:
+    sta.b $06 ; $02: Norm X
+    lda.l VecNormTableB_Y,X
+    and #$00FF
+    cmp #$80
+    php
+    lsr
+    lsr
+    plp
+    bcc +
+    ora #$FFC0
+    +:
+    sta.b $04 ; $04: Norm Y
+    sep #$20
+    ; RAND X
+    stz.b $01
+    ldx.w entity_timer,Y
+    lda.l CosTableB,X
+    php
+    lsr
+    lsr
+    plp
+    bpl +
+    dec $01
+    ora #$C0
+    +:
+    sta.b $00
+    lda.w entity_posx,Y
+    xba
+    lda.b _fly_xl
+    rep #$20
+    ; Apply X
+    clc
+    adc.b $00
+    clc
+    adc.b $06
+    sep #$20
+    sta.b _fly_xl
+    xba
+    sta.w entity_posx,Y
+    ; RAND Y
+    sep #$30 ; 8B AXY
+    stz.b $01
+    ldx.w entity_timer,Y
+    lda.l SinTableB,X
+    php
+    lsr
+    lsr
+    plp
+    bpl +
+    dec $01
+    ora #$C0
+    +:
+    sta.b $00
+    lda.w entity_posy,Y
+    xba
+    lda.b _fly_yl
+    rep #$20
+    ; Apply Y
+    clc
+    adc.b $00
+    clc
+    adc.b $04
+    sep #$20
+    sta.b _fly_yl
+    xba
+    sta.w entity_posy,Y
+; load & set gfx
+    rep #$20
     lda #0
-    sep #$20 ; 8B A
+    sep #$20
     ldx.b _fly_fgxptr
     lda.w entity_timer,Y
     dec A
     sta.w entity_timer,Y
-    and #$04
+    and #$08
     beq +
     ldx.b _fly_fgxptr+2
     +:
@@ -100,6 +234,8 @@ _e_basic_fly_tick:
 _e_basic_fly_free:
     .ACCU 16
     .INDEX 16
+    lda #0
+    sta.w entity_mask,Y
     .EntityIndexYToExtX
     lda.w entity_data + _fly_fgxptr,X
     tax
@@ -114,6 +250,11 @@ entity_create:
     ; first: find next free slot
     pha
     ldy #0
+    ; for non-character entities, start from ENTITY_CHARACTER_MAX instead.
+    cmp #0
+    bpl +
+    ldy #ENTITY_CHARACTER_MAX
+    +:
     lda.w entity_type,Y
     beq @end
 @loop:
@@ -143,7 +284,8 @@ entity_free:
     tax
     phy
     jsr (EntityDefinitions + entitytypeinfo_t.free_func,X)
-    ply
+    ply    ; 
+    jsl SpatialPartitionClear
     ; set type to 0
     sep #$20
     lda #0
@@ -179,10 +321,12 @@ entity_free_all:
     bne @loop
 @end:
     plb
+    jsl EntityInfoInitialize
     rtl
 
 ; Tick all entities
 entity_tick_all:
+    ; jsl SpatialPartitionClear
     rep #$30 ; 16B AXY
     phb
     .ChangeDataBank $7E
@@ -202,6 +346,22 @@ entity_tick_all:
     bne @loop
 @end:
     plb
+    rtl
+
+EntityInfoInitialize:
+    phd
+    pea $4300
+    pld
+    .ClearWRam_ZP entity_type, (rawMemorySizeShared-entity_type)
+    pld
+    rtl
+
+SpatialPartitionClear:
+    phd
+    pea $4300
+    pld
+    .ClearWRam_ZP spatial_partition, _sizeof_spatial_partition
+    pld
     rtl
 
 EntityDefinitions:

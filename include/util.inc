@@ -444,3 +444,35 @@
         .FAIL "CheapModA16: invalid num"
     .ENDIF
 .ENDM
+
+; COLLISION
+
+.MACRO .InsertHitboxLite
+    .REPT SPATIAL_LAYER_COUNT INDEX i
+        ldy.w spatial_partition.{i+1},X
+        bne +++++
+        sta.w spatial_partition.{i+1},X
+        bra @@@@@\.\@
+        +++++:
+    .ENDR
+    @@@@@\.\@:
+.ENDM
+
+.MACRO .EraseHitboxLite
+    .REPT SPATIAL_LAYER_COUNT INDEX i
+        cmp.w spatial_partition.{i+1},X
+        beq @@@@@\.\@{i}
+    .ENDR
+    bra @@@@@\.\@end
+    .REPT SPATIAL_LAYER_COUNT INDEX i
+        @@@@@\.\@{i}:
+        .IF (i != (SPATIAL_LAYER_COUNT-1))
+            lda.w spatial_partition.{i+2},X
+            sta.w spatial_partition.{i+1},X
+            beq @@@@@\.\@end
+        .ELSE
+            stz.w spatial_partition.{i+1},X
+        .ENDIF
+    .ENDR
+    @@@@@\.\@end:
+.ENDM

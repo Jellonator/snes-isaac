@@ -178,3 +178,13 @@
 .DEFINE ENTITY_CHARACTER_MAX 24
 
 .DEFINE ENTITY_TYPE_ATTACK_FLY 128
+
+.DEFINE SPATIAL_LAYER_COUNT 4
+
+; Entity Mask: Defines types that can collide with given mask
+; Objects that can be damaged by player tears
+.DEFINE ENTITY_MASK_TEAR $01
+; Objects that can be damaged by enemy projectiles
+.DEFINE ENTITY_MASK_PROJECTILE $02
+; Objects that can be damaged by bombs
+.DEFINE ENTITY_MASK_BOMBABLE $04

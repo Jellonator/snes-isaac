@@ -14,50 +14,66 @@
 .ENDE
 
 ; Bank used for somewhat commonly used variables that need to be in bank 0
+; (or which are accessed so much, that accessing via .w is much faster)
 .ENUM $0100
-    ; joypad inputs
+; joypad inputs
     joy1raw dw
     joy1press dw
     joy1held dw
-    ; flags
+; flags
     is_game_update_running dw
     last_used_sprite db
-    ; RNG state
-    gameSeed INSTANCEOF rng_t ; seed used for entire game
-    gameSeedStored INSTANCEOF rng_t ; stored seed used for game (that way it can be displayed to player)
-    stageSeed INSTANCEOF rng_t ; seed used to generate stage
-    ; map data
-    numTilesToUpdate db ; set to $FF to update entire map
+; RNG state
+    ; seed used for entire game
+    gameSeed INSTANCEOF rng_t 
+    ; stored seed used for game (that way it can be displayed to player)
+    gameSeedStored INSTANCEOF rng_t 
+    ; seed used to generate stage
+    stageSeed INSTANCEOF rng_t
+; map data
+    ; set to $FF to update entire map
+    numTilesToUpdate db
     numUsedMapSlots db
     mapTileTypeTable INSTANCEOF byte_t MAP_MAX_SIZE
     mapTileFlagsTable INSTANCEOF byte_t MAP_MAX_SIZE
     loadedMapSlot db
     loadedRoomIndex INSTANCEOF maptilepos_t
-    ; game data
+; game data
     player INSTANCEOF player_t
-    tear_bytes_used dw ; number of bytes used of tear_array
+    ; number of bytes used of tear_array
+    tear_bytes_used dw
     tear_array INSTANCEOF tear_t TEAR_ARRAY_MAX_COUNT
-    ; OAM data
+; OAM data
     objectData INSTANCEOF object_t 128
     objectDataExt dsb 32 ; 2 bits per object: Xs
     objectIndex dw
-    ; VQueue data
+; VQueue data
     vqueueNumOps dw
     vqueueNumMiniOps dw
     vqueueBinOffset dw
-    ; Room scroll data
+; Room scroll data
     gameRoomBG2Offset dw ; % 000000y0 000x0000
     gameRoomScrollX dw
     gameRoomScrollY dw
-    ; Commonly used entity data
+; Commonly used entity data
     entity_type ds ENTITY_TOTAL_MAX
-    entity_state ds ENTITY_TOTAL_MAX
     entity_variant ds ENTITY_TOTAL_MAX
+    entity_state ds ENTITY_TOTAL_MAX
     entity_timer ds ENTITY_TOTAL_MAX
+    ; position + size
     entity_posx ds ENTITY_TOTAL_MAX
     entity_posy ds ENTITY_TOTAL_MAX
+    entity_boxw ds ENTITY_TOTAL_MAX
+    entity_boxh ds ENTITY_TOTAL_MAX
+    ; Defines how entities can collide or be detected
+    entity_mask ds ENTITY_TOTAL_MAX
+    ; Set for entities to indicate different kinds of interaction
+    entity_signal ds ENTITY_TOTAL_MAX
+    ; Extraneous entity data (only for certain entity types)
     entity_data INSTANCEOF entitycharacterdata_t ENTITY_CHARACTER_MAX
-    ; end
+; spatial collision data (for entities)
+    spatial_partition INSTANCEOF spatialpartitionlayer_t SPATIAL_LAYER_COUNT
+; end
     rawMemorySizeShared db
 .ENDE
 
@@ -91,10 +107,12 @@
 ; For more efficient bank usage, this bank is mostly used for video memory management
 ; Perhaps will be used for decompressed animated sprites?
 .ENUM $7F0000
-    ; VQueue data
+; VQueue data
     vqueueOps INSTANCEOF vqueueop_t VQUEUE_MAX_SIZE
     vqueueMiniOps INSTANCEOF vqueueminiop_t 255
-    vqueueBinData INSTANCEOF byte_t $4000 ; 16K of potential DMA data
-    ; end
+    ; 16K of potential DMA data. We can only transfer ~5K per frame,
+    ; so if we somehow overreach this, we've messed something up bad.
+    vqueueBinData INSTANCEOF byte_t $4000
+; end
     rawMemorySize7F db
 .ENDE

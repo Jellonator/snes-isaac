@@ -166,3 +166,11 @@
     spritemem db ; sprite memory index
     count db ; number of users
 .ENDST
+
+; ENTITY COLLISION DATA
+
+; Represents 16x16 spatial partition
+; Each layer allows one object to occupy a given slot
+.STRUCT spatialpartitionlayer_t
+    tiles ds 256
+.ENDST

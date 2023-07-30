@@ -55,4 +55,63 @@ SpriteIndexToExtMaskX:
     .db %00000001 %00000100 %00010000 %01000000
 SpriteIndexToExtMaskS:
     .db %00000010 %00001000 %00100000 %10000000
+
+;-------------;
+; DATA TABLES ;
+;-------------;
+
+; sin/cos
+; INDEX: angle b/t 0 and 255
+; OUTPUT: signed sin or cos value with magnitude of 127
+
+SinTableB:
+    .DBSIN 0.0, 63, (360.0/256.0), 127, 0
+CosTableB:
+    .DBCOS 0.0, 255, (360.0/256.0), 127, 0
+
+; vector norm
+; INDEX: xxxxyyyy (x,y: signed value b/t -8 and 7)
+VecNormTableB_X:
+    .REPT 8 INDEX ix
+        .REPT 8 INDEX iy
+            .IF (ix == 0) && (iy == 0)
+                .db 0
+            .ELSE
+                .db ((127 * ix) / sqrt((ix * ix) + (iy * iy)))
+            .ENDIF
+        .ENDR
+        .REPT 8 INDEX iy
+            .db ((127 * ix) / sqrt((ix * ix) + ((iy-8) * (iy-8))))
+        .ENDR
+    .ENDR
+    .REPT 8 INDEX ix
+        .REPT 8 INDEX iy
+            .db ((127 * (ix - 8)) / sqrt(((ix - 8) * (ix - 8)) + (iy * iy)))
+        .ENDR
+        .REPT 8 INDEX iy
+            .db ((127 * (ix - 8)) / sqrt(((ix - 8) * (ix - 8)) + ((iy-8) * (iy-8))))
+        .ENDR
+    .ENDR
+VecNormTableB_Y:
+    .REPT 8 INDEX ix
+        .REPT 8 INDEX iy
+            .IF (ix == 0) && (iy == 0)
+                .db 0
+            .ELSE
+                .db ((127 * iy) / sqrt((ix * ix) + (iy * iy)))
+            .ENDIF
+        .ENDR
+        .REPT 8 INDEX iy
+            .db ((127 * (iy - 8)) / sqrt((ix * ix) + ((iy-8) * (iy-8))))
+        .ENDR
+    .ENDR
+    .REPT 8 INDEX ix
+        .REPT 8 INDEX iy
+            .db ((127 * iy) / sqrt(((ix - 8) * (ix - 8)) + (iy * iy)))
+        .ENDR
+        .REPT 8 INDEX iy
+            .db ((127 * (iy - 8)) / sqrt(((ix - 8) * (ix - 8)) + ((iy-8) * (iy-8))))
+        .ENDR
+    .ENDR
+
 .ENDS

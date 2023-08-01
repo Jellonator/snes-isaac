@@ -469,7 +469,7 @@
         .IF (i != (SPATIAL_LAYER_COUNT-1))
             lda.w spatial_partition.{i+2},X
             sta.w spatial_partition.{i+1},X
-            beq @@@@@\.\@end
+            ; beq @@@@@\.\@end
         .ELSE
             stz.w spatial_partition.{i+1},X
         .ENDIF

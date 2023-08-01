@@ -56,26 +56,38 @@
     gameRoomScrollX dw
     gameRoomScrollY dw
 ; Commonly used entity data
-    entity_type ds ENTITY_TOTAL_MAX
-    entity_variant ds ENTITY_TOTAL_MAX
-    entity_state ds ENTITY_TOTAL_MAX
-    entity_timer ds ENTITY_TOTAL_MAX
+    _base_entity_type ds ENTITY_TOTAL_MAX
+    _base_entity_variant ds ENTITY_TOTAL_MAX
+    _base_entity_state ds ENTITY_TOTAL_MAX
+    _base_entity_timer ds ENTITY_TOTAL_MAX
     ; position + size
-    entity_posx ds ENTITY_TOTAL_MAX
-    entity_posy ds ENTITY_TOTAL_MAX
-    entity_boxw ds ENTITY_TOTAL_MAX
-    entity_boxh ds ENTITY_TOTAL_MAX
+    _base_entity_posx ds ENTITY_TOTAL_MAX
+    _base_entity_posy ds ENTITY_TOTAL_MAX
+    _base_entity_boxw ds ENTITY_TOTAL_MAX
+    _base_entity_boxh ds ENTITY_TOTAL_MAX
     ; Defines how entities can collide or be detected
-    entity_mask ds ENTITY_TOTAL_MAX
+    _base_entity_mask ds ENTITY_TOTAL_MAX
     ; Set for entities to indicate different kinds of interaction
-    entity_signal ds ENTITY_TOTAL_MAX
+    _base_entity_signal ds ENTITY_TOTAL_MAX
     ; Extraneous entity data (only for certain entity types)
-    entity_data INSTANCEOF entitycharacterdata_t ENTITY_CHARACTER_MAX
+    _base_entity_data INSTANCEOF entitycharacterdata_t ENTITY_CHARACTER_MAX
 ; spatial collision data (for entities)
     spatial_partition INSTANCEOF spatialpartitionlayer_t SPATIAL_LAYER_COUNT
 ; end
     rawMemorySizeShared db
 .ENDE
+
+.define entity_type _base_entity_type - 1
+.define entity_variant _base_entity_variant - 1
+.define entity_state _base_entity_state - 1
+.define entity_timer _base_entity_timer - 1
+.define entity_posx _base_entity_posx - 1
+.define entity_posy _base_entity_posy - 1
+.define entity_boxw _base_entity_boxw - 1
+.define entity_boxh _base_entity_boxh - 1
+.define entity_mask _base_entity_mask - 1
+.define entity_signal _base_entity_signal - 1
+.define entity_data _base_entity_data - _sizeof_entitycharacterdata_t
 
 ; Should contain data that is either large or not often used.
 ; For more efficient bank usage, this bank is mostly used for bank/game data

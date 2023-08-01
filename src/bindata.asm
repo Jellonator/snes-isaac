@@ -1,7 +1,7 @@
 .include "base.inc"
 
 .bank $40
-.SECTION "Graphics" SUPERFREE
+.SECTION "Graphics" FREE
 .include "assets.inc"
 .ENDS
 

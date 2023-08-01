@@ -55,9 +55,70 @@ InsertHitbox:
 ; Inputs:
 ;   A: The entity ID
 ;   X: The spatial slot
+; Clobbers: A
 EraseHitbox:
     .EraseHitboxLite
     rts
+
+.MACRO .EntityRemoveHitbox ARGS NUM_X, NUM_Y
+    lda.w entity_posy,Y
+    and #$F0
+    sta.b $00
+    lda.w entity_posx,Y
+    lsr
+    lsr
+    lsr
+    lsr
+    ora.b $00
+    sta.b $00
+    .REPT NUM_Y INDEX iy
+        tax
+        .REPT NUM_X INDEX ix
+            .IF ix > 0
+                inx
+            .ENDIF
+            tya
+            jsr EraseHitbox
+        .ENDR
+        .IF iy < (NUM_Y-1)
+            lda.b $00
+            clc
+            adc #16
+            sta.b $00
+        .ENDIF
+    .ENDR
+.ENDM
+
+.MACRO .EntityAddHitbox ARGS NUM_X, NUM_Y
+    sty.b $01
+    lda.w entity_posy,Y
+    and #$F0
+    sta.b $00
+    lda.w entity_posx,Y
+    lsr
+    lsr
+    lsr
+    lsr
+    ora.b $00
+    sta.b $00
+    .REPT NUM_Y INDEX iy
+        tax
+        lda.b $01
+        .REPT NUM_X INDEX ix
+            .IF ix > 0
+                inx
+            .ENDIF
+            jsr InsertHitbox
+        .ENDR
+        .IF iy < (NUM_Y-1)
+            lda.b $00
+            clc
+            adc #16
+            sta.b $00
+        .ENDIF
+    .ENDR
+    ldy.b $01
+.ENDM
 
 _e_null:
     rts
@@ -70,6 +131,18 @@ _e_basic_fly_init:
     .ACCU 16
     .INDEX 16
     .EntityIndexYToDP
+    ; default info
+    lda #10
+    sta.b entitycharacterdata_t.health
+    stz.b entitycharacterdata_t.status_effects
+    sep #$20
+    lda #0
+    sta.w entity_signal,Y
+    sta.w entity_mask,Y
+    lda #16
+    sta.w entity_boxw,Y
+    sta.w entity_boxh,Y
+    rep #$20
     ; load sprite
     lda #sprite.enemy.attack_fly.0
     jsl spriteman_new_sprite_ref
@@ -90,8 +163,10 @@ _e_basic_fly_tick:
     .ACCU 16
     .INDEX 16
     .EntityIndexYToDP
-; move
+; Remove col
     sep #$30 ; 8B AXY
+    .EntityRemoveHitbox 2, 2
+; move
     ; TO PLAYER
     lda.w entity_posx,Y
     lsr
@@ -224,6 +299,8 @@ _e_basic_fly_tick:
     lda #%00101001
     sta.w objectData.1.flags,X
     .END_EntityIndexYToDP
+    ; add to partition
+    .EntityAddHitbox 2, 2
     ; inc object index
     rep #$30
     .SetCurrentObjectS
@@ -249,8 +326,8 @@ entity_create:
     sep #$20 ; 8B A
     ; first: find next free slot
     pha
-    ldy #0
-    ; for non-character entities, start from ENTITY_CHARACTER_MAX instead.
+    ldy #ENTITY_TOTAL_MAX
+    ; for character entities, start from ENTITY_CHARACTER_MAX instead.
     cmp #0
     bpl +
     ldy #ENTITY_CHARACTER_MAX
@@ -258,7 +335,7 @@ entity_create:
     lda.w entity_type,Y
     beq @end
 @loop:
-    iny
+    dey
     lda.w entity_type,Y
     bne @loop
 @end:
@@ -284,8 +361,7 @@ entity_free:
     tax
     phy
     jsr (EntityDefinitions + entitytypeinfo_t.free_func,X)
-    ply    ; 
-    jsl SpatialPartitionClear
+    ply
     ; set type to 0
     sep #$20
     lda #0
@@ -300,7 +376,7 @@ entity_free_all:
     rep #$30 ; 16B AXY
     phb
     .ChangeDataBank $7E
-    ldy.w #0
+    ldy.w #ENTITY_TOTAL_MAX
 @loop:
     lda.w entity_type,Y
     and.w #$00FF
@@ -316,8 +392,7 @@ entity_free_all:
     sta.w entity_type,Y
     rep #$20
 @skip_ent:
-    iny
-    cpy #ENTITY_TOTAL_MAX
+    dey
     bne @loop
 @end:
     plb
@@ -326,25 +401,64 @@ entity_free_all:
 
 ; Tick all entities
 entity_tick_all:
-    ; jsl SpatialPartitionClear
     rep #$30 ; 16B AXY
     phb
     .ChangeDataBank $7E
-    ldy.w #0
+    ldy.w #ENTITY_TOTAL_MAX
 @loop:
+    ; stz.w entity_mask,X
     lda.w entity_type,Y
     and.w #$00FF
     beq @skip_ent ; skip if type == 0
+    phy
     .MultiplyStatic 8
     tax
-    phy
+    php
     jsr (EntityDefinitions + entitytypeinfo_t.tick_func,X)
+    plp
     ply
 @skip_ent:
-    iny
-    cpy #ENTITY_TOTAL_MAX
+    dey
     bne @loop
 @end:
+    ; clear entity partition
+    ; jsl SpatialPartitionClear
+    ; Add entities to partition
+;     sep #$20
+;     ldy.w #ENTITY_TOTAL_MAX
+; @loop_part:
+;     lda.w entity_mask,Y
+;     and #$00FF
+;     beq @skip_part ; skip if mask == 0
+;     lda.w entity_type,Y
+;     and #$00FF
+;     beq @skip_part ; skip if type == 0
+
+;     lda.w entity_boxw,Y
+;     lsr
+;     lsr
+;     lsr
+;     lsr
+;     sta.b $00
+;     lda.w entity_boxh,Y
+;     lsr
+;     lsr
+;     lsr
+;     lsr
+;     sta.b $01
+
+;     dec.b $01
+
+    ; .MultiplyStatic 8
+    ; tax
+    ; phy
+    ; jsr (EntityDefinitions + entitytypeinfo_t.tick_func,X)
+    ; ply
+; @skip_part:
+;     dey
+;     bne @loop_part
+; @end_part:
+; end
     plb
     rtl
 
@@ -352,7 +466,7 @@ EntityInfoInitialize:
     phd
     pea $4300
     pld
-    .ClearWRam_ZP entity_type, (rawMemorySizeShared-entity_type)
+    .ClearWRam_ZP _base_entity_type, (rawMemorySizeShared-entity_type)
     pld
     rtl
 

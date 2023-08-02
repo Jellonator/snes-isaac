@@ -64,7 +64,7 @@
     _base_entity_posx dsw ENTITY_TOTAL_MAX
     _base_entity_posy dsw ENTITY_TOTAL_MAX
     ; size
-    _base_entity_combined_box_width_height dsw ENTITY_TOTAL_MAX
+    _base_entity_combined_box_x2y2 dsw ENTITY_TOTAL_MAX
     ; velocity
     _base_entity_velocx dsw ENTITY_TOTAL_MAX
     _base_entity_velocy dsw ENTITY_TOTAL_MAX
@@ -86,8 +86,10 @@
 .define entity_posy _base_entity_posy - 2
 .define entity_velocx _base_entity_velocx - 2
 .define entity_velocy _base_entity_velocy - 2
-.define entity_boxw _base_entity_combined_box_width_height - 2
-.define entity_boxh _base_entity_combined_box_width_height - 1
+.define entity_box_x1 entity_posx + 1
+.define entity_box_y1 entity_posy + 1
+.define entity_box_x2 _base_entity_combined_box_x2y2 - 2
+.define entity_box_y2 _base_entity_combined_box_x2y2 - 1
 .define entity_mask _base_entity_combined_mask_signal - 2
 .define entity_signal _base_entity_combined_mask_signal - 1
 

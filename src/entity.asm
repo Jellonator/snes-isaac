@@ -113,9 +113,6 @@ _e_basic_fly_init:
     ; sta.w entitycharacterdata_t.status_effects
     sta.w entity_signal,Y
     sta.w entity_mask,Y
-    lda #16
-    sta.w entity_boxw,Y
-    sta.w entity_boxh,Y
     rep #$20
     ; load sprite
     lda #sprite.enemy.attack_fly.0
@@ -142,6 +139,14 @@ _e_basic_fly_tick:
 ; Remove col
     sep #$30 ; 8B AXY
     .EntityRemoveHitbox 2, 2
+; check signal
+    lda #ENTITY_SIGNAL_KILL
+    and.w entity_signal,Y
+    beq +
+        ; We have perished
+        jsl entity_free
+        rts
+    +:
 ; move
     ; TO PLAYER
     lda.w entity_posx+1,Y
@@ -152,7 +157,7 @@ _e_basic_fly_tick:
     sec
     sbc.b $02
     bmi +
-    adc #15
+        adc #15
     +:
     and #$F0
     sta.b $02
@@ -164,7 +169,7 @@ _e_basic_fly_tick:
     sec
     sbc.b $03
     bmi +
-    adc #15
+        adc #15
     +:
     lsr
     lsr
@@ -181,7 +186,7 @@ _e_basic_fly_tick:
     lsr
     plp
     bcc +
-    ora #$FFC0
+        ora #$FFC0
     +:
     sta.b $06 ; $02: Norm X
     lda.l VecNormTableB_Y,X
@@ -192,7 +197,7 @@ _e_basic_fly_tick:
     lsr
     plp
     bcc +
-    ora #$FFC0
+        ora #$FFC0
     +:
     sta.b $04 ; $04: Norm Y
     sep #$20
@@ -205,8 +210,8 @@ _e_basic_fly_tick:
     lsr
     plp
     bpl +
-    dec $01
-    ora #$C0
+        dec $01
+        ora #$C0
     +:
     sta.b $00
     rep #$20
@@ -217,8 +222,12 @@ _e_basic_fly_tick:
     clc
     adc.b $06
     sta.w entity_posx,Y
-    ; RAND Y
     sep #$30 ; 8B AXY
+    xba
+    clc
+    adc #15
+    sta.w entity_box_x2,Y
+    ; RAND Y
     stz.b $01
     ldx.w entity_timer,Y
     lda.l SinTableB,X
@@ -227,8 +236,8 @@ _e_basic_fly_tick:
     lsr
     plp
     bpl +
-    dec $01
-    ora #$C0
+        dec $01
+        ora #$C0
     +:
     sta.b $00
     rep #$20
@@ -239,6 +248,11 @@ _e_basic_fly_tick:
     clc
     adc.b $04
     sta.w entity_posy,Y
+    sep #$30 ; 8B AXY
+    xba
+    clc
+    adc #15
+    sta.w entity_box_y2,Y
 ; load & set gfx
     rep #$20
     lda #0
@@ -249,7 +263,7 @@ _e_basic_fly_tick:
     sta.w entity_timer,Y
     and #$08
     beq +
-    ldx.w _fly_fgxptr.2,Y
+        ldx.w _fly_fgxptr.2,Y
     +:
     lda.w loword(spriteTableValue + spritetab_t.spritemem),X
     phx
@@ -266,6 +280,11 @@ _e_basic_fly_tick:
     sta.w objectData.1.flags,X
     ; add to partition
     .EntityAddHitbox 2, 2
+    ; set some flags
+    lda #ENTITY_MASK_TEAR
+    sta.w entity_mask,Y
+    lda #0
+    sta.w entity_signal,Y
     ; inc object index
     rep #$30
     .SetCurrentObjectS
@@ -301,7 +320,7 @@ entity_create:
     ; for character entities, start from ENTITY_CHARACTER_MAX instead.
     cmp #0
     bpl +
-    ldy #ENTITY_CHARACTER_MAX_INDEX
+        ldy #ENTITY_CHARACTER_MAX_INDEX
     +:
     lda.w entity_type,Y
     beq @end
@@ -325,6 +344,7 @@ entity_create:
 
 ; Free the given entity in reference Y
 entity_free:
+    rep #$30 ; 16B AXY
     phb
     .ChangeDataBank $7E
     lda.w entity_type,Y
@@ -379,7 +399,6 @@ entity_tick_all:
     .ChangeDataBank $7E
     ldy.w #ENTITY_TOTAL_MAX_INDEX
 @loop:
-    ; stz.w entity_mask,X
     lda.w entity_type,Y
     and.w #$00FF
     beq @skip_ent ; skip if type == 0
@@ -396,6 +415,53 @@ entity_tick_all:
     bne @loop
 @end:
     plb
+    rtl
+
+; Get the collision at the given position, if available
+; $00: Mask
+; $01: X
+; $02: Y
+; Return: Y as entity ID
+GetEntityCollisionAt:
+    .INDEX 8
+    .ACCU 8
+    lda.b $02
+    and #$F0
+    sta.b $03
+    lda.b $01
+    lsr
+    lsr
+    lsr
+    lsr
+    ora.b $03
+    tax
+    .REPT SPATIAL_LAYER_COUNT INDEX i
+        ; get tile at X
+        ldy.w spatial_partition.{i+1},X
+        bne +
+            ; no more tiles; exit early
+            ldy #0
+            rtl
+        +:
+        ; check mask
+        lda.w entity_mask,Y
+        and.b $00
+        beq + ; skip if not match
+            ; check position
+            lda.b $01
+            cmp.w entity_box_x1,Y
+            bcc +
+            cmp.w entity_box_x2,Y
+            bcs +
+            lda.b $02
+            cmp.w entity_box_y1,Y
+            bcc +
+            cmp.w entity_box_y2,Y
+            bcs +
+            rtl
+        +:
+    .ENDR
+    ldy #0
     rtl
 
 EntityInfoInitialize:

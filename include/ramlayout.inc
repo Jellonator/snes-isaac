@@ -56,38 +56,44 @@
     gameRoomScrollX dw
     gameRoomScrollY dw
 ; Commonly used entity data
-    _base_entity_type ds ENTITY_TOTAL_MAX
-    _base_entity_variant ds ENTITY_TOTAL_MAX
-    _base_entity_state ds ENTITY_TOTAL_MAX
-    _base_entity_timer ds ENTITY_TOTAL_MAX
-    ; position + size
-    _base_entity_posx ds ENTITY_TOTAL_MAX
-    _base_entity_posy ds ENTITY_TOTAL_MAX
-    _base_entity_boxw ds ENTITY_TOTAL_MAX
-    _base_entity_boxh ds ENTITY_TOTAL_MAX
-    ; Defines how entities can collide or be detected
-    _base_entity_mask ds ENTITY_TOTAL_MAX
-    ; Set for entities to indicate different kinds of interaction
-    _base_entity_signal ds ENTITY_TOTAL_MAX
+    _base_entity_combined_type_variant dsw ENTITY_TOTAL_MAX
+    _base_entity_combined_state_timer dsw ENTITY_TOTAL_MAX
+    _base_entity_combined_mask_signal dsw ENTITY_TOTAL_MAX
+    _base_entity_health dsw ENTITY_TOTAL_MAX
+    ; position
+    _base_entity_posx dsw ENTITY_TOTAL_MAX
+    _base_entity_posy dsw ENTITY_TOTAL_MAX
+    ; size
+    _base_entity_combined_box_width_height dsw ENTITY_TOTAL_MAX
+    ; velocity
+    _base_entity_velocx dsw ENTITY_TOTAL_MAX
+    _base_entity_velocy dsw ENTITY_TOTAL_MAX
     ; Extraneous entity data (only for certain entity types)
-    _base_entity_data INSTANCEOF entitycharacterdata_t ENTITY_CHARACTER_MAX
+    _ext_entity_custom INSTANCEOF entitycustomdatatableentry_t 16
+    _ext_entity_statfx INSTANCEOF entitystatuseffectdata_t 2
 ; spatial collision data (for entities)
     spatial_partition INSTANCEOF spatialpartitionlayer_t SPATIAL_LAYER_COUNT
 ; end
     rawMemorySizeShared db
 .ENDE
 
-.define entity_type _base_entity_type - 1
-.define entity_variant _base_entity_variant - 1
-.define entity_state _base_entity_state - 1
-.define entity_timer _base_entity_timer - 1
-.define entity_posx _base_entity_posx - 1
-.define entity_posy _base_entity_posy - 1
-.define entity_boxw _base_entity_boxw - 1
-.define entity_boxh _base_entity_boxh - 1
-.define entity_mask _base_entity_mask - 1
-.define entity_signal _base_entity_signal - 1
-.define entity_data _base_entity_data - _sizeof_entitycharacterdata_t
+.define entity_type _base_entity_combined_type_variant - 2
+.define entity_variant _base_entity_combined_type_variant - 1
+.define entity_state _base_entity_combined_state_timer - 2
+.define entity_timer _base_entity_combined_state_timer - 1
+.define entity_health _base_entity_health - 2
+.define entity_posx _base_entity_posx - 2
+.define entity_posy _base_entity_posy - 2
+.define entity_velocx _base_entity_velocx - 2
+.define entity_velocy _base_entity_velocy - 2
+.define entity_boxw _base_entity_combined_box_width_height - 2
+.define entity_boxh _base_entity_combined_box_width_height - 1
+.define entity_mask _base_entity_combined_mask_signal - 2
+.define entity_signal _base_entity_combined_mask_signal - 1
+
+.REPT 16 INDEX i
+    .define entity_char_custom.{i+1} _ext_entity_custom.{i+1} - 2
+.ENDR
 
 ; Should contain data that is either large or not often used.
 ; For more efficient bank usage, this bank is mostly used for bank/game data

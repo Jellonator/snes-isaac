@@ -150,16 +150,24 @@
     padding dw
 .ENDST
 
-; Character entity data; aligned to 32 bytes
-.STRUCT entitycharacterdata_t
-    scratch ds 4
-    reserved ds 4
-    health dw
-    status_effects ds 4
-    velocx db
-    velocy db
-    ext ds 16
+; Custom entity data
+.STRUCT entitycustomdatatableentry_t
+    for_entity dsw ENTITY_CHARACTER_MAX
 .ENDST
+
+.STRUCT entitystatuseffectdata_t
+    for_entity dsw ENTITY_CHARACTER_MAX
+.ENDST
+
+; .STRUCT entitycharacterdata_t
+;     scratch ds 4
+;     reserved ds 4
+;     health dw
+;     status_effects ds 4
+;     velocx db
+;     velocy db
+;     ext ds 16
+; .ENDST
 
 ; 2-byte structure for extra data contained in sprite table
 .STRUCT spritetab_t

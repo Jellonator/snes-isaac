@@ -173,9 +173,11 @@
 ; Number of objects stored per room
 .DEFINE ENTITY_STORE_COUNT 24
 ; Enemies and other objects which may consume multiple sprite slots
-.DEFINE ENTITY_TOTAL_MAX 64
+.DEFINE ENTITY_TOTAL_MAX 96
+.DEFINE ENTITY_TOTAL_MAX_INDEX (2 * ENTITY_TOTAL_MAX)
 ; Character entities which may have health, status effects, custom sprites, etc.
 .DEFINE ENTITY_CHARACTER_MAX 24
+.DEFINE ENTITY_CHARACTER_MAX_INDEX (2 * ENTITY_CHARACTER_MAX)
 
 .DEFINE ENTITY_TYPE_ATTACK_FLY 128
 
@@ -188,3 +190,8 @@
 .DEFINE ENTITY_MASK_PROJECTILE $02
 ; Objects that can be damaged by bombs
 .DEFINE ENTITY_MASK_BOMBABLE $04
+
+
+; Entity Signals: Used to tell an entity to respond to some form of interaction
+; Signaled when an entity is killed (or otherwise needs to handle its own removal)
+.DEFINE ENTITY_SIGNAL_KILL $01

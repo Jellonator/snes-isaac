@@ -254,11 +254,11 @@ LoadRoomSlotIntoLevel:
     lda $020000 + objectdef_t.x,X ; X coord
     clc
     adc #ROOM_LEFT
-    sta.w entity_posx,Y
+    sta.w entity_posx+1,Y
     lda $020000 + objectdef_t.y,X ; Y coord
     clc
     adc #ROOM_TOP
-    sta.w entity_posy,Y
+    sta.w entity_posy+1,Y
     rep #$20 ; 16B A
     ply
     dey

@@ -365,7 +365,7 @@ _UpdateTearPost:
     sta.w objectData.1.pos_x,Y
     lda.w tear_array.1.pos.y+1,X
     sec
-    sbc $00
+    sbc $08
     sta.w objectData.1.pos_y,Y
     lda #$21
     sta.w objectData.1.tileid,Y
@@ -419,7 +419,7 @@ UpdateTears:
     beq @iter_remove
     sta.w tear_array.1.lifetime,X
     AMINUI 8
-    sta.w $00 ; $00 is tear height
+    sta.w $08 ; $08 is tear height
 ; Apply speed to position
     lda.w tear_array.1.pos.x,X
     clc
@@ -446,8 +446,49 @@ UpdateTears:
     cmp #0
     beq @skipTileHandler
     jsr _UpdateTearTile
-    bra @iter_remove
+    brl @iter_remove
 @skipTileHandler:
+; Check collisions
+    pha
+    phx
+    phy
+    sep #$30
+    lda #ENTITY_MASK_TEAR
+    sta.b $00
+    lda.w tear_array.1.pos.x+1,X
+    clc
+    adc #4
+    sta.b $01
+    lda.w tear_array.1.pos.y+1,X
+    clc
+    adc #4
+    sta.b $02
+    jsl GetEntityCollisionAt
+    cpy #0
+    beq @skipCollisionHandler
+        ; found object:
+        rep #$30
+        lda.w entity_health,Y
+        sec
+        sbc #4
+        sta.w entity_health,Y
+        bcs +
+            ; kill target
+            sep #$20
+            lda.w entity_signal,Y
+            ora #ENTITY_SIGNAL_KILL
+            sta.w entity_signal,Y
+            rep #$30
+        +:
+        ply
+        plx
+        pla
+        brl @iter_remove
+@skipCollisionHandler:
+    rep #$30
+    ply
+    plx
+    pla
 ; Update rest of tear info
     jsr _UpdateTearPost
     rep #$30 ; 16AXY

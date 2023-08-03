@@ -38,5 +38,10 @@
         "name": "enemy_attack_fly",
         "src": "assets/sprites/enemy/attack_fly.raw",
         "depth": 16
+    },
+    {
+        "name": "enemy_zombie",
+        "src": "assets/sprites/enemy/zombie.raw",
+        "depth": 16
     }
 ]

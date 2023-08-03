@@ -22,4 +22,6 @@ SpriteDefs:
 
 .DefineSprite "sprite.enemy.attack_fly", sprites@enemy_attack_fly, 1, 2
 
+.DefineSprite "sprite.enemy.zombie", sprites@enemy_zombie, 1, 2
+
 .ENDS

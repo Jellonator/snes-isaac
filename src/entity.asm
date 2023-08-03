@@ -4,36 +4,6 @@
 .BANK $02 SLOT "ROM"
 .SECTION "Entity" FREE
 
-; For each of the following:
-; * execution bank will be $02
-; * Data bank will be $7E
-; * Y will be entity index (16B)
-; * A,X,Y will be 16B
-
-; Insert entity into spatial partition slot
-; Inputs:
-;   A: The entity ID
-;   X: The spatial slot
-; Clobbers: Y
-InsertHitbox:
-    .REPT SPATIAL_LAYER_COUNT INDEX i
-        ldy.w spatial_partition.{i+1},X
-        bne +
-        sta.w spatial_partition.{i+1},X
-        rts
-        +:
-    .ENDR
-    rts
-
-; Remove entity from spatial partition slot
-; Inputs:
-;   A: The entity ID
-;   X: The spatial slot
-; Clobbers: A
-EraseHitbox:
-    .EraseHitboxLite
-    rts
-
 .MACRO .EntityRemoveHitbox ARGS NUM_X, NUM_Y
     lda.w entity_posy+1,Y
     and #$F0
@@ -94,219 +64,41 @@ EraseHitbox:
     ldy.b $01
 .ENDM
 
-_e_null:
-    rts
+; ENTITY DEFS
+.include "entitydefs/enemy_fly.inc"
+.include "entitydefs/enemy_zombie.inc"
 
-.DEFINE _fly_fgxptr.1 entity_char_custom.1
-.DEFINE _fly_fgxptr.2 entity_char_custom.2
+; For each of the following:
+; * execution bank will be $02
+; * Data bank will be $7E
+; * Y will be entity index (16B)
+; * A,X,Y will be 16B
 
-_e_basic_fly_init:
-    .ACCU 16
-    .INDEX 16
-    ; default info
-    tya
-    sta.w entity_timer,Y
-    lda #10
-    sta.w entity_health,Y
-    sep #$20
-    lda #0
-    ; sta.w entitycharacterdata_t.status_effects
-    sta.w entity_signal,Y
-    sta.w entity_mask,Y
-    rep #$20
-    ; load sprite
-    lda #sprite.enemy.attack_fly.0
-    phy
-    jsl spriteman_new_sprite_ref
-    rep #$30
-    ply
-    txa
-    sta.w _fly_fgxptr.1,Y
-    ; load frame 2
-    lda #sprite.enemy.attack_fly.1
-    phy
-    jsl spriteman_new_sprite_ref
-    rep #$30
-    ply
-    txa
-    sta.w _fly_fgxptr.2,Y
-    ; end
-    rts
-
-_e_basic_fly_tick:
-    .ACCU 16
-    .INDEX 16
-; Remove col
-    sep #$30 ; 8B AXY
-    .EntityRemoveHitbox 2, 2
-; check signal
-    lda #ENTITY_SIGNAL_KILL
-    and.w entity_signal,Y
-    beq +
-        ; We have perished
-        jsl entity_free
+; Insert entity into spatial partition slot
+; Inputs:
+;   A: The entity ID
+;   X: The spatial slot
+; Clobbers: Y
+InsertHitbox:
+    .REPT SPATIAL_LAYER_COUNT INDEX i
+        ldy.w spatial_partition.{i+1},X
+        bne +
+        sta.w spatial_partition.{i+1},X
         rts
-    +:
-; move
-    ; TO PLAYER
-    lda.w entity_posx+1,Y
-    lsr
-    sta.b $02
-    lda.w player.pos.x+1
-    lsr
-    sec
-    sbc.b $02
-    bmi +
-        adc #15
-    +:
-    and #$F0
-    sta.b $02
-    lda.w entity_posy+1,Y
-    lsr
-    sta.b $03
-    lda.w player.pos.y+1
-    lsr
-    sec
-    sbc.b $03
-    bmi +
-        adc #15
-    +:
-    lsr
-    lsr
-    lsr
-    lsr
-    ora.b $02
-    tax
-    rep #$20
-    lda.l VecNormTableB_X,X
-    and #$00FF
-    cmp #$80
-    php
-    lsr
-    lsr
-    plp
-    bcc +
-        ora #$FFC0
-    +:
-    sta.b $06 ; $02: Norm X
-    lda.l VecNormTableB_Y,X
-    and #$00FF
-    cmp #$80
-    php
-    lsr
-    lsr
-    plp
-    bcc +
-        ora #$FFC0
-    +:
-    sta.b $04 ; $04: Norm Y
-    sep #$20
-    ; RAND X
-    stz.b $01
-    ldx.w entity_timer,Y
-    lda.l CosTableB,X
-    php
-    lsr
-    lsr
-    plp
-    bpl +
-        dec $01
-        ora #$C0
-    +:
-    sta.b $00
-    rep #$20
-    lda.w entity_posx,Y
-    ; Apply X
-    clc
-    adc.b $00
-    clc
-    adc.b $06
-    sta.w entity_posx,Y
-    sep #$30 ; 8B AXY
-    xba
-    clc
-    adc #15
-    sta.w entity_box_x2,Y
-    ; RAND Y
-    stz.b $01
-    ldx.w entity_timer,Y
-    lda.l SinTableB,X
-    php
-    lsr
-    lsr
-    plp
-    bpl +
-        dec $01
-        ora #$C0
-    +:
-    sta.b $00
-    rep #$20
-    lda.w entity_posy,Y
-    ; Apply Y
-    clc
-    adc.b $00
-    clc
-    adc.b $04
-    sta.w entity_posy,Y
-    sep #$30 ; 8B AXY
-    xba
-    clc
-    adc #15
-    sta.w entity_box_y2,Y
-; load & set gfx
-    rep #$20
-    lda #0
-    sep #$20
-    ldx.w _fly_fgxptr.1,Y
-    lda.w entity_timer,Y
-    dec A
-    sta.w entity_timer,Y
-    and #$08
-    beq +
-        ldx.w _fly_fgxptr.2,Y
-    +:
-    lda.w loword(spriteTableValue + spritetab_t.spritemem),X
-    phx
-    tax
-    lda.l SpriteSlotIndexTable,X
-    plx
-    ldx.w objectIndex
-    sta.w objectData.1.tileid,X
-    lda.w entity_posx + 1,Y
-    sta.w objectData.1.pos_x,X
-    lda.w entity_posy + 1,Y
-    sta.w objectData.1.pos_y,X
-    lda #%00101001
-    sta.w objectData.1.flags,X
-    ; add to partition
-    .EntityAddHitbox 2, 2
-    ; set some flags
-    lda #ENTITY_MASK_TEAR
-    sta.w entity_mask,Y
-    lda #0
-    sta.w entity_signal,Y
-    ; inc object index
-    rep #$30
-    .SetCurrentObjectS
-    .IncrementObjectIndex
-    ; end
+        +:
+    .ENDR
     rts
 
-_e_basic_fly_free:
-    .ACCU 16
-    .INDEX 16
-    lda #0
-    sta.w entity_mask,Y
-    lda.w _fly_fgxptr.1,Y
-    tax
-    phy
-    php
-    jsl spriteman_unref
-    plp
-    ply
-    lda.w _fly_fgxptr.2,Y
-    tax
-    jsl spriteman_unref
+; Remove entity from spatial partition slot
+; Inputs:
+;   A: The entity ID
+;   X: The spatial slot
+; Clobbers: A
+EraseHitbox:
+    .EraseHitboxLite
+    rts
+
+_e_null:
     rts
 
 ; Create an entity of type A
@@ -331,6 +123,8 @@ entity_create:
     bne @loop
 @end:
     ; init entity
+    lda #0
+    xba
     pla
     sta.w entity_type,Y
     rep #$20 ; 16B A
@@ -495,9 +289,16 @@ EntityDefinitions:
         .ENDST
     .ENDR
     ; 128 : Attack fly
-    .DSTRUCT @attack_fly INSTANCEOF entitytypeinfo_t VALUES
+    .DSTRUCT @enemy_attack_fly INSTANCEOF entitytypeinfo_t VALUES
         init_func: .dw _e_basic_fly_init
         tick_func: .dw _e_basic_fly_tick
         free_func: .dw _e_basic_fly_free
     .ENDST
+    ; 129 : zombie
+    .DSTRUCT @enemy_zombie INSTANCEOF entitytypeinfo_t VALUES
+        init_func: .dw _e_zombie_init
+        tick_func: .dw _e_zombie_tick
+        free_func: .dw _e_zombie_free
+    .ENDST
+
 .ENDS

@@ -17,7 +17,8 @@ tiledIdsToGameIds = {
 }
 
 tiledIdsToObjectIds = {
-    0: "ENTITY_TYPE_ATTACK_FLY"
+    0: "ENTITY_TYPE_ENEMY_ATTACK_FLY",
+    1: "ENTITY_TYPE_ENEMY_ZOMBIE"
 }
 
 ROOMPOOL_OUT = "include/roompools.inc"
@@ -35,7 +36,7 @@ for pool in json_roompools:
         rooms.add(room)
 
 out_inc.write(".BANK $02 SLOT \"ROM\"\n")
-out_inc.write(".SECTION \"RoomDefinitions\" SUPERFREE\n")
+out_inc.write(".SECTION \"RoomDefinitions\" FREE\n")
 out_inc.write("RoomDefinitions:\n")
 
 roomPathToId = {}

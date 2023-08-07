@@ -12,3 +12,4 @@ obj/vqueue.obj
 obj/spriteslot.obj
 obj/spritedefs.obj
 obj/entity.obj
+obj/projectile.obj

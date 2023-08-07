@@ -33,28 +33,28 @@ PlayerInit:
     stz.w joy1press
     stz.w joy1raw
     lda #24
-    sta.w player.stat_accel
+    sta.w playerData.stat_accel
     lda #128*3
-    sta.w player.stat_speed
+    sta.w playerData.stat_speed
     lda #24
-    sta.w player.stat_tear_delay
+    sta.w playerData.stat_tear_delay
     lda #$0100
-    sta.w player.stat_tear_speed
+    sta.w playerData.stat_tear_speed
     lda #0
-    sta.w player.speed.x
+    sta.w player_velocx
     lda #0
-    sta.w player.speed.y
+    sta.w player_velocy
     lda #((32 + 6 * 16 - 8) * 256)
-    sta.w player.pos.x
+    sta.w player_posx
     lda #((64 + 4 * 16 - 8) * 256)
-    sta.w player.pos.y
-    stz.w tear_bytes_used
+    sta.w player_posy
+    stz.w projectile_count_2x
     rts
 
 PlayerUpdate:
     rep #$30 ; 16 bit AXY
 
-    lda.w player.stat_speed
+    lda.w playerData.stat_speed
     sta $00
     ; check (LEFT OR RIGHT) AND (UP OR DOWN)
     ; if so, multiply speed by 3/4; aka (A+A+A) >> 2
@@ -64,7 +64,7 @@ PlayerUpdate:
     beq @skip_slow
     bit #$0300
     beq @skip_slow
-    lda.w player.stat_speed
+    lda.w playerData.stat_speed
     asl
     clc
     adc $00
@@ -73,7 +73,7 @@ PlayerUpdate:
     sta $00
 @skip_slow:
 
-    ldx.w player.speed.y
+    ldx.w player_velocy
     lda.w joy1held
     bit #JOY_DOWN
     bne @down
@@ -85,36 +85,36 @@ PlayerUpdate:
 
     ; slowright
     clc
-    adc.w player.stat_accel
+    adc.w playerData.stat_accel
     AMINI $00
     jmp @endy
 @slowup:
     ; slowleft
     sec
-    sbc.w player.stat_accel
+    sbc.w playerData.stat_accel
     AMAXI $00
     jmp @endy
 @down:
     ; right
     txa
     clc
-    adc.w player.stat_accel
+    adc.w playerData.stat_accel
     AMIN $00
     jmp @endy
 @up:
     ; left
     txa
     sec
-    sbc.w player.stat_accel
+    sbc.w playerData.stat_accel
     eor #$FFFF
     inc A
     AMIN $00
     eor #$FFFF
     inc A
 @endy:
-    sta.w player.speed.y
+    sta.w player_velocy
     
-    ldx.w player.speed.x
+    ldx.w player_velocx
     lda.w joy1held
     bit #JOY_RIGHT
     bne @right
@@ -127,34 +127,34 @@ PlayerUpdate:
 
     ; slowright
     clc
-    adc.w player.stat_accel
+    adc.w playerData.stat_accel
     AMINI $00
     jmp @endx
 @slowleft:
     ; slowleft
     sec
-    sbc.w player.stat_accel
+    sbc.w playerData.stat_accel
     AMAXI $00
     jmp @endx
 @right:
     ; right
     txa
     clc
-    adc.w player.stat_accel
+    adc.w playerData.stat_accel
     AMIN $00
     jmp @endx
 @left:
     ; left
     txa
     sec
-    sbc.w player.stat_accel
+    sbc.w playerData.stat_accel
     eor #$FFFF
     inc A
     AMIN $00
     eor #$FFFF
     inc A
 @endx:
-    sta.w player.speed.x
+    sta.w player_velocx
 
 .DEFINE TempLimitLeft $00
 .DEFINE TempLimitRight $02
@@ -164,7 +164,7 @@ PlayerUpdate:
     ldy #(ROOM_RIGHT - 12)*256
     stx $00 ; left
     sty $02 ; right
-    lda player.pos.y
+    lda player_posy
     cmp #(ROOM_CENTER_Y - 8 - ROOM_DOOR_RADIUS)*256
     bmi +
     cmp #(ROOM_CENTER_Y - 8 + ROOM_DOOR_RADIUS)*256
@@ -179,7 +179,7 @@ PlayerUpdate:
     ldy #(ROOM_BOTTOM - 12)*256
     stx $04 ; top
     sty $06 ; bottom
-    lda player.pos.x
+    lda player_posx
     cmp #(ROOM_CENTER_X - 8 - ROOM_DOOR_RADIUS)*256
     bmi +
     cmp #(ROOM_CENTER_X - 8 + ROOM_DOOR_RADIUS)*256
@@ -202,7 +202,7 @@ PlayerUpdate:
     sty $06 ; bottom
 ++:
 
-    lda player.pos.y
+    lda player_posy
     cmp #(ROOM_TOP - 4)*256
     bcc +
     cmp #(ROOM_BOTTOM - 12 + 1)*256
@@ -220,8 +220,8 @@ PlayerUpdate:
     jsr PlayerMoveVertical
 ; handle player shoot
     rep #$30 ; 16b AXY
-    lda.w player.tear_timer
-    cmp.w player.stat_tear_delay ; if tear_timer < stat_tear_delay: ++tear_timer
+    lda.w playerData.tear_timer
+    cmp.w playerData.stat_tear_delay ; if tear_timer < stat_tear_delay: ++tear_timer
     bcc @tear_not_ready
     ; check inputs
     lda.w joy1held
@@ -231,14 +231,14 @@ PlayerUpdate:
     jmp @end_tear_code
 @tear_not_ready:
     inc A
-    sta.w player.tear_timer
+    sta.w playerData.tear_timer
 @end_tear_code:
     sep #$30 ; 8 bit AXY
     ; update render data
-    lda.w player.pos.x+1
+    lda.w player_posx+1
     sta.w objectData.1.pos_x
     sta.w objectData.2.pos_x
-    lda.w player.pos.y+1
+    lda.w player_posy+1
     sta.w objectData.2.pos_y
     sec
     sbc #10
@@ -258,15 +258,15 @@ PlayerUpdate:
 
 PlayerShootTear:
     rep #$30 ; 16 bit AXY
-    jsr GetTearSlot
-    lda.w player.flags
+    jsl projectile_slot_get
+    lda.w playerData.flags
     eor #PLAYER_FLAG_EYE
-    sta.w player.flags
-    lda #90
-    sta.w tear_array.1.lifetime,X
-    stz.w tear_array.1.size,X
+    sta.w playerData.flags
+    lda #120
+    sta.w projectile_lifetime,X
+    stz.w projectile_size,X
     lda #$0000
-    sta.w player.tear_timer
+    sta.w playerData.tear_timer
     lda.w joy1held
     bit #JOY_Y
     bne @tear_left
@@ -275,319 +275,99 @@ PlayerShootTear:
     bit #JOY_B
     bne @tear_down
 ;tear_up:
-    lda.w player.speed.x
-    sta.w tear_array.1.speed.x,X
-    lda.w player.speed.y
+    lda.w player_velocx
+    sta.w projectile_velocx,X
+    lda.w player_velocy
     AMINI 64
     AMAXI -128
     sec
-    sbc.w player.stat_tear_speed
-    sta.w tear_array.1.speed.y,X
+    sbc.w playerData.stat_tear_speed
+    sta.w projectile_velocy,X
     jmp @vertical
 @tear_left:
-    lda.w player.speed.y
-    sta.w tear_array.1.speed.y,X
-    lda.w player.speed.x
+    lda.w player_velocy
+    sta.w projectile_velocy,X
+    lda.w player_velocx
     AMINI 64
     AMAXI -128
     sec
-    sbc.w player.stat_tear_speed
-    sta.w tear_array.1.speed.x,X
+    sbc.w playerData.stat_tear_speed
+    sta.w projectile_velocx,X
     jmp @horizontal
 @tear_right:
-    lda.w player.speed.y
-    sta.w tear_array.1.speed.y,X
-    lda.w player.speed.x
+    lda.w player_velocy
+    sta.w projectile_velocy,X
+    lda.w player_velocx
     AMAXI -64
     AMAXI 128
     clc
-    adc.w player.stat_tear_speed
-    sta.w tear_array.1.speed.x,X
+    adc.w playerData.stat_tear_speed
+    sta.w projectile_velocx,X
     jmp @horizontal
 @tear_down:
-    lda.w player.speed.x
-    sta.w tear_array.1.speed.x,X
-    lda.w player.speed.y
+    lda.w player_velocx
+    sta.w projectile_velocx,X
+    lda.w player_velocy
     AMAXI -64
     AMAXI 128
     clc
-    adc.w player.stat_tear_speed
-    sta.w tear_array.1.speed.y,X
+    adc.w playerData.stat_tear_speed
+    sta.w projectile_velocy,X
     jmp @vertical
 @vertical:
-    lda.w player.flags
+    lda.w playerData.flags
     bit #PLAYER_FLAG_EYE
     bne @vertical_skip
-    lda.w player.pos.x
-    sta.w tear_array.1.pos.x,X
-    lda.w player.pos.y
+    lda.w player_posx
+    sta.w projectile_posx,X
+    lda.w player_posy
     clc
     adc #256*4
-    sta.w tear_array.1.pos.y,X
+    sta.w projectile_posy,X
     rts
 @vertical_skip:
-    lda.w player.pos.x
+    lda.w player_posx
     clc
     adc #256*8
-    sta.w tear_array.1.pos.x,X
-    lda.w player.pos.y
+    sta.w projectile_posx,X
+    lda.w player_posy
     clc
     adc #256*4
-    sta.w tear_array.1.pos.y,X
+    sta.w projectile_posy,X
     rts
 @horizontal:
-    lda.w player.flags
+    lda.w playerData.flags
     bit #PLAYER_FLAG_EYE
     bne @horizontal_skip
-    lda.w player.pos.x
+    lda.w player_posx
     clc
     adc #256*4
-    sta.w tear_array.1.pos.x,X
-    lda.w player.pos.y
-    sta.w tear_array.1.pos.y,X
+    sta.w projectile_posx,X
+    lda.w player_posy
+    sta.w projectile_posy,X
     rts
 @horizontal_skip:
-    lda.w player.pos.x
+    lda.w player_posx
     clc
     adc #256*4
-    sta.w tear_array.1.pos.x,X
-    lda.w player.pos.y
+    sta.w projectile_posx,X
+    lda.w player_posy
     clc
     adc.w #256*8
-    sta.w tear_array.1.pos.y,X
-    rts
-
-_UpdateTearPost:
-    ; send to OAM
-    sep #$20 ; 8A, 16XY
-    ldy.w objectIndex
-    lda.w tear_array.1.pos.x+1,X
-    sta.w objectData.1.pos_x,Y
-    lda.w tear_array.1.pos.y+1,X
-    sec
-    sbc $08
-    sta.w objectData.1.pos_y,Y
-    lda #$21
-    sta.w objectData.1.tileid,Y
-    lda #%00101010
-    sta.w objectData.1.flags,Y
-    rts
-
-_UpdateTearTile:
-    .ACCU 16
-    .INDEX 16
-    cmp #BLOCK_POOP
-    bne +
-; handle poop
-    sep #$20 ; 8 bit A
-    lda [currentRoomTileVariantTableAddress],Y
-    cmp #2
-    beq @removeTile
-    inc A
-    sta [currentRoomTileVariantTableAddress],Y
-    rep #$20 ; 16 bit A
-    jsr HandleTileChanged
-    rts
-@removeTile:
-    sep #$20 ; 8 bit A
-    lda #0
-    sta [currentRoomTileVariantTableAddress],Y
-    sta [currentRoomTileTypeTableAddress],Y
-    rep #$20 ; 16 bit A
-    jsr HandleTileChanged
-    rts
-+:
-    rts
-
-UpdateTears:
-    rep #$30 ; 16 bit AXY
-    ldx #$0000
-    cpx.w tear_bytes_used
-    bne @iter
-    rts
-@iter_remove:
-    jsr RemoveTearSlot
-    ; No ++X, but do check that this is the end of the array
-    cpx.w tear_bytes_used ; X < tear_bytes_used
-    bcc @iter
-    jmp @end
-@iter:
-; Handle lifetime
-    lda.w tear_array.1.lifetime,X
-    dec A
-    cmp #0 ; if lifetime == 0, then remove
-    beq @iter_remove
-    sta.w tear_array.1.lifetime,X
-    AMINUI 8
-    sta.w $08 ; $08 is tear height
-; Apply speed to position
-    lda.w tear_array.1.pos.x,X
-    clc
-    adc.w tear_array.1.speed.x,X
-    sta.w tear_array.1.pos.x,X
-    clc
-    adc #(4-ROOM_LEFT)*256
-    .PositionToIndex_A
-    sta currentConsideredTileX
-    lda.w tear_array.1.pos.y,X
-    clc
-    adc.w tear_array.1.speed.y,X
-    sta.w tear_array.1.pos.y,X
-    clc
-    adc #(-ROOM_TOP)*256
-    .PositionToIndex_A
-    sta currentConsideredTileY
-; Check tile
-    .BranchIfTileXYOOB currentConsideredTileX, currentConsideredTileY, @iter_remove
-    .TileXYToIndexA currentConsideredTileX, currentConsideredTileY, TempTemp1
-    tay
-    lda [currentRoomTileTypeTableAddress],Y
-    and #$00FF
-    cmp #0
-    beq @skipTileHandler
-    jsr _UpdateTearTile
-    brl @iter_remove
-@skipTileHandler:
-; Check collisions
-    pha
-    phx
-    phy
-    sep #$30
-    lda #ENTITY_MASK_TEAR
-    sta.b $00
-    lda.w tear_array.1.pos.x+1,X
-    clc
-    adc #4
-    sta.b $01
-    lda.w tear_array.1.pos.y+1,X
-    clc
-    adc #4
-    sta.b $02
-    jsl GetEntityCollisionAt
-    cpy #0
-    beq @skipCollisionHandler
-        ; found object:
-        rep #$30
-        lda.w entity_health,Y
-        sec
-        sbc #4
-        sta.w entity_health,Y
-        bcs +
-            ; kill target
-            sep #$20
-            lda.w entity_signal,Y
-            ora #ENTITY_SIGNAL_KILL
-            sta.w entity_signal,Y
-            rep #$30
-        +:
-        ply
-        plx
-        pla
-        brl @iter_remove
-@skipCollisionHandler:
-    rep #$30
-    ply
-    plx
-    pla
-; Update rest of tear info
-    jsr _UpdateTearPost
-    rep #$30 ; 16AXY
-    phx
-    .IncrementObjectIndex
-    plx
-    txa ; ++X
-    clc
-    adc #_sizeof_tear_t
-    tax
-    cpx.w tear_bytes_used ; X < tear_bytes_used
-    bcs @end
-    jmp @iter
-@end:
-    rts
-
-; Get the next available tear slot, and store it in X
-; if there are no available slots, the tear with the lowest life will be chosen
-GetTearSlot:
-    rep #$30 ; 16 bit AXY
-    lda.w tear_bytes_used
-    cmp #TEAR_ARRAY_MAX_SIZE
-    bcc @has_empty_slots
-; no empty slots available:
-; find the slot with the lowest lifetime
-    lda #$7FFF
-    sta $00 ; $00 is best value
-    ldx #0 ; x is current index
-    ldy #0 ; Y is best index
-@iter_tears:
-    lda.w tear_array.1.lifetime,X
-    cmp $00
-    bcs @skip_store
-    sta $00
-    txy ; if tears[X].lifetime < tears[Y].lifetime: Y=X
-@skip_store:
-; ++X
-    txa ; increment X
-    clc
-    adc #_sizeof_tear_t
-    tax
-; X < TEAR_ARRAY_MAX_SIZE
-    cpx #TEAR_ARRAY_MAX_SIZE
-    bcc @iter_tears
-; Finish, transfer Y to X
-    tyx
-    rts
-; empty slots available:
-@has_empty_slots:
-    tax
-    clc
-    adc #_sizeof_tear_t
-    sta.w tear_bytes_used
-    rts
-
-; Remove the tear at the index X
-; AXY must be 16bit
-RemoveTearSlot:
-    rep #$30 ; 16 bit AXY
-    ; decrement number of used tears
-    lda.w tear_bytes_used
-    sec
-    sbc #_sizeof_tear_t
-    sta.w tear_bytes_used
-    ; Check if X is the last available tear slot
-    cpx.w tear_bytes_used
-    beq @skip_copy
-    ; copy last tear slot to slot being removed
-    ldy.w tear_bytes_used
-    lda.w tear_array+0,Y
-    sta.w tear_array+0,X
-    lda.w tear_array+2,Y
-    sta.w tear_array+2,X
-    lda.w tear_array+4,Y
-    sta.w tear_array+4,X
-    lda.w tear_array+6,Y
-    sta.w tear_array+6,X
-    lda.w tear_array+8,Y
-    sta.w tear_array+8,X
-    lda.w tear_array+10,Y
-    sta.w tear_array+10,X
-    lda.w tear_array+12,Y
-    sta.w tear_array+12,X
-    lda.w tear_array+14,Y
-    sta.w tear_array+14,X
-@skip_copy:
+    sta.w projectile_posy,X
     rts
 
 PlayerMoveHorizontal:
     .ACCU 16
     .INDEX 16
-    lda.w player.speed.x
+    lda.w player_velocx
     beq @skipmove
     clc
-    adc.w player.pos.x
+    adc.w player_posx
     AMAXU $00
     AMINU $02
-    sta.w player.pos.x
-    lda.w player.speed.x
+    sta.w player_posx
+    lda.w player_velocx
     cmp #0
     bmi PlayerMoveLeft
     jmp PlayerMoveRight
@@ -598,19 +378,19 @@ PlayerMoveLeft:
     .ACCU 16
     .INDEX 16
 ; Get Tile X from player left
-    lda.w player.pos.x
+    lda.w player_posx
     clc
     adc #(PLAYER_HITBOX_LEFT - ROOM_LEFT)*256
     .PositionToIndex_A
     sta TempTileX
 ; Get Tile Y (top)
-    lda player.pos.y
+    lda player_posy
     clc
     adc #(PLAYER_HITBOX_TOP - ROOM_TOP)*256
     .PositionToIndex_A
     sta TempTileY
 ; Get Tile Y (bottom)
-    lda player.pos.y
+    lda player_posy
     clc
     adc #(PLAYER_HITBOX_BOTTOM - ROOM_TOP)*256
     .PositionToIndex_A
@@ -633,8 +413,8 @@ PlayerMoveLeft:
     clc
     adc #(ROOM_LEFT + 16 - PLAYER_HITBOX_LEFT)*256
 ; apply position
-    AMAXU player.pos.x
-    sta.w player.pos.x
+    AMAXU player_posx
+    sta.w player_posx
 @end:
     rts
 
@@ -642,19 +422,19 @@ PlayerMoveRight:
     .ACCU 16
     .INDEX 16
 ; Get Tile X from player left
-    lda.w player.pos.x
+    lda.w player_posx
     clc
     adc #(PLAYER_HITBOX_RIGHT - ROOM_LEFT)*256-1
     .PositionToIndex_A
     sta TempTileX
 ; Get Tile Y (top)
-    lda player.pos.y
+    lda player_posy
     clc
     adc #(PLAYER_HITBOX_TOP - ROOM_TOP)*256
     .PositionToIndex_A
     sta TempTileY
 ; Get Tile Y (bottom)
-    lda player.pos.y
+    lda player_posy
     clc
     adc #(PLAYER_HITBOX_BOTTOM - ROOM_TOP)*256
     .PositionToIndex_A
@@ -677,22 +457,22 @@ PlayerMoveRight:
     clc
     adc #(ROOM_LEFT - PLAYER_HITBOX_RIGHT)*256-1
 ; apply position
-    AMINU player.pos.x
-    sta.w player.pos.x
+    AMINU player_posx
+    sta.w player_posx
 @end:
     rts
 
 PlayerMoveVertical:
     .ACCU 16
     .INDEX 16
-    lda.w player.speed.y
+    lda.w player_velocy
     beq @skipmove
     clc
-    adc.w player.pos.y
+    adc.w player_posy
     AMAXU $04
     AMINU $06
-    sta.w player.pos.y
-    lda.w player.speed.y
+    sta.w player_posy
+    lda.w player_velocy
     cmp #0
     bmi PlayerMoveUp
     jmp PlayerMoveDown
@@ -703,19 +483,19 @@ PlayerMoveUp:
     .ACCU 16
     .INDEX 16
 ; Get Tile Y from player top
-    lda.w player.pos.y
+    lda.w player_posy
     clc
     adc #(PLAYER_HITBOX_TOP - ROOM_TOP)*256
     .PositionToIndex_A
     sta TempTileY
 ; Get Tile X (left)
-    lda player.pos.x
+    lda player_posx
     clc
     adc #(PLAYER_HITBOX_LEFT - ROOM_LEFT)*256
     .PositionToIndex_A
     sta TempTileX
 ; Get Tile X (right)
-    lda player.pos.x
+    lda player_posx
     clc
     adc #(PLAYER_HITBOX_RIGHT - ROOM_LEFT)*256
     .PositionToIndex_A
@@ -738,8 +518,8 @@ PlayerMoveUp:
     clc
     adc #(ROOM_TOP + 16 - PLAYER_HITBOX_TOP)*256
 ; apply position
-    AMAXU player.pos.y
-    sta.w player.pos.y
+    AMAXU player_posy
+    sta.w player_posy
 @end:
     rts
 
@@ -747,19 +527,19 @@ PlayerMoveDown:
     .ACCU 16
     .INDEX 16
 ; Get Tile Y from player bottom
-    lda.w player.pos.y
+    lda.w player_posy
     clc
     adc #(PLAYER_HITBOX_BOTTOM - ROOM_TOP)*256-1
     .PositionToIndex_A
     sta TempTileY
 ; Get Tile X (left)
-    lda player.pos.x
+    lda player_posx
     clc
     adc #(PLAYER_HITBOX_LEFT - ROOM_LEFT)*256
     .PositionToIndex_A
     sta TempTileX
 ; Get Tile X (right)
-    lda player.pos.x
+    lda player_posx
     clc
     adc #(PLAYER_HITBOX_RIGHT - ROOM_LEFT)*256
     .PositionToIndex_A
@@ -782,8 +562,8 @@ PlayerMoveDown:
     clc
     adc #(ROOM_TOP - PLAYER_HITBOX_BOTTOM)*256 - 1
 ; apply position
-    AMINU player.pos.y
-    sta.w player.pos.y
+    AMINU player_posy
+    sta.w player_posy
 @end:
     rts
 
@@ -821,24 +601,24 @@ PlayerMoveDown:
 
 PlayerCheckEnterRoom:
     rep #$30 ; 16b AXY
-    lda player.pos.x
+    lda player_posx
     cmp #(ROOM_LEFT - 16)*256
     bcc @left
     cmp #(ROOM_RIGHT)*256
     bcs @right
-    lda player.pos.y
+    lda player_posy
     cmp #(ROOM_TOP - 16)*256
     bcc @up
-    lda player.pos.y
+    lda player_posy
     cmp #(ROOM_BOTTOM)*256
     bcs @down
     rts
 @left:
     .ACCU 16
     lda #(ROOM_RIGHT - PLAYER_HITBOX_RIGHT)*256
-    sta player.pos.x
+    sta player_posx
     lda #(ROOM_CENTER_Y - 8)*256
-    sta player.pos.y
+    sta player_posy
     lda #BG2_TILE_ADDR_OFFS_X
     eor gameRoomBG2Offset
     sta gameRoomBG2Offset
@@ -851,9 +631,9 @@ PlayerCheckEnterRoom:
 @right:
     .ACCU 16
     lda #(ROOM_LEFT - PLAYER_HITBOX_LEFT)*256
-    sta player.pos.x
+    sta player_posx
     lda #(ROOM_CENTER_Y - 8)*256
-    sta player.pos.y
+    sta player_posy
     lda #BG2_TILE_ADDR_OFFS_X
     eor gameRoomBG2Offset
     sta gameRoomBG2Offset
@@ -866,9 +646,9 @@ PlayerCheckEnterRoom:
 @up:
     .ACCU 16
     lda #(ROOM_BOTTOM - 12)*256
-    sta player.pos.y
+    sta player_posy
     lda #(ROOM_CENTER_X - 8)*256
-    sta player.pos.x
+    sta player_posx
     lda #BG2_TILE_ADDR_OFFS_Y
     eor gameRoomBG2Offset
     sta gameRoomBG2Offset
@@ -883,9 +663,9 @@ PlayerCheckEnterRoom:
 @down:
     .ACCU 16
     lda #(ROOM_TOP - 4)*256
-    sta player.pos.y
+    sta player_posy
     lda #(ROOM_CENTER_X - 8)*256
-    sta player.pos.x
+    sta player_posx
     lda #BG2_TILE_ADDR_OFFS_Y
     eor gameRoomBG2Offset
     sta gameRoomBG2Offset
@@ -916,8 +696,8 @@ PlayerCheckEnterRoom:
     ora vqueueMiniOps.1.data,X
     sta vqueueMiniOps.1.data,X
     .VQueuePushMiniopForIndex TempTemp2
-    stz player.speed.x
-    stz player.speed.y
+    stz player_velocx
+    stz player_velocy
     rts
 
 _MakeWaitScrollSub1:

@@ -53,7 +53,7 @@ _e_basic_fly_tick:
     lda.w entity_posx+1,Y
     lsr
     sta.b $02
-    lda.w player.pos.x+1
+    lda.w player_posx+1
     lsr
     sec
     sbc.b $02
@@ -65,7 +65,7 @@ _e_basic_fly_tick:
     lda.w entity_posy+1,Y
     lsr
     sta.b $03
-    lda.w player.pos.y+1
+    lda.w player_posy+1
     lsr
     sec
     sbc.b $03

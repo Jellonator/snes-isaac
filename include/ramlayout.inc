@@ -38,11 +38,18 @@
     mapTileFlagsTable INSTANCEOF byte_t MAP_MAX_SIZE
     loadedMapSlot db
     loadedRoomIndex INSTANCEOF maptilepos_t
-; game data
-    player INSTANCEOF player_t
-    ; number of bytes used of tear_array
-    tear_bytes_used dw
-    tear_array INSTANCEOF tear_t TEAR_ARRAY_MAX_COUNT
+; player ext data
+    playerData INSTANCEOF playerextdata_t
+; tear/projectile data
+    projectile_velocx dsw PROJECTILE_ARRAY_MAX_COUNT
+    projectile_velocy dsw PROJECTILE_ARRAY_MAX_COUNT
+    projectile_posx dsw PROJECTILE_ARRAY_MAX_COUNT
+    projectile_posy dsw PROJECTILE_ARRAY_MAX_COUNT
+    projectile_lifetime dsw PROJECTILE_ARRAY_MAX_COUNT
+    projectile_flags dsw PROJECTILE_ARRAY_MAX_COUNT
+    projectile_damage dsw PROJECTILE_ARRAY_MAX_COUNT
+    _projectile_base_size_type dsw PROJECTILE_ARRAY_MAX_COUNT
+    projectile_count_2x dw
 ; OAM data
     objectData INSTANCEOF object_t 128
     objectDataExt dsb 32 ; 2 bits per object: Xs
@@ -77,21 +84,36 @@
     rawMemorySizeShared db
 .ENDE
 
-.define entity_type _base_entity_combined_type_variant - 2
-.define entity_variant _base_entity_combined_type_variant - 1
-.define entity_state _base_entity_combined_state_timer - 2
-.define entity_timer _base_entity_combined_state_timer - 1
-.define entity_health _base_entity_health - 2
-.define entity_posx _base_entity_posx - 2
-.define entity_posy _base_entity_posy - 2
-.define entity_velocx _base_entity_velocx - 2
-.define entity_velocy _base_entity_velocy - 2
-.define entity_box_x1 entity_posx + 1
-.define entity_box_y1 entity_posy + 1
-.define entity_box_x2 _base_entity_combined_box_x2y2 - 2
-.define entity_box_y2 _base_entity_combined_box_x2y2 - 1
-.define entity_mask _base_entity_combined_mask_signal - 2
-.define entity_signal _base_entity_combined_mask_signal - 1
+.define entity_type (_base_entity_combined_type_variant - 2)
+.define entity_variant (_base_entity_combined_type_variant - 1)
+.define entity_state (_base_entity_combined_state_timer - 2)
+.define entity_timer (_base_entity_combined_state_timer - 1)
+.define entity_health (_base_entity_health - 2)
+.define entity_posx (_base_entity_posx - 2)
+.define entity_posy (_base_entity_posy - 2)
+.define entity_velocx (_base_entity_velocx - 2)
+.define entity_velocy (_base_entity_velocy - 2)
+.define entity_box_x1 (entity_posx + 1)
+.define entity_box_y1 (entity_posy + 1)
+.define entity_box_x2 (_base_entity_combined_box_x2y2 - 2)
+.define entity_box_y2 (_base_entity_combined_box_x2y2 - 1)
+.define entity_mask (_base_entity_combined_mask_signal - 2)
+.define entity_signal (_base_entity_combined_mask_signal - 1)
+
+.define player_posx (ENTITY_INDEX_PLAYER + entity_posx)
+.define player_posy (ENTITY_INDEX_PLAYER + entity_posy)
+.define player_velocx (ENTITY_INDEX_PLAYER + entity_velocx)
+.define player_velocy (ENTITY_INDEX_PLAYER + entity_velocy)
+.define player_box_x1 (ENTITY_INDEX_PLAYER + entity_box_x1)
+.define player_box_x2 (ENTITY_INDEX_PLAYER + entity_box_x2)
+.define player_box_y1 (ENTITY_INDEX_PLAYER + entity_box_y1)
+.define player_box_y2 (ENTITY_INDEX_PLAYER + entity_box_y2)
+.define player_mask (ENTITY_INDEX_PLAYER + entity_mask)
+.define player_signal (ENTITY_INDEX_PLAYER + entity_signal)
+.define player_type (ENTITY_INDEX_PLAYER + entity_type)
+
+.define projectile_size _projectile_base_size_type
+.define projectile_type (_projectile_base_size_type+1)
 
 .REPT 16 INDEX i
     .define entity_char_custom.{i+1} _ext_entity_custom.{i+1} - 2

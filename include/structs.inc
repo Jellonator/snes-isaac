@@ -39,16 +39,14 @@
 .ENDST
 
 ; Player object
-.STRUCT player_t
-    pos instanceof position_t
-    speed instanceof position_t
+.STRUCT playerextdata_t
     tear_timer dw
     stat_speed dw
     stat_accel dw
     stat_tear_delay dw
     stat_tear_speed dw
     flags dw
-    healthSlots INSTANCEOF byte_t 12
+    healthSlots INSTANCEOF byte_t 16
 .ENDST
 
 ; ENSURE tear_t is some kind of power of 2, that way
@@ -65,8 +63,7 @@
 .ENDST
 
 ; Tear array info
-.DEFINE TEAR_ARRAY_MAX_COUNT 32
-.DEFINE TEAR_ARRAY_MAX_SIZE (TEAR_ARRAY_MAX_COUNT*_sizeof_tear_t)
+.DEFINE PROJECTILE_ARRAY_MAX_COUNT 64
 
 ; Represents a maptile position
 .STRUCT maptilepos_t

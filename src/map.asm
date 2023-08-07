@@ -276,6 +276,8 @@ LoadRoomSlotIntoLevel:
 HandleTileChanged:
     .ACCU 16
     .INDEX 16
+    phb
+    .ChangeDataBank $00
     .TileXYToIndexA currentConsideredTileX, currentConsideredTileY, $04
     tay
     lda [currentRoomTileTypeTableAddress],Y ; get TYPE
@@ -308,6 +310,7 @@ HandleTileChanged:
     adc #2 + 2*32
     sta vqueueMiniOps.1.vramAddr,X
     inc vqueueNumMiniOps
+    plb
     rts
 
 .ENDS

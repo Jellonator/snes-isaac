@@ -108,7 +108,7 @@ entity_create:
     sep #$20 ; 8B A
     ; first: find next free slot
     pha
-    ldy #ENTITY_TOTAL_MAX_INDEX
+    ldy #ENTITY_FIRST_CUSTOM_INDEX
     ; for character entities, start from ENTITY_CHARACTER_MAX instead.
     cmp #0
     bpl +
@@ -162,7 +162,7 @@ entity_free_all:
     rep #$30 ; 16B AXY
     phb
     .ChangeDataBank $7E
-    ldy.w #ENTITY_TOTAL_MAX_INDEX
+    ldy.w #ENTITY_FIRST_CUSTOM_INDEX
 @loop:
     lda.w entity_type,Y
     and.w #$00FF
@@ -191,7 +191,7 @@ entity_tick_all:
     rep #$30 ; 16B AXY
     phb
     .ChangeDataBank $7E
-    ldy.w #ENTITY_TOTAL_MAX_INDEX
+    ldy.w #ENTITY_FIRST_CUSTOM_INDEX
 @loop:
     lda.w entity_type,Y
     and.w #$00FF
@@ -259,11 +259,29 @@ GetEntityCollisionAt:
     rtl
 
 EntityInfoInitialize:
+    rep #$20
+    ; save player info
+    lda.w player_posx
+    pha
+    lda.w player_posy
+    pha
+    ; clear
+    sep #$20
     phd
     pea $4300
     pld
     .ClearWRam_ZP _base_entity_combined_type_variant, (rawMemorySizeShared-_base_entity_combined_type_variant)
     pld
+    ; set player type
+    sep #$20
+    lda #ENTITY_TYPE_PLAYER
+    sta.w player_type
+    ; load player info
+    rep #$20
+    pla
+    sta.w player_posy
+    pla
+    sta.w player_posx
     rtl
 
 SpatialPartitionClear:
@@ -281,8 +299,13 @@ EntityDefinitions:
         tick_func: .dw _e_null
         free_func: .dw _e_null
     .ENDST
-    .REPT (128 - 0 - 1) INDEX i
-        .DSTRUCT @null_pad{i} INSTANCEOF entitytypeinfo_t VALUES
+    .DSTRUCT @player INSTANCEOF entitytypeinfo_t VALUES
+        init_func: .dw _e_null
+        tick_func: .dw _e_null
+        free_func: .dw _e_null
+    .ENDST
+    .REPT (128 - 1 - 1) INDEX i
+        .DSTRUCT @null_pad{i+1} INSTANCEOF entitytypeinfo_t VALUES
             init_func: .dw _e_null
             tick_func: .dw _e_null
             free_func: .dw _e_null

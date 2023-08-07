@@ -25,7 +25,8 @@ UpdateLoop:
     lda #$01
     sta MDMAEN
     jsr PlayerUpdate
-    jsr UpdateTears
+    jsl projectile_update_loop
+    ; jsr UpdateTears
     jsr UpdateRest
     jsl entity_tick_all
     ; Finally, check if room should be changed

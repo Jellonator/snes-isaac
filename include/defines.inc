@@ -58,6 +58,9 @@
 ; Player flags
 .DEFINE PLAYER_FLAG_EYE $0001
 
+; Projectile info
+.DEFINE PROJECTILE_LIST_SIZE 64
+.DEFINE PROJECTILE_LIST_SIZE_2X 128
 ; Object types
 .ENUMID 0
 .ENUMID OBJECT_TYPE_PENNY
@@ -173,12 +176,17 @@
 ; Number of objects stored per room
 .DEFINE ENTITY_STORE_COUNT 24
 ; Enemies and other objects which may consume multiple sprite slots
-.DEFINE ENTITY_TOTAL_MAX 96
+; Probably don't need this many slots, but it doesn't hurt to be safe
+.DEFINE ENTITY_TOTAL_MAX 48
 .DEFINE ENTITY_TOTAL_MAX_INDEX (2 * ENTITY_TOTAL_MAX)
 ; Character entities which may have health, status effects, custom sprites, etc.
 .DEFINE ENTITY_CHARACTER_MAX 24
 .DEFINE ENTITY_CHARACTER_MAX_INDEX (2 * ENTITY_CHARACTER_MAX)
+; Specific entity indices
+.DEFINE ENTITY_INDEX_PLAYER ENTITY_TOTAL_MAX_INDEX
+.DEFINE ENTITY_FIRST_CUSTOM_INDEX (ENTITY_TOTAL_MAX_INDEX - 2)
 
+.DEFINE ENTITY_TYPE_PLAYER 1
 .DEFINE ENTITY_TYPE_ENEMY_ATTACK_FLY 128
 .DEFINE ENTITY_TYPE_ENEMY_ZOMBIE 129
 
@@ -191,7 +199,6 @@
 .DEFINE ENTITY_MASK_PROJECTILE $02
 ; Objects that can be damaged by bombs
 .DEFINE ENTITY_MASK_BOMBABLE $04
-
 
 ; Entity Signals: Used to tell an entity to respond to some form of interaction
 ; Signaled when an entity is killed (or otherwise needs to handle its own removal)

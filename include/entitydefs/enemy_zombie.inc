@@ -38,6 +38,9 @@ _e_zombie_init:
     ; end
     rts
 
+.DefinePathSpeedTable "_e_zombie_speedtable", 128, 1
+.DEFINE ZOMBIE_ACCEL 4
+
 _e_zombie_tick:
     .ACCU 16
     .INDEX 16
@@ -61,6 +64,54 @@ _e_zombie_tick:
         sta.w entity_health,Y
     @not_kill:
 ; move
+    sep #$30
+    lda.w entity_posx+1,Y
+    adc #8
+    lsr
+    lsr
+    lsr
+    lsr
+    sta.b $00
+    lda.w entity_posy+1,Y
+    adc #8
+    and #$F0
+    ora.b $00
+    tax
+    lda.w pathfind_player_data,X
+    rep #$30
+    and #$00FF
+    asl
+    tax
+    ; X
+    lda.w entity_velocx,Y
+    cmp.l _e_zombie_speedtable_X,X
+    beq ++
+    bpl +
+        ; velocx < target
+        adc #ZOMBIE_ACCEL
+    bra ++
+    +:
+        ; velocx > target
+        sbc #ZOMBIE_ACCEL
+    ++:
+    sta.w entity_velocx,Y
+    adc.w entity_posx,Y
+    sta.w entity_posx,Y
+    ; Y
+    lda.w entity_velocy,Y
+    cmp.l _e_zombie_speedtable_Y,X
+    beq ++
+    bpl +
+        ; velocy < target
+        adc #ZOMBIE_ACCEL
+    bra ++
+    +:
+        ; velocy > target
+        sbc #ZOMBIE_ACCEL
+    ++:
+    sta.w entity_velocy,Y
+    adc.w entity_posy,Y
+    sta.w entity_posy,Y
 ; load & set gfx
     rep #$30
     lda #0

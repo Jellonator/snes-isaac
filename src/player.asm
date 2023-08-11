@@ -795,4 +795,146 @@ WaitScrollUp:
 WaitScrollDown:
     .MakeWaitScroll BG2VOFS, gameRoomScrollY, 256, 32, 128, TempTemp1, object_t.pos_y
 
+GameTileToRoomTileIndexTable:
+    .REPT 16*4
+        .db 96
+    .ENDR
+    .REPT 8 INDEX iy
+        .db 96, 96
+        .REPT 12 INDEX ix
+            .db (iy * 12) + ix
+        .ENDR
+        .db 96, 96
+    .ENDR
+    .REPT 16*4
+        .db 96
+    .ENDR
+
+InitialPathfindingData:
+.REPT 16*4
+    .db $01 ; down
+.ENDR
+.REPT 8
+    .db $02, $02 ; right
+    .db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ; empty
+    .db $03, $03 ; left
+.ENDR
+.REPT 16*4
+    .db $04 ; up
+.ENDR
+
+; PathfindingDirectionX:
+;     .db 0
+;     .db 0
+;     .db 127
+;     .db -127
+;     .db 0
+;     .db 0
+
+; PathfindingDirectionY:
+;     .db 0
+;     .db 127
+;     .db 0
+;     .db 0
+;     .db -127
+;     .db 0
+
+player_initialize_pathfinding_data:
+    rep #$30
+    phb
+    lda #255
+    ldx #loword(InitialPathfindingData)
+    ldy #loword(pathfind_player_data)
+    mvn bankbyte(InitialPathfindingData), bankbyte(pathfind_player_data)
+    plb
+    rtl
+
+_player_clear_pathfinding_data:
+    jsl player_initialize_pathfinding_data
+    rts
+
+player_update_pathfinding_data:
+    jsr _player_clear_pathfinding_data
+    .DEFINE tmp $00
+    .DEFINE q_start $02
+    .DEFINE q_end $04
+    .DEFINE q_count $06
+    rep #$30
+    ldx #loword(tempData) | $FF
+    stx.b q_start
+    stx.b q_end
+    stz.b q_count
+    sep #$30
+    phb
+    .ChangeDataBank $7E
+; begin
+    lda.w player_posx+1
+    adc #8
+    .DivideStatic 16
+    sta.b tmp
+    lda.w player_posy+1
+    adc #8
+    and #$F0
+    ora.b tmp
+    sta.b (q_end)
+    dec.b q_end
+    tax
+    lda #PATH_DIR_NONE
+    sta.w loword(pathfind_player_data),X
+    inc.b q_count
+    ; loop
+    @loop:
+        lda.b (q_start)
+        tax
+        lda.l GameTileToRoomTileIndexTable,X
+        tay
+        lda [currentRoomTileTypeTableAddress],Y
+        bne @skiptile ; Skip if this tile is solid (can not be entered)
+        stx.b tmp
+        .REPT 4 INDEX i
+            .IF i == 0
+                .DEFINE i_dir PATH_DIR_DOWN
+                .DEFINE i_offs $F0
+            .ELIF i == 1
+                .DEFINE i_dir PATH_DIR_RIGHT
+                .DEFINE i_offs $FF
+            .ELIF i == 2
+                .DEFINE i_dir PATH_DIR_UP
+                .DEFINE i_offs $10
+            .ELIF i == 3
+                .DEFINE i_dir PATH_DIR_LEFT
+                .DEFINE i_offs $01
+            .ENDIF
+
+            lda.b tmp
+            .IF i_offs == $01
+                inc A
+            .ELIF i_offs == $FF
+                dec A
+            .ELSE
+                clc
+                adc #i_offs
+            .ENDIF
+            tax
+            lda.w loword(pathfind_player_data),X
+            bne + ; If found tile is non-zero, skip it
+            lda #i_dir
+            sta.w loword(pathfind_player_data),X
+            txa
+            sta.b (q_end)
+            dec.b q_end
+            inc.b q_count
+
+            +:
+            .UNDEFINE i_dir
+            .UNDEFINE i_offs
+        .ENDR
+    @skiptile:
+        dec.b q_start
+        dec.b q_count
+        bne @loop
+    ; end
+    plb
+    rtl
+
 .ENDS

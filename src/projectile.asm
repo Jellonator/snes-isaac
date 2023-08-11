@@ -222,7 +222,17 @@ projectile_update_loop:
     cpy #0
     beq @skipCollisionHandler
         ; found object:
+        ; Add veloc
         rep #$30
+        lda $04,S
+        tax
+        lda.w entity_velocx,Y
+        adc.w projectile_velocx,X
+        sta.w entity_velocx,Y
+        lda.w entity_velocy,Y
+        adc.w projectile_velocy,X
+        sta.w entity_velocy,Y
+        ; reduce HP
         lda.w entity_health,Y
         sec
         sbc #4

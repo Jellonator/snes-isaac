@@ -203,3 +203,14 @@
 ; Entity Signals: Used to tell an entity to respond to some form of interaction
 ; Signaled when an entity is killed (or otherwise needs to handle its own removal)
 .DEFINE ENTITY_SIGNAL_KILL $01
+
+; Pathfinding data
+
+.DEFINE PATH_DIR_NULL 0
+.DEFINE PATH_DIR_DOWN 1
+.DEFINE PATH_DIR_RIGHT 2
+.DEFINE PATH_DIR_LEFT 3
+.DEFINE PATH_DIR_UP 4
+.DEFINE PATH_DIR_NONE 5
+
+.DEFINE PATH_DIR_DEF_COUNT 6

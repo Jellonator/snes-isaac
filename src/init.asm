@@ -397,6 +397,8 @@ tile_data_loop:
     sta gameRoomScrollY
     ; clear entity table
     jsl EntityInfoInitialize
+    ; clear pathfinding data
+    jsl player_initialize_pathfinding_data
     jmp UpdateLoop
 
 .ENDS

@@ -78,8 +78,11 @@
     ; Extraneous entity data (only for certain entity types)
     _ext_entity_custom INSTANCEOF entitycustomdatatableentry_t 16
     _ext_entity_statfx INSTANCEOF entitystatuseffectdata_t 2
+    _bleh ds 11
 ; spatial collision data (for entities)
     spatial_partition INSTANCEOF spatialpartitionlayer_t SPATIAL_LAYER_COUNT
+; pathfinding data
+    pathfind_player_data ds 256
 ; end
     rawMemorySizeShared db
 .ENDE
@@ -135,15 +138,18 @@
     _mapDoorVerticalEmptyBuf ds MAP_MAX_WIDTH
     mapDoorVertical ds MAP_MAX_SIZE ; For index i: Connects room i with room i+MAP_MAX_WIDTH
     ; mapDoor variables are a bit larger than necessary for efficiency's sake
-    tempData ds 256 ; Temp data that can be used for whatever purpose
     ; sprite allocation data
     spriteTableKey dsw SPRITE_TABLE_TOTAL_SIZE
     spriteTablePtr dsw SPRITE_TABLE_TOTAL_SIZE
     spriteTableValue INSTANCEOF spritetab_t SPRITE_TABLE_TOTAL_SIZE
     spriteQueueTabNext ds SPRITE_QUEUE_SIZE+1
+    ; reserve tempdata buffer, just to make sure it has space
+    _res_tempData ds 256 ; Temp data that can be used for whatever purpose
     ; end
     rawMemorySize7E db
 .ENDE
+
+.DEFINE tempData $7EFF00
 
 ; Should contain data that is either large or not often used
 ; For more efficient bank usage, this bank is mostly used for video memory management

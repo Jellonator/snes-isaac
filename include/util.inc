@@ -440,8 +440,43 @@
         asl
         asl
         asl
+        asl
     .ELSE
-        .FAIL "CheapModA16: invalid num"
+        .FAIL "MultiplyStatic: invalid num"
+    .ENDIF
+.ENDM
+
+.MACRO .DivideStatic ARGS num
+    .IF num == 1
+    .ELIF num == 2
+        lsr
+    .ELIF num == 4
+        lsr
+        lsr
+    .ELIF num == 8
+        lsr
+        lsr
+        lsr
+    .ELIF num == 16
+        lsr
+        lsr
+        lsr
+        lsr
+    .ELIF num == 32
+        lsr
+        lsr
+        lsr
+        lsr
+        lsr
+    .ELIF num == 64
+        lsr
+        lsr
+        lsr
+        lsr
+        lsr
+        lsr
+    .ELSE
+        .FAIL "DivideStatic: invalid num"
     .ENDIF
 .ENDM
 
@@ -475,4 +510,20 @@
         .ENDIF
     .ENDR
     @@@@@\.\@end:
+.ENDM
+
+.MACRO .DefinePathSpeedTable ARGS tblName, speed, is_wide
+    {tblName}_X:
+        .IF is_wide == 1
+            .dw 0, 0, speed, -speed, 0, 0
+        .ELSE
+            .db 0, 0, speed, -speed, 0, 0
+        .ENDIF
+    {tblName}_Y:
+        .IF is_wide == 1
+            .dw 0, speed, 0, 0, -speed, 0
+        .ELSE
+            .db 0, speed, 0, 0, -speed, 0
+        .ENDIF
+
 .ENDM

@@ -25,6 +25,7 @@ UpdateLoop:
     lda #$01
     sta MDMAEN
     jsr PlayerUpdate
+    jsl player_update_pathfinding_data
     jsl projectile_update_loop
     ; jsr UpdateTears
     jsr UpdateRest

@@ -859,14 +859,15 @@ player_update_pathfinding_data:
     .DEFINE q_start $02
     .DEFINE q_end $04
     .DEFINE q_count $06
+; setup
+    phb
+    .ChangeDataBank $7E
     rep #$30
     ldx #loword(tempData) | $FF
     stx.b q_start
     stx.b q_end
     stz.b q_count
     sep #$30
-    phb
-    .ChangeDataBank $7E
 ; begin
     lda.w player_posx+1
     adc #8
@@ -888,34 +889,29 @@ player_update_pathfinding_data:
         tax
         lda.l GameTileToRoomTileIndexTable,X
         tay
-        lda [currentRoomTileTypeTableAddress],Y
+        lda (currentRoomTileTypeTableAddress),Y
         bne @skiptile ; Skip if this tile is solid (can not be entered)
-        stx.b tmp
+ 
         .REPT 4 INDEX i
             .IF i == 0
-                .DEFINE i_dir PATH_DIR_DOWN
-                .DEFINE i_offs $F0
-            .ELIF i == 1
                 .DEFINE i_dir PATH_DIR_RIGHT
-                .DEFINE i_offs $FF
+                dex
+            .ELIF i == 1
+                .DEFINE i_dir PATH_DIR_LEFT
+                inx
+                inx
             .ELIF i == 2
                 .DEFINE i_dir PATH_DIR_UP
-                .DEFINE i_offs $10
+                txa
+                adc #$11
+                tax
             .ELIF i == 3
-                .DEFINE i_dir PATH_DIR_LEFT
-                .DEFINE i_offs $01
+                .DEFINE i_dir PATH_DIR_DOWN
+                txa
+                adc #$E0
+                tax
             .ENDIF
-
-            lda.b tmp
-            .IF i_offs == $01
-                inc A
-            .ELIF i_offs == $FF
-                dec A
-            .ELSE
-                clc
-                adc #i_offs
-            .ENDIF
-            tax
+            ; tax
             lda.w loword(pathfind_player_data),X
             bne + ; If found tile is non-zero, skip it
             lda #i_dir

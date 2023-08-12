@@ -388,6 +388,8 @@
 
 .FUNCTION IS_POW2(x) !(x & (x - 1))
 
+.FUNCTION log2(x) log(x) / log(2.0)
+
 .MACRO .CheapModA8 ARGS num
     .IF num == 1
     .ELIF num > 0 && num <= (2^7) && IS_POW2(num)
@@ -412,72 +414,59 @@
     .ENDIF
 .ENDM
 
+.MACRO .ShiftLeft ARGS num
+    .REPT num
+        asl
+    .ENDR
+.ENDM
+
+.MACRO .ShiftRight ARGS num
+    .REPT num
+        lsr
+    .ENDR
+.ENDM
+
 .MACRO .MultiplyStatic ARGS num
-    .IF num == 1
-    .ELIF num == 2
-        asl
-    .ELIF num == 4
-        asl
-        asl
-    .ELIF num == 8
-        asl
-        asl
-        asl
-    .ELIF num == 16
-        asl
-        asl
-        asl
-        asl
-    .ELIF num == 32
-        asl
-        asl
-        asl
-        asl
-        asl
-    .ELIF num == 64
-        asl
-        asl
-        asl
-        asl
-        asl
-        asl
+    .IF num == 0
+    .ELIF IS_POW2(num)
+        .ShiftLeft round(log2(num))
     .ELSE
         .FAIL "MultiplyStatic: invalid num"
     .ENDIF
 .ENDM
 
 .MACRO .DivideStatic ARGS num
-    .IF num == 1
-    .ELIF num == 2
-        lsr
-    .ELIF num == 4
-        lsr
-        lsr
-    .ELIF num == 8
-        lsr
-        lsr
-        lsr
-    .ELIF num == 16
-        lsr
-        lsr
-        lsr
-        lsr
-    .ELIF num == 32
-        lsr
-        lsr
-        lsr
-        lsr
-        lsr
-    .ELIF num == 64
-        lsr
-        lsr
-        lsr
-        lsr
-        lsr
-        lsr
+    .IF num == 0
+    .ELIF IS_POW2(num)
+        .ShiftRight round(log2(num))
     .ELSE
         .FAIL "DivideStatic: invalid num"
     .ENDIF
+.ENDM
+
+.MACRO .ShiftRight_SIGN ARGS num, do_cmp
+    .IF num > 0
+        clc
+        .IF do_cmp
+            cmp #0
+        .ENDIF
+        bpl +++++
+            .IF num > 1
+                ora #((2^(num-1)) - 1)
+            .ENDIF
+            sec
+        +++++:
+        .REPT num
+            ror
+        .ENDR
+    .ENDIF
+.ENDM
+
+; will only break if value overflows :)
+.MACRO .ShiftLeft_SIGN ARGS num, do_cmp
+    .REPT num
+        asl
+    .ENDR
 .ENDM
 
 ; COLLISION
@@ -511,6 +500,68 @@
     .ENDR
     @@@@@\.\@end:
 .ENDM
+
+.MACRO .EntityRemoveHitbox ARGS NUM_X, NUM_Y
+    lda.w entity_posy+1,Y
+    and #$F0
+    sta.b $00
+    lda.w entity_posx+1,Y
+    lsr
+    lsr
+    lsr
+    lsr
+    ora.b $00
+    sta.b $00
+    .REPT NUM_Y INDEX iy
+        tax
+        .REPT NUM_X INDEX ix
+            .IF ix > 0
+                inx
+            .ENDIF
+            tya
+            jsr EraseHitbox
+        .ENDR
+        .IF iy < (NUM_Y-1)
+            lda.b $00
+            clc
+            adc #16
+            sta.b $00
+        .ENDIF
+    .ENDR
+.ENDM
+
+.MACRO .EntityAddHitbox ARGS NUM_X, NUM_Y
+    sty.b $01
+    lda.w entity_posy+1,Y
+    and #$F0
+    sta.b $00
+    lda.w entity_posx+1,Y
+    lsr
+    lsr
+    lsr
+    lsr
+    ora.b $00
+    sta.b $00
+    .REPT NUM_Y INDEX iy
+        tax
+        lda.b $01
+        .REPT NUM_X INDEX ix
+            .IF ix > 0
+                inx
+            .ENDIF
+            jsr InsertHitbox
+        .ENDR
+        .IF iy < (NUM_Y-1)
+            lda.b $00
+            clc
+            adc #16
+            sta.b $00
+        .ENDIF
+    .ENDR
+    ldy.b $01
+.ENDM
+
+; Pathing
 
 .MACRO .DefinePathSpeedTable ARGS tblName, speed, is_wide
     {tblName}_X:

@@ -21,7 +21,9 @@ SOURCES  := main.asm\
 			spriteslot.asm\
 			spritedefs.asm\
 			entity.asm\
-			projectile.asm
+			projectile.asm\
+			entity/enemy_fly.asm\
+			entity/enemy_zombie.asm
 
 OBJECTS  := $(SOURCES:%.asm=$(OBJDIR)/%.obj)
 PALETTES := $(wildcard assets/palettes/*.hex)
@@ -32,6 +34,9 @@ Test.smc: Test.link $(OBJECTS)
 	mkdir -p $(BINDIR)
 	$(ALINK) $(ALDFLAGS) Test.link $(BINDIR)/$(BINFILE)
 
+Test.link:
+	echo -e -n "[objects]$(OBJECTS:%.obj=\n%.obj)" > Test.link
+
 include/assets.inc: $(PALETTES) $(SPRITES) assets/palettes.json assets/sprites.json
 	echo MAKING ASSET INC
 	mkdir -p include/palettes/
@@ -40,6 +45,7 @@ include/assets.inc: $(PALETTES) $(SPRITES) assets/palettes.json assets/sprites.j
 
 $(OBJDIR)/%.obj: $(SRCDIR)/%.asm $(INCLUDES)
 	mkdir -p $(OBJDIR)
+	mkdir -p $(OBJDIR)/entity
 	$(AC) $(AFLAGS) -o $@ $<
 
 .PHONY: clean
@@ -48,5 +54,6 @@ clean:
 	rm -rf $(BINDIR)
 	rm -rf include/palettes/
 	rm -rf include/sprites/
-	rm include/assets.inc
-	rm include/roompools.inc
+	rm -f include/assets.inc
+	rm -f include/roompools.inc
+	rm -f Test.link

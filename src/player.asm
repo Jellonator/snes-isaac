@@ -295,8 +295,9 @@ PlayerShootTear:
     lda.w player_velocx
     sta.w projectile_velocx,X
     lda.w player_velocy
-    AMINI 64
-    AMAXI -128
+    .ShiftRight_SIGN 1, FALSE
+    AMINI 32
+    AMAXI -64
     sec
     sbc.w playerData.stat_tear_speed
     sta.w projectile_velocy,X
@@ -305,8 +306,9 @@ PlayerShootTear:
     lda.w player_velocy
     sta.w projectile_velocy,X
     lda.w player_velocx
-    AMINI 64
-    AMAXI -128
+    .ShiftRight_SIGN 1, FALSE
+    AMINI 32
+    AMAXI -64
     sec
     sbc.w playerData.stat_tear_speed
     sta.w projectile_velocx,X
@@ -315,8 +317,9 @@ PlayerShootTear:
     lda.w player_velocy
     sta.w projectile_velocy,X
     lda.w player_velocx
-    AMAXI -64
-    AMAXI 128
+    .ShiftRight_SIGN 1, FALSE
+    AMAXI -32
+    AMAXI 64
     clc
     adc.w playerData.stat_tear_speed
     sta.w projectile_velocx,X
@@ -325,8 +328,9 @@ PlayerShootTear:
     lda.w player_velocx
     sta.w projectile_velocx,X
     lda.w player_velocy
-    AMAXI -64
-    AMAXI 128
+    .ShiftRight_SIGN 1, FALSE
+    AMAXI -32
+    AMAXI 64
     clc
     adc.w playerData.stat_tear_speed
     sta.w projectile_velocy,X

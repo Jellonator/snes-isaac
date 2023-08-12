@@ -32,31 +32,31 @@
 projectile_slot_get:
     rep #$30 ; 16 bit AXY
     ldx.w projectile_count_2x
-;     cmp #PROJECTILE_LIST_SIZE_2X
-;     bne @has_empty_slots
-; ; no empty slots available:
-; ; find the slot with the lowest lifetime
-;     lda #$7FFF
-;     sta $00 ; $00 is best value
-;     ldx #0 ; x is current index
-;     ldy #0 ; Y is best index
-; @iter_tears:
-;     lda.w projectile_lifetime,X
-;     cmp $00
-;     bcs @skip_store
-;     sta $00
-;     txy ; if tears[X].lifetime < tears[Y].lifetime: Y=X
-; @skip_store:
-;     inx
-;     inx
-; ; X == 0
-;     cpx.w projectile_count_2x
-;     bne @iter_tears
-; ; Finish, transfer Y to X
-;     tyx
-;     rts
-; ; empty slots available:
-; @has_empty_slots:
+    cpx #PROJECTILE_LIST_SIZE_2X
+    bne @has_empty_slots
+; no empty slots available:
+; find the slot with the lowest lifetime
+    lda #$7FFF
+    sta $00 ; $00 is best value
+    ldx #0 ; x is current index
+    ldy #0 ; Y is best index
+@iter_tears:
+    lda.w projectile_lifetime,X
+    cmp $00
+    bcs @skip_store
+    sta $00
+    txy ; if tears[X].lifetime < tears[Y].lifetime: Y=X
+@skip_store:
+    inx
+    inx
+; X == 0
+    cpx.w projectile_count_2x
+    bne @iter_tears
+; Finish, transfer Y to X
+    tyx
+    rts
+; empty slots available:
+@has_empty_slots:
     inx
     inx
     stx.w projectile_count_2x
@@ -222,13 +222,15 @@ projectile_update_loop:
         ; found object:
         ; Add veloc
         rep #$30
-        lda $04,S
+        lda $03,S
         tax
-        lda.w entity_velocx,Y
-        adc.w projectile_velocx,X
+        lda.w projectile_velocx,X
+        .ShiftRight_SIGN 1, FALSE
+        adc.w entity_velocx,Y
         sta.w entity_velocx,Y
-        lda.w entity_velocy,Y
-        adc.w projectile_velocy,X
+        lda.w projectile_velocy,X
+        .ShiftRight_SIGN 1, FALSE
+        adc.w entity_velocy,Y
         sta.w entity_velocy,Y
         ; reduce HP
         lda.w entity_health,Y

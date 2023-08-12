@@ -402,11 +402,12 @@ PlayerMoveLeft:
     .TileXYToIndexA TempTileX, TempTileY2, TempTemp2
     tax
 ; Determine if tile is solid
+    sep #$20
     lda [currentRoomTileTypeTableAddress],Y ; top
     txy
     ora [currentRoomTileTypeTableAddress],y ; bottom
-    and #$00FF
-    beq @end
+    rep #$20
+    bpl @end
 ; get position that player would be when flush against wall
     lda TempTileX
     .IndexToPosition_A
@@ -446,11 +447,12 @@ PlayerMoveRight:
     .TileXYToIndexA TempTileX, TempTileY2, TempTemp2
     tax
 ; Determine if tile is solid
+    sep #$20
     lda [currentRoomTileTypeTableAddress],Y ; top
     txy
     ora [currentRoomTileTypeTableAddress],y ; bottom
-    and #$00FF
-    beq @end
+    rep #$20
+    bpl @end
 ; get position that player would be when flush against wall
     lda TempTileX
     .IndexToPosition_A
@@ -507,11 +509,12 @@ PlayerMoveUp:
     .TileXYToIndexA TempTileX2, TempTileY, TempTemp2
     tax
 ; Determine if tile is solid
+    sep #$20
     lda [currentRoomTileTypeTableAddress],Y ; top
     txy
     ora [currentRoomTileTypeTableAddress],y ; bottom
-    and #$00FF
-    beq @end
+    rep #$20
+    bpl @end
 ; get position that player would be when flush against wall
     lda TempTileY
     .IndexToPosition_A
@@ -551,11 +554,12 @@ PlayerMoveDown:
     .TileXYToIndexA TempTileX2, TempTileY, TempTemp2
     tax
 ; Determine if tile is solid
+    sep #$20
     lda [currentRoomTileTypeTableAddress],Y ; top
     txy
     ora [currentRoomTileTypeTableAddress],y ; bottom
-    and #$00FF
-    beq @end
+    rep #$20
+    bpl @end
 ; get position that player would be when flush against wall
     lda TempTileY
     .IndexToPosition_A
@@ -890,7 +894,7 @@ player_update_pathfinding_data:
         lda.l GameTileToRoomTileIndexTable,X
         tay
         lda (currentRoomTileTypeTableAddress),Y
-        bne @skiptile ; Skip if this tile is solid (can not be entered)
+        bmi @skiptile ; Skip if this tile is solid (can not be entered)
  
         .REPT 4 INDEX i
             .IF i == 0
@@ -903,11 +907,13 @@ player_update_pathfinding_data:
             .ELIF i == 2
                 .DEFINE i_dir PATH_DIR_UP
                 txa
-                adc #$11
+                clc
+                adc #$0F
                 tax
             .ELIF i == 3
                 .DEFINE i_dir PATH_DIR_DOWN
                 txa
+                clc
                 adc #$E0
                 tax
             .ENDIF
@@ -923,7 +929,6 @@ player_update_pathfinding_data:
 
             +:
             .UNDEFINE i_dir
-            .UNDEFINE i_offs
         .ENDR
     @skiptile:
         dec.b q_start

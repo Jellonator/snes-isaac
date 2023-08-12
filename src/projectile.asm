@@ -109,7 +109,6 @@ _projectile_update_sprite:
 _projectile_tile_do_nothing:
     .INDEX 16
     .ACCU 16
-    lda #0
     rts
 
 _projectile_tile_poop:
@@ -123,16 +122,15 @@ _projectile_tile_poop:
     sta [currentRoomTileVariantTableAddress],Y
     rep #$20 ; 16 bit A
     jsr HandleTileChanged
-    lda #1
     rts
 @removeTile:
     sep #$20 ; 8 bit A
     lda #0
     sta [currentRoomTileVariantTableAddress],Y
+    lda #BLOCK_REGULAR
     sta [currentRoomTileTypeTableAddress],Y
     rep #$20 ; 16 bit A
     jsr HandleTileChanged
-    lda #1
     rts
 
 _ProjectileTileHandlerTable:
@@ -189,20 +187,20 @@ projectile_update_loop:
     .BranchIfTileXYOOB currentConsideredTileX, currentConsideredTileY, @iter_remove
     .TileXYToIndexA currentConsideredTileX, currentConsideredTileY, TempTemp1
     tay
+    sep #$20
     lda [currentRoomTileTypeTableAddress],Y
+    rep #$20
+    bpl @skipTileHandler
+    phx
+    php
     and #$00FF
     asl
-    phx
     tax
     jsr (_ProjectileTileHandlerTable,X)
-    beq @skipTileHandler
+    plp
     plx
-    ; cmp #0
-    ; beq @skipTileHandler
-    ; jsr _projectile_update_tile
     brl @iter_remove
 @skipTileHandler:
-    plx
 ; Check collisions
     pha
     phx

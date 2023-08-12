@@ -166,14 +166,22 @@ PlayerUpdate:
     sty $02 ; right
     lda player_posy
     cmp #(ROOM_CENTER_Y - 8 - ROOM_DOOR_RADIUS)*256
-    bmi +
+    bmi ++
     cmp #(ROOM_CENTER_Y - 8 + ROOM_DOOR_RADIUS)*256
-    bpl +
+    bpl ++
     ldx #(ROOM_LEFT - 4 - 16)*256
     ldy #(ROOM_RIGHT - 12 + 16)*256
-    stx $00 ; left
-    sty $02 ; right
-+:
+    sep #$20
+    lda [mapDoorWest]
+    bpl +
+        stx $00 ; left
+    +:
+    lda [mapDoorEast]
+    bpl +
+        sty $02 ; right
+    +:
+    rep #$20
+++:
 
     ldx #(ROOM_TOP - 4)*256
     ldy #(ROOM_BOTTOM - 12)*256
@@ -181,15 +189,24 @@ PlayerUpdate:
     sty $06 ; bottom
     lda player_posx
     cmp #(ROOM_CENTER_X - 8 - ROOM_DOOR_RADIUS)*256
-    bmi +
+    bmi ++
     cmp #(ROOM_CENTER_X - 8 + ROOM_DOOR_RADIUS)*256
-    bpl +
+    bpl ++
     ldx #(ROOM_TOP - 4 - 16)*256
     ldy #(ROOM_BOTTOM - 12 + 16)*256
-    stx $04 ; top
-    sty $06 ; bottom
-+:
+    sep #$20
+    lda [mapDoorNorth]
+    bpl +
+        stx $04 ; top
+    +:
+    lda [mapDoorSouth]
+    bpl +
+        sty $06 ; bottom
+    +:
+    rep #$20
+++:
 
+    lda player_posx
     cmp #(ROOM_LEFT - 4)*256
     bcc +
     cmp #(ROOM_RIGHT - 12 + 1)*256

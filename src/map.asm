@@ -171,8 +171,25 @@ LoadRoomSlotIntoLevel:
     ldx currentRoomSlot
     lda.l roomSlotMapPos,X
     tay
+    ; store map position variables
+    rep #$20
+    tya
+    clc
+    adc #loword(mapDoorHorizontal)
+    sta.b mapDoorEast
+    dec A
+    sta.b mapDoorWest
+    tya
+    clc
+    adc #loword(mapDoorVertical)
+    sta.b mapDoorSouth
+    sec
+    sbc #MAP_MAX_WIDTH
+    sta.b mapDoorNorth
+    sep #$20
+    ; check doors
     tax ; X now contains map position
-    lda.l mapDoorVertical-MAP_MAX_WIDTH,X ; top door
+    lda [mapDoorNorth] ; top door
     beq +
         rep #$30 ; 16b AXY
         ; TODO: choose door
@@ -188,7 +205,7 @@ LoadRoomSlotIntoLevel:
         sep #$30 ; 8b AXY
         tyx
     +:
-    lda.l mapDoorVertical,X ; bottom door
+    lda [mapDoorSouth] ; bottom door
     beq +
         rep #$30 ; 16b AXY
         ldx $10 ; X is now bin offset
@@ -203,7 +220,7 @@ LoadRoomSlotIntoLevel:
         sep #$30 ; 8b AXY
         tyx
     +:
-    lda.l mapDoorHorizontal-1,X ; left door
+    lda [mapDoorWest] ; left door
     beq +
         rep #$30 ; 16b AXY
         ldx $10 ; X is now bin offset
@@ -218,7 +235,7 @@ LoadRoomSlotIntoLevel:
         sep #$30 ; 8b AXY
         tyx
     +:
-    lda.l mapDoorHorizontal,X ; right door
+    lda [mapDoorEast] ; right door
     beq +
         rep #$30 ; 16b AXY
         lda #$002C

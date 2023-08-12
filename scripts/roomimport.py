@@ -9,11 +9,11 @@ from pathlib import Path
 MAX_POOL_SIZE = 255
 
 tiledIdsToGameIds = {
-    -1: 0,
-    0: 0,
-    16: 1,
-    17: 2,
-    8: 3,
+    -1: "BLOCK_REGULAR",
+    0: "BLOCK_REGULAR",
+    16: "BLOCK_ROCK",
+    17: "BLOCK_ROCK_TINTED",
+    8: "BLOCK_POOP",
 }
 
 tiledIdsToObjectIds = {

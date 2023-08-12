@@ -133,7 +133,7 @@ LoadRoomSlotIntoLevel:
     sta $02 ; $00 = dest bin
     sta $1A
     ; Begin iteration
-    sep #$10 ; 8b XY
+    ; sep #$10 ; 8b XY
     lda #ROOM_TILE_HEIGHT
     sta $04 ; $04 = Y iterations
     ldy #0
@@ -142,11 +142,13 @@ LoadRoomSlotIntoLevel:
     sta $06 ; $06 = X iterations
     @loop_tile_x:
         lda [currentRoomTileTypeTableAddress],Y
+        and #$00FF
         asl
         tax
         lda.w BlockVariantAddresses,X
         sta $08
         lda [currentRoomTileVariantTableAddress],Y
+        and #$00FF
         asl
         tyx
         tay
@@ -318,17 +320,20 @@ HandleTileChanged:
 .BANK $00 SLOT "ROM"
 .SECTION "LevelData" FREE
 
-BlockVariantCount:
-    .db 1
-    .db 1
-    .db 1
-    .db 1
-
 BlockVariantAddresses:
-    .dw BlockEmptyVariants
-    .dw BlockRockVariants
-    .dw BlockRockTintedVariants
-    .dw BlockPoopVariants
+.REPT 256 INDEX i
+    .IF i == BLOCK_REGULAR
+        .dw BlockEmptyVariants
+    .ELIF i == BLOCK_ROCK
+        .dw BlockRockVariants
+    .ELIF i == BLOCK_ROCK_TINTED
+        .dw BlockRockTintedVariants
+    .ELIF i == BLOCK_POOP
+        .dw BlockPoopVariants
+    .ELSE
+        .dw BlockEmptyVariants
+    .ENDIF
+.ENDR
 
 BlockEmptyVariants:
     .dw $002A

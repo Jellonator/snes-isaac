@@ -1,72 +1,8 @@
 .include "base.inc"
 
 ; This bank is entirely relegated to entity functionality
-.BANK $02 SLOT "ROM"
+.BANK ROMBANK_ENTITYCODE SLOT "ROM"
 .SECTION "Entity" FREE
-
-.MACRO .EntityRemoveHitbox ARGS NUM_X, NUM_Y
-    lda.w entity_posy+1,Y
-    and #$F0
-    sta.b $00
-    lda.w entity_posx+1,Y
-    lsr
-    lsr
-    lsr
-    lsr
-    ora.b $00
-    sta.b $00
-    .REPT NUM_Y INDEX iy
-        tax
-        .REPT NUM_X INDEX ix
-            .IF ix > 0
-                inx
-            .ENDIF
-            tya
-            jsr EraseHitbox
-        .ENDR
-        .IF iy < (NUM_Y-1)
-            lda.b $00
-            clc
-            adc #16
-            sta.b $00
-        .ENDIF
-    .ENDR
-.ENDM
-
-.MACRO .EntityAddHitbox ARGS NUM_X, NUM_Y
-    sty.b $01
-    lda.w entity_posy+1,Y
-    and #$F0
-    sta.b $00
-    lda.w entity_posx+1,Y
-    lsr
-    lsr
-    lsr
-    lsr
-    ora.b $00
-    sta.b $00
-    .REPT NUM_Y INDEX iy
-        tax
-        lda.b $01
-        .REPT NUM_X INDEX ix
-            .IF ix > 0
-                inx
-            .ENDIF
-            jsr InsertHitbox
-        .ENDR
-        .IF iy < (NUM_Y-1)
-            lda.b $00
-            clc
-            adc #16
-            sta.b $00
-        .ENDIF
-    .ENDR
-    ldy.b $01
-.ENDM
-
-; ENTITY DEFS
-.include "entitydefs/enemy_fly.inc"
-.include "entitydefs/enemy_zombie.inc"
 
 ; For each of the following:
 ; * execution bank will be $02
@@ -313,15 +249,15 @@ EntityDefinitions:
     .ENDR
     ; 128 : Attack fly
     .DSTRUCT @enemy_attack_fly INSTANCEOF entitytypeinfo_t VALUES
-        init_func: .dw _e_basic_fly_init
-        tick_func: .dw _e_basic_fly_tick
-        free_func: .dw _e_basic_fly_free
+        init_func: .dw entity_basic_fly_init
+        tick_func: .dw entity_basic_fly_tick
+        free_func: .dw entity_basic_fly_free
     .ENDST
     ; 129 : zombie
     .DSTRUCT @enemy_zombie INSTANCEOF entitytypeinfo_t VALUES
-        init_func: .dw _e_zombie_init
-        tick_func: .dw _e_zombie_tick
-        free_func: .dw _e_zombie_free
+        init_func: .dw entity_zombie_init
+        tick_func: .dw entity_zombie_tick
+        free_func: .dw entity_zombie_free
     .ENDST
 
 .ENDS

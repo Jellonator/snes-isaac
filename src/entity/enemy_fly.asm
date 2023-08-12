@@ -1,7 +1,12 @@
+.include "base.inc"
+
+.BANK ROMBANK_ENTITYCODE SLOT "ROM"
+.SECTION "Entity Enemy Fly" FREE
+
 .DEFINE _fly_fgxptr.1 entity_char_custom.1
 .DEFINE _fly_fgxptr.2 entity_char_custom.2
 
-_e_basic_fly_init:
+entity_basic_fly_init:
     .ACCU 16
     .INDEX 16
     ; default info
@@ -34,7 +39,7 @@ _e_basic_fly_init:
     ; end
     rts
 
-_e_basic_fly_tick:
+entity_basic_fly_tick:
     .ACCU 16
     .INDEX 16
 ; Remove col
@@ -191,7 +196,7 @@ _e_basic_fly_tick:
     ; end
     rts
 
-_e_basic_fly_free:
+entity_basic_fly_free:
     .ACCU 16
     .INDEX 16
     lda #0
@@ -207,3 +212,5 @@ _e_basic_fly_free:
     tax
     jsl spriteman_unref
     rts
+
+.ENDS

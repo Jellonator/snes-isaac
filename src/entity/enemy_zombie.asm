@@ -1,7 +1,12 @@
+.include "base.inc"
+
+.BANK ROMBANK_ENTITYCODE SLOT "ROM"
+.SECTION "Entity Enemy Zombie" FREE
+
 .DEFINE _zombie_gfxptr.1 entity_char_custom.1
 .DEFINE _zombie_gfxptr.2 entity_char_custom.2
 
-_e_zombie_init:
+entity_zombie_init:
     .ACCU 16
     .INDEX 16
     ; default info
@@ -41,7 +46,7 @@ _e_zombie_init:
 .DefinePathSpeedTable "_e_zombie_speedtable", 128, 1
 .DEFINE ZOMBIE_ACCEL 4
 
-_e_zombie_tick:
+entity_zombie_tick:
     .ACCU 16
     .INDEX 16
 ; Remove col
@@ -116,13 +121,13 @@ _e_zombie_tick:
     rep #$30
     lda #0
     sep #$20
-    ldx.w _fly_fgxptr.1,Y
+    ldx.w _zombie_gfxptr.1,Y
     lda.w loword(spriteTableValue + spritetab_t.spritemem),X
     tax
     lda.l SpriteSlotIndexTable,X
     sta.b $00
 
-    ldx.w _fly_fgxptr.2,Y
+    ldx.w _zombie_gfxptr.2,Y
     lda.w loword(spriteTableValue + spritetab_t.spritemem),X
     tax
     lda.l SpriteSlotIndexTable,X
@@ -187,19 +192,21 @@ _e_zombie_tick:
     ; end
     rts
 
-_e_zombie_free:
+entity_zombie_free:
     .ACCU 16
     .INDEX 16
     lda #0
     sta.w entity_mask,Y
-    lda.w _fly_fgxptr.1,Y
+    lda.w _zombie_gfxptr.1,Y
     tax
     phy
     php
     jsl spriteman_unref
     plp
     ply
-    lda.w _fly_fgxptr.2,Y
+    lda.w _zombie_gfxptr.2,Y
     tax
     jsl spriteman_unref
     rts
+
+.ENDS

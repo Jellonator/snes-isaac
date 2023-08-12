@@ -9,6 +9,11 @@
     currentRoomTileVariantTableAddress dl
     currentConsideredTileX dw
     currentConsideredTileY dw
+; long pointers to current room's doors
+    mapDoorNorth dl
+    mapDoorEast dl
+    mapDoorSouth dl
+    mapDoorWest dl
     ; end
     rawMemorySizeZP db
 .ENDE

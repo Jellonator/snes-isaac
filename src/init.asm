@@ -389,6 +389,10 @@ tile_data_loop:
     lda #bankbyte(mapTileSlotTable)
     sta currentRoomTileTypeTableAddress+2
     sta currentRoomTileVariantTableAddress+2
+    sta mapDoorNorth+2
+    sta mapDoorEast+2
+    sta mapDoorSouth+2
+    sta mapDoorWest+2
     rep #$30
     lda #BG2_TILE_BASE_ADDR
     sta gameRoomBG2Offset

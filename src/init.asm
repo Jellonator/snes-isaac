@@ -374,8 +374,6 @@ tile_data_loop:
     rep #$30
     ; init rng
     jsl RngGameInitialize
-    ; init player
-    jsr PlayerInit
     ; init vqueue
     jsl ClearVQueue
     ; init hashtables
@@ -403,6 +401,8 @@ tile_data_loop:
     jsl EntityInfoInitialize
     ; clear pathfinding data
     jsl player_initialize_pathfinding_data
+    ; init player
+    jsr PlayerInit
     jmp UpdateLoop
 
 .ENDS

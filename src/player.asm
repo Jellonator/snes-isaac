@@ -27,6 +27,114 @@
 .BANK $01 SLOT "ROM"
 .SECTION "Player" FREE
 
+_PlayerNextHealthValueTable:
+    .db HEALTH_NULL           ; null
+    .db HEALTH_REDHEART_EMPTY ; red empty
+    .db HEALTH_REDHEART_EMPTY ; red half
+    .db HEALTH_REDHEART_HALF  ; red full
+    .db HEALTH_NULL           ; spirit half
+    .db HEALTH_SOULHEART_HALF ; spirit full
+    .db HEALTH_NULL           ; eternal
+
+_PlayerHealthTileValueTable:
+    .dw $0000 ; null
+    .dw $2832 ; red empty
+    .dw $2831 ; red half
+    .dw $2830 ; red full
+    .dw $2C33 ; spirit half
+    .dw $2C30 ; spirit full
+    .dw $0000 ; eternal
+
+; Render heart at slot Y
+_PlayerRenderSingleHeart:
+    rep #$30 ; 16B AXY
+    ; Init vqueue
+    lda.w vqueueNumMiniOps
+    asl
+    asl
+    tax
+    inc.w vqueueNumMiniOps
+    ; first, determine offset
+    tya
+    and #$0007 ; 8 per line
+    sta.b $00
+    tya
+    and #$00F8 ; x8
+    asl      ; x16
+    asl      ; x32
+    ora.b $00 ; X|Y
+    sta.b $00
+    clc
+    adc #BG1_TILE_BASE_ADDR + 6
+    sta.l vqueueMiniOps.1.vramAddr,X
+    ; now, determine character
+    lda.w playerData.healthSlots,Y
+    and #$00FF
+    asl
+    phx
+    tax
+    lda.l _PlayerHealthTileValueTable,X
+    plx
+    sta.l vqueueMiniOps.1.data,X
+    rtl
+
+_PlayerRenderAllHearts:
+    sep #$30
+    ldy #HEALTHSLOT_COUNT-1
+    @loop:
+        phy
+        php
+        jsl _PlayerRenderSingleHeart
+        plp
+        ply
+    dey
+    bpl @loop
+    rtl
+
+_PlayerTakeHealth:
+    ; check health slots
+    sep #$30
+    ldy #HEALTHSLOT_COUNT-1
+    @loop:
+        lda.w playerData.healthSlots,Y
+        cmp #HEALTH_REDHEART_HALF
+        bcs @foundHealth
+    dey
+    bpl @loop
+; player has died; eventually handle
+@died:
+    rtl
+@foundHealth:
+; found health slot; Y is slot, A is value
+    ; health[Y] = NextHealthValue[A]
+    tax
+    lda.l _PlayerNextHealthValueTable,X
+    sta.w playerData.healthSlots,Y
+    ; update UI
+    phy
+    php
+    jsl _PlayerRenderSingleHeart
+    plp
+    ply
+    ; if last slot and new value is empty: kill
+    cpy #0
+    bne +
+        cmp #HEALTH_REDHEART_HALF
+        bcc @died
+    +
+    ; set invuln timer
+    rep #$30
+    lda #60 ; 1 second
+    sta.w playerData.invuln_timer
+    rtl
+
+_PlayerHandleDamaged:
+    lda.w playerData.invuln_timer
+    bne +
+        jsl _PlayerTakeHealth
+    +:
+    rtl
+
 PlayerInit:
     rep #$20 ; 16 bit A
     stz.w joy1held
@@ -42,18 +150,42 @@ PlayerInit:
     sta.w playerData.stat_tear_speed
     lda #0
     sta.w player_velocx
-    lda #0
     sta.w player_velocy
+    stz.w player_damageflag
     lda #((32 + 6 * 16 - 8) * 256)
     sta.w player_posx
     lda #((64 + 4 * 16 - 8) * 256)
     sta.w player_posy
     stz.w projectile_count_2x
+    ; setup HP
+    .REPT HEALTHSLOT_COUNT INDEX i
+        stz.w playerData.healthSlots + (i * 2)
+    .ENDR
+    stz.w playerData.invuln_timer
+    sep #$30
+    lda #HEALTH_REDHEART_FULL
+    sta.w playerData.healthSlots.1
+    sta.w playerData.healthSlots.2
+    sta.w playerData.healthSlots.3
+    jsl _PlayerRenderAllHearts
     rts
 
 PlayerUpdate:
+; check hp
     rep #$30 ; 16 bit AXY
+    lda.w player_damageflag
+    bpl +
+        jsl _PlayerHandleDamaged
+    +:
+    rep #$30
+    stz.w player_damageflag
+    dec.w playerData.invuln_timer
+    bpl +
+        stz.w playerData.invuln_timer
+    +:
 
+; movement
+    rep #$30 ; 16 bit AXY
     lda.w playerData.stat_speed
     sta $00
     ; check (LEFT OR RIGHT) AND (UP OR DOWN)
@@ -86,20 +218,20 @@ PlayerUpdate:
     ; slowright
     clc
     adc.w playerData.stat_accel
-    AMINI $00
+    .AMIN #$00
     jmp @endy
 @slowup:
     ; slowleft
     sec
     sbc.w playerData.stat_accel
-    AMAXI $00
+    .AMAX #$00
     jmp @endy
 @down:
     ; right
     txa
     clc
     adc.w playerData.stat_accel
-    AMIN $00
+    .AMIN $00
     jmp @endy
 @up:
     ; left
@@ -108,7 +240,7 @@ PlayerUpdate:
     sbc.w playerData.stat_accel
     eor #$FFFF
     inc A
-    AMIN $00
+    .AMIN $00
     eor #$FFFF
     inc A
 @endy:
@@ -128,20 +260,20 @@ PlayerUpdate:
     ; slowright
     clc
     adc.w playerData.stat_accel
-    AMINI $00
+    .AMIN #$00
     jmp @endx
 @slowleft:
     ; slowleft
     sec
     sbc.w playerData.stat_accel
-    AMAXI $00
+    .AMAX #$00
     jmp @endx
 @right:
     ; right
     txa
     clc
     adc.w playerData.stat_accel
-    AMIN $00
+    .AMIN $00
     jmp @endx
 @left:
     ; left
@@ -150,7 +282,7 @@ PlayerUpdate:
     sbc.w playerData.stat_accel
     eor #$FFFF
     inc A
-    AMIN $00
+    .AMIN $00
     eor #$FFFF
     inc A
 @endx:
@@ -161,7 +293,7 @@ PlayerUpdate:
 .DEFINE TempLimitTop $04
 .DEFINE TempLimitBottom $06
     ldx #(ROOM_LEFT - 4)*256
-    ldy #(ROOM_RIGHT - 12)*256
+    ldy #(ROOM_RIGHT - 12)*256 - 1
     stx $00 ; left
     sty $02 ; right
     lda player_posy
@@ -252,6 +384,9 @@ PlayerUpdate:
 @end_tear_code:
     sep #$30 ; 8 bit AXY
     ; update render data
+    lda.w playerData.invuln_timer
+    bit #$08
+    bne @invis_frame
     lda.w player_posx+1
     sta.w objectData.1.pos_x
     sta.w objectData.2.pos_x
@@ -271,6 +406,7 @@ PlayerUpdate:
     .IncrementObjectIndex
     .SetCurrentObjectS
     .IncrementObjectIndex
+@invis_frame:
     rts
 
 PlayerShootTear:
@@ -296,8 +432,8 @@ PlayerShootTear:
     sta.w projectile_velocx,X
     lda.w player_velocy
     .ShiftRight_SIGN 1, FALSE
-    AMINI 32
-    AMAXI -64
+    .AMIN #32
+    .AMAX #-64
     sec
     sbc.w playerData.stat_tear_speed
     sta.w projectile_velocy,X
@@ -307,8 +443,8 @@ PlayerShootTear:
     sta.w projectile_velocy,X
     lda.w player_velocx
     .ShiftRight_SIGN 1, FALSE
-    AMINI 32
-    AMAXI -64
+    .AMIN #32
+    .AMAX #-64
     sec
     sbc.w playerData.stat_tear_speed
     sta.w projectile_velocx,X
@@ -318,8 +454,8 @@ PlayerShootTear:
     sta.w projectile_velocy,X
     lda.w player_velocx
     .ShiftRight_SIGN 1, FALSE
-    AMAXI -32
-    AMAXI 64
+    .AMAX #-32
+    .AMAX #64
     clc
     adc.w playerData.stat_tear_speed
     sta.w projectile_velocx,X
@@ -329,8 +465,8 @@ PlayerShootTear:
     sta.w projectile_velocx,X
     lda.w player_velocy
     .ShiftRight_SIGN 1, FALSE
-    AMAXI -32
-    AMAXI 64
+    .AMAX #-32
+    .AMAX #64
     clc
     adc.w playerData.stat_tear_speed
     sta.w projectile_velocy,X
@@ -385,8 +521,8 @@ PlayerMoveHorizontal:
     beq @skipmove
     clc
     adc.w player_posx
-    AMAXU $00
-    AMINU $02
+    .AMAXU $00
+    .AMINU $02
     sta.w player_posx
     lda.w player_velocx
     cmp #0
@@ -435,7 +571,7 @@ PlayerMoveLeft:
     clc
     adc #(ROOM_LEFT + 16 - PLAYER_HITBOX_LEFT)*256
 ; apply position
-    AMAXU player_posx
+    .AMAXU player_posx
     sta.w player_posx
 @end:
     rts
@@ -480,7 +616,7 @@ PlayerMoveRight:
     clc
     adc #(ROOM_LEFT - PLAYER_HITBOX_RIGHT)*256-1
 ; apply position
-    AMINU player_posx
+    .AMINU player_posx
     sta.w player_posx
 @end:
     rts
@@ -492,8 +628,8 @@ PlayerMoveVertical:
     beq @skipmove
     clc
     adc.w player_posy
-    AMAXU $04
-    AMINU $06
+    .AMAXU $04
+    .AMINU $06
     sta.w player_posy
     lda.w player_velocy
     cmp #0
@@ -542,7 +678,7 @@ PlayerMoveUp:
     clc
     adc #(ROOM_TOP + 16 - PLAYER_HITBOX_TOP)*256
 ; apply position
-    AMAXU player_posy
+    .AMAXU player_posy
     sta.w player_posy
 @end:
     rts
@@ -587,7 +723,7 @@ PlayerMoveDown:
     clc
     adc #(ROOM_TOP - PLAYER_HITBOX_BOTTOM)*256 - 1
 ; apply position
-    AMINU player_posy
+    .AMINU player_posy
     sta.w player_posy
 @end:
     rts

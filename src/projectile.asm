@@ -164,7 +164,7 @@ projectile_update_loop:
     dec A
     beq @iter_remove
     sta.w projectile_lifetime,X
-    AMINUI 8
+    .AMINU #8
     sta.w $08 ; $08 is tear height
 ; Apply speed to position
     lda.w projectile_posx,X

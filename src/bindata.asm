@@ -20,13 +20,13 @@ EmptySpriteData:
     .ENDR
 DefaultUiData:
     .dw $0000 $2C02 $2C03 $2C03 $6C02
-    .dw $2C20 $2830 $2830 $2830 $2830 $2831 $2832
-    .REPT 20
+    .dw $2C20
+    .REPT 26
         .dw $0000
     .ENDR
     .dw $0000 $2C12 $0000 $0000 $6C12
-    .dw $2C21 $2832 $2832 $2C30 $2C33 $0000 $0000
-    .REPT 20
+    .dw $2C21
+    .REPT 26
         .dw $0000
     .ENDR
     .dw $0000 $2C12 $0000 $0000 $6C12

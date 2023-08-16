@@ -46,7 +46,8 @@
     stat_tear_delay dw
     stat_tear_speed dw
     flags dw
-    healthSlots INSTANCEOF byte_t 16
+    invuln_timer dw
+    healthSlots INSTANCEOF byte_t HEALTHSLOT_COUNT
 .ENDST
 
 ; ENSURE tear_t is some kind of power of 2, that way

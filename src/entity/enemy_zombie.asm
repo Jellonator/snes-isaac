@@ -181,6 +181,7 @@ entity_zombie_tick:
     sta.w entity_signal,Y
     ; inc object index
     rep #$30
+    phy
     lda.w entity_variant,Y
     and #$00FF
     beq +
@@ -189,6 +190,26 @@ entity_zombie_tick:
     +:
     .SetCurrentObjectS
     .IncrementObjectIndex
+    ply
+    ; Check collision with player
+    sep #$20
+    lda.w player_box_x1
+    clc
+    adc #8 ; ACC = player center x
+    cmp.w entity_box_x1,Y
+    bmi @no_player_col
+    cmp.w entity_box_x2,Y
+    bpl @no_player_col
+    lda.w player_box_y1
+    clc
+    adc #8
+    cmp.w entity_box_y1,Y
+    bmi @no_player_col
+    cmp.w entity_box_y2,Y
+    bpl @no_player_col
+    rep #$20
+    dec.w player_damageflag
+@no_player_col:
     ; end
     rts
 

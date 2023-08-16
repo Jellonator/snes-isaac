@@ -3,67 +3,67 @@
 ; as a general rule, macro labels should begin with @@@@@
 ; that way, these labels don't mess with those in code
 
-; Maximum of A register and memory location, signed
-.MACRO AMAX
-    cmp \1
+; Maximum of A register and value, signed
+.MACRO .AMAX
+    .IF \?1 == ARG_IMMEDIATE
+        cmp #\1
+    .ELSE
+        cmp \1
+    .ENDIF
     bpl @@@@@\.\@
-    lda \1
+    .IF \?1 == ARG_IMMEDIATE
+        lda #\1
+    .ELSE
+        lda \1
+    .ENDIF
 @@@@@\.\@:
 .ENDM
 
-; Minimum of A register and memory location, signed
-.MACRO AMIN
-    cmp \1
+; Minimum of A register and value, signed
+.MACRO .AMIN
+    .IF \?1 == ARG_IMMEDIATE
+        cmp #\1
+    .ELSE
+        cmp \1
+    .ENDIF
     bmi @@@@@\.\@
-    lda \1
+    .IF \?1 == ARG_IMMEDIATE
+        lda #\1
+    .ELSE
+        lda \1
+    .ENDIF
 @@@@@\.\@:
 .ENDM
 
-; Maximum of A register and immediate value, signed
-.MACRO AMAXI
-    cmp #\1
-    bpl @@@@@\.\@
-    lda #\1
-@@@@@\.\@:
-.ENDM
-
-; Minimum of A register and immediate value, signed
-.MACRO AMINI
-    cmp #\1
-    bmi @@@@@\.\@
-    lda #\1
-@@@@@\.\@:
-.ENDM
-
-; Maximum of A register and memory location, unsigned
-.MACRO AMAXU
-    cmp \1
+; Maximum of A register and value, unsigned
+.MACRO .AMAXU
+    .IF \?1 == ARG_IMMEDIATE
+        cmp #\1
+    .ELSE
+        cmp \1
+    .ENDIF
     bcs @@@@@\.\@
-    lda \1
+    .IF \?1 == ARG_IMMEDIATE
+        lda #\1
+    .ELSE
+        lda \1
+    .ENDIF
 @@@@@\.\@:
 .ENDM
 
-; Minimum of A register and memory location, unsigned
-.MACRO AMINU
-    cmp \1
+; Minimum of A register and value, unsigned
+.MACRO .AMINU
+    .IF \?1 == ARG_IMMEDIATE
+        cmp #\1
+    .ELSE
+        cmp \1
+    .ENDIF
     bcc @@@@@\.\@
-    lda \1
-@@@@@\.\@:
-.ENDM
-
-; Maximum of A register and immediate value, unsigned
-.MACRO AMAXUI
-    cmp #\1
-    bcs @@@@@\.\@
-    lda #\1
-@@@@@\.\@:
-.ENDM
-
-; Minimum of A register and immediate value, unsigned
-.MACRO AMINUI
-    cmp #\1
-    bcc @@@@@\.\@
-    lda #\1
+    .IF \?1 == ARG_IMMEDIATE
+        lda #\1
+    .ELSE
+        lda \1
+    .ENDIF
 @@@@@\.\@:
 .ENDM
 
@@ -463,7 +463,7 @@
 .ENDM
 
 ; will only break if value overflows :)
-.MACRO .ShiftLeft_SIGN ARGS num, do_cmp
+.MACRO .ShiftLeft_SIGN ARGS num
     .REPT num
         asl
     .ENDR

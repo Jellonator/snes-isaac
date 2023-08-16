@@ -119,6 +119,7 @@
 .define player_mask (ENTITY_INDEX_PLAYER + entity_mask)
 .define player_signal (ENTITY_INDEX_PLAYER + entity_signal)
 .define player_type (ENTITY_INDEX_PLAYER + entity_type)
+.define player_damageflag (ENTITY_INDEX_PLAYER + entity_health)
 
 .define projectile_size _projectile_base_size_type
 .define projectile_type (_projectile_base_size_type+1)

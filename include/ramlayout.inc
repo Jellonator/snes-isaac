@@ -137,7 +137,6 @@
     roomSlotDoorMask ds MAX_MAP_SLOTS
     roomSlotMapPos INSTANCEOF maptilepos_t MAX_MAP_SLOTS
     roomSlotRoomType ds MAX_MAP_SLOTS
-    roomSlotRoomSize ds MAX_MAP_SLOTS
     tilesToUpdate INSTANCEOF byte_t MAP_MAX_SIZE
     _mapDoorHorizontalEmptyBuf ds MAP_MAX_HEIGHT
     mapDoorHorizontal ds MAP_MAX_SIZE ; For index i: Connects room i with room i+1

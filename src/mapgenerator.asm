@@ -9,6 +9,7 @@
     mapgenNumAvailableTiles db
     mapgenNumAvailableEndpointTiles db
     mapgenAvailableTiles INSTANCEOF maptilepos_t MAX_MAP_SLOTS
+    currentRoomPoolBase dl
 .ENDE
 
 .DEFINE TempDoorMask $20
@@ -214,12 +215,18 @@ _PushAvailableTileX:
     rts
 
 ; Initialize the tile at X
+; Parameters:
+;     roomtype: db $03,S
 _InitializeRoomX:
     .ACCU 8
     .INDEX 8
     pha ; >1
 ; set up map data
-    lda #ROOMTYPE_NORMAL
+    lda $03+1,S
+    cmp #ROOMTYPE_START
+    bne + ; start becomes normal room
+        lda #ROOMTYPE_NORMAL
+    +:
     sta.w mapTileTypeTable,X
     stz.w mapTileFlagsTable,X
     lda.w numUsedMapSlots
@@ -230,10 +237,8 @@ _InitializeRoomX:
     tax ; X now contains tile slot
     lda $01,S
     sta roomSlotMapPos,X
-    lda #ROOMTYPE_NORMAL
+    lda $03+2,S
     sta roomSlotRoomType,X
-    lda #ROOM_SIZE_REGULAR
-    sta roomSlotRoomSize,X
     plx ; <1
 ; end
     pla ; <1
@@ -301,7 +306,33 @@ _SetupRoomX:
     lda TempDoorMask
     sta roomSlotDoorMask,X
 ; Set up actual room
+    ; set pool according to room type
+    lda roomSlotRoomType,X
+    cmp #ROOMTYPE_NORMAL
+    beq @room_normal
+    bra @room_empty ; uh oh; something has gone wrong probably. Just make it empty
+    @room_normal:
+        ; normal room type
+        sep #$30
+        lda #bankbyte(RoomPoolDefinitions@floor_basement)
+        sta.b currentRoomPoolBase+2
+        rep #$30 ; 16b AXY
+        lda #loword(RoomPoolDefinitions@floor_basement)
+        sta.b currentRoomPoolBase
+        bra @end
+    @room_empty:
+        ; empty room type
+        sep #$30
+        lda #bankbyte(RoomPoolDefinitions@type_start)
+        sta.b currentRoomPoolBase+2
+        rep #$30 ; 16b AXY
+        lda #loword(RoomPoolDefinitions@type_start)
+        sta.b currentRoomPoolBase
+        ; bra @end
+    @end:
+    ; select room from pool
     jsr _PushRandomRoomFromPool ; >3
+    ; initialize room
     jsl InitializeRoomSlot
     rep #$20 ; 16b A
     pla ; <2
@@ -431,7 +462,10 @@ BeginMapGeneration:
     sta.b start_pos
     sta.w loadedRoomIndex
     tax
+    lda #ROOMTYPE_START
+    pha
     jsr _InitializeRoomX
+    pla
     lda.b start_pos
     jsr _PushAdjacentEmptyTilesA
     ldy #10
@@ -466,7 +500,10 @@ BeginMapGeneration:
         jsr _RemoveAvailableTileX
         ; Push room
         ldx $05
+        lda #ROOMTYPE_NORMAL
+        pha
         jsr _InitializeRoomX
+        pla
         lda $05
         jsr _PushAdjacentEmptyTilesA
     ply
@@ -493,46 +530,49 @@ _PushRandomRoomFromPool:
 ; Get RNG value
     jsl RngGeneratorUpdate8
     sta.l DIVU_DIVIDEND
-; Put pointer in X
-; For efficiency, X starts at size*3, and accesses use X-3
-    lda.l RoomPoolDefinitions@basement.numRooms ; byte 0 is size
+; Put pointer in Y
+; For efficiency, Y starts at size*3
+    lda [currentRoomPoolBase] ; byte 0 is size
     and #$FF
     sta TempValue
     asl
     clc
     adc.l TempValue
-    tax
+    tay
     sep #$20 ; 8b A
-    ldy #0 ; Y counts number of valid rooms
+    ldx #0 ; Y counts number of valid rooms
     dec TempValue ; TempValue is index of current element (i.e. X/3 - 1)
-; Find rooms with matching door mask, and put their indices into tempData
-@loop:
-    rep #$20 ; 16b A
-    lda.l RoomPoolDefinitions@basement.roomList-3,X
-    sta TempAddr
-    sep #$20 ; 8b A
-    lda.l RoomPoolDefinitions@basement.roomList+2-3,X
-    sta TempAddr+2
-    ; Ensure that RoomMask is a subset of DefMask
-    ; Need to check that RoomMask & DefMask = RoomMask
-    ; Need to check that (RoomMask)(DefMask) xor (RoomMask)(1) = 0
-    ; (RoomMask)(1 xor DefMask) = 0
-    lda [TempAddr] ; get DefMask
-    ; eor #$0F
-    and TempDoorMask
-    cmp TempDoorMask
-    bne @skip
-    lda TempValue
-    sta.w loword(tempData),Y
-    iny
-@skip:
-    dec TempValue
-    dex
-    dex
-    dex
-    bne @loop
-; Apply RNG (rand() % Y)
-    tya
+    ; Find rooms with matching door mask, and put their indices into tempData
+    sep #$20
+    @loop:
+        ; dey
+        lda [currentRoomPoolBase],Y ; pool+2,Y (bank)
+        sta TempAddr+2
+        rep #$20 ; 16b A
+        dey
+        dey
+        lda [currentRoomPoolBase],Y ; pool,Y (addr)
+        dey
+        sta TempAddr
+        ; Ensure that RoomMask is a subset of DefMask
+        ; Need to check that:
+        ;     RoomMask & DefMask = RoomMask
+        ;     (RoomMask)(DefMask) xor (RoomMask)(1) = 0
+        ;     (RoomMask)(1 xor DefMask) = 0
+        sep #$20 ; 8b A
+        lda [TempAddr] ; get DefMask
+        and TempDoorMask
+        cmp TempDoorMask
+        bne @skip
+        lda TempValue
+        sta.w loword(tempData),X
+        inx
+    @skip:
+        dec TempValue
+        cpy #0
+        bne @loop
+; Apply RNG (rand() % X)
+    txa
     sta.l DIVU_DIVISOR
     .REPT 8
         NOP ; (8 * 2 cycle)
@@ -545,15 +585,20 @@ _PushRandomRoomFromPool:
     asl
     clc
     adc.w loword(tempData),X
-    tax ; X now contains index into RoomPoolDefinitions@basement.roomList
+    tay ; Y now contains index into pool's roomList
     sep #$20 ; 8b A
-    lda.l RoomPoolDefinitions@basement+3,X ; bank
-    ply ; <2 pull return address
+    iny
+    iny
+    iny
+    lda [currentRoomPoolBase],Y ; bank
+    plx ; <2 pull return address
     pha ; >1
     rep #$20 ; 16b A
-    lda.l RoomPoolDefinitions@basement+1,X ; addr
+    dey
+    dey
+    lda [currentRoomPoolBase],Y ; addr
     pha ; >2
-    phy ; >2 push return address
+    phx ; >2 push return address
     rts
 
 _ClearMap:

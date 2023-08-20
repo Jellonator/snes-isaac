@@ -1,6 +1,6 @@
 [
     {
-        "id": "basement",
+        "id": "floor_basement",
         "rooms": [
             "empty.tmx",
             "basement/b1.tmx",
@@ -12,6 +12,12 @@
             "basement/b7.tmx",
             "basement/test_h.tmx",
             "basement/test_v.tmx"
+        ]
+    },
+    {
+        "id": "type_start",
+        "rooms": [
+            "empty.tmx"
         ]
     }
 ]

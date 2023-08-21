@@ -90,6 +90,33 @@
     bne label
 .ENDM
 
+.MACRO ._UpdateDoors ARGS newValue
+    ; west door
+    lda.w loword(mapDoorHorizontal)-1,X
+    beq +
+        lda #newValue
+        sta.w loword(mapDoorHorizontal)-1,X
+    +:
+    ; east door
+    lda.w loword(mapDoorHorizontal),X
+    beq +
+        lda #newValue
+        sta.w loword(mapDoorHorizontal),X
+    +:
+    ; north door
+    lda.w loword(mapDoorVertical)-MAP_MAX_WIDTH,X
+    beq +
+        lda #newValue
+        sta.w loword(mapDoorVertical)-MAP_MAX_WIDTH,X
+    +:
+    ; south door
+    lda.w loword(mapDoorVertical),X
+    beq +
+        lda #newValue
+        sta.w loword(mapDoorVertical),X
+    +:
+.ENDM
+
 ; i = 0, j = len(tiles)-1
 ; while (i <= j) {
 ;   if (isEndpoint(tiles[i]) {
@@ -186,6 +213,17 @@ _CalculateAvailableEndpointTiles:
     bne @end
     inc.b mapgenNumAvailableEndpointTiles
 @end:
+    rts
+
+_MoveActiveRoomsIntoAvailableTiles:
+    stz.b mapgenNumAvailableEndpointTiles
+    ldx numUsedMapSlots
+    stx.b mapgenNumAvailableTiles
+@loop_setup_tiles:
+    lda.w loword(roomSlotMapPos-1),X
+    sta.b mapgenAvailableTiles-1,X
+    dex
+    bne @loop_setup_tiles
     rts
 
 ; Removes the room at mapgenAvailableTiles[X]
@@ -510,8 +548,31 @@ BeginMapGeneration:
     dey
     cpy #0
     bne @loop_add_tiles ; } while (--Y != 0);
-; Setup rooms
+; setup special rooms
+    ; Determine endpoint tiles
+    jsr _MoveActiveRoomsIntoAvailableTiles
+    jsr _CalculateAvailableEndpointTiles
     sep #$30 ; 8b AXY
+    ; for now, just set them up depending on index in available endpoint tiles
+    ; BOSS
+        ldx mapgenAvailableTiles+0
+        ldy.w loword(mapTileSlotTable),X
+        lda #ROOMTYPE_BOSS
+        sta.w loword(mapTileTypeTable),X
+        sta.w loword(roomSlotRoomType),Y
+    ; ITEM
+        ldx mapgenAvailableTiles+1
+        ldy.w loword(mapTileSlotTable),X
+        lda #ROOMTYPE_ITEM
+        sta.w loword(mapTileTypeTable),X
+        sta.w loword(roomSlotRoomType),Y
+    ; SHOP
+        ldx mapgenAvailableTiles+2
+        ldy.w loword(mapTileSlotTable),X
+        lda #ROOMTYPE_SHOP
+        sta.w loword(mapTileTypeTable),X
+        sta.w loword(roomSlotRoomType),Y
+; Setup rooms
     ldy numUsedMapSlots
 @loop_setup_tiles:
     ldx loword(roomSlotMapPos-1),Y
@@ -519,6 +580,16 @@ BeginMapGeneration:
     sep #$30 ; 8b AXY
     dey
     bne @loop_setup_tiles
+; setup special door rooms
+    ; BOSS
+        ldx mapgenAvailableTiles+0
+        ._UpdateDoors (DOOR_OPEN | DOOR_TYPE_BOSS | DOOR_METHOD_FINISH_ROOM)
+    ; ITEM
+        ldx mapgenAvailableTiles+1
+        ._UpdateDoors (DOOR_CLOSED | DOOR_TYPE_TREASURE | DOOR_METHOD_KEY)
+    ; SHOP
+        ldx mapgenAvailableTiles+2
+        ._UpdateDoors (DOOR_CLOSED | DOOR_TYPE_SHOP | DOOR_METHOD_KEY)
 ; end
     lda #$FF
     sta.w numTilesToUpdate

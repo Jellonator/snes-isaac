@@ -390,6 +390,9 @@
 
 .FUNCTION log2(x) log(x) / log(2.0)
 
+; define tile
+.FUNCTION deft(chr,p) (chr | (p << 10))
+
 .MACRO .CheapModA8 ARGS num
     .IF num == 1
     .ELIF num > 0 && num <= (2^7) && IS_POW2(num)

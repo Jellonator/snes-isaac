@@ -188,68 +188,74 @@ LoadRoomSlotIntoLevel:
     sta.b mapDoorNorth
     sep #$20
     ; check doors
-    tax ; X now contains map position
-    lda [mapDoorNorth] ; top door
-    beq +
-        rep #$30 ; 16b AXY
-        ; TODO: choose door
-        ldx $10 ; X is now bin offset
-        lda #$000C
-        sta.l $7F0000 + ( 7 * 2),X
-        lda #$000E
-        sta.l $7F0000 + ( 8 * 2),X
-        lda #$002C
-        sta.l $7F0000 + (23 * 2),X
-        lda #$002E
-        sta.l $7F0000 + (24 * 2),X
-        sep #$30 ; 8b AXY
-        tyx
-    +:
-    lda [mapDoorSouth] ; bottom door
-    beq +
-        rep #$30 ; 16b AXY
-        ldx $10 ; X is now bin offset
-        lda #$802C
-        sta.l $7F0000 + ((16*(2 + ROOM_TILE_HEIGHT) +  7) * 2),X
-        lda #$802E
-        sta.l $7F0000 + ((16*(2 + ROOM_TILE_HEIGHT) +  8) * 2),X
-        lda #$800C
-        sta.l $7F0000 + ((16*(2 + ROOM_TILE_HEIGHT) + 23) * 2),X
-        lda #$800E
-        sta.l $7F0000 + ((16*(2 + ROOM_TILE_HEIGHT) + 24) * 2),X
-        sep #$30 ; 8b AXY
-        tyx
-    +:
-    lda [mapDoorWest] ; left door
-    beq +
-        rep #$30 ; 16b AXY
-        ldx $10 ; X is now bin offset
-        lda #$0040
-        sta.l $7F0000 + ((16*(2 + 3) +  0) * 2),X
-        lda #$0042
-        sta.l $7F0000 + ((16*(2 + 3) +  1) * 2),X
-        lda #$0060
-        sta.l $7F0000 + ((16*(2 + 3) + 16) * 2),X
-        lda #$0062
-        sta.l $7F0000 + ((16*(2 + 3) + 17) * 2),X
-        sep #$30 ; 8b AXY
-        tyx
-    +:
-    lda [mapDoorEast] ; right door
-    beq +
-        rep #$30 ; 16b AXY
-        lda #$002C
-        ldx $10 ; X is now bin offset
-        lda #$4042
-        sta.l $7F0000 + ((16*(2 + 3) + 14) * 2),X
-        lda #$4040
-        sta.l $7F0000 + ((16*(2 + 3) + 15) * 2),X
-        lda #$4062
-        sta.l $7F0000 + ((16*(2 + 3) + 30) * 2),X
-        lda #$4060
-        sta.l $7F0000 + ((16*(2 + 3) + 31) * 2),X
-        sep #$30 ; 8b AXY
-    +:
+    php
+    jsr _UpdateDoorTileNorth
+    jsr _UpdateDoorTileSouth
+    jsr _UpdateDoorTileEast
+    jsr _UpdateDoorTileWest
+    plp
+    ; tax ; X now contains map position
+    ; lda [mapDoorNorth] ; top door
+    ; beq +
+    ;     rep #$30 ; 16b AXY
+    ;     ; TODO: choose door
+    ;     ldx $10 ; X is now bin offset
+    ;     lda #$000C
+    ;     sta.l $7F0000 + ( 7 * 2),X
+    ;     lda #$000E
+    ;     sta.l $7F0000 + ( 8 * 2),X
+    ;     lda #$002C
+    ;     sta.l $7F0000 + (23 * 2),X
+    ;     lda #$002E
+    ;     sta.l $7F0000 + (24 * 2),X
+    ;     sep #$30 ; 8b AXY
+    ;     tyx
+    ; +:
+    ; lda [mapDoorSouth] ; bottom door
+    ; beq +
+    ;     rep #$30 ; 16b AXY
+    ;     ldx $10 ; X is now bin offset
+    ;     lda #$802C
+    ;     sta.l $7F0000 + ((16*(2 + ROOM_TILE_HEIGHT) +  7) * 2),X
+    ;     lda #$802E
+    ;     sta.l $7F0000 + ((16*(2 + ROOM_TILE_HEIGHT) +  8) * 2),X
+    ;     lda #$800C
+    ;     sta.l $7F0000 + ((16*(2 + ROOM_TILE_HEIGHT) + 23) * 2),X
+    ;     lda #$800E
+    ;     sta.l $7F0000 + ((16*(2 + ROOM_TILE_HEIGHT) + 24) * 2),X
+    ;     sep #$30 ; 8b AXY
+    ;     tyx
+    ; +:
+    ; lda [mapDoorWest] ; left door
+    ; beq +
+    ;     rep #$30 ; 16b AXY
+    ;     ldx $10 ; X is now bin offset
+    ;     lda #$0040
+    ;     sta.l $7F0000 + ((16*(2 + 3) +  0) * 2),X
+    ;     lda #$0042
+    ;     sta.l $7F0000 + ((16*(2 + 3) +  1) * 2),X
+    ;     lda #$0060
+    ;     sta.l $7F0000 + ((16*(2 + 3) + 16) * 2),X
+    ;     lda #$0062
+    ;     sta.l $7F0000 + ((16*(2 + 3) + 17) * 2),X
+    ;     sep #$30 ; 8b AXY
+    ;     tyx
+    ; +:
+    ; lda [mapDoorEast] ; right door
+    ; beq +
+    ;     rep #$30 ; 16b AXY
+    ;     lda #$002C
+    ;     ldx $10 ; X is now bin offset
+    ;     lda #$4042
+    ;     sta.l $7F0000 + ((16*(2 + 3) + 14) * 2),X
+    ;     lda #$4040
+    ;     sta.l $7F0000 + ((16*(2 + 3) + 15) * 2),X
+    ;     lda #$4062
+    ;     sta.l $7F0000 + ((16*(2 + 3) + 30) * 2),X
+    ;     lda #$4060
+    ;     sta.l $7F0000 + ((16*(2 + 3) + 31) * 2),X
+    ;     sep #$30 ; 8b AXY
+    ; +:
 ; spawn entities
     rep #$30 ; 16B AXY
     lda $0A
@@ -332,6 +338,194 @@ HandleTileChanged:
     plb
     rts
 
+_UpdateDoorTileNorth:
+    rep #$30
+    ; Init vqueue
+    lda.w vqueueNumMiniOps
+    asl
+    asl
+    tax
+    inc.w vqueueNumMiniOps
+    inc.w vqueueNumMiniOps
+    inc.w vqueueNumMiniOps
+    inc.w vqueueNumMiniOps
+    ; set up tile indices
+    lda.w gameRoomBG2Offset
+    clc
+    adc #7
+    sta.l vqueueMiniOps.1.vramAddr,X
+    inc A
+    sta.l vqueueMiniOps.2.vramAddr,X
+    clc
+    adc #32 - 1
+    sta.l vqueueMiniOps.3.vramAddr,X
+    inc A
+    sta.l vqueueMiniOps.4.vramAddr,X
+    ; set up tile values
+    lda [mapDoorNorth]
+    and #$0F
+    asl
+    asl
+    tay
+    lda.w DoorTileTopperTable_TOP,Y
+    sta.l vqueueMiniOps.1.data,X
+    lda.w DoorTileTopperTable_TOP+2,Y
+    sta.l vqueueMiniOps.2.data,X
+    lda [mapDoorNorth]
+    and #$F0
+    lsr
+    lsr
+    tay
+    lda.w DoorTileBaseTable_TOP,Y
+    sta.l vqueueMiniOps.3.data,X
+    lda.w DoorTileBaseTable_TOP+2,Y
+    sta.l vqueueMiniOps.4.data,X
+    ; Return
+    rts
+
+_UpdateDoorTileSouth:
+    rep #$30
+    ; Init vqueue
+    lda.w vqueueNumMiniOps
+    asl
+    asl
+    tax
+    inc.w vqueueNumMiniOps
+    inc.w vqueueNumMiniOps
+    inc.w vqueueNumMiniOps
+    inc.w vqueueNumMiniOps
+    ; set up tile indices
+    lda.w gameRoomBG2Offset
+    clc
+    adc #10*32+7
+    sta.l vqueueMiniOps.1.vramAddr,X
+    inc A
+    sta.l vqueueMiniOps.2.vramAddr,X
+    clc
+    adc #32 - 1
+    sta.l vqueueMiniOps.3.vramAddr,X
+    inc A
+    sta.l vqueueMiniOps.4.vramAddr,X
+    ; set up tile values
+    lda [mapDoorSouth]
+    and #$0F
+    asl
+    asl
+    tay
+    lda.w DoorTileTopperTable_TOP,Y
+    ora #$8000
+    sta.l vqueueMiniOps.3.data,X
+    lda.w DoorTileTopperTable_TOP+2,Y
+    ora #$8000
+    sta.l vqueueMiniOps.4.data,X
+    lda [mapDoorSouth]
+    and #$F0
+    lsr
+    lsr
+    tay
+    lda.w DoorTileBaseTable_TOP,Y
+    ora #$8000
+    sta.l vqueueMiniOps.1.data,X
+    lda.w DoorTileBaseTable_TOP+2,Y
+    ora #$8000
+    sta.l vqueueMiniOps.2.data,X
+    ; Return
+    rts
+
+_UpdateDoorTileWest:
+    rep #$30
+    ; Init vqueue
+    lda.w vqueueNumMiniOps
+    asl
+    asl
+    tax
+    inc.w vqueueNumMiniOps
+    inc.w vqueueNumMiniOps
+    inc.w vqueueNumMiniOps
+    inc.w vqueueNumMiniOps
+    ; set up tile indices
+    lda.w gameRoomBG2Offset
+    clc
+    adc #5*32
+    sta.l vqueueMiniOps.1.vramAddr,X
+    inc A
+    sta.l vqueueMiniOps.2.vramAddr,X
+    clc
+    adc #32 - 1
+    sta.l vqueueMiniOps.3.vramAddr,X
+    inc A
+    sta.l vqueueMiniOps.4.vramAddr,X
+    ; set up tile values
+    lda [mapDoorWest]
+    and #$0F
+    asl
+    asl
+    tay
+    lda.w DoorTileTopperTable_LEFT,Y
+    sta.l vqueueMiniOps.1.data,X
+    lda.w DoorTileTopperTable_LEFT+2,Y
+    sta.l vqueueMiniOps.3.data,X
+    lda [mapDoorWest]
+    and #$F0
+    lsr
+    lsr
+    tay
+    lda.w DoorTileBaseTable_LEFT,Y
+    sta.l vqueueMiniOps.2.data,X
+    lda.w DoorTileBaseTable_LEFT+2,Y
+    sta.l vqueueMiniOps.4.data,X
+    ; Return
+    rts
+
+_UpdateDoorTileEast:
+    rep #$30
+    ; Init vqueue
+    lda.w vqueueNumMiniOps
+    asl
+    asl
+    tax
+    inc.w vqueueNumMiniOps
+    inc.w vqueueNumMiniOps
+    inc.w vqueueNumMiniOps
+    inc.w vqueueNumMiniOps
+    ; set up tile indices
+    lda.w gameRoomBG2Offset
+    clc
+    adc #5*32+14
+    sta.l vqueueMiniOps.1.vramAddr,X
+    inc A
+    sta.l vqueueMiniOps.2.vramAddr,X
+    clc
+    adc #32 - 1
+    sta.l vqueueMiniOps.3.vramAddr,X
+    inc A
+    sta.l vqueueMiniOps.4.vramAddr,X
+    ; set up tile values
+    lda [mapDoorEast]
+    and #$0F
+    asl
+    asl
+    tay
+    lda.w DoorTileTopperTable_LEFT,Y
+    eor #$4000
+    sta.l vqueueMiniOps.2.data,X
+    lda.w DoorTileTopperTable_LEFT+2,Y
+    eor #$4000
+    sta.l vqueueMiniOps.4.data,X
+    lda [mapDoorEast]
+    and #$F0
+    lsr
+    lsr
+    tay
+    lda.w DoorTileBaseTable_LEFT,Y
+    eor #$4000
+    sta.l vqueueMiniOps.1.data,X
+    lda.w DoorTileBaseTable_LEFT+2,Y
+    eor #$4000
+    sta.l vqueueMiniOps.3.data,X
+    ; Return
+    rts
+
 .ENDS
 
 .BANK $00 SLOT "ROM"
@@ -399,5 +593,51 @@ EmptyRoomTiles:
 .dw $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000
 .dw $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000
 .dw $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000
+
+; INDEXED BY method
+; 4B per item
+; (doortype & F0) >> 4
+DoorTileBaseTable_TOP:
+    .dw deft($26, 0), deft($26, 0) ; 0 wall
+    .dw deft($88, 0), deft($8A, 0) ; 1 key
+    .dw deft($26, 0), deft($26, 0) ; 2 wall
+    .dw deft($26, 0), deft($26, 0) ; 3 wall
+    .dw deft($68, 0), deft($6A, 0) ; 4 room finish
+    .dw deft($26, 0), deft($26, 0) ; 5 wall
+    .dw deft($26, 0), deft($26, 0) ; 6 wall
+    .dw deft($26, 0), deft($26, 0) ; 7 wall
+    .REPT 8
+        .dw deft($48, 0), deft($4A, 0) ; 8 open
+    .ENDR
+
+DoorTileBaseTable_LEFT:
+    .dw deft($06, 0), deft($06, 0) ; 0 wall
+    .dw deft($CC, 0), deft($EC, 0) ; 1 key
+    .dw deft($06, 0), deft($06, 0) ; 2 wall
+    .dw deft($06, 0), deft($06, 0) ; 3 wall
+    .dw deft($CA, 0), deft($EA, 0) ; 4 room finish
+    .dw deft($06, 0), deft($06, 0) ; 5 wall
+    .dw deft($06, 0), deft($06, 0) ; 6 wall
+    .dw deft($06, 0), deft($06, 0) ; 7 wall
+    .REPT 8
+        .dw deft($C8, 0), deft($E8, 0) ; 8 open
+    .ENDR
+
+; INDEX BY type
+; 4B per item
+; doortype & 0xF
+DoorTileTopperTable_TOP:
+    .dw deft($04, 0), deft($04, 0) ; 0 wall
+    .dw deft($4C, 0), deft($4E, 0) ; 1 normal
+    .dw deft($6C, 0), deft($6E, 0) ; 2 item
+    .dw deft($8C, 0), deft($8E, 0) ; 3 shop
+    .dw deft($AC, 0), deft($AE, 0) ; 4 boss
+
+DoorTileTopperTable_LEFT:
+    .dw deft($22, 0), deft($22, 0) ; 0 wall
+    .dw deft($C0, 0), deft($E0, 0) ; 1 normal
+    .dw deft($C2, 0), deft($E2, 0) ; 2 item
+    .dw deft($C4, 0), deft($E4, 0) ; 3 shop
+    .dw deft($C6, 0), deft($E6, 0) ; 4 boss
 
 .ENDS

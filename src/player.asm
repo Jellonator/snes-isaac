@@ -65,7 +65,7 @@ _PlayerRenderSingleHeart:
     ora.b $00 ; X|Y
     sta.b $00
     clc
-    adc #BG1_TILE_BASE_ADDR + 6
+    adc #BG1_TILE_BASE_ADDR + 8 + 64
     sta.l vqueueMiniOps.1.vramAddr,X
     ; now, determine character
     lda.w playerData.healthSlots,Y

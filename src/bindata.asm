@@ -19,24 +19,44 @@ EmptySpriteData:
         .db %00000000
     .ENDR
 DefaultUiData:
+    .REPT 32
+        .dw $0000
+    .ENDR
     .dw $0000 $2C02 $2C03 $2C03 $6C02
-    .dw $2C20
-    .REPT 26
+    .REPT 8
+        .dw 0
+    .ENDR
+    .dw 0, 0, 0
+    .REPT 16
         .dw $0000
     .ENDR
     .dw $0000 $2C12 $0000 $0000 $6C12
-    .dw $2C21
-    .REPT 26
+    .dw deft($01,3) | T_HIGHP, deft($70, 4) | T_HIGHP, deft($70, 4) | T_HIGHP
+    .REPT 24
         .dw $0000
     .ENDR
     .dw $0000 $2C12 $0000 $0000 $6C12
-    .dw $2C22
-    .REPT 26
+    .dw deft($11,4) | T_HIGHP, deft($70, 4) | T_HIGHP, deft($70, 4) | T_HIGHP
+    .REPT 24
         .dw $0000
     .ENDR
     .dw $0000 $AC02 $AC03 $AC03 $EC02
+    .dw deft($10,2) | T_HIGHP, deft($70, 4) | T_HIGHP, deft($70, 4) | T_HIGHP
+    .REPT 24
+        .dw $0000
+    .ENDR
     .dw $0000
-    .REPT 26
+    .dw $0000
+    .dw $2C16
+    .REPT 31
+        .dw $0000
+    .ENDR
+    .dw $2C25
+    .REPT 31
+        .dw $0000
+    .ENDR
+    .dw $2C34
+    .REPT 29
         .dw $0000
     .ENDR
     @end:

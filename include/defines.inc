@@ -121,6 +121,7 @@
 ; Opening a door should be ORA 1, closing should be AND ~1
 .DEFINE DOOR_MASK_IS_CLOSED $80
 .DEFINE DOOR_MASK_OPEN_METHOD $70
+.DEFINE DOOR_MASK_STATUS $F0
 .DEFINE DOOR_MASK_TYPE $0F
 
 .DEFINE DOOR_OPEN   $80
@@ -135,6 +136,7 @@
 .DEFINE DOOR_TYPE_SECRET   $06
 .DEFINE DOOR_TYPE_CURSE    $07
 
+.DEFINE DOOR_METHOD_NEVER       $00 ; DEFAULT - door can never open
 .DEFINE DOOR_METHOD_KEY         $10
 .DEFINE DOOR_METHOD_BOMB        $20
 .DEFINE DOOR_METHOD_COIN        $30
@@ -220,6 +222,16 @@
 ; Entity Signals: Used to tell an entity to respond to some form of interaction
 ; Signaled when an entity is killed (or otherwise needs to handle its own removal)
 .DEFINE ENTITY_SIGNAL_KILL $01
+
+; Entity spawn groups: used to decide which entities to spawn
+; Entities that should always be spawned every time the room is entered
+.DEFINE ENTITY_SPAWNGROUP_ALWAYS $03
+; Entities that should be spawned when entering non-completed rooms
+.DEFINE ENTITY_SPAWNGROUP_ENEMY $02
+; Entities that should only spawn the first time you enter a room
+.DEFINE ENTITY_SPAWNGROUP_ONCE $01
+; Don't spawn these; here for completion's sake
+.DEFINE ENTITY_SPAWNGROUP_NEVER $00
 
 ; Pathfinding data
 

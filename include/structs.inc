@@ -145,7 +145,8 @@
     init_func dw
     tick_func dw
     free_func dw
-    padding dw
+    spawngroup db
+    padding db
 .ENDST
 
 ; Custom entity data

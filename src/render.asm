@@ -66,6 +66,7 @@ VBlank2:
     lda #%00001111
     sta INIDISP
     jsr ReadInput
+    stz.w is_game_update_running
     cli ; enable interrupts
     rti
 
@@ -122,7 +123,6 @@ CopyPalette:
     sta $4301 ; Write to CGRAM
     lda #$01
     sta $420B ; Begin transfer
-    stz.w is_game_update_running
     rtl
 
 ; Copy sprite data to VRAM

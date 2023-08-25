@@ -312,7 +312,7 @@ _SetupRoomX:
             sta TempDoorMask
             ; setup door to right
             ; TODO: improve algorithm
-            lda #DOOR_TYPE_NORMAL | DOOR_OPEN
+            lda #DOOR_TYPE_NORMAL | DOOR_OPEN | DOOR_METHOD_FINISH_ROOM
             sta.w loword(mapDoorHorizontal),Y
     +:
     lda $02,s
@@ -336,7 +336,7 @@ _SetupRoomX:
             sta TempDoorMask
             ; setup door to bottom
             ; TODO: improve algorithm
-            lda #DOOR_TYPE_NORMAL | DOOR_OPEN
+            lda #DOOR_TYPE_NORMAL | DOOR_OPEN | DOOR_METHOD_FINISH_ROOM
             sta.w loword(mapDoorVertical),Y
     +:
     lda $01,s

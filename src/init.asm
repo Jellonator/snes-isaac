@@ -397,6 +397,7 @@ tile_data_loop:
     stz gameRoomScrollX
     lda #-32
     sta gameRoomScrollY
+    stz.w is_game_update_running
     ; clear entity table
     jsl EntityInfoInitialize
     ; clear pathfinding data

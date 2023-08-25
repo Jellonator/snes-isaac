@@ -391,7 +391,11 @@
 .FUNCTION log2(x) log(x) / log(2.0)
 
 ; define tile
-.FUNCTION deft(chr,p) (chr | (p << 10))
+.FUNCTION deft(chr,pal) (chr | (pal << 10))
+.DEFINE T_HIGHP 0x2000
+.DEFINE T_FLIPH 0x4000
+.DEFINE T_FLIPV 0x8000
+.DEFINE T_FLIPVH 0xC000
 
 .MACRO .CheapModA8 ARGS num
     .IF num == 1

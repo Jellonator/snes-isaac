@@ -4,9 +4,17 @@
 ; $40 should mostly be used for commonly used variables,
 ; or long pointers for use with [DIRECT],Y addressing
 .ENUM $40
+    ; Slot for the currently loaded room
     currentRoomSlot db
+    ; map position of the currently loaded room
+    loadedRoomIndex INSTANCEOF maptilepos_t
+    ; Definition for current room
+    currentRoomDefinition dw
+    ; quick-read table for the current room's tile types
     currentRoomTileTypeTableAddress dl
+    ; quick-read table for the current room's tile variants
     currentRoomTileVariantTableAddress dl
+    ; ... used for a variety of purposes I guess. Just treat them as temp vars
     currentConsideredTileX dw
     currentConsideredTileY dw
 ; long pointers to current room's doors
@@ -18,6 +26,8 @@
     rawMemorySizeZP db
 .ENDE
 
+.FUNCTION MAP_DOOR_MEM_LOC(i) (mapDoorNorth + (i * 3))
+
 ; Bank used for somewhat commonly used variables that need to be in bank 0
 ; (or which are accessed so much, that accessing via .w is much faster)
 .ENUM $0100
@@ -27,7 +37,6 @@
     joy1held dw
 ; flags
     is_game_update_running dw
-    last_used_sprite db
 ; RNG state
     ; seed used for entire game
     gameSeed INSTANCEOF rng_t 
@@ -36,13 +45,14 @@
     ; seed used to generate stage
     stageSeed INSTANCEOF rng_t
 ; map data
-    ; set to $FF to update entire map
+    ; set to $FF to update entire map.
     numTilesToUpdate db
+    ; number of room slots currently in use
     numUsedMapSlots db
+    ; type of each map tile (by location). See the 'ROOMTYPE' enum
     mapTileTypeTable INSTANCEOF byte_t MAP_MAX_SIZE
+    ; flags for each map tile (by location). See the 'MAPTILE' enum
     mapTileFlagsTable INSTANCEOF byte_t MAP_MAX_SIZE
-    loadedMapSlot db
-    loadedRoomIndex INSTANCEOF maptilepos_t
 ; player ext data
     playerData INSTANCEOF playerextdata_t
 ; tear/projectile data
@@ -83,10 +93,11 @@
     ; Extraneous entity data (only for certain entity types)
     _ext_entity_custom INSTANCEOF entitycustomdatatableentry_t 16
     _ext_entity_statfx INSTANCEOF entitystatuseffectdata_t 2
-    _bleh ds 11
-; spatial collision data (for entities)
+; Common entity data
+    currentRoomEnemyCount dw
+    ; spatial collision data (for entities)
     spatial_partition INSTANCEOF spatialpartitionlayer_t SPATIAL_LAYER_COUNT
-; pathfinding data
+    ; pathfinding data
     pathfind_player_data ds 256
 ; end
     rawMemorySizeShared db
@@ -131,26 +142,31 @@
 ; Should contain data that is either large or not often used.
 ; For more efficient bank usage, this bank is mostly used for bank/game data
 .ENUM $7E2000
-    ; map data
+; map data
+    ; maps [maptilepos_t] -> [room slot]
     mapTileSlotTable INSTANCEOF byte_t MAP_MAX_SIZE
+    ; full info for each room
     roomSlotTiles INSTANCEOF roominfo_t MAX_MAP_SLOTS
+    ; door mask of each room, determines how it connects to nearby rooms
     roomSlotDoorMask ds MAX_MAP_SLOTS
+    ; maps [room slot] -> [maptilepos_t]
     roomSlotMapPos INSTANCEOF maptilepos_t MAX_MAP_SLOTS
+    ; room type (by slot). See the 'ROOMTYPE' enum
     roomSlotRoomType ds MAX_MAP_SLOTS
-    tilesToUpdate INSTANCEOF byte_t MAP_MAX_SIZE
+    ; room door data
+    ; mapDoor variables are a bit larger than necessary for efficiency's sake
     _mapDoorHorizontalEmptyBuf ds MAP_MAX_HEIGHT
     mapDoorHorizontal ds MAP_MAX_SIZE ; For index i: Connects room i with room i+1
     _mapDoorVerticalEmptyBuf ds MAP_MAX_WIDTH
     mapDoorVertical ds MAP_MAX_SIZE ; For index i: Connects room i with room i+MAP_MAX_WIDTH
-    ; mapDoor variables are a bit larger than necessary for efficiency's sake
-    ; sprite allocation data
+; sprite allocation data
     spriteTableKey dsw SPRITE_TABLE_TOTAL_SIZE
     spriteTablePtr dsw SPRITE_TABLE_TOTAL_SIZE
     spriteTableValue INSTANCEOF spritetab_t SPRITE_TABLE_TOTAL_SIZE
     spriteQueueTabNext ds SPRITE_QUEUE_SIZE+1
-    ; reserve tempdata buffer, just to make sure it has space
+; reserve tempdata buffer, just to make sure it has space
     _res_tempData ds 256 ; Temp data that can be used for whatever purpose
-    ; end
+; end
     rawMemorySize7E db
 .ENDE
 
@@ -161,11 +177,14 @@
 ; Perhaps will be used for decompressed animated sprites?
 .ENUM $7F0000
 ; VQueue data
+    ; ops + miniops: $087C
     vqueueOps INSTANCEOF vqueueop_t VQUEUE_MAX_SIZE
     vqueueMiniOps INSTANCEOF vqueueminiop_t 255
-    ; 16K of potential DMA data. We can only transfer ~5K per frame,
+    ; at least 4K of potential DMA data. We can only transfer ~5K per frame ($1400),
     ; so if we somehow overreach this, we've messed something up bad.
-    vqueueBinData INSTANCEOF byte_t $4000
+    ; Grabbing vqueue buffer space should be rare anyways.
+    ; $2000 - $087C = $1784
+    vqueueBinData INSTANCEOF byte_t 1 ($2000 - (255 * _sizeof_vqueueminiop_t) - (VQUEUE_MAX_SIZE * _sizeof_vqueueop_t))
 ; end
     rawMemorySize7F db
 .ENDE

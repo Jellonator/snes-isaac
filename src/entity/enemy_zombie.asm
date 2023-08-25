@@ -9,6 +9,7 @@
 entity_zombie_init:
     .ACCU 16
     .INDEX 16
+    inc.w currentRoomEnemyCount
     ; default info
     tya
     sta.w entity_timer,Y
@@ -216,6 +217,7 @@ entity_zombie_tick:
 entity_zombie_free:
     .ACCU 16
     .INDEX 16
+    dec.w currentRoomEnemyCount
     lda #0
     sta.w entity_mask,Y
     lda.w _zombie_gfxptr.1,Y

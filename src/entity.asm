@@ -234,17 +234,20 @@ EntityDefinitions:
         init_func: .dw _e_null
         tick_func: .dw _e_null
         free_func: .dw _e_null
+        spawngroup: .db ENTITY_SPAWNGROUP_NEVER
     .ENDST
     .DSTRUCT @player INSTANCEOF entitytypeinfo_t VALUES
         init_func: .dw _e_null
         tick_func: .dw _e_null
         free_func: .dw _e_null
+        spawngroup: .db ENTITY_SPAWNGROUP_NEVER
     .ENDST
     .REPT (128 - 1 - 1) INDEX i
         .DSTRUCT @null_pad{i+1} INSTANCEOF entitytypeinfo_t VALUES
             init_func: .dw _e_null
             tick_func: .dw _e_null
             free_func: .dw _e_null
+            spawngroup: .db ENTITY_SPAWNGROUP_NEVER
         .ENDST
     .ENDR
     ; 128 : Attack fly
@@ -252,12 +255,14 @@ EntityDefinitions:
         init_func: .dw entity_basic_fly_init
         tick_func: .dw entity_basic_fly_tick
         free_func: .dw entity_basic_fly_free
+        spawngroup: .db ENTITY_SPAWNGROUP_ENEMY
     .ENDST
     ; 129 : zombie
     .DSTRUCT @enemy_zombie INSTANCEOF entitytypeinfo_t VALUES
         init_func: .dw entity_zombie_init
         tick_func: .dw entity_zombie_tick
         free_func: .dw entity_zombie_free
+        spawngroup: .db ENTITY_SPAWNGROUP_ENEMY
     .ENDST
 
 .ENDS

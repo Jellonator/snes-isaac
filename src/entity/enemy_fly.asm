@@ -9,6 +9,7 @@
 entity_basic_fly_init:
     .ACCU 16
     .INDEX 16
+    inc.w currentRoomEnemyCount
     ; default info
     tya
     sta.w entity_timer,Y
@@ -220,6 +221,7 @@ entity_basic_fly_tick:
 entity_basic_fly_free:
     .ACCU 16
     .INDEX 16
+    dec.w currentRoomEnemyCount
     lda #0
     sta.w entity_mask,Y
     lda.w _fly_fgxptr.1,Y

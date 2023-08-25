@@ -60,7 +60,7 @@ InitializeRoomSlot:
 LoadRoomSlotIntoLevel:
     ; first, clear existing level
     jsl entity_free_all
-    sep #$20 ; 8 bit A
+    sep #$30 ; 8 bit AXY
     ; Turn slot index into slot address in X
     lda #lobyte(_sizeof_roominfo_t)
     sta MULTS_A
@@ -69,12 +69,11 @@ LoadRoomSlotIntoLevel:
     lda $04,s
     sta currentRoomSlot
     sta MULTS_B
-    sta.w loadedMapSlot
     rep #$30 ; 16 bit AXY
     lda MULTS_RESULT_LOW
     tax
     lda.l roomSlotTiles.1.roomDefinition,X
-    sta.b $0A ; $0A: roomDefinition
+    sta.b currentRoomDefinition ; $0A: roomDefinition
     txa
     clc
     adc #loword(roomSlotTiles) + roominfo_t.tileTypeTable
@@ -194,106 +193,7 @@ LoadRoomSlotIntoLevel:
     jsr _UpdateDoorTileEast
     jsr _UpdateDoorTileWest
     plp
-    ; tax ; X now contains map position
-    ; lda [mapDoorNorth] ; top door
-    ; beq +
-    ;     rep #$30 ; 16b AXY
-    ;     ; TODO: choose door
-    ;     ldx $10 ; X is now bin offset
-    ;     lda #$000C
-    ;     sta.l $7F0000 + ( 7 * 2),X
-    ;     lda #$000E
-    ;     sta.l $7F0000 + ( 8 * 2),X
-    ;     lda #$002C
-    ;     sta.l $7F0000 + (23 * 2),X
-    ;     lda #$002E
-    ;     sta.l $7F0000 + (24 * 2),X
-    ;     sep #$30 ; 8b AXY
-    ;     tyx
-    ; +:
-    ; lda [mapDoorSouth] ; bottom door
-    ; beq +
-    ;     rep #$30 ; 16b AXY
-    ;     ldx $10 ; X is now bin offset
-    ;     lda #$802C
-    ;     sta.l $7F0000 + ((16*(2 + ROOM_TILE_HEIGHT) +  7) * 2),X
-    ;     lda #$802E
-    ;     sta.l $7F0000 + ((16*(2 + ROOM_TILE_HEIGHT) +  8) * 2),X
-    ;     lda #$800C
-    ;     sta.l $7F0000 + ((16*(2 + ROOM_TILE_HEIGHT) + 23) * 2),X
-    ;     lda #$800E
-    ;     sta.l $7F0000 + ((16*(2 + ROOM_TILE_HEIGHT) + 24) * 2),X
-    ;     sep #$30 ; 8b AXY
-    ;     tyx
-    ; +:
-    ; lda [mapDoorWest] ; left door
-    ; beq +
-    ;     rep #$30 ; 16b AXY
-    ;     ldx $10 ; X is now bin offset
-    ;     lda #$0040
-    ;     sta.l $7F0000 + ((16*(2 + 3) +  0) * 2),X
-    ;     lda #$0042
-    ;     sta.l $7F0000 + ((16*(2 + 3) +  1) * 2),X
-    ;     lda #$0060
-    ;     sta.l $7F0000 + ((16*(2 + 3) + 16) * 2),X
-    ;     lda #$0062
-    ;     sta.l $7F0000 + ((16*(2 + 3) + 17) * 2),X
-    ;     sep #$30 ; 8b AXY
-    ;     tyx
-    ; +:
-    ; lda [mapDoorEast] ; right door
-    ; beq +
-    ;     rep #$30 ; 16b AXY
-    ;     lda #$002C
-    ;     ldx $10 ; X is now bin offset
-    ;     lda #$4042
-    ;     sta.l $7F0000 + ((16*(2 + 3) + 14) * 2),X
-    ;     lda #$4040
-    ;     sta.l $7F0000 + ((16*(2 + 3) + 15) * 2),X
-    ;     lda #$4062
-    ;     sta.l $7F0000 + ((16*(2 + 3) + 30) * 2),X
-    ;     lda #$4060
-    ;     sta.l $7F0000 + ((16*(2 + 3) + 31) * 2),X
-    ;     sep #$30 ; 8b AXY
-    ; +:
-; spawn entities
-    rep #$30 ; 16B AXY
-    lda $0A
-    tax
-    lda.l $020000 + roomdefinition_t.numObjects,X
-    and #$00FF
-    tay ; Y = num entities
-    beq @end
-    txa
-    clc
-    adc #_sizeof_roomdefinition_t
-    tax
-@loop:
-    lda $020000 + objectdef_t.objectType,X
-    phy
-    phx
-    jsl entity_create
-    rep #$30
-    plx
-    sep #$20 ; 8B A
-    lda $020000 + objectdef_t.x,X ; X coord
-    clc
-    adc #ROOM_LEFT
-    sta.w entity_posx+1,Y
-    lda $020000 + objectdef_t.y,X ; Y coord
-    clc
-    adc #ROOM_TOP
-    sta.w entity_posy+1,Y
-    rep #$20 ; 16B A
-    ply
-    dey
-    beq @end
-    inx
-    inx
-    inx
-    inx
-    bra @loop
-@end:
+    jsl Room_Init
     rtl
 
 ; Update the VRAM tile in currentConsideredTile
@@ -525,6 +425,13 @@ _UpdateDoorTileEast:
     sta.l vqueueMiniOps.3.data,X
     ; Return
     rts
+
+updateAllDoorsInRoom:
+    jsr _UpdateDoorTileNorth
+    jsr _UpdateDoorTileSouth
+    jsr _UpdateDoorTileEast
+    jsr _UpdateDoorTileWest
+    rtl
 
 .ENDS
 

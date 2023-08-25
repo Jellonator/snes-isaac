@@ -8,22 +8,23 @@ AFLAGS   := -I include
 ALDFLAGS := -S -v
 PY       := python3
 
-SOURCES  := main.asm\
+SOURCES  := bindata.asm\
+			entity.asm\
+			entity/enemy_fly.asm\
+			entity/enemy_zombie.asm\
 			init.asm\
-			player.asm\
 			layout.asm\
+			main.asm\
+			map.asm\
 			mapgenerator.asm\
+			player.asm\
+			projectile.asm\
 			render.asm\
 			rng.asm\
-			map.asm\
-			bindata.asm\
-			vqueue.asm\
-			spriteslot.asm\
+			room.asm\
 			spritedefs.asm\
-			entity.asm\
-			projectile.asm\
-			entity/enemy_fly.asm\
-			entity/enemy_zombie.asm
+			spriteslot.asm\
+			vqueue.asm
 
 OBJECTS  := $(SOURCES:%.asm=$(OBJDIR)/%.obj)
 PALETTES := $(wildcard assets/palettes/*.hex)

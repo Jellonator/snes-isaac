@@ -27,9 +27,9 @@ UpdateLoop:
     jsr PlayerUpdate
     jsl player_update_pathfinding_data
     jsl projectile_update_loop
-    ; jsr UpdateTears
-    jsr UpdateRest
     jsl entity_tick_all
+    jsl Room_Tick
+    jsr UpdateRest
     ; Finally, check if room should be changed
     jsr PlayerCheckEnterRoom
     ; End update code

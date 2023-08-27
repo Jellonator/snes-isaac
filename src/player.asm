@@ -183,7 +183,34 @@ PlayerUpdate:
     bpl +
         stz.w playerData.invuln_timer
     +:
-
+; remove from partition
+    sep #$30
+    lda.w player_box_y1
+    and #$F0
+    sta.b $00
+    lda.w player_box_x1
+    lsr
+    lsr
+    lsr
+    lsr
+    ora.b $00
+    sta.b $00
+    .REPT 2 INDEX iy
+        tax
+        .REPT 2 INDEX ix
+            .IF ix > 0
+                inx
+            .ENDIF
+            lda #ENTITY_INDEX_PLAYER
+            .EraseHitboxLite
+        .ENDR
+        .IF iy < 1
+            lda.b $00
+            clc
+            adc #16
+            sta.b $00
+        .ENDIF
+    .ENDR
 ; movement
     rep #$30 ; 16 bit AXY
     lda.w playerData.stat_speed
@@ -367,6 +394,47 @@ PlayerUpdate:
     ; move
     jsr PlayerMoveHorizontal
     jsr PlayerMoveVertical
+; setup partition
+    sep #$30
+    ; add to partition
+    lda.w player_box_y1
+    and #$F0
+    sta.b $00
+    lda.w player_box_x1
+    lsr
+    lsr
+    lsr
+    lsr
+    ora.b $00
+    sta.b $00
+    .REPT 2 INDEX iy
+        tax
+        lda #ENTITY_INDEX_PLAYER
+        .REPT 2 INDEX ix
+            .IF ix > 0
+                inx
+            .ENDIF
+            .InsertHitboxLite
+        .ENDR
+        .IF iy < 1
+            lda.b $00
+            clc
+            adc #16
+            sta.b $00
+        .ENDIF
+    .ENDR
+    ; set box pos
+    lda.w player_box_x1
+    clc
+    adc #16
+    sta.w player_box_x2
+    lda.w player_box_y1
+    clc
+    adc #16
+    sta.w player_box_y2
+    ; set flags/mask
+    lda #ENTITY_MASK_PROJECTILE
+    sta.w player_mask
 ; handle player shoot
     rep #$30 ; 16b AXY
     lda.w playerData.tear_timer
@@ -412,14 +480,27 @@ PlayerUpdate:
 PlayerShootTear:
     rep #$30 ; 16 bit AXY
     jsl projectile_slot_get
+; set player info
+    stz.w playerData.tear_timer
     lda.w playerData.flags
     eor #PLAYER_FLAG_EYE
     sta.w playerData.flags
+; set base projectile info
+    ; life
     lda #120
     sta.w projectile_lifetime,X
+    ; size
+    stz.w projectile_flags,X
+    sep #$20
     stz.w projectile_size,X
-    lda #$0000
-    sta.w playerData.tear_timer
+    ; type
+    lda #PROJECTILE_TYPE_PLAYER_BASIC
+    sta.w projectile_type,X
+    rep #$20
+    ; dmg
+    lda #3
+    sta.w projectile_damage,X
+; check direction
     lda.w joy1held
     bit #JOY_Y
     bne @tear_left

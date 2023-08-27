@@ -99,6 +99,12 @@ _projectile_update_sprite:
     sta.w objectData.1.tileid,Y
     lda #%00101010
     sta.w objectData.1.flags,Y
+    lda.w projectile_type,X
+    bpl +
+        ; different gfx for enemy projectile
+        lda #%00101110
+        sta.w objectData.1.flags,Y
+    +:
     iny
     iny
     iny
@@ -206,8 +212,6 @@ projectile_update_loop:
     phx
     phy
     sep #$30
-    lda #ENTITY_MASK_TEAR
-    sta.b $00
     lda.w projectile_posx+1,X
     clc
     adc #4
@@ -215,7 +219,18 @@ projectile_update_loop:
     lda.w projectile_posy+1,X
     clc
     adc #4
+    sec
+    sbc $08
     sta.b $02
+    ; set detection mask
+    lda #ENTITY_MASK_TEAR
+    sta.b $00
+    lda.w projectile_type,X
+    bpl +
+        ; enemy projectile: change mask
+        lda #ENTITY_MASK_PROJECTILE
+        sta.b $00
+    +:
     jsl GetEntityCollisionAt
     cpy #0
     beq @skipCollisionHandler

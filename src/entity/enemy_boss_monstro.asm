@@ -19,6 +19,8 @@ entity_boss_monstro_init:
     lda #0
     sta.w entity_signal,Y
     sta.w entity_mask,Y
+    lda #10
+    sta.w entity_timer,Y
     phy
     .REPT 3 INDEX iy
         .REPT 4 INDEX ix
@@ -45,7 +47,7 @@ entity_boss_monstro_init:
 entity_boss_monstro_tick:
     .ACCU 16
     .INDEX 16
-    sty.b $00
+    sty.b $08
 ; Remove col
     sep #$30 ; 8B AXY
     .EntityRemoveHitbox (MONSTRO_WIDTH+15)/16,(MONSTRO_HEIGHT+15)/16
@@ -123,7 +125,7 @@ entity_boss_monstro_tick:
         inc.w objectIndex
         inc.w objectIndex
     .ENDR
-    ldy $00
+    ldy $08
 ; add to partition
     sep #$30
     .EntityAddHitbox (MONSTRO_WIDTH+15)/16,(MONSTRO_HEIGHT+15)/16
@@ -141,6 +143,44 @@ entity_boss_monstro_tick:
     sta.w entity_mask,Y
     lda #0
     sta.w entity_signal,Y
+; fire projectiles
+    lda.w entity_timer,Y
+    dec A
+    sta.w entity_timer,Y
+    bne @no_projectile
+        rep #$30 ; 16 bit AXY
+        jsl projectile_slot_get
+    ; set base projectile info
+        ; life
+        lda #120
+        sta.w projectile_lifetime,X
+        ; size
+        stz.w projectile_flags,X
+        sep #$20
+        stz.w projectile_size,X
+        ; type
+        lda #PROJECTILE_TYPE_ENEMY_BASIC
+        sta.w projectile_type,X
+        rep #$20
+        ; position
+        ldy $08
+        lda.w entity_posx,Y
+        sta.w projectile_posx,X
+        lda.w entity_posy,Y
+        clc
+        adc #16 * 256
+        sta.w projectile_posy,X
+        lda #$100
+        sta.w projectile_velocx,X
+        lda #0
+        sta.w projectile_velocy,X
+        ; dmg
+        lda #100
+        sta.w projectile_damage,X
+    ; set timer
+        lda #10
+        sta.w entity_timer,Y
+@no_projectile:
     rts
 
 entity_boss_monstro_free:

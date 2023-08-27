@@ -12,6 +12,7 @@ SOURCES  := bindata.asm\
 			entity.asm\
 			entity/enemy_fly.asm\
 			entity/enemy_zombie.asm\
+			entity/enemy_boss_monstro.asm\
 			init.asm\
 			layout.asm\
 			main.asm\

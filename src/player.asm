@@ -296,7 +296,7 @@ PlayerUpdate:
     ldy #(ROOM_RIGHT - 12)*256 - 1
     stx $00 ; left
     sty $02 ; right
-    lda player_posy
+    lda.w player_posy
     cmp #(ROOM_CENTER_Y - 8 - ROOM_DOOR_RADIUS)*256
     bmi ++
     cmp #(ROOM_CENTER_Y - 8 + ROOM_DOOR_RADIUS)*256
@@ -319,7 +319,7 @@ PlayerUpdate:
     ldy #(ROOM_BOTTOM - 12)*256
     stx $04 ; top
     sty $06 ; bottom
-    lda player_posx
+    lda.w player_posx
     cmp #(ROOM_CENTER_X - 8 - ROOM_DOOR_RADIUS)*256
     bmi ++
     cmp #(ROOM_CENTER_X - 8 + ROOM_DOOR_RADIUS)*256
@@ -338,7 +338,7 @@ PlayerUpdate:
     rep #$20
 ++:
 
-    lda player_posx
+    lda.w player_posx
     cmp #(ROOM_LEFT - 4)*256
     bcc +
     cmp #(ROOM_RIGHT - 12 + 1)*256
@@ -351,7 +351,7 @@ PlayerUpdate:
     sty $06 ; bottom
 ++:
 
-    lda player_posy
+    lda.w player_posy
     cmp #(ROOM_TOP - 4)*256
     bcc +
     cmp #(ROOM_BOTTOM - 12 + 1)*256
@@ -541,17 +541,17 @@ PlayerMoveLeft:
     .PositionToIndex_A
     sta TempTileX
 ; Get Tile Y (top)
-    lda player_posy
+    lda.w player_posy
     clc
     adc #(PLAYER_HITBOX_TOP - ROOM_TOP)*256
     .PositionToIndex_A
-    sta TempTileY
+    sta.b TempTileY
 ; Get Tile Y (bottom)
-    lda player_posy
+    lda.w player_posy
     clc
     adc #(PLAYER_HITBOX_BOTTOM - ROOM_TOP)*256
     .PositionToIndex_A
-    sta TempTileY2
+    sta.b TempTileY2
 ; Get Tile Index
     .BranchIfTileXYOOB TempTileX, TempTileY, @end
     .TileXYToIndexA TempTileX, TempTileY, TempTemp1
@@ -584,19 +584,19 @@ PlayerMoveRight:
     clc
     adc #(PLAYER_HITBOX_RIGHT - ROOM_LEFT)*256-1
     .PositionToIndex_A
-    sta TempTileX
+    sta.b TempTileX
 ; Get Tile Y (top)
-    lda player_posy
+    lda.w player_posy
     clc
     adc #(PLAYER_HITBOX_TOP - ROOM_TOP)*256
     .PositionToIndex_A
-    sta TempTileY
+    sta.b TempTileY
 ; Get Tile Y (bottom)
-    lda player_posy
+    lda.w player_posy
     clc
     adc #(PLAYER_HITBOX_BOTTOM - ROOM_TOP)*256
     .PositionToIndex_A
-    sta TempTileY2
+    sta.b TempTileY2
 ; Get Tile Index
     .BranchIfTileXYOOB TempTileX, TempTileY, @end
     .TileXYToIndexA TempTileX, TempTileY, TempTemp1
@@ -611,7 +611,7 @@ PlayerMoveRight:
     rep #$20
     bpl @end
 ; get position that player would be when flush against wall
-    lda TempTileX
+    lda.b TempTileX
     .IndexToPosition_A
     clc
     adc #(ROOM_LEFT - PLAYER_HITBOX_RIGHT)*256-1
@@ -646,19 +646,19 @@ PlayerMoveUp:
     clc
     adc #(PLAYER_HITBOX_TOP - ROOM_TOP)*256
     .PositionToIndex_A
-    sta TempTileY
+    sta.b TempTileY
 ; Get Tile X (left)
-    lda player_posx
+    lda.w player_posx
     clc
     adc #(PLAYER_HITBOX_LEFT - ROOM_LEFT)*256
     .PositionToIndex_A
-    sta TempTileX
+    sta.b TempTileX
 ; Get Tile X (right)
-    lda player_posx
+    lda.w player_posx
     clc
     adc #(PLAYER_HITBOX_RIGHT - ROOM_LEFT)*256
     .PositionToIndex_A
-    sta TempTileX2
+    sta.b TempTileX2
 ; Get Tile Index
     .BranchIfTileXYOOB TempTileX, TempTileY, @end
     .TileXYToIndexA TempTileX, TempTileY, TempTemp1
@@ -693,13 +693,13 @@ PlayerMoveDown:
     .PositionToIndex_A
     sta TempTileY
 ; Get Tile X (left)
-    lda player_posx
+    lda.w player_posx
     clc
     adc #(PLAYER_HITBOX_LEFT - ROOM_LEFT)*256
     .PositionToIndex_A
     sta TempTileX
 ; Get Tile X (right)
-    lda player_posx
+    lda.w player_posx
     clc
     adc #(PLAYER_HITBOX_RIGHT - ROOM_LEFT)*256
     .PositionToIndex_A
@@ -730,11 +730,11 @@ PlayerMoveDown:
 
 .MACRO .VQueuePushMiniopForIndex ARGS ROOMINDEX
 ; First, set VRAM address
-    lda vqueueNumMiniOps
+    lda.w vqueueNumMiniOps
     asl
     asl
     tax
-    inc vqueueNumMiniOps
+    inc.w vqueueNumMiniOps
     lda ROOMINDEX
     and #$0F
     sta.l vqueueMiniOps.1.vramAddr,X
@@ -762,80 +762,80 @@ PlayerMoveDown:
 
 PlayerCheckEnterRoom:
     rep #$30 ; 16b AXY
-    lda player_posx
+    lda.w player_posx
     cmp #(ROOM_LEFT - 16)*256
     bcc @left
     cmp #(ROOM_RIGHT)*256
     bcs @right
-    lda player_posy
+    lda.w player_posy
     cmp #(ROOM_TOP - 16)*256
     bcc @up
-    lda player_posy
+    lda.w player_posy
     cmp #(ROOM_BOTTOM)*256
     bcs @down
     rts
 @left:
     .ACCU 16
     lda #(ROOM_RIGHT - PLAYER_HITBOX_RIGHT)*256
-    sta player_posx
+    sta.w player_posx
     lda #(ROOM_CENTER_Y - 8)*256
-    sta player_posy
+    sta.w player_posy
     lda #BG2_TILE_ADDR_OFFS_X
-    eor gameRoomBG2Offset
-    sta gameRoomBG2Offset
+    eor.w gameRoomBG2Offset
+    sta.w gameRoomBG2Offset
     sep #$20 ; 8 bit A
-    lda loadedRoomIndex
-    sta TempTemp2
-    dec loadedRoomIndex
+    lda.b loadedRoomIndex
+    sta.b TempTemp2
+    dec.b loadedRoomIndex
     jsr @initialize
     jmp WaitScrollLeft
 @right:
     .ACCU 16
     lda #(ROOM_LEFT - PLAYER_HITBOX_LEFT)*256
-    sta player_posx
+    sta.w player_posx
     lda #(ROOM_CENTER_Y - 8)*256
-    sta player_posy
+    sta.w player_posy
     lda #BG2_TILE_ADDR_OFFS_X
-    eor gameRoomBG2Offset
-    sta gameRoomBG2Offset
+    eor.w gameRoomBG2Offset
+    sta.w gameRoomBG2Offset
     sep #$20 ; 8 bit A
-    lda loadedRoomIndex
-    sta TempTemp2
-    inc loadedRoomIndex
+    lda.b loadedRoomIndex
+    sta.b TempTemp2
+    inc.b loadedRoomIndex
     jsr @initialize
     jmp WaitScrollRight
 @up:
     .ACCU 16
     lda #(ROOM_BOTTOM - 12)*256
-    sta player_posy
+    sta.w player_posy
     lda #(ROOM_CENTER_X - 8)*256
-    sta player_posx
+    sta.w player_posx
     lda #BG2_TILE_ADDR_OFFS_Y
-    eor gameRoomBG2Offset
-    sta gameRoomBG2Offset
+    eor.w gameRoomBG2Offset
+    sta.w gameRoomBG2Offset
     sep #$20 ; 8 bit A
-    lda loadedRoomIndex
-    sta TempTemp2
+    lda.b loadedRoomIndex
+    sta.b TempTemp2
     sec
     sbc #MAP_MAX_WIDTH
-    sta loadedRoomIndex
+    sta.b loadedRoomIndex
     jsr @initialize
     jmp WaitScrollUp
 @down:
     .ACCU 16
     lda #(ROOM_TOP - 4)*256
-    sta player_posy
+    sta.w player_posy
     lda #(ROOM_CENTER_X - 8)*256
-    sta player_posx
+    sta.w player_posx
     lda #BG2_TILE_ADDR_OFFS_Y
-    eor gameRoomBG2Offset
-    sta gameRoomBG2Offset
+    eor.w gameRoomBG2Offset
+    sta.w gameRoomBG2Offset
     sep #$20 ; 8 bit A
-    lda loadedRoomIndex
-    sta TempTemp2
+    lda.b loadedRoomIndex
+    sta.b TempTemp2
     clc
     adc #MAP_MAX_WIDTH
-    sta loadedRoomIndex
+    sta.b loadedRoomIndex
     jsr @initialize
     jmp WaitScrollDown
 @initialize:
@@ -843,7 +843,7 @@ PlayerCheckEnterRoom:
     sep #$30 ; 16 bit A
 ; Load room
     sep #$30 ; 8 bit AXY
-    ldx loadedRoomIndex
+    ldx.b loadedRoomIndex
     lda.l mapTileSlotTable,X
     pha
     jsl LoadRoomSlotIntoLevel
@@ -854,11 +854,11 @@ PlayerCheckEnterRoom:
 ; Note: TempTemp2 contains old tile index
     .VQueuePushMiniopForIndex loadedRoomIndex
     lda #$0020
-    ora vqueueMiniOps.1.data,X
-    sta vqueueMiniOps.1.data,X
+    ora.l vqueueMiniOps.1.data,X
+    sta.l vqueueMiniOps.1.data,X
     .VQueuePushMiniopForIndex TempTemp2
-    stz player_velocx
-    stz player_velocy
+    stz.w player_velocx
+    stz.w player_velocy
     rts
 
 _MakeWaitScrollSub1:
@@ -875,7 +875,7 @@ _MakeWaitScrollSub2:
     rep #$20 ; 16 bit A
     sep #$10 ; 8 bit XY
     lda #NFRAMES
-    sta TEMP1
+    sta.b TEMP1
     @loopWait:
     ; First, move objects
         .IF SPRVAL != object_t.pos_x
@@ -883,7 +883,7 @@ _MakeWaitScrollSub2:
         .ENDIF
         rep #$10 ; 16 bit XY
         ldx #0
-        cpx objectIndex
+        cpx.w objectIndex
         beq @loopSpriteEnd
         @loopSprite:
             .IF SPRVAL == object_t.pos_x
@@ -892,16 +892,16 @@ _MakeWaitScrollSub2:
                 sbc #(AMT - SAMT)/NFRAMES
                 jsr _MakeWaitScrollSub2
             .ELSE
-                lda objectData+SPRVAL,X
+                lda.w objectData+SPRVAL,X
                 sec
                 sbc #(AMT - SAMT)/NFRAMES
-                sta objectData+SPRVAL,X
+                sta.w objectData+SPRVAL,X
             .ENDIF
             inx
             inx
             inx
             inx
-            cpx objectIndex
+            cpx.w objectIndex
             bne @loopSprite
         @loopSpriteEnd:
         .IF SPRVAL != object_t.pos_x
@@ -911,14 +911,14 @@ _MakeWaitScrollSub2:
     ; Wait for VBlank
         wai
     ; Scroll
-        lda SVAR
+        lda.w SVAR
         clc
         adc #AMT/NFRAMES
         and #$01FF
-        sta SVAR
-        ldx SVAR
+        sta.w SVAR
+        ldx.w SVAR
         stx SREG
-        ldx SVAR+1
+        ldx.w SVAR+1
         stx SREG
     ; Upload objects to OAM
         stz OAMADDR

@@ -385,18 +385,18 @@ tile_data_loop:
     ; Initialize other variables
     sep #$30
     lda #bankbyte(mapTileSlotTable)
-    sta currentRoomTileTypeTableAddress+2
-    sta currentRoomTileVariantTableAddress+2
-    sta mapDoorNorth+2
-    sta mapDoorEast+2
-    sta mapDoorSouth+2
-    sta mapDoorWest+2
+    sta.b currentRoomTileTypeTableAddress+2
+    sta.b currentRoomTileVariantTableAddress+2
+    sta.b mapDoorNorth+2
+    sta.b mapDoorEast+2
+    sta.b mapDoorSouth+2
+    sta.b mapDoorWest+2
     rep #$30
     lda #BG2_TILE_BASE_ADDR
-    sta gameRoomBG2Offset
-    stz gameRoomScrollX
+    sta.w gameRoomBG2Offset
+    stz.w gameRoomScrollX
     lda #-32
-    sta gameRoomScrollY
+    sta.w gameRoomScrollY
     stz.w is_game_update_running
     ; clear entity table
     jsl EntityInfoInitialize

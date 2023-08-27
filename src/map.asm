@@ -32,12 +32,10 @@ InitializeRoomSlot:
     sep #$20 ; 8 bit A, 16 bit XY
     ; write tile position
     lda $08,s
-    ; sta.l roomSlotTiles.1.tilePos,X
     ; TODO: set door flags
     ; write room size
     ldy #$01
     lda [$0A],Y
-    ; sta.l roomSlotTiles.1.roomSize,X
     ; Copy tile data, applying variants
     ldy #roomdefinition_t.tileData
 @tile_copy_loop: ; do {
@@ -67,7 +65,7 @@ LoadRoomSlotIntoLevel:
     lda #hibyte(_sizeof_roominfo_t)
     sta MULTS_A
     lda $04,s
-    sta currentRoomSlot
+    sta.b currentRoomSlot
     sta MULTS_B
     rep #$30 ; 16 bit AXY
     lda MULTS_RESULT_LOW
@@ -167,7 +165,7 @@ LoadRoomSlotIntoLevel:
     bne @loop_tile_y
 ; update doors
     sep #$30 ; 8b AXY
-    ldx currentRoomSlot
+    ldx.b currentRoomSlot
     lda.l roomSlotMapPos,X
     tay
     ; store map position variables
@@ -210,31 +208,31 @@ HandleTileChanged:
     asl
     tax
     lda.w BlockVariantAddresses,X
-    sta $00
+    sta.b $00
     lda [currentRoomTileVariantTableAddress],Y ; get VARIANT
     and #$00FF
     asl
     tay
-    lda vqueueNumMiniOps
+    lda.w vqueueNumMiniOps
     asl
     asl
     tax
     lda ($00),Y ; A now contains the actual tile value
-    sta vqueueMiniOps.1.data,X
-    lda currentConsideredTileY
+    sta.l vqueueMiniOps.1.data,X
+    lda.b currentConsideredTileY
     asl
     asl
     asl
     asl
     asl
     clc
-    adc gameRoomBG2Offset
+    adc.w gameRoomBG2Offset
     clc
-    adc currentConsideredTileX
+    adc.b currentConsideredTileX
     clc
     adc #2 + 2*32
-    sta vqueueMiniOps.1.vramAddr,X
-    inc vqueueNumMiniOps
+    sta.l vqueueMiniOps.1.vramAddr,X
+    inc.w vqueueNumMiniOps
     plb
     rts
 

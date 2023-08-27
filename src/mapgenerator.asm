@@ -104,10 +104,10 @@
         sta.w loword(mapDoorHorizontal),X
     +:
     ; north door
-    lda.w loword(mapDoorVertical)-MAP_MAX_WIDTH,X
+    lda.w loword(mapDoorVertical-MAP_MAX_WIDTH),X
     beq +
         lda #newValue
-        sta.w loword(mapDoorVertical)-MAP_MAX_WIDTH,X
+        sta.w loword(mapDoorVertical-MAP_MAX_WIDTH),X
     +:
     ; south door
     lda.w loword(mapDoorVertical),X
@@ -217,7 +217,7 @@ _CalculateAvailableEndpointTiles:
 
 _MoveActiveRoomsIntoAvailableTiles:
     stz.b mapgenNumAvailableEndpointTiles
-    ldx numUsedMapSlots
+    ldx.w numUsedMapSlots
     stx.b mapgenNumAvailableTiles
 @loop_setup_tiles:
     lda.w loword(roomSlotMapPos-1),X
@@ -274,9 +274,9 @@ _InitializeRoomX:
     phx ; >1
     tax ; X now contains tile slot
     lda $01,S
-    sta roomSlotMapPos,X
+    sta.w loword(roomSlotMapPos),X
     lda $03+2,S
-    sta roomSlotRoomType,X
+    sta.w loword(roomSlotRoomType),X
     plx ; <1
 ; end
     pla ; <1
@@ -288,7 +288,7 @@ _SetupRoomX:
     .ACCU 8
     phy ; >1
     pha ; >1
-    lda mapTileSlotTable,X
+    lda.w loword(mapTileSlotTable),X
     phx ; >1 $02,S contains tile position [db]
     pha ; >1 $01,S contains room slot [db]
 ; First, determine door mask
@@ -342,12 +342,14 @@ _SetupRoomX:
     lda $01,s
     tax
     lda TempDoorMask
-    sta roomSlotDoorMask,X
+    sta.w loword(roomSlotDoorMask),X
 ; Set up actual room
     ; set pool according to room type
-    lda roomSlotRoomType,X
+    lda.w loword(roomSlotRoomType),X
     cmp #ROOMTYPE_NORMAL
     beq @room_normal
+    cmp #ROOMTYPE_BOSS
+    beq @room_boss
     bra @room_empty ; uh oh; something has gone wrong probably. Just make it empty
     @room_normal:
         ; normal room type
@@ -356,6 +358,15 @@ _SetupRoomX:
         sta.b currentRoomPoolBase+2
         rep #$30 ; 16b AXY
         lda #loword(RoomPoolDefinitions@floor_basement)
+        sta.b currentRoomPoolBase
+        bra @end
+    @room_boss:
+        ; normal room type
+        sep #$30
+        lda #bankbyte(RoomPoolDefinitions@boss_basement)
+        sta.b currentRoomPoolBase+2
+        rep #$30 ; 16b AXY
+        lda #loword(RoomPoolDefinitions@boss_basement)
         sta.b currentRoomPoolBase
         bra @end
     @room_empty:
@@ -573,22 +584,22 @@ BeginMapGeneration:
         sta.w loword(mapTileTypeTable),X
         sta.w loword(roomSlotRoomType),Y
 ; Setup rooms
-    ldy numUsedMapSlots
+    ldy.w numUsedMapSlots
 @loop_setup_tiles:
-    ldx loword(roomSlotMapPos-1),Y
+    ldx.w loword(roomSlotMapPos-1),Y
     jsr _SetupRoomX
     sep #$30 ; 8b AXY
     dey
     bne @loop_setup_tiles
 ; setup special door rooms
     ; BOSS
-        ldx mapgenAvailableTiles+0
+        ldx.b mapgenAvailableTiles+0
         ._UpdateDoors (DOOR_OPEN | DOOR_TYPE_BOSS | DOOR_METHOD_FINISH_ROOM)
     ; ITEM
-        ldx mapgenAvailableTiles+1
+        ldx.b mapgenAvailableTiles+1
         ._UpdateDoors (DOOR_CLOSED | DOOR_TYPE_TREASURE | DOOR_METHOD_KEY)
     ; SHOP
-        ldx mapgenAvailableTiles+2
+        ldx.b mapgenAvailableTiles+2
         ._UpdateDoors (DOOR_CLOSED | DOOR_TYPE_SHOP | DOOR_METHOD_KEY)
 ; end
     lda #$FF
@@ -605,26 +616,26 @@ _PushRandomRoomFromPool:
 ; For efficiency, Y starts at size*3
     lda [currentRoomPoolBase] ; byte 0 is size
     and #$FF
-    sta TempValue
+    sta.b TempValue
     asl
     clc
-    adc.l TempValue
+    adc.b TempValue
     tay
     sep #$20 ; 8b A
     ldx #0 ; Y counts number of valid rooms
-    dec TempValue ; TempValue is index of current element (i.e. X/3 - 1)
+    dec.b TempValue ; TempValue is index of current element (i.e. X/3 - 1)
     ; Find rooms with matching door mask, and put their indices into tempData
     sep #$20
     @loop:
         ; dey
         lda [currentRoomPoolBase],Y ; pool+2,Y (bank)
-        sta TempAddr+2
+        sta.b TempAddr+2
         rep #$20 ; 16b A
         dey
         dey
         lda [currentRoomPoolBase],Y ; pool,Y (addr)
         dey
-        sta TempAddr
+        sta.b TempAddr
         ; Ensure that RoomMask is a subset of DefMask
         ; Need to check that:
         ;     RoomMask & DefMask = RoomMask
@@ -632,14 +643,14 @@ _PushRandomRoomFromPool:
         ;     (RoomMask)(1 xor DefMask) = 0
         sep #$20 ; 8b A
         lda [TempAddr] ; get DefMask
-        and TempDoorMask
-        cmp TempDoorMask
+        and.b TempDoorMask
+        cmp.b TempDoorMask
         bne @skip
-        lda TempValue
+        lda.b TempValue
         sta.w loword(tempData),X
         inx
     @skip:
-        dec TempValue
+        dec.b TempValue
         cpy #0
         bne @loop
 ; Apply RNG (rand() % X)
@@ -684,7 +695,7 @@ _ClearMap:
     .ClearWRam_ZP mapTileTypeTable, MAP_MAX_SIZE
     .ClearWRam_ZP mapTileFlagsTable, MAP_MAX_SIZE
     .ClearWRam_ZP mapTileSlotTable, MAP_MAX_SIZE
-    .ClearWRam_ZP _mapDoorHorizontalEmptyBuf, (MAP_MAX_SIZE*2 + MAP_MAX_WIDTH + MAP_MAX_HEIGHT)
+    .ClearWRam_ZP private_mapDoorHorizontalEmptyBuf, (MAP_MAX_SIZE*2 + MAP_MAX_WIDTH + MAP_MAX_HEIGHT)
     pld
     rts
 

@@ -21,7 +21,7 @@ VBlank2:
     beq @continuevblank
     pla
     plb
-    cli ; enable interrupts
+    ; cli ; enable interrupts
     rti
 @continuevblank:
     pla ; compensate for earlier pha

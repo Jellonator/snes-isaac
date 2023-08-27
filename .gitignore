@@ -12,3 +12,4 @@ include/palettes/
 *.tiled-session
 scripts/venv
 *.code-workspace
+Test.link

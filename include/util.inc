@@ -8,13 +8,13 @@
     .IF \?1 == ARG_IMMEDIATE
         cmp #\1
     .ELSE
-        cmp \1
+        cmp.w \1
     .ENDIF
     bpl @@@@@\.\@
     .IF \?1 == ARG_IMMEDIATE
         lda #\1
     .ELSE
-        lda \1
+        lda.w \1
     .ENDIF
 @@@@@\.\@:
 .ENDM
@@ -24,13 +24,13 @@
     .IF \?1 == ARG_IMMEDIATE
         cmp #\1
     .ELSE
-        cmp \1
+        cmp.w \1
     .ENDIF
     bmi @@@@@\.\@
     .IF \?1 == ARG_IMMEDIATE
         lda #\1
     .ELSE
-        lda \1
+        lda.w \1
     .ENDIF
 @@@@@\.\@:
 .ENDM
@@ -40,13 +40,13 @@
     .IF \?1 == ARG_IMMEDIATE
         cmp #\1
     .ELSE
-        cmp \1
+        cmp.w \1
     .ENDIF
     bcs @@@@@\.\@
     .IF \?1 == ARG_IMMEDIATE
         lda #\1
     .ELSE
-        lda \1
+        lda.w \1
     .ENDIF
 @@@@@\.\@:
 .ENDM
@@ -60,9 +60,9 @@
     .ENDIF
     bcc @@@@@\.\@
     .IF \?1 == ARG_IMMEDIATE
-        lda #\1
+        lda.w #\1
     .ELSE
-        lda \1
+        lda.w \1
     .ENDIF
 @@@@@\.\@:
 .ENDM
@@ -221,6 +221,23 @@
     sta.w objectDataExt,Y
 .ENDM
 
+.MACRO .SetCurrentObjectXS
+    lda.w objectIndex
+    lsr
+    lsr
+    tay
+    and #3
+    tax
+    tya
+    lsr
+    lsr
+    tay
+    lda.l SpriteIndexToExtMaskXS,X
+    and #$FF
+    ora.w objectDataExt,Y
+    sta.w objectDataExt,Y
+.ENDM
+
 .MACRO .GetObjectPos_X
     phy
     phx
@@ -239,7 +256,7 @@
     beq @@@@@\.\@pos
 @@@@@\.\@neg:
     plx
-    lda objectData.1.pos_x,X
+    lda.w objectData.1.pos_x,X
     and #$FF
     eor #$FFFF
     sec
@@ -247,7 +264,7 @@
     bra @@@@@\.\@end
 @@@@@\.\@pos:
     plx
-    lda objectData.1.pos_x,X
+    lda.w objectData.1.pos_x,X
     and #$FF
 @@@@@\.\@end:
     ply
@@ -284,7 +301,7 @@
     adc #1
     sep #$20 ; 8b A
     plx
-    sta objectData.1.pos_x,X
+    sta.w objectData.1.pos_x,X
     rep #$20 ; 16b A
     bra @@@@@\.\@end
 @@@@@\.\@pos:
@@ -296,28 +313,11 @@
     lda $03,S
     sep #$20 ; 8b A
     plx
-    sta objectData.1.pos_x,X
+    sta.w objectData.1.pos_x,X
     rep #$20 ; 16b A
 @@@@@\.\@end:
     pla
     ply
-.ENDM
-
-.MACRO .SetCurrentObjectXS
-    lda.w objectIndex
-    lsr
-    lsr
-    tay
-    and #3
-    tax
-    tya
-    lsr
-    lsr
-    tay
-    lda.l SpriteIndexToExtMaskXS,X
-    and #$FF
-    ora.w objectDataExt,Y
-    sta.w objectDataExt,Y
 .ENDM
 
 .MACRO .IncrementObjectIndex
@@ -396,6 +396,8 @@
 .DEFINE T_FLIPH 0x4000
 .DEFINE T_FLIPV 0x8000
 .DEFINE T_FLIPVH 0xC000
+
+.FUNCTION spriteoffset(spriteId) ((spriteId - 1) * 4)
 
 .MACRO .CheapModA8 ARGS num
     .IF num == 1

@@ -18,7 +18,8 @@ tiledIdsToGameIds = {
 
 tiledIdsToObjectIds = {
     0: "ENTITY_TYPE_ENEMY_ATTACK_FLY",
-    1: "ENTITY_TYPE_ENEMY_ZOMBIE"
+    1: "ENTITY_TYPE_ENEMY_ZOMBIE",
+    2: "ENTITY_TYPE_ENEMY_BOSS_MONSTRO"
 }
 
 ROOMPOOL_OUT = "include/roompools.inc"

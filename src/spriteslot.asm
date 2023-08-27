@@ -44,6 +44,52 @@ spriteman_get_raw_slot:
     plb
     rtl
 
+; write to spritemem X
+; Args:
+; sprite_bank           [db] $05
+; spriteTop_location    [dw] $03
+; spriteBottom_location [dw] $01
+spriteman_write_sprite_to_raw_slot:
+    phb ; >1
+    rep #$30 ; 16 bit AXY
+; increment vqueueops; just trust that we aren't already in bank $7F
+    .VQueueOpToA
+    inc.w vqueueNumOps 
+    inc.w vqueueNumOps
+    tay
+
+; vramaddr[0] = spritemem + SPRITE2_BASE_ADDR
+    .ChangeDataBank $7F
+    txa
+    asl
+    tax
+    lda.l SpriteSlotMemTable,X
+    sta.w loword(vqueueOps.1.vramAddr),Y
+; vramaddr[1] = spritemem + SPRITE2_BASE_ADDR + $100
+    clc
+    adc #$100
+    sta.w loword(vqueueOps.2.vramAddr),Y
+; param[] = 0b00000001, bAddr[] = $18
+    lda #(%00000001 + ($0100 * $18))
+    sta.w loword(vqueueOps.1.param),Y ; both param and bAddr
+    sta.w loword(vqueueOps.2.param),Y
+; numBytes[] = 2 * 2 * (8 * 8 * 4) / 8 = 128
+    lda #64
+    sta.w loword(vqueueOps.1.numBytes),Y
+    sta.w loword(vqueueOps.2.numBytes),Y
+; memAddr[i] = input[i]
+    lda $03 + 4,S
+    sta.w loword(vqueueOps.1.aAddr),Y
+    lda $01 + 4,S
+    sta.w loword(vqueueOps.2.aAddr),Y
+    sep #$20 ; 8B A
+    lda $05 + 4,S
+    sta.w loword(vqueueOps.1.aAddr+2),Y
+    sta.w loword(vqueueOps.2.aAddr+2),Y
+; end
+    plb ; <1
+    rtl
+
 ; Free slot in X
 .MACRO .spriteman_free_raw_slot_lite
     sep #$30 ; 8b AXY
@@ -102,7 +148,7 @@ spriteman_new_sprite_ref:
     sta.w loword(spriteTableValue.1.spritemem),Y
     lda.b #1
     sta.w loword(spriteTableValue.1.count),Y
-    ; TODO: upload sprite via vqueue
+; write sprite data
     rep #$30 ; 16 bit AXY
     .VQueueOpToA
     tax

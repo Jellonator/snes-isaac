@@ -15,6 +15,12 @@
         ]
     },
     {
+        "id": "boss_basement",
+        "rooms": [
+            "basement_boss/monstro1.tmx"
+        ]
+    },
+    {
         "id": "type_start",
         "rooms": [
             "empty.tmx"

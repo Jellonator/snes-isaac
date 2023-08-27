@@ -24,4 +24,6 @@ SpriteDefs:
 
 .DefineSprite "sprite.enemy.zombie", sprites@enemy_zombie, 1, 2
 
+.DefineSprite "sprite.boss.monstro", sprites@boss_monstro, 12, 1
+
 .ENDS

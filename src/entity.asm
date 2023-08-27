@@ -206,7 +206,7 @@ EntityInfoInitialize:
     phd
     pea $4300
     pld
-    .ClearWRam_ZP _base_entity_combined_type_variant, (rawMemorySizeShared-_base_entity_combined_type_variant)
+    .ClearWRam_ZP entity_data_begin, (entity_data_end-entity_data_begin)
     pld
     ; set player type
     sep #$20
@@ -262,6 +262,13 @@ EntityDefinitions:
         init_func: .dw entity_zombie_init
         tick_func: .dw entity_zombie_tick
         free_func: .dw entity_zombie_free
+        spawngroup: .db ENTITY_SPAWNGROUP_ENEMY
+    .ENDST
+    ; 130 : monstro
+    .DSTRUCT @boss_monstro INSTANCEOF entitytypeinfo_t VALUES
+        init_func: .dw entity_boss_monstro_init
+        tick_func: .dw entity_boss_monstro_tick
+        free_func: .dw entity_boss_monstro_free
         spawngroup: .db ENTITY_SPAWNGROUP_ENEMY
     .ENDST
 

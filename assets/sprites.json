@@ -48,5 +48,10 @@
         "name": "boss_monstro",
         "src": "assets/sprites/enemy/monstro.raw",
         "depth": 16
+    },
+    {
+        "name": "default_sprites",
+        "src": "assets/sprites/default_sprites.raw",
+        "depth": 16
     }
 ]

@@ -3,9 +3,9 @@
 .BANK ROMBANK_ENTITYCODE SLOT "ROM"
 .SECTION "Entity Boss Monstro" FREE
 
-.DEFINE MONSTRO_WIDTH 48
-.DEFINE MONSTRO_HEIGHT 20
-.DEFINE MONSTRO_TILE_X_OFFS -8
+.DEFINE MONSTRO_WIDTH 64
+.DEFINE MONSTRO_HEIGHT 24
+.DEFINE MONSTRO_TILE_X_OFFS 0
 .DEFINE MONSTRO_TILE_Y_OFFS -24
 
 entity_boss_monstro_init:
@@ -144,6 +144,7 @@ entity_boss_monstro_tick:
     lda #0
     sta.w entity_signal,Y
 ; fire projectiles
+    rts
     lda.w entity_timer,Y
     dec A
     sta.w entity_timer,Y

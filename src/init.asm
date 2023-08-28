@@ -291,6 +291,20 @@ Start2:
     pla
     pla
     pla
+    ; copy default sprites to VRAM
+    pea SPRITE1_BASE_ADDR + 64*32 ; VRAM address
+    pea 128
+    sep #$20 ; 8 bit A
+    lda #bankbyte(sprites@default_sprites)
+    pha
+    pea sprites@default_sprites ; address
+    jsl CopySprite
+    sep #$20 ; 8 bit A
+    pla
+    rep #$20 ; 16 bit A
+    pla
+    pla
+    pla
     ; Clear BG1 (UI)
     pea BG1_TILE_BASE_ADDR
     pea 32*32*2

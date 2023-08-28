@@ -127,6 +127,9 @@
     spriteTablePtr dsw SPRITE_TABLE_TOTAL_SIZE
     spriteTableValue INSTANCEOF spritetab_t SPRITE_TABLE_TOTAL_SIZE
     spriteQueueTabNext ds SPRITE_QUEUE_SIZE+1
+; extra entity data
+    numEntities dw
+    entityExecutionOrder ds 256
 .ENDS
 
 ; Should contain data that is either large or not often used

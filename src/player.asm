@@ -450,32 +450,36 @@ PlayerUpdate:
     inc A
     sta.w playerData.tear_timer
 @end_tear_code:
+    rts
+
+PlayerRender:
     sep #$30 ; 8 bit AXY
     ; update render data
     lda.w playerData.invuln_timer
     bit #$08
     bne @invis_frame
-    lda.w player_posx+1
-    sta.w objectData.1.pos_x
-    sta.w objectData.2.pos_x
-    lda.w player_posy+1
-    sta.w objectData.2.pos_y
-    sec
-    sbc #10
-    sta.w objectData.1.pos_y
-    stz.w objectData.1.tileid
-    lda #$02
-    sta.w objectData.2.tileid
-    lda #%00101000
-    sta.w objectData.1.flags
-    sta.w objectData.2.flags
-    rep #$30 ; 16 bit AXY
-    .SetCurrentObjectS
-    .IncrementObjectIndex
-    .SetCurrentObjectS
-    .IncrementObjectIndex
+        ldx.w objectIndex
+        lda.w player_posx+1
+        sta.w objectData.1.pos_x,X
+        sta.w objectData.2.pos_x,X
+        lda.w player_posy+1
+        sta.w objectData.2.pos_y,X
+        sec
+        sbc #10
+        sta.w objectData.1.pos_y,X
+        stz.w objectData.1.tileid,X
+        lda #$02
+        sta.w objectData.2.tileid,X
+        lda #%00101000
+        sta.w objectData.1.flags,X
+        sta.w objectData.2.flags,X
+        rep #$30 ; 16 bit AXY
+        .SetCurrentObjectS
+        .IncrementObjectIndex
+        .SetCurrentObjectS
+        .IncrementObjectIndex
 @invis_frame:
-    rts
+    rtl
 
 PlayerShootTear:
     rep #$30 ; 16 bit AXY

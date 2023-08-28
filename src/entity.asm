@@ -2,7 +2,11 @@
 
 ; This bank is entirely relegated to entity functionality
 .BANK ROMBANK_ENTITYCODE SLOT "ROM"
-.SECTION "Entity" FREE
+.ORG 0
+.SECTION "Entity"
+
+_e_null:
+    rts
 
 ; For each of the following:
 ; * execution bank will be $02
@@ -32,9 +36,6 @@ InsertHitbox:
 ; Clobbers: A
 EraseHitbox:
     .EraseHitboxLite
-    rts
-
-_e_null:
     rts
 
 ; Create an entity of type A
@@ -69,6 +70,14 @@ entity_create:
     phy
     jsr (EntityDefinitions + entitytypeinfo_t.init_func,X)
     ply
+    ; insert into execution order
+    lda.l numEntities
+    tax
+    tya
+    sta.l entityExecutionOrder,X
+    txa
+    inc A
+    sta.l numEntities
     ; return
     rtl
 
@@ -89,6 +98,35 @@ entity_free:
     lda #0
     sta.w entity_type,Y
     rep #$20
+    ; remove from execution order
+    tya ; A = Y
+    ldx #0
+    cpx.w numEntities
+    beq @endloop
+    ; while (i < numEntities) {
+    @loop:
+        ; if (entity[i] == Y) {
+        cmp.w entityExecutionOrder,X
+        bne +
+            ; --numEntities;
+            dec.w numEntities
+            ; entity[i] = entity[numEntities];
+            ldy.w numEntities
+            lda.w entityExecutionOrder,Y
+            sta.w entityExecutionOrder,X
+            ; assume that no other instances will occur and return
+            plb
+            rtl
+        ; } else {
+        +:
+            ; i += 1;
+            inx
+            cpx.w numEntities
+            bne @loop
+        ; }
+        ;   }
+    ; }
+    @endloop:
     ; return
     plb
     rtl
@@ -124,27 +162,183 @@ entity_free_all:
 
 ; Tick all entities
 entity_tick_all:
-    rep #$30 ; 16B AXY
     phb
     .ChangeDataBank $7E
-    ldy.w #ENTITY_FIRST_CUSTOM_INDEX
-@loop:
-    lda.w entity_type,Y
-    and.w #$00FF
-    beq @skip_ent ; skip if type == 0
-    phy
-    .MultiplyStatic 8
-    tax
-    php
-    jsr (EntityDefinitions + entitytypeinfo_t.tick_func,X)
-    plp
-    ply
-@skip_ent:
-    dey
-    dey
-    bne @loop
+    jsl SortEntityExecutionOrder
+    rep #$30 ; 16B AXY
+    ldx.w numEntities
+    beq @end
+    @loop:
+        phx
+        lda.w entityExecutionOrder-1,X
+        and #$00FF
+        tay
+        lda.w entity_type,Y
+        and #$00FF
+        .MultiplyStatic 8
+        tax
+        php
+        jsr (EntityDefinitions + entitytypeinfo_t.tick_func,X)
+        plp
+        plx
+        dex
+        bne @loop
 @end:
     plb
+    rtl
+
+_player_tick:
+    jsl PlayerRender
+    rts
+
+EntityDefinitions:
+    ; 0: Null
+    .DSTRUCT @null INSTANCEOF entitytypeinfo_t VALUES
+        init_func: .dw _e_null
+        tick_func: .dw _e_null
+        free_func: .dw _e_null
+        spawngroup: .db ENTITY_SPAWNGROUP_NEVER
+    .ENDST
+    .DSTRUCT @player INSTANCEOF entitytypeinfo_t VALUES
+        init_func: .dw _e_null
+        tick_func: .dw _player_tick
+        free_func: .dw _e_null
+        spawngroup: .db ENTITY_SPAWNGROUP_NEVER
+    .ENDST
+    .REPT (128 - 1 - 1) INDEX i
+        .DSTRUCT @null_pad{i+1} INSTANCEOF entitytypeinfo_t VALUES
+            init_func: .dw _e_null
+            tick_func: .dw _e_null
+            free_func: .dw _e_null
+            spawngroup: .db ENTITY_SPAWNGROUP_NEVER
+        .ENDST
+    .ENDR
+    ; 128 : Attack fly
+    .DSTRUCT @enemy_attack_fly INSTANCEOF entitytypeinfo_t VALUES
+        init_func: .dw entity_basic_fly_init
+        tick_func: .dw entity_basic_fly_tick
+        free_func: .dw entity_basic_fly_free
+        spawngroup: .db ENTITY_SPAWNGROUP_ENEMY
+    .ENDST
+    ; 129 : zombie
+    .DSTRUCT @enemy_zombie INSTANCEOF entitytypeinfo_t VALUES
+        init_func: .dw entity_zombie_init
+        tick_func: .dw entity_zombie_tick
+        free_func: .dw entity_zombie_free
+        spawngroup: .db ENTITY_SPAWNGROUP_ENEMY
+    .ENDST
+    ; 130 : monstro
+    .DSTRUCT @boss_monstro INSTANCEOF entitytypeinfo_t VALUES
+        init_func: .dw entity_boss_monstro_init
+        tick_func: .dw entity_boss_monstro_tick
+        free_func: .dw entity_boss_monstro_free
+        spawngroup: .db ENTITY_SPAWNGROUP_ENEMY
+    .ENDST
+
+.ENDS
+
+; Extra code/data that doesn't necessarily need to be in main entity bank
+.BANK $04 SLOT "ROM"
+.ORG 0
+.SECTION "EntityExtCode"
+
+SortEntityExecutionOrder:
+    sep #$30
+    lda.w numEntities
+    cmp #2
+    bcc @noSort
+; sorting logic
+    ldy #1
+    ; do {
+@outerloop:
+    ; e = entity[i]
+    lda.w entityExecutionOrder,Y
+    ; sta.b $01
+    ; v = entity_y2[e]
+    tax
+    ; xba
+    lda.w entity_box_y2,X
+    sta.b $02
+    ; j = i - 1;
+    sty.b $00
+    dec.b $00
+    ; while (j >= 0 && && entity_y2[entity[j]] >= v) {
+    @innerloop:
+        ldx.b $00
+        cpx #$FF
+        beq @endinnerloop
+        ; X = entity[j]
+        lda.w entityExecutionOrder,X
+        tax
+        ; A = entity_y2[X]
+        lda.w entity_box_y2,X
+        cmp.b $02
+        bcc @endinnerloop
+        beq @endinnerloop
+        ; swap entity[j+1], entity[j];
+        ; txa
+        ldx.b $00
+        lda.w entityExecutionOrder+0,X
+        xba
+        lda.w entityExecutionOrder+1,X
+        sta.w entityExecutionOrder+0,X
+        xba
+        sta.w entityExecutionOrder+1,X
+        ; j -= 1;
+        dec.b $00
+        bra @innerloop
+    ; }
+    @endinnerloop:
+    ; entity[j+1] = entity[i];
+    ; lda.b $01
+    ; ldx.b $00
+    ; sta.w entityExecutionOrder+1,X
+    ; i += 1;
+    iny
+    ; } while (i < COUNT);
+    cpy.w numEntities
+    bcc @outerloop
+; end
+@noSort:
+    rtl
+
+EntityInfoInitialize:
+    rep #$20
+    ; save player info
+    lda.w player_posx
+    pha
+    lda.w player_posy
+    pha
+    ; clear
+    sep #$20
+    phd
+    pea $4300
+    pld
+    .ClearWRam_ZP entity_data_begin, (entity_data_end-entity_data_begin)
+    pld
+    ; set player type
+    sep #$20
+    lda #ENTITY_TYPE_PLAYER
+    sta.w player_type
+    ; load player info
+    rep #$20
+    pla
+    sta.w player_posy
+    pla
+    sta.w player_posx
+    ; reset entity execution order
+    lda #1
+    sta.l numEntities
+    lda #ENTITY_INDEX_PLAYER
+    sta.l entityExecutionOrder
+    rtl
+
+SpatialPartitionClear:
+    phd
+    pea $4300
+    pld
+    .ClearWRam_ZP spatial_partition, _sizeof_spatial_partition
+    pld
     rtl
 
 ; Get the collision at the given position, if available
@@ -193,83 +387,5 @@ GetEntityCollisionAt:
     .ENDR
     ldy #0
     rtl
-
-EntityInfoInitialize:
-    rep #$20
-    ; save player info
-    lda.w player_posx
-    pha
-    lda.w player_posy
-    pha
-    ; clear
-    sep #$20
-    phd
-    pea $4300
-    pld
-    .ClearWRam_ZP entity_data_begin, (entity_data_end-entity_data_begin)
-    pld
-    ; set player type
-    sep #$20
-    lda #ENTITY_TYPE_PLAYER
-    sta.w player_type
-    ; load player info
-    rep #$20
-    pla
-    sta.w player_posy
-    pla
-    sta.w player_posx
-    rtl
-
-SpatialPartitionClear:
-    phd
-    pea $4300
-    pld
-    .ClearWRam_ZP spatial_partition, _sizeof_spatial_partition
-    pld
-    rtl
-
-EntityDefinitions:
-    ; 0: Null
-    .DSTRUCT @null INSTANCEOF entitytypeinfo_t VALUES
-        init_func: .dw _e_null
-        tick_func: .dw _e_null
-        free_func: .dw _e_null
-        spawngroup: .db ENTITY_SPAWNGROUP_NEVER
-    .ENDST
-    .DSTRUCT @player INSTANCEOF entitytypeinfo_t VALUES
-        init_func: .dw _e_null
-        tick_func: .dw _e_null
-        free_func: .dw _e_null
-        spawngroup: .db ENTITY_SPAWNGROUP_NEVER
-    .ENDST
-    .REPT (128 - 1 - 1) INDEX i
-        .DSTRUCT @null_pad{i+1} INSTANCEOF entitytypeinfo_t VALUES
-            init_func: .dw _e_null
-            tick_func: .dw _e_null
-            free_func: .dw _e_null
-            spawngroup: .db ENTITY_SPAWNGROUP_NEVER
-        .ENDST
-    .ENDR
-    ; 128 : Attack fly
-    .DSTRUCT @enemy_attack_fly INSTANCEOF entitytypeinfo_t VALUES
-        init_func: .dw entity_basic_fly_init
-        tick_func: .dw entity_basic_fly_tick
-        free_func: .dw entity_basic_fly_free
-        spawngroup: .db ENTITY_SPAWNGROUP_ENEMY
-    .ENDST
-    ; 129 : zombie
-    .DSTRUCT @enemy_zombie INSTANCEOF entitytypeinfo_t VALUES
-        init_func: .dw entity_zombie_init
-        tick_func: .dw entity_zombie_tick
-        free_func: .dw entity_zombie_free
-        spawngroup: .db ENTITY_SPAWNGROUP_ENEMY
-    .ENDST
-    ; 130 : monstro
-    .DSTRUCT @boss_monstro INSTANCEOF entitytypeinfo_t VALUES
-        init_func: .dw entity_boss_monstro_init
-        tick_func: .dw entity_boss_monstro_tick
-        free_func: .dw entity_boss_monstro_free
-        spawngroup: .db ENTITY_SPAWNGROUP_ENEMY
-    .ENDST
 
 .ENDS

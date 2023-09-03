@@ -3,36 +3,136 @@
 ; as a general rule, macro labels should begin with @@@@@
 ; that way, these labels don't mess with those in code
 
-; Maximum of A register and value, signed
-.MACRO .AMAX
-    .IF \?1 == ARG_IMMEDIATE
-        cmp #\1
+.ENUMID 0
+.ENUMID P_IMM
+.ENUMID P_ABS
+.ENUMID P_ABS_X
+.ENUMID P_ABS_Y
+.ENUMID P_ABS_IND
+.ENUMID P_ABS_INDL
+.ENUMID P_DIR
+.ENUMID P_DIR_X
+.ENUMID P_DIR_Y
+.ENUMID P_DIR_IND
+.ENUMID P_DIR_INDL
+.ENUMID P_DIR_X_IND
+.ENUMID P_DIR_IND_Y
+.ENUMID P_DIR_INDL_Y
+.ENUMID P_LONG
+.ENUMID P_LONG_X
+.ENUMID P_STACK
+.ENUMID P_STACK_IND_Y
+.ENUMID P_IMPLIED
+.ENUMID P_REL8
+.ENUMID P_REL16
+.ENUMID P_SRC_DEST
+
+; GENERIC INSTRUCTION
+; Parameters:
+;   inst   - the instruction
+;   method - address mode
+;   arg    - address
+.MACRO .g_instruction ARGS inst method arg
+    .IF method == P_IMM
+        \1 #arg
+    .ELIF method == P_ABS
+        \1.w arg
+    .ELIF method == P_ABS_X
+        \1.w arg,X
+    .ELIF method == P_ABS_Y
+        \1.w arg,Y
+    .ELIF method == P_ABS_IND
+        \1.w (arg)
+    .ELIF method == P_ABS_INDL
+        \1.w [arg]
+    .ELIF method == P_DIR
+        \1.b arg
+    .ELIF method == P_DIR_X
+        \1.b arg,X
+    .ELIF method == P_DIR_Y
+        \1.b arg,Y
+    .ELIF method == P_DIR_IND
+        \1.b (arg)
+    .ELIF method == P_DIR_INDL
+        \1.b [arg]
+    .ELIF method == P_DIR_X_IND
+        \1.b (arg,X)
+    .ELIF method == P_DIR_IND_Y
+        \1.b (arg),Y
+    .ELIF method == P_DIR_INDL_Y
+        \1.b [arg],Y
+    .ELIF method == P_LONG
+        \1.l arg
+    .ELIF method == P_LONG_X
+        \1.l arg,X
+    .ELIF method == P_STACK
+        \1 arg,S
+    .ELIF method == P_STACK_IND_Y
+        \1 (arg,S),Y
+    .ELIF method == P_REL8 || method == P_REL16
+        \1 arg
+    .ELIF method == P_IMPLIED || method == P_SRC_DEST
+        .FAIL "Incompatible addressing mode"
     .ELSE
-        cmp.w \1
+        .FAIL "Invalid addressing mode"
     .ENDIF
-    bpl @@@@@\.\@
-    .IF \?1 == ARG_IMMEDIATE
-        lda #\1
-    .ELSE
-        lda.w \1
-    .ENDIF
-@@@@@\.\@:
+.ENDM
+
+.MACRO .CMPS_BEGIN ARGS method, addr
+    sec
+    .g_instruction sbc, method, addr
+    bvs @@@@@\@cmps_invert
+    bpl @@@@@\@cmps_greater
+@@@@@\@cmps_lesser:
+.ENDM
+
+.MACRO .CMPS_GREATER
+    bra @@@@@\@cmps_end
+@@@@@\@cmps_invert:
+    bpl @@@@@\@cmps_lesser
+@@@@@\@cmps_greater:
+.ENDM
+
+.MACRO .CMPS_EQUAL
+    bra @@@@@\@cmps_end
+@@@@@\@cmps_equal:
+.ENDM
+
+.MACRO .CMPS_END
+@@@@@\@cmps_end:
+.ENDM
+
+.MACRO .AMAX ARGS method arg
+    sec
+    .g_instruction sbc, method, arg
+    bvs @@@@@@\.\@invert
+    bpl @@@@@@\.\@restore
+@@@@@@\.\@load:
+    .g_instruction lda, method, arg
+    bra @@@@@@\.\@end
+@@@@@@\.\@invert:
+    bpl @@@@@@\.\@load
+@@@@@@\.\@restore:
+    clc
+    .g_instruction adc, method, arg
+@@@@@@\.\@end:
 .ENDM
 
 ; Minimum of A register and value, signed
-.MACRO .AMIN
-    .IF \?1 == ARG_IMMEDIATE
-        cmp #\1
-    .ELSE
-        cmp.w \1
-    .ENDIF
-    bmi @@@@@\.\@
-    .IF \?1 == ARG_IMMEDIATE
-        lda #\1
-    .ELSE
-        lda.w \1
-    .ENDIF
-@@@@@\.\@:
+.MACRO .AMIN ARGS method, arg
+    sec
+    .g_instruction sbc, method, arg
+    bvs @@@@@@\.\@invert
+    bmi @@@@@@\.\@restore
+@@@@@@\.\@load:
+    .g_instruction lda, method, arg
+    bra @@@@@@\.\@end
+@@@@@@\.\@invert:
+    bmi @@@@@@\.\@load
+@@@@@@\.\@restore:
+    clc
+    .g_instruction adc, method, arg
+@@@@@@\.\@end:
 .ENDM
 
 ; Maximum of A register and value, unsigned

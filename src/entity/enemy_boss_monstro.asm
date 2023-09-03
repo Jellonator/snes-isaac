@@ -8,6 +8,19 @@
 .DEFINE MONSTRO_TILE_X_OFFS 0
 .DEFINE MONSTRO_TILE_Y_OFFS -24
 
+.DEFINE MONSTRO_POS_Z private_ext_entity_custom.13
+.DEFINE MONSTRO_VELOC_Z private_ext_entity_custom.15
+
+.ENUMID 1
+; state when monstro is idle
+.ENUMID MONSTRO_STATE_IDLE
+; state when monstro is preparing to shoot
+.ENUMID MONSTRO_STATE_SHOOT_PRE
+.ENUMID MONSTRO_STATE_SHOOT_POST
+.ENUMID MONSTRO_STATE_JUMP_POST
+.ENUMID MONSTRO_STATE_JUMP_PREPARE
+.ENUMID MONSTRO_STATE_JUMP_PREPARE_BIG
+
 entity_boss_monstro_init:
     .ACCU 16
     .INDEX 16
@@ -15,12 +28,16 @@ entity_boss_monstro_init:
     ; default info
     lda #100
     sta.w entity_health,Y
+    lda #10
+    sta.w entity_timer,Y
     sep #$20
     lda #0
     sta.w entity_signal,Y
     sta.w entity_mask,Y
-    lda #10
-    sta.w entity_timer,Y
+    sta.w MONSTRO_POS_Z,Y
+    sta.w MONSTRO_VELOC_Z,Y
+    lda #MONSTRO_STATE_IDLE
+    sta.w entity_state,Y
     phy
     .REPT 3 INDEX iy
         .REPT 4 INDEX ix
@@ -143,44 +160,46 @@ entity_boss_monstro_tick:
     sta.w entity_mask,Y
     lda #0
     sta.w entity_signal,Y
-; fire projectiles
-    rts
-    lda.w entity_timer,Y
-    dec A
-    sta.w entity_timer,Y
-    bne @no_projectile
-        rep #$30 ; 16 bit AXY
-        jsl projectile_slot_get
-    ; set base projectile info
-        ; life
-        lda #120
-        sta.w projectile_lifetime,X
-        ; size
-        stz.w projectile_flags,X
-        sep #$20
-        stz.w projectile_size,X
-        ; type
-        lda #PROJECTILE_TYPE_ENEMY_BASIC
-        sta.w projectile_type,X
-        rep #$20
-        ; position
-        ldy $08
-        lda.w entity_posx,Y
-        sta.w projectile_posx,X
-        lda.w entity_posy,Y
-        clc
-        adc #16 * 256
-        sta.w projectile_posy,X
-        lda #$100
-        sta.w projectile_velocx,X
-        lda #0
-        sta.w projectile_velocy,X
-        ; dmg
-        lda #100
-        sta.w projectile_damage,X
-    ; set timer
-        lda #10
-        sta.w entity_timer,Y
+; AI handling
+
+; ; fire projectiles
+;     rts
+;     lda.w entity_timer,Y
+;     dec A
+;     sta.w entity_timer,Y
+;     bne @no_projectile
+;         rep #$30 ; 16 bit AXY
+;         jsl projectile_slot_get
+;     ; set base projectile info
+;         ; life
+;         lda #120
+;         sta.w projectile_lifetime,X
+;         ; size
+;         stz.w projectile_flags,X
+;         sep #$20
+;         stz.w projectile_size,X
+;         ; type
+;         lda #PROJECTILE_TYPE_ENEMY_BASIC
+;         sta.w projectile_type,X
+;         rep #$20
+;         ; position
+;         ldy $08
+;         lda.w entity_posx,Y
+;         sta.w projectile_posx,X
+;         lda.w entity_posy,Y
+;         clc
+;         adc #16 * 256
+;         sta.w projectile_posy,X
+;         lda #$100
+;         sta.w projectile_velocx,X
+;         lda #0
+;         sta.w projectile_velocy,X
+;         ; dmg
+;         lda #100
+;         sta.w projectile_damage,X
+;     ; set timer
+;         lda #10
+;         sta.w entity_timer,Y
 @no_projectile:
     rts
 

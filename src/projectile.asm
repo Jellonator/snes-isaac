@@ -190,7 +190,7 @@ projectile_update_loop:
     .PositionToIndex_A
     sta currentConsideredTileY
 ; Check tile
-    .BranchIfTileXYOOB currentConsideredTileX, currentConsideredTileY, @iter_remove
+    .BranchIfTileXYOOB currentConsideredTileX, currentConsideredTileY, @skipTileHandler
     .TileXYToIndexA currentConsideredTileX, currentConsideredTileY, TempTemp1
     tay
     sep #$20

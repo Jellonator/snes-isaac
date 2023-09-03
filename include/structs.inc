@@ -82,8 +82,11 @@
 
 ; Actual generated room data, laid out in RAM
 .STRUCT roominfo_t
-    tileTypeTable INSTANCEOF byte_t ROOM_TILE_COUNT
-    tileVariantTable INSTANCEOF byte_t ROOM_TILE_COUNT
+    ; two extra tiles:
+    ; tile[96] is a gap
+    ; tile[97] is a solid block
+    tileTypeTable INSTANCEOF byte_t ROOM_TILE_COUNT + 2
+    tileVariantTable INSTANCEOF byte_t ROOM_TILE_COUNT + 2
     ; entityStoreTable INSTANCEOF entitystore_t ENTITY_STORE_COUNT
     roomDefinition dw
 .ENDST

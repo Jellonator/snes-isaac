@@ -245,20 +245,20 @@ PlayerUpdate:
     ; slowright
     clc
     adc.w playerData.stat_accel
-    .AMIN #$00
+    .AMIN P_IMM, $00
     jmp @endy
 @slowup:
     ; slowleft
     sec
     sbc.w playerData.stat_accel
-    .AMAX #$00
+    .AMAX P_IMM, $00
     jmp @endy
 @down:
     ; right
     txa
     clc
     adc.w playerData.stat_accel
-    .AMIN $00
+    .AMIN P_DIR, $00
     jmp @endy
 @up:
     ; left
@@ -267,7 +267,7 @@ PlayerUpdate:
     sbc.w playerData.stat_accel
     eor #$FFFF
     inc A
-    .AMIN $00
+    .AMIN P_DIR, $00
     eor #$FFFF
     inc A
 @endy:
@@ -287,20 +287,20 @@ PlayerUpdate:
     ; slowright
     clc
     adc.w playerData.stat_accel
-    .AMIN #$00
+    .AMIN P_IMM, $00
     jmp @endx
 @slowleft:
     ; slowleft
     sec
     sbc.w playerData.stat_accel
-    .AMAX #$00
+    .AMAX P_IMM, $00
     jmp @endx
 @right:
     ; right
     txa
     clc
     adc.w playerData.stat_accel
-    .AMIN $00
+    .AMIN P_DIR, $00
     jmp @endx
 @left:
     ; left
@@ -309,7 +309,7 @@ PlayerUpdate:
     sbc.w playerData.stat_accel
     eor #$FFFF
     inc A
-    .AMIN $00
+    .AMIN P_DIR, $00
     eor #$FFFF
     inc A
 @endx:
@@ -507,18 +507,24 @@ PlayerShootTear:
 ; check direction
     lda.w joy1held
     bit #JOY_Y
-    bne @tear_left
+    beq +
+        brl @tear_left
+    +
     bit #JOY_A
-    bne @tear_right
+    beq +
+        brl @tear_right
+    +
     bit #JOY_B
-    bne @tear_down
+    beq +
+        brl @tear_down
+    +
 ;tear_up:
     lda.w player_velocx
     sta.w projectile_velocx,X
     lda.w player_velocy
     .ShiftRight_SIGN 1, FALSE
-    .AMIN #32
-    .AMAX #-64
+    .AMIN P_IMM, 32
+    .AMAX P_IMM, -64
     sec
     sbc.w playerData.stat_tear_speed
     sta.w projectile_velocy,X
@@ -528,8 +534,8 @@ PlayerShootTear:
     sta.w projectile_velocy,X
     lda.w player_velocx
     .ShiftRight_SIGN 1, FALSE
-    .AMIN #32
-    .AMAX #-64
+    .AMIN P_IMM, 32
+    .AMAX P_IMM, -64
     sec
     sbc.w playerData.stat_tear_speed
     sta.w projectile_velocx,X
@@ -539,8 +545,8 @@ PlayerShootTear:
     sta.w projectile_velocy,X
     lda.w player_velocx
     .ShiftRight_SIGN 1, FALSE
-    .AMAX #-32
-    .AMAX #64
+    .AMAX P_IMM, -32
+    .AMAX P_IMM, 64
     clc
     adc.w playerData.stat_tear_speed
     sta.w projectile_velocx,X
@@ -550,8 +556,8 @@ PlayerShootTear:
     sta.w projectile_velocx,X
     lda.w player_velocy
     .ShiftRight_SIGN 1, FALSE
-    .AMAX #-32
-    .AMAX #64
+    .AMAX P_IMM, -32
+    .AMAX P_IMM, 64
     clc
     adc.w playerData.stat_tear_speed
     sta.w projectile_velocy,X
@@ -1069,22 +1075,6 @@ InitialPathfindingData:
     .db $04 ; up
 .ENDR
 
-; PathfindingDirectionX:
-;     .db 0
-;     .db 0
-;     .db 127
-;     .db -127
-;     .db 0
-;     .db 0
-
-; PathfindingDirectionY:
-;     .db 0
-;     .db 127
-;     .db 0
-;     .db 0
-;     .db -127
-;     .db 0
-
 player_initialize_pathfinding_data:
     rep #$30
     phb
@@ -1096,7 +1086,17 @@ player_initialize_pathfinding_data:
     rtl
 
 _player_clear_pathfinding_data:
-    jsl player_initialize_pathfinding_data
+    rep #$30
+    phb
+    ; loop
+    .REPT 8 INDEX i
+        ldx #loword(InitialPathfindingData) + 16 * 4 + 2 + (16 * i)
+        ldy #loword(pathfind_player_data) + 16 * 4 + 2 + (16 * i)
+        lda #11
+        mvn bankbyte(InitialPathfindingData), bankbyte(pathfind_player_data)
+    .ENDR
+    ; end
+    plb
     rts
 
 player_update_pathfinding_data:

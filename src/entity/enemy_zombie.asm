@@ -90,32 +90,42 @@ entity_zombie_tick:
     tax
     ; X
     lda.w entity_velocx,Y
-    cmp.l _e_zombie_speedtable_X,X
-    beq ++
-    bpl +
+    .CMPS_BEGIN P_LONG_X, _e_zombie_speedtable_X
         ; velocx < target
+        lda.w entity_velocx,Y
+        clc
         adc #ZOMBIE_ACCEL
-    bra ++
-    +:
+        .AMIN P_LONG_X, _e_zombie_speedtable_X
+    .CMPS_GREATER
         ; velocx > target
+        lda.w entity_velocx,Y
+        sec
         sbc #ZOMBIE_ACCEL
-    ++:
+        .AMAX P_LONG_X, _e_zombie_speedtable_X
+    .CMPS_EQUAL
+    .CMPS_END
     sta.w entity_velocx,Y
+    clc
     adc.w entity_posx,Y
     sta.w entity_posx,Y
     ; Y
     lda.w entity_velocy,Y
-    cmp.l _e_zombie_speedtable_Y,X
-    beq ++
-    bpl +
-        ; velocy < target
+    .CMPS_BEGIN P_LONG_X, _e_zombie_speedtable_Y
+        ; velocx < target
+        lda.w entity_velocy,Y
+        clc
         adc #ZOMBIE_ACCEL
-    bra ++
-    +:
-        ; velocy > target
+        .AMIN P_LONG_X, _e_zombie_speedtable_Y
+    .CMPS_GREATER
+        ; velocx > target
+        lda.w entity_velocy,Y
+        sec
         sbc #ZOMBIE_ACCEL
-    ++:
+        .AMAX P_LONG_X, _e_zombie_speedtable_Y
+    .CMPS_EQUAL
+    .CMPS_END
     sta.w entity_velocy,Y
+    clc
     adc.w entity_posy,Y
     sta.w entity_posy,Y
 ; load & set gfx

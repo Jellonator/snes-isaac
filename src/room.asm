@@ -118,6 +118,9 @@ Room_Init:
     php
     jsl updateAllDoorsInRoom
     plp
+; Rest of initialization
+    rep #$20
+    stz.w projectile_count_2x
     rtl
 
 _Room_Open_Doors:

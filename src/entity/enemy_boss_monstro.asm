@@ -8,8 +8,8 @@
 .DEFINE MONSTRO_TILE_X_OFFS 0
 .DEFINE MONSTRO_TILE_Y_OFFS -24
 
-.DEFINE MONSTRO_POS_Z private_ext_entity_custom.13
-.DEFINE MONSTRO_VELOC_Z private_ext_entity_custom.15
+; .DEFINE MONSTRO_POS_Z private_ext_entity_custom.13
+; .DEFINE MONSTRO_VELOC_Z private_ext_entity_custom.15
 
 .ENUMID 1
 ; state when monstro is idle
@@ -34,8 +34,8 @@ entity_boss_monstro_init:
     lda #0
     sta.w entity_signal,Y
     sta.w entity_mask,Y
-    sta.w MONSTRO_POS_Z,Y
-    sta.w MONSTRO_VELOC_Z,Y
+    ; sta.w MONSTRO_POS_Z,Y
+    ; sta.w MONSTRO_VELOC_Z,Y
     lda #MONSTRO_STATE_IDLE
     sta.w entity_state,Y
     phy

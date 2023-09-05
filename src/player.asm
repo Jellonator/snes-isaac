@@ -6,6 +6,7 @@
 .DEFINE TempTileY2 $0E
 .DEFINE TempTemp1 $14
 .DEFINE TempTemp2 $16
+.DEFINE TempTearIdx $18
 
 .MACRO .PositionToIndex_A
     xba
@@ -156,7 +157,7 @@ PlayerInit:
     sta.w player_posx
     lda #((64 + 4 * 16 - 8) * 256)
     sta.w player_posy
-    stz.w projectile_count_2x
+    ; stz.w projectile_count_2x
     ; setup HP
     .REPT HEALTHSLOT_COUNT INDEX i
         stz.w playerData.healthSlots + (i * 2)
@@ -482,8 +483,12 @@ PlayerRender:
     rtl
 
 PlayerShootTear:
+    sep #$20
+    lda #ENTITY_TYPE_PROJECTILE
+    jsl entity_create
     rep #$30 ; 16 bit AXY
-    jsl projectile_slot_get
+    sty.b TempTearIdx
+    tyx
 ; set player info
     stz.w playerData.tear_timer
     lda.w playerData.flags
@@ -501,9 +506,11 @@ PlayerShootTear:
     lda #PROJECTILE_TYPE_PLAYER_BASIC
     sta.w projectile_type,X
     rep #$20
-    ; dmg
-    lda #3
-    sta.w projectile_damage,X
+    lda #-8 * $100
+    sta.w projectile_height,X
+    ; ; dmg; TODO: implement tear damage
+    ; lda #3
+    ; sta.w projectile_damage,X
 ; check direction
     lda.w joy1held
     bit #JOY_Y
@@ -520,68 +527,68 @@ PlayerShootTear:
     +
 ;tear_up:
     lda.w player_velocx
-    sta.w projectile_velocx,X
+    sta.w entity_velocx,X
     lda.w player_velocy
     .ShiftRight_SIGN 1, FALSE
     .AMIN P_IMM, 32
     .AMAX P_IMM, -64
     sec
     sbc.w playerData.stat_tear_speed
-    sta.w projectile_velocy,X
+    sta.w entity_velocy,X
     jmp @vertical
 @tear_left:
     lda.w player_velocy
-    sta.w projectile_velocy,X
+    sta.w entity_velocy,X
     lda.w player_velocx
     .ShiftRight_SIGN 1, FALSE
     .AMIN P_IMM, 32
     .AMAX P_IMM, -64
     sec
     sbc.w playerData.stat_tear_speed
-    sta.w projectile_velocx,X
+    sta.w entity_velocx,X
     jmp @horizontal
 @tear_right:
     lda.w player_velocy
-    sta.w projectile_velocy,X
+    sta.w entity_velocy,X
     lda.w player_velocx
     .ShiftRight_SIGN 1, FALSE
     .AMAX P_IMM, -32
     .AMAX P_IMM, 64
     clc
     adc.w playerData.stat_tear_speed
-    sta.w projectile_velocx,X
+    sta.w entity_velocx,X
     jmp @horizontal
 @tear_down:
     lda.w player_velocx
-    sta.w projectile_velocx,X
+    sta.w entity_velocx,X
     lda.w player_velocy
     .ShiftRight_SIGN 1, FALSE
     .AMAX P_IMM, -32
     .AMAX P_IMM, 64
     clc
     adc.w playerData.stat_tear_speed
-    sta.w projectile_velocy,X
+    sta.w entity_velocy,X
     jmp @vertical
 @vertical:
     lda.w playerData.flags
     bit #PLAYER_FLAG_EYE
     bne @vertical_skip
     lda.w player_posx
-    sta.w projectile_posx,X
+    sta.w entity_posx,X
     lda.w player_posy
     clc
     adc #256*4
-    sta.w projectile_posy,X
+    sta.w entity_posy,X
     rts
 @vertical_skip:
     lda.w player_posx
     clc
     adc #256*8
-    sta.w projectile_posx,X
+    sta.w entity_posx,X
     lda.w player_posy
     clc
     adc #256*4
-    sta.w projectile_posy,X
+    sta.w entity_posy,X
     rts
 @horizontal:
     lda.w playerData.flags
@@ -590,19 +597,19 @@ PlayerShootTear:
     lda.w player_posx
     clc
     adc #256*4
-    sta.w projectile_posx,X
+    sta.w entity_posx,X
     lda.w player_posy
-    sta.w projectile_posy,X
+    sta.w entity_posy,X
     rts
 @horizontal_skip:
     lda.w player_posx
     clc
     adc #256*4
-    sta.w projectile_posx,X
+    sta.w entity_posx,X
     lda.w player_posy
     clc
     adc.w #256*8
-    sta.w projectile_posy,X
+    sta.w entity_posy,X
     rts
 
 PlayerMoveHorizontal:

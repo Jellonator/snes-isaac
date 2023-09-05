@@ -5,8 +5,7 @@
 ; $00-$3F is reserved for temporary variables
 ; $40 should mostly be used for commonly used variables,
 ; or long pointers for use with [DIRECT],Y addressing
-.RAMSECTION "ZP" BANK 0 SLOT "ZeroMemory"
-    _zp_reserved ds 40
+.RAMSECTION "ZP" BANK 0 SLOT "ZeroMemory" ORGA $0040 FORCE
     ; Slot for the currently loaded room
     currentRoomSlot db
     ; map position of the currently loaded room
@@ -29,7 +28,7 @@
 
 ; Bank used for somewhat commonly used variables that need to be in bank 0
 ; (or which are accessed so much, that accessing via .w is much faster)
-.RAMSECTION "Shared" BANK 0 SLOT "SharedMemory"
+.RAMSECTION "Shared" BANK 0 SLOT "SharedMemory" ORGA $0100 FORCE
 ; joypad inputs
     joy1raw dw
     joy1press dw
@@ -54,16 +53,6 @@
     mapTileFlagsTable INSTANCEOF byte_t MAP_MAX_SIZE
 ; player ext data
     playerData INSTANCEOF playerextdata_t
-; tear/projectile data
-    projectile_velocx dsw PROJECTILE_ARRAY_MAX_COUNT
-    projectile_velocy dsw PROJECTILE_ARRAY_MAX_COUNT
-    projectile_posx dsw PROJECTILE_ARRAY_MAX_COUNT
-    projectile_posy dsw PROJECTILE_ARRAY_MAX_COUNT
-    projectile_lifetime dsw PROJECTILE_ARRAY_MAX_COUNT
-    projectile_flags dsw PROJECTILE_ARRAY_MAX_COUNT
-    projectile_damage dsw PROJECTILE_ARRAY_MAX_COUNT
-    private_projectile_base_size_type dsw PROJECTILE_ARRAY_MAX_COUNT
-    projectile_count_2x dw
 ; OAM data
     objectData INSTANCEOF object_t 128
     objectDataExt dsb 32 ; 2 bits per object: Xs
@@ -90,21 +79,23 @@
     ; velocity
     private_base_entity_velocx dsw ENTITY_TOTAL_MAX
     private_base_entity_velocy dsw ENTITY_TOTAL_MAX
-    ; Extraneous entity data (only for certain entity types)
-    private_ext_entity_custom INSTANCEOF entitycustomdatatableentry_t 16
-    private_ext_entity_statfx INSTANCEOF entitystatuseffectdata_t 2
+    ; Extraneous entity data
+    private_entity_custom INSTANCEOF entitycustomdata_t 4
+    ; Extraneous character data
+    private_entity_char_custom INSTANCEOF entitycharactercustomdata_t 16
+    private_entity_char_statfx INSTANCEOF entitycharacterstatuseffectdata_t 2
 ; Common entity data
     currentRoomEnemyCount dw
     ; spatial collision data (for entities)
     spatial_partition INSTANCEOF spatialpartitionlayer_t SPATIAL_LAYER_COUNT
     ; pathfinding data
     pathfind_player_data ds 256
-    entity_data_end ds 0
+    entity_data_end ds 01
 .ENDS
 
 ; Should contain data that is either large or not often used.
 ; For more efficient bank usage, this bank is mostly used for bank/game data
-.RAMSECTION "7E" BANK $7E SLOT "ExtraMemory"
+.RAMSECTION "7E" BANK $7E SLOT "ExtraMemory" ORGA $2000 FORCE
 ; map data
     ; maps [maptilepos_t] -> [room slot]
     mapTileSlotTable INSTANCEOF byte_t MAP_MAX_SIZE
@@ -135,7 +126,7 @@
 ; Should contain data that is either large or not often used
 ; For more efficient bank usage, this bank is mostly used for video memory management
 ; Perhaps will be used for decompressed animated sprites?
-.RAMSECTION "7F" BANK $7F SLOT "FullMemory"
+.RAMSECTION "7F" BANK $7F SLOT "FullMemory" ORGA $0000 FORCE
 ; VQueue data
     ; ops + miniops: $087C
     vqueueOps INSTANCEOF vqueueop_t VQUEUE_MAX_SIZE

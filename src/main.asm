@@ -26,7 +26,6 @@ UpdateLoop:
     sta MDMAEN
     jsr PlayerUpdate
     jsl player_update_pathfinding_data
-    jsl projectile_update_loop
     jsl entity_tick_all
     jsl Room_Tick
     jsr UpdateRest

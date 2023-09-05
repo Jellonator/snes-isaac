@@ -153,11 +153,15 @@
 .ENDST
 
 ; Custom entity data
-.STRUCT entitycustomdatatableentry_t
+.STRUCT entitycustomdata_t
+    for_entity dsw ENTITY_TOTAL_MAX
+.ENDST
+
+.STRUCT entitycharactercustomdata_t
     for_entity dsw ENTITY_CHARACTER_MAX
 .ENDST
 
-.STRUCT entitystatuseffectdata_t
+.STRUCT entitycharacterstatuseffectdata_t
     for_entity dsw ENTITY_CHARACTER_MAX
 .ENDST
 

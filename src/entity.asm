@@ -97,7 +97,7 @@ entity_free:
     sep #$20
     lda #0
     sta.w entity_type,Y
-    rep #$20
+    ; rep #$20
     ; remove from execution order
     tya ; A = Y
     ldx #0
@@ -199,13 +199,21 @@ EntityDefinitions:
         free_func: .dw _e_null
         spawngroup: .db ENTITY_SPAWNGROUP_NEVER
     .ENDST
+    ; 1: Player
     .DSTRUCT @player INSTANCEOF entitytypeinfo_t VALUES
         init_func: .dw _e_null
         tick_func: .dw _player_tick
         free_func: .dw _e_null
         spawngroup: .db ENTITY_SPAWNGROUP_NEVER
     .ENDST
-    .REPT (128 - 1 - 1) INDEX i
+    ; 2: Projectile
+    .DSTRUCT @projectile INSTANCEOF entitytypeinfo_t VALUES
+        init_func: .dw projectile_entity_init
+        tick_func: .dw projectile_entity_tick
+        free_func: .dw projectile_entity_free
+        spawngroup: .db ENTITY_SPAWNGROUP_NEVER
+    .ENDST
+    .REPT (128 - 2 - 1) INDEX i
         .DSTRUCT @null_pad{i+1} INSTANCEOF entitytypeinfo_t VALUES
             init_func: .dw _e_null
             tick_func: .dw _e_null

@@ -64,10 +64,7 @@
 ; Player flags
 .DEFINE PLAYER_FLAG_EYE $0001
 
-; Projectile info
-.DEFINE PROJECTILE_LIST_SIZE 64
-.DEFINE PROJECTILE_LIST_SIZE_2X 128
-
+; Projectile subtypes
 .ENUMID 0
 .ENUMID PROJECTILE_TYPE_PLAYER_BASIC
 
@@ -198,7 +195,14 @@
 .DEFINE ENTITY_STORE_COUNT 24
 ; Enemies and other objects which may consume multiple sprite slots
 ; Probably don't need this many slots, but it doesn't hurt to be safe
-.DEFINE ENTITY_TOTAL_MAX 48
+; I figure:
+; 1 Player
+; up to 16 enemies
+; up to 16 pickups/objects
+; up to 15 familiars
+; up to 48 projectiles
+; plus 31 extras
+.DEFINE ENTITY_TOTAL_MAX 127
 .DEFINE ENTITY_TOTAL_MAX_INDEX (2 * ENTITY_TOTAL_MAX)
 ; Character entities which may have health, status effects, custom sprites, etc.
 .DEFINE ENTITY_CHARACTER_MAX 24
@@ -209,6 +213,7 @@
 
 ; ENTITY TYPES
 .DEFINE ENTITY_TYPE_PLAYER 1
+.DEFINE ENTITY_TYPE_PROJECTILE 2
 .DEFINE ENTITY_TYPE_ENEMY_ATTACK_FLY 128
 .DEFINE ENTITY_TYPE_ENEMY_ZOMBIE 129
 .DEFINE ENTITY_TYPE_ENEMY_BOSS_MONSTRO 130

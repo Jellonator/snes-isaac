@@ -7,7 +7,7 @@
     SLOT 4 $2000 $E000 "ExtraMemory" ; Non-mirrored RAM slot
     SLOT 5 $0000 $10000 "FullMemory" ; Full RAM slot
     SLOT 6 $0000 $8000 "SRAM" ; SRAM slot
-    SLOT 7 $1F00 $0100 "Stack" ; Stack slot, ensuring at least 256 bytes reserved for stack
+    SLOT 7 $1E00 $0200 "Stack" ; Stack slot, ensuring at least 512 bytes reserved for stack
 .ENDME
 
 .ROMBANKMAP

@@ -1,12 +1,5 @@
 .include "base.inc"
 
-.DEFINE TempTileX $08
-.DEFINE TempTileY $0A
-.DEFINE TempTileX2 $0C
-.DEFINE TempTileY2 $0E
-.DEFINE TempTemp1 $14
-.DEFINE TempTemp2 $16
-
 .MACRO .PositionToIndex_A
     xba
     and #$00F0
@@ -24,76 +17,51 @@
     xba
 .ENDM
 
+.BANK ROMBANK_ENTITYCODE SLOT "ROM"
+.SECTION "ProjectileHooks" FREE
+
+projectile_entity_init:
+    ; creator is responsible for setting position, velocity
+    rep #$20
+    lda #0
+    sta.w entity_mask,Y
+    ; sta.w entity_signal,Y; implicit by 16b store
+    sta.w entity_state,Y
+    ; sta.w entity_timer,Y; implicit by 16b store
+    sta.w projectile_flags,Y
+    sta.w projectile_velocz,Y
+    lda #-$0800
+    sta.w projectile_height
+    rts
+
+projectile_entity_tick:
+    jsl projectile_tick__
+    rts
+
+projectile_entity_free:
+    rts
+
+.ENDS
+
 .BANK $01 SLOT "ROM"
 .SECTION "Projectilecode" FREE
-
-; Get the next available tear slot, and store it in X
-; if there are no available slots, the tear with the lowest life will be chosen
-projectile_slot_get:
-    rep #$30 ; 16 bit AXY
-    ldx.w projectile_count_2x
-    cpx #PROJECTILE_LIST_SIZE_2X
-    bne @has_empty_slots
-; no empty slots available:
-; find the slot with the lowest lifetime
-    lda #$7FFF
-    sta $00 ; $00 is best value
-    ldx #0 ; x is current index
-    ldy #0 ; Y is best index
-@iter_tears:
-    lda.w projectile_lifetime,X
-    cmp $00
-    bcs @skip_store
-    sta $00
-    txy ; if tears[X].lifetime < tears[Y].lifetime: Y=X
-@skip_store:
-    inx
-    inx
-; X == 0
-    cpx.w projectile_count_2x
-    bne @iter_tears
-; Finish, transfer Y to X
-    tyx
-    rts
-; empty slots available:
-@has_empty_slots:
-    inx
-    inx
-    stx.w projectile_count_2x
-    dex
-    dex
-    rtl
 
 ; Remove the tear at the index X
 ; AXY must be 16bit
 projectile_slot_free:
-    rep #$30 ; 16 bit AXY
-    ; decrement number of used tears
-    ldy.w projectile_count_2x
-    beq @skip_copy
-    dey
-    dey
-    sty.w projectile_count_2x
-    ; Check if X is the last available tear slot
-    cpx.w projectile_count_2x
-    beq @skip_copy
-    ; copy last tear slot to slot being removed
-    .REPT 8 INDEX i
-        lda.w projectile_velocx+(PROJECTILE_ARRAY_MAX_COUNT*2*i),Y
-        sta.w projectile_velocx+(PROJECTILE_ARRAY_MAX_COUNT*2*i),X
-    .ENDR
-@skip_copy:
     rtl
 
 _projectile_update_sprite:
     ; send to OAM
     sep #$20 ; 8A, 16XY
+    rep #$10
+    tyx
     ldy.w objectIndex
-    lda.w projectile_posx+1,X
+    lda.w entity_posx+1,X
     sta.w objectData.1.pos_x,Y
-    lda.w projectile_posy+1,X
-    sec
-    sbc $08
+    lda.w entity_posy+1,X
+    clc
+    adc.w projectile_height+1,X
     sta.w objectData.1.pos_y,Y
     lda #$21
     sta.w objectData.1.tileid,Y
@@ -148,84 +116,75 @@ _ProjectileTileHandlerTable:
     .ENDIF
 .ENDR
 
-projectile_update_loop:
-    rep #$30 ; 16 bit AXY
-    ldx #$0000
-    cpx.w projectile_count_2x
-    bcc @iter
+.define PROJECTILE_TMP_IDX $20
+.define PROJECTILE_TMP_POSX $01
+.define PROJECTILE_TMP_POSY $02
+.define PROJECTILE_TMP_VAL $12
+_projectile_delete:
+    rep #$30
+    ldy.b PROJECTILE_TMP_IDX
+    jsl entity_free ; tail call optimization
     rtl
-@iter_remove:
-    jsl projectile_slot_free
-    ; No ++X, but do check that this is the end of the array
-    cpx.w projectile_count_2x ; X < tear_bytes_used
-    bcc @iter
-    rtl
-@iter:
+
+projectile_tick__:
+    .INDEX 16
+    .ACCU 16
+    rep #$30
+    sty.b PROJECTILE_TMP_IDX
 ; Handle lifetime
-    lda.w projectile_lifetime,X
+    lda.w projectile_lifetime,Y
     dec A
-    beq @iter_remove
-    sta.w projectile_lifetime,X
-    .AMINU #8
-    sta.w $08 ; $08 is tear height
+    beq _projectile_delete
+    sta.w projectile_lifetime,Y
 ; Apply speed to position
     ; X
-    lda.w projectile_posx,X
+    lda.w entity_posx,Y
     clc
-    adc.w projectile_velocx,X
-    sta.w projectile_posx,X
-    ; store X index into TempTemp+1
-    lsr
-    lsr
-    lsr
-    lsr
-    sta.b TempTemp1
-    ; Y
-    lda.w projectile_posy,X
-    clc
-    adc.w projectile_velocy,X
-    sta.w projectile_posy,X
-; Check tile
-    ; Get tile index
+    adc.w entity_velocx,Y
+    sta.w entity_posx,Y
+    ; store X index
     xba
-    and #$00F0
     sep #$20
-    ora.b TempTemp1+1
-    tay
-    lda.w GameTileToRoomTileIndexTable,Y
-    cmp #97
-    bcs @iter_remove ; remove if oob
-    tay
-    ; sep #$20
-    lda [currentRoomTileTypeTableAddress],Y
+    clc
+    adc #$04
+    sta.b PROJECTILE_TMP_POSX
+    sta.w entity_box_x2,Y
+    lsr
+    lsr
+    lsr
+    lsr
+    sta.b PROJECTILE_TMP_VAL
+    ; Y
     rep #$20
+    lda.w entity_posy,Y
+    clc
+    adc.w entity_velocy,Y
+    sta.w entity_posy,Y
+    xba
+    sep #$30
+    clc
+    adc #$04
+    sta.b PROJECTILE_TMP_POSY
+    sta.w entity_box_y2,Y
+; Check tile
+    and #$F0
+    ora.b PROJECTILE_TMP_VAL
+    tax
+    lda.l GameTileToRoomTileIndexTable,X
+    cmp #97
+    bcs _projectile_delete ; remove if oob
+    tay
+    lda [currentRoomTileTypeTableAddress],Y
     bpl @skipTileHandler
-    phx
-    php
+    rep #$30
     and #$00FF
     asl
     tax
     jsr (_ProjectileTileHandlerTable,X)
-    plp
-    plx
-    brl @iter_remove
+    jmp _projectile_delete
 @skipTileHandler:
 ; Check collisions
-    rep #$30
-    pha
-    phx
-    phy
     sep #$30
-    lda.w projectile_posx+1,X
-    clc
-    adc #4
-    sta.b $01
-    lda.w projectile_posy+1,X
-    clc
-    adc #4
-    sec
-    sbc $08
-    sta.b $02
     ; set detection mask
     lda #ENTITY_MASK_TEAR
     sta.b $00
@@ -235,19 +194,18 @@ projectile_update_loop:
         lda #ENTITY_MASK_PROJECTILE
         sta.b $00
     +:
-    jsl GetEntityCollisionAt
+    jsl GetEntityCollisionAt ; Y = new entity
     cpy #0
     beq @skipCollisionHandler
         ; found object:
         ; Add veloc
         rep #$30
-        lda $03,S
-        tax
-        lda.w projectile_velocx,X
+        ldx.b PROJECTILE_TMP_IDX
+        lda.w entity_velocx,X
         .ShiftRight_SIGN 1, FALSE
         adc.w entity_velocx,Y
         sta.w entity_velocx,Y
-        lda.w projectile_velocy,X
+        lda.w entity_velocy,X
         .ShiftRight_SIGN 1, FALSE
         adc.w entity_velocy,Y
         sta.w entity_velocy,Y
@@ -264,24 +222,10 @@ projectile_update_loop:
             sta.w entity_signal,Y
             rep #$30
         +:
-        ply
-        plx
-        pla
-        brl @iter_remove
+        jmp _projectile_delete
 @skipCollisionHandler:
-    rep #$30
-    ply
-    plx
-    pla
-; Update rest of tear info
+    ldy.b PROJECTILE_TMP_IDX
     jsr _projectile_update_sprite
-    rep #$30 ; 16AXY
-    inx
-    inx
-    cpx.w projectile_count_2x
-    bcs @end
-    jmp @iter
-@end:
     rtl
 
 .ENDS

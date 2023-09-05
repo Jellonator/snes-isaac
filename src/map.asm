@@ -50,6 +50,14 @@ InitializeRoomSlot:
     inx
     cpy #roomdefinition_t.tileData+ROOM_TILE_COUNT
     bne @tile_copy_loop
+    ; set extra tiles
+    lda #BLOCK_HOLE
+    sta.l roomSlotTiles.1.tileTypeTable,X
+    lda #BLOCK_IMPERVIOUS
+    sta.l roomSlotTiles.1.tileTypeTable+1,X
+    lda #0
+    sta.l roomSlotTiles.1.tileVariantTable,X
+    sta.l roomSlotTiles.1.tileVariantTable+1,X
     rtl
 
 ; Initialize a room slot from a room definition

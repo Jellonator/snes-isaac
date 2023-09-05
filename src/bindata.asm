@@ -7,7 +7,7 @@
 
 .include "roompools.inc"
 
-.bank $41
+.bank $00
 .SECTION "ExtraData"
 EmptyData:
     .dw $0000
@@ -133,5 +133,39 @@ VecNormTableB_Y:
             .db ((127 * (iy - 8)) / sqrt(((ix - 8) * (ix - 8)) + ((iy-8) * (iy-8))))
         .ENDR
     .ENDR
+
+GameTileToRoomTileIndexTable:
+    .REPT 16*3
+        .db 97
+    .ENDR
+    .REPT 16
+        .db 96
+    .ENDR
+    .REPT 8 INDEX iy
+        .db 97, 96
+        .REPT 12 INDEX ix
+            .db (iy * 12) + ix
+        .ENDR
+        .db 96, 97
+    .ENDR
+    .REPT 16
+        .db 96
+    .ENDR
+    .REPT 16*3
+        .db 97
+    .ENDR
+
+InitialPathfindingData:
+.REPT 16*4
+    .db $01 ; down
+.ENDR
+.REPT 8
+    .db $02, $02 ; right
+    .db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ; empty
+    .db $03, $03 ; left
+.ENDR
+.REPT 16*4
+    .db $04 ; up
+.ENDR
 
 .ENDS

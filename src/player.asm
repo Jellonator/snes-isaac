@@ -1047,34 +1047,6 @@ WaitScrollUp:
 WaitScrollDown:
     .MakeWaitScroll BG2VOFS, gameRoomScrollY, 256, 32, 128, TempTemp1, object_t.pos_y
 
-GameTileToRoomTileIndexTable:
-    .REPT 16*4
-        .db 96
-    .ENDR
-    .REPT 8 INDEX iy
-        .db 96, 96
-        .REPT 12 INDEX ix
-            .db (iy * 12) + ix
-        .ENDR
-        .db 96, 96
-    .ENDR
-    .REPT 16*4
-        .db 96
-    .ENDR
-
-InitialPathfindingData:
-.REPT 16*4
-    .db $01 ; down
-.ENDR
-.REPT 8
-    .db $02, $02 ; right
-    .db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ; empty
-    .db $03, $03 ; left
-.ENDR
-.REPT 16*4
-    .db $04 ; up
-.ENDR
-
 player_initialize_pathfinding_data:
     rep #$30
     phb

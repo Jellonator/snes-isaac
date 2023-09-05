@@ -27,6 +27,48 @@
 .ENUMID P_REL16
 .ENUMID P_SRC_DEST
 
+; meta instructions
+.MACRO beql ARGS addr
+    bne +++++
+        jmp addr
+    +++++:
+.ENDM
+.MACRO bnel ARGS addr
+    beq +++++
+        jmp addr
+    +++++:
+.ENDM
+.MACRO bccl ARGS addr
+    bcs +++++
+        jmp addr
+    +++++:
+.ENDM
+.MACRO bcsl ARGS addr
+    bcc +++++
+        jmp addr
+    +++++:
+.ENDM
+.MACRO bvcl ARGS addr
+    bvs +++++
+        jmp addr
+    +++++:
+.ENDM
+.MACRO bvsl ARGS addr
+    bvc +++++
+        jmp addr
+    +++++:
+.ENDM
+.MACRO bmil ARGS addr
+    bpl +++++
+        jmp addr
+    +++++:
+.ENDM
+.MACRO bpll ARGS addr
+    bmi +++++
+        jmp addr
+    +++++:
+.ENDM
+
 ; GENERIC INSTRUCTION
 ; Parameters:
 ;   inst   - the instruction
@@ -473,6 +515,20 @@
     lda YMEM
     cmp #8
     bcs LABEL
+.ENDM
+
+.MACRO .PositionToTileIndex ARGS XACCESS, XADDR, YACCESS, YADDR, TMP
+    .g_instruction lda, XACCESS, XADDR
+    lsr
+    lsr
+    lsr
+    lsr
+    sta.b TMP
+    .g_instruction lda, YACCESS, YADDR
+    and #$FF00
+    ora.b TMP
+    tax
+    lda.l GameTileToRoomTileIndexTable,X
 .ENDM
 
 .MACRO .TileXYToIndexA ARGS XMEM, YMEM, TEMPMEM

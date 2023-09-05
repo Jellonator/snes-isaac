@@ -150,19 +150,15 @@ _ProjectileTileHandlerTable:
 
 projectile_update_loop:
     rep #$30 ; 16 bit AXY
-    phb
-    .ChangeDataBank $7E
     ldx #$0000
     cpx.w projectile_count_2x
     bcc @iter
-    plb
     rtl
 @iter_remove:
     jsl projectile_slot_free
     ; No ++X, but do check that this is the end of the array
     cpx.w projectile_count_2x ; X < tear_bytes_used
     bcc @iter
-    plb
     rtl
 @iter:
 ; Handle lifetime
@@ -173,27 +169,34 @@ projectile_update_loop:
     .AMINU #8
     sta.w $08 ; $08 is tear height
 ; Apply speed to position
+    ; X
     lda.w projectile_posx,X
     clc
     adc.w projectile_velocx,X
     sta.w projectile_posx,X
-    clc
-    adc #(4-ROOM_LEFT)*256
-    .PositionToIndex_A
-    sta currentConsideredTileX
+    ; store X index into TempTemp+1
+    lsr
+    lsr
+    lsr
+    lsr
+    sta.b TempTemp1
+    ; Y
     lda.w projectile_posy,X
     clc
     adc.w projectile_velocy,X
     sta.w projectile_posy,X
-    clc
-    adc #(-ROOM_TOP)*256
-    .PositionToIndex_A
-    sta currentConsideredTileY
 ; Check tile
-    .BranchIfTileXYOOB currentConsideredTileX, currentConsideredTileY, @skipTileHandler
-    .TileXYToIndexA currentConsideredTileX, currentConsideredTileY, TempTemp1
-    tay
+    ; Get tile index
+    xba
+    and #$00F0
     sep #$20
+    ora.b TempTemp1+1
+    tay
+    lda.w GameTileToRoomTileIndexTable,Y
+    cmp #97
+    bcs @iter_remove ; remove if oob
+    tay
+    ; sep #$20
     lda [currentRoomTileTypeTableAddress],Y
     rep #$20
     bpl @skipTileHandler
@@ -208,6 +211,7 @@ projectile_update_loop:
     brl @iter_remove
 @skipTileHandler:
 ; Check collisions
+    rep #$30
     pha
     phx
     phy
@@ -278,7 +282,6 @@ projectile_update_loop:
     bcs @end
     jmp @iter
 @end:
-    plb
     rtl
 
 .ENDS

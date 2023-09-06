@@ -215,7 +215,7 @@ PlayerUpdate:
 ; movement
     rep #$30 ; 16 bit AXY
     lda.w playerData.stat_speed
-    sta $00
+    sta $00 ; $00 = speed
     ; check (LEFT OR RIGHT) AND (UP OR DOWN)
     ; if so, multiply speed by 3/4; aka (A+A+A) >> 2
     lda.w joy1held
@@ -224,46 +224,48 @@ PlayerUpdate:
     beq @skip_slow
     bit #$0300
     beq @skip_slow
-    lda.w playerData.stat_speed
+    lda.b $00
     asl
     clc
     adc $00
     lsr
     lsr
-    sta $00
+    sta $00 ; $00 = speed * 0.75
 @skip_slow:
-
-    ldx.w player_velocy
+; Y MOVEMENT
     lda.w joy1held
     bit #JOY_DOWN
     bne @down
     bit #JOY_UP
     bne @up
-    txa
+    ; Y stop
+    lda.w player_velocy
     cmp #0
-    bpl @slowup ; If speed.y > 0
-
-    ; slowright
+    bpl @slowup
+    ; slowdown
+    lda.w player_velocy
     clc
     adc.w playerData.stat_accel
     .AMIN P_IMM, $00
     jmp @endy
 @slowup:
-    ; slowleft
+    ; slowup
+    lda.w player_velocy
     sec
     sbc.w playerData.stat_accel
     .AMAX P_IMM, $00
     jmp @endy
 @down:
-    ; right
-    txa
+    ; up
+    lda.w player_velocy
     clc
     adc.w playerData.stat_accel
     .AMIN P_DIR, $00
+    .AMAX P_IMM $00
     jmp @endy
 @up:
-    ; left
-    txa
+    ; up
+    lda.w player_velocy
     sec
     sbc.w playerData.stat_accel
     eor #$FFFF
@@ -271,41 +273,43 @@ PlayerUpdate:
     .AMIN P_DIR, $00
     eor #$FFFF
     inc A
+    .AMIN P_IMM $00
 @endy:
     sta.w player_velocy
-    
-    ldx.w player_velocx
+; X MOVEMENT
     lda.w joy1held
     bit #JOY_RIGHT
     bne @right
     bit #JOY_LEFT
     bne @left
     ; X stop
-    txa
+    lda.w player_velocx
     cmp #0
     bpl @slowleft ; If speed.x > 0
-
     ; slowright
+    lda.w player_velocx
     clc
     adc.w playerData.stat_accel
     .AMIN P_IMM, $00
     jmp @endx
 @slowleft:
     ; slowleft
+    lda.w player_velocx
     sec
     sbc.w playerData.stat_accel
     .AMAX P_IMM, $00
     jmp @endx
 @right:
     ; right
-    txa
+    lda.w player_velocx
     clc
     adc.w playerData.stat_accel
     .AMIN P_DIR, $00
+    .AMAX P_IMM $00
     jmp @endx
 @left:
     ; left
-    txa
+    lda.w player_velocx
     sec
     sbc.w playerData.stat_accel
     eor #$FFFF
@@ -313,6 +317,7 @@ PlayerUpdate:
     .AMIN P_DIR, $00
     eor #$FFFF
     inc A
+    .AMIN P_IMM $00
 @endx:
     sta.w player_velocx
 
@@ -454,7 +459,8 @@ PlayerUpdate:
     rts
 
 PlayerRender:
-    sep #$30 ; 8 bit AXY
+    sep #$20
+    rep #$10
     ; update render data
     lda.w playerData.invuln_timer
     bit #$08
@@ -480,6 +486,32 @@ PlayerRender:
         .SetCurrentObjectS
         .IncrementObjectIndex
 @invis_frame:
+    ; put shadow
+    sep #$20
+    rep #$10
+    ldx.w objectIndexShadow
+    dex
+    dex
+    dex
+    dex
+    cpx.w objectIndex
+    bcc @skipShadow
+        stx.w objectIndexShadow
+        lda.w player_posy + 1
+        clc
+        adc #5
+        sta.w objectData.1.pos_y,X
+        lda.w player_posx + 1
+        clc
+        adc #4
+        sta.w objectData.1.pos_x,X
+        eor.w player_posy + 1
+        and #$01
+        ora #$A0
+        sta.w objectData.1.tileid,X
+        lda #%00101010
+        sta.w objectData.1.flags,X
+    @skipShadow:
     rtl
 
 PlayerShootTear:
@@ -496,7 +528,7 @@ PlayerShootTear:
     sta.w playerData.flags
 ; set base projectile info
     ; life
-    lda #120
+    lda #100
     sta.w projectile_lifetime,X
     ; size
     stz.w projectile_flags,X
@@ -506,7 +538,7 @@ PlayerShootTear:
     lda #PROJECTILE_TYPE_PLAYER_BASIC
     sta.w projectile_type,X
     rep #$20
-    lda #-8 * $100
+    lda #$0800
     sta.w projectile_height,X
     ; ; dmg; TODO: implement tear damage
     ; lda #3
@@ -599,6 +631,8 @@ PlayerShootTear:
     adc #256*4
     sta.w entity_posx,X
     lda.w player_posy
+    sec
+    sbc.w #256*2
     sta.w entity_posy,X
     rts
 @horizontal_skip:
@@ -608,7 +642,7 @@ PlayerShootTear:
     sta.w entity_posx,X
     lda.w player_posy
     clc
-    adc.w #256*8
+    adc.w #256*6
     sta.w entity_posy,X
     rts
 
@@ -619,8 +653,8 @@ PlayerMoveHorizontal:
     beq @skipmove
     clc
     adc.w player_posx
-    .AMAXU $00
-    .AMINU $02
+    .AMAXU P_DIR, $00
+    .AMINU P_DIR, $02
     sta.w player_posx
     lda.w player_velocx
     cmp #0
@@ -669,7 +703,7 @@ PlayerMoveLeft:
     clc
     adc #(ROOM_LEFT + 16 - PLAYER_HITBOX_LEFT)*256
 ; apply position
-    .AMAXU player_posx
+    .AMAXU P_ABS, player_posx
     sta.w player_posx
 @end:
     rts
@@ -714,7 +748,7 @@ PlayerMoveRight:
     clc
     adc #(ROOM_LEFT - PLAYER_HITBOX_RIGHT)*256-1
 ; apply position
-    .AMINU player_posx
+    .AMINU P_ABS, player_posx
     sta.w player_posx
 @end:
     rts
@@ -726,8 +760,8 @@ PlayerMoveVertical:
     beq @skipmove
     clc
     adc.w player_posy
-    .AMAXU $04
-    .AMINU $06
+    .AMAXU P_DIR, $04
+    .AMINU P_DIR, $06
     sta.w player_posy
     lda.w player_velocy
     cmp #0
@@ -776,7 +810,7 @@ PlayerMoveUp:
     clc
     adc #(ROOM_TOP + 16 - PLAYER_HITBOX_TOP)*256
 ; apply position
-    .AMAXU player_posy
+    .AMAXU P_ABS, player_posy
     sta.w player_posy
 @end:
     rts
@@ -821,7 +855,7 @@ PlayerMoveDown:
     clc
     adc #(ROOM_TOP - PLAYER_HITBOX_BOTTOM)*256 - 1
 ; apply position
-    .AMINU player_posy
+    .AMINU P_ABS, player_posy
     sta.w player_posy
 @end:
     rts

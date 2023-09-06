@@ -96,13 +96,17 @@ entity_zombie_tick:
         clc
         adc #ZOMBIE_ACCEL
         .AMIN P_LONG_X, _e_zombie_speedtable_X
+        .AMAX P_IMM, -$0040
     .CMPS_GREATER
         ; velocx > target
         lda.w entity_velocx,Y
         sec
         sbc #ZOMBIE_ACCEL
         .AMAX P_LONG_X, _e_zombie_speedtable_X
+        .AMIN P_IMM, $0040
     .CMPS_EQUAL
+        .AMAX P_IMM, -$0100
+        .AMIN P_IMM, $0100
     .CMPS_END
     sta.w entity_velocx,Y
     clc
@@ -116,13 +120,17 @@ entity_zombie_tick:
         clc
         adc #ZOMBIE_ACCEL
         .AMIN P_LONG_X, _e_zombie_speedtable_Y
+        .AMAX P_IMM, -$0040
     .CMPS_GREATER
         ; velocx > target
         lda.w entity_velocy,Y
         sec
         sbc #ZOMBIE_ACCEL
         .AMAX P_LONG_X, _e_zombie_speedtable_Y
+        .AMIN P_IMM, $0040
     .CMPS_EQUAL
+        .AMAX P_IMM, -$0100
+        .AMIN P_IMM, $0100
     .CMPS_END
     sta.w entity_velocy,Y
     clc
@@ -200,8 +208,39 @@ entity_zombie_tick:
         .IncrementObjectIndex
     +:
     .SetCurrentObjectS
-    .IncrementObjectIndex
     ply
+    ; put shadow
+    sep #$20
+    rep #$10
+    ldx.w objectIndex
+    inx
+    inx
+    inx
+    inx
+    stx.w objectIndex
+    cpx.w objectIndexShadow
+    bcs @skipShadow
+        ldx.w objectIndexShadow
+        dex
+        dex
+        dex
+        dex
+        stx.w objectIndexShadow
+        lda.w entity_posy+1,Y
+        clc
+        adc #5
+        sta.w objectData.1.pos_y,X
+        lda.w entity_posx+1,Y
+        clc
+        adc #4
+        sta.w objectData.1.pos_x,X
+        eor.w entity_posy+1,Y
+        and #$01
+        ora #$A0
+        sta.w objectData.1.tileid,X
+        lda #%00101010
+        sta.w objectData.1.flags,X
+    @skipShadow:
     ; Check collision with player
     sep #$20
     lda.w player_box_x1

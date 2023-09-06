@@ -57,6 +57,7 @@
     objectData INSTANCEOF object_t 128
     objectDataExt dsb 32 ; 2 bits per object: Xs
     objectIndex dw
+    objectIndexShadow dw
 ; VQueue data
     vqueueNumOps dw
     vqueueNumMiniOps dw

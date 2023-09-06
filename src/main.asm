@@ -8,7 +8,9 @@ UpdateLoop:
     inc.w is_game_update_running
     ; Actual update code
     ; First, clear sprite data (will eventually make this better)
-    .InitializeObjectIndices
+    stz.w objectIndex
+    lda #512
+    sta.w objectIndexShadow
     lda #EmptySpriteData
     sta DMA0_SRCL
     lda #512+32

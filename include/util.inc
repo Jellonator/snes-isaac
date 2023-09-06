@@ -178,34 +178,18 @@
 .ENDM
 
 ; Maximum of A register and value, unsigned
-.MACRO .AMAXU
-    .IF \?1 == ARG_IMMEDIATE
-        cmp #\1
-    .ELSE
-        cmp.w \1
-    .ENDIF
+.MACRO .AMAXU ARGS method, addr
+    .g_instruction cmp, method, addr
     bcs @@@@@\.\@
-    .IF \?1 == ARG_IMMEDIATE
-        lda #\1
-    .ELSE
-        lda.w \1
-    .ENDIF
+    .g_instruction lda, method, addr
 @@@@@\.\@:
 .ENDM
 
 ; Minimum of A register and value, unsigned
-.MACRO .AMINU
-    .IF \?1 == ARG_IMMEDIATE
-        cmp #\1
-    .ELSE
-        cmp \1
-    .ENDIF
+.MACRO .AMINU ARGS method, addr
+    .g_instruction cmp, method, addr
     bcc @@@@@\.\@
-    .IF \?1 == ARG_IMMEDIATE
-        lda.w #\1
-    .ELSE
-        lda.w \1
-    .ENDIF
+    .g_instruction lda, method, addr
 @@@@@\.\@:
 .ENDM
 
@@ -323,10 +307,6 @@
     sta.b <DMA0_DEST
     lda #$01
     sta.l MDMAEN
-.ENDM
-
-.MACRO .InitializeObjectIndices
-    stz.w objectIndex
 .ENDM
 
 .MACRO .SetCurrentObjectS

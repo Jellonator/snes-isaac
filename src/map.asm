@@ -202,15 +202,21 @@ LoadRoomSlotIntoLevel:
     jsl Room_Init
     rtl
 
+TileLocationMap:
+.REPT 8 INDEX iy
+    .REPT 12 INDEX ix
+        .dw (32 * iy) + ix + 2 + 2*32
+    .ENDR
+.ENDR
+
 ; Update the VRAM tile in currentConsideredTile
 ; Clobbers A, X, and Y
 HandleTileChanged:
     .ACCU 16
     .INDEX 16
     phb
+    phy
     .ChangeDataBank $00
-    .TileXYToIndexA currentConsideredTileX, currentConsideredTileY, $04
-    tay
     lda [currentRoomTileTypeTableAddress],Y ; get TYPE
     and #$00FF
     asl
@@ -227,22 +233,19 @@ HandleTileChanged:
     tax
     lda ($00),Y ; A now contains the actual tile value
     sta.l vqueueMiniOps.1.data,X
-    lda.b currentConsideredTileY
+    phx
+    lda $03,S
     asl
-    asl
-    asl
-    asl
-    asl
+    tax
+    lda.l TileLocationMap,X
     clc
     adc.w gameRoomBG2Offset
-    clc
-    adc.b currentConsideredTileX
-    clc
-    adc #2 + 2*32
+    plx
     sta.l vqueueMiniOps.1.vramAddr,X
     inc.w vqueueNumMiniOps
+    ply
     plb
-    rts
+    rtl
 
 _UpdateDoorTileNorth:
     rep #$30

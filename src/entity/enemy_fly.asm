@@ -180,6 +180,8 @@ entity_basic_fly_tick:
     lda.w entity_posx + 1,Y
     sta.w objectData.1.pos_x,X
     lda.w entity_posy + 1,Y
+    sec
+    sbc #8
     sta.w objectData.1.pos_y,X
     lda #%00101001
     sta.w objectData.1.flags,X
@@ -194,8 +196,39 @@ entity_basic_fly_tick:
     rep #$30
     phy
     .SetCurrentObjectS
-    .IncrementObjectIndex
     ply
+    ; put shadow
+    sep #$20
+    rep #$10
+    ldx.w objectIndex
+    inx
+    inx
+    inx
+    inx
+    stx.w objectIndex
+    cpx.w objectIndexShadow
+    bcs @skipShadow
+        ldx.w objectIndexShadow
+        dex
+        dex
+        dex
+        dex
+        stx.w objectIndexShadow
+        lda.w entity_posy+1,Y
+        clc
+        adc #4
+        sta.w objectData.1.pos_y,X
+        lda.w entity_posx+1,Y
+        clc
+        adc #4
+        sta.w objectData.1.pos_x,X
+        eor.w entity_posy+1,Y
+        and #$01
+        ora #$A0
+        sta.w objectData.1.tileid,X
+        lda #%00101010
+        sta.w objectData.1.flags,X
+    @skipShadow:
     ; Check collision with player
     sep #$20
     lda.w player_box_x1

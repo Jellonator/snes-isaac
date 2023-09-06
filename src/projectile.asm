@@ -30,7 +30,7 @@ projectile_entity_init:
     ; sta.w entity_timer,Y; implicit by 16b store
     sta.w projectile_flags,Y
     sta.w projectile_velocz,Y
-    lda #-$0800
+    lda #$0800
     sta.w projectile_height
     rts
 
@@ -60,8 +60,8 @@ _projectile_update_sprite:
     lda.w entity_posx+1,X
     sta.w objectData.1.pos_x,Y
     lda.w entity_posy+1,X
-    clc
-    adc.w projectile_height+1,X
+    sec
+    sbc.w projectile_height+1,X
     sta.w objectData.1.pos_y,Y
     lda #$21
     sta.w objectData.1.tileid,Y
@@ -78,6 +78,25 @@ _projectile_update_sprite:
     iny
     iny
     sty.w objectIndex
+    cpy.w objectIndexShadow
+    bcs @skipShadow
+        ldy.w objectIndexShadow
+        dey
+        dey
+        dey
+        dey
+        sty.w objectIndexShadow
+        lda.w entity_posy+1,X
+        sta.w objectData.1.pos_y,Y
+        lda.w entity_posx+1,X
+        sta.w objectData.1.pos_x,Y
+        eor.w entity_posy+1,X
+        and #$01
+        ora #$A0
+        sta.w objectData.1.tileid,Y
+        lda #%00101010
+        sta.w objectData.1.flags,Y
+    @skipShadow:
     rts
 
 _projectile_tile_do_nothing:
@@ -95,7 +114,7 @@ _projectile_tile_poop:
     inc A
     sta [currentRoomTileVariantTableAddress],Y
     rep #$20 ; 16 bit A
-    jsr HandleTileChanged
+    jsl HandleTileChanged
     rts
 @removeTile:
     sep #$20 ; 8 bit A
@@ -104,7 +123,7 @@ _projectile_tile_poop:
     lda #BLOCK_REGULAR
     sta [currentRoomTileTypeTableAddress],Y
     rep #$20 ; 16 bit A
-    jsr HandleTileChanged
+    jsl HandleTileChanged
     rts
 
 _ProjectileTileHandlerTable:
@@ -131,11 +150,19 @@ projectile_tick__:
     .ACCU 16
     rep #$30
     sty.b PROJECTILE_TMP_IDX
-; Handle lifetime
+; Handle lifetime (drop when life ends)
     lda.w projectile_lifetime,Y
+    bne @noFall
+        lda.w projectile_height,Y
+        sec
+        sbc #256
+        sta.w projectile_height,Y
+        bpl @lifeEnd
+        jmp _projectile_delete
+    @noFall:
     dec A
-    beq _projectile_delete
     sta.w projectile_lifetime,Y
+    @lifeEnd:
 ; Apply speed to position
     ; X
     lda.w entity_posx,Y
@@ -148,7 +175,6 @@ projectile_tick__:
     clc
     adc #$04
     sta.b PROJECTILE_TMP_POSX
-    sta.w entity_box_x2,Y
     lsr
     lsr
     lsr
@@ -165,7 +191,6 @@ projectile_tick__:
     clc
     adc #$04
     sta.b PROJECTILE_TMP_POSY
-    sta.w entity_box_y2,Y
 ; Check tile
     and #$F0
     ora.b PROJECTILE_TMP_VAL
@@ -174,6 +199,14 @@ projectile_tick__:
     cmp #97
     bcs _projectile_delete ; remove if oob
     tay
+    ; intermission: skip collision checking if too damn high up
+    ldx.b PROJECTILE_TMP_IDX
+    lda.w projectile_height+1,X
+    cmp #25
+    bcc +
+        jmp @skipCollisionHandler
+    +:
+    ; continuing on...
     lda [currentRoomTileTypeTableAddress],Y
     bpl @skipTileHandler
     rep #$30
@@ -186,6 +219,7 @@ projectile_tick__:
 ; Check collisions
     sep #$30
     ; set detection mask
+    ; ldx.b PROJECTILE_TMP_IDX
     lda #ENTITY_MASK_TEAR
     sta.b $00
     lda.w projectile_type,X
@@ -224,7 +258,17 @@ projectile_tick__:
         +:
         jmp _projectile_delete
 @skipCollisionHandler:
+    rep #$10
     ldy.b PROJECTILE_TMP_IDX
+    sep #$20
+    lda.w entity_box_x1,Y
+    clc
+    adc #8
+    sta.w entity_box_x2,Y
+    lda.w entity_box_y1,Y
+    clc
+    adc #8
+    sta.w entity_box_y2,Y
     jsr _projectile_update_sprite
     rtl
 

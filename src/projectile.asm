@@ -65,7 +65,7 @@ _projectile_update_sprite:
     sta.w objectData.1.pos_y,Y
     lda #$21
     sta.w objectData.1.tileid,Y
-    lda #%00101010
+    lda #%00100010
     sta.w objectData.1.flags,Y
     lda.w projectile_type,X
     bpl +
@@ -77,6 +77,7 @@ _projectile_update_sprite:
     iny
     iny
     iny
+    ; special handling for projectile shadows
     sty.w objectIndex
     cpy.w objectIndexShadow
     bcs @skipShadow
@@ -91,7 +92,7 @@ _projectile_update_sprite:
         lda.w entity_posx+1,X
         sta.w objectData.1.pos_x,Y
         eor.w entity_posy+1,X
-        and #$01
+        and #$00
         ora #$A0
         sta.w objectData.1.tileid,Y
         lda #%00101010
@@ -267,7 +268,9 @@ projectile_tick__:
     sta.w entity_box_x2,Y
     lda.w entity_box_y1,Y
     clc
-    adc #8
+    adc #4
+    sta.w entity_ysort,Y
+    adc #4
     sta.w entity_box_y2,Y
     jsr _projectile_update_sprite
     rtl

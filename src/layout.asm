@@ -82,6 +82,7 @@
     private_base_entity_velocy dsw ENTITY_TOTAL_MAX
     ; Extraneous entity data
     private_entity_custom INSTANCEOF entitycustomdata_t 4
+    private_entity_ysort_order ds ENTITY_TOTAL_MAX
     ; Extraneous character data
     private_entity_char_custom INSTANCEOF entitycharactercustomdata_t 16
     private_entity_char_statfx INSTANCEOF entitycharacterstatuseffectdata_t 2

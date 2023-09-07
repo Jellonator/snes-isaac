@@ -436,7 +436,9 @@ PlayerUpdate:
     sta.w player_box_x2
     lda.w player_box_y1
     clc
-    adc #16
+    adc #8
+    sta.w entity_ysort + ENTITY_INDEX_PLAYER
+    adc #8
     sta.w player_box_y2
     ; set flags/mask
     lda #ENTITY_MASK_PROJECTILE
@@ -477,7 +479,7 @@ PlayerRender:
         stz.w objectData.1.tileid,X
         lda #$02
         sta.w objectData.2.tileid,X
-        lda #%00101000
+        lda #%00100000
         sta.w objectData.1.flags,X
         sta.w objectData.2.flags,X
         rep #$30 ; 16 bit AXY
@@ -489,29 +491,10 @@ PlayerRender:
     ; put shadow
     sep #$20
     rep #$10
-    ldx.w objectIndexShadow
-    dex
-    dex
-    dex
-    dex
-    cpx.w objectIndex
-    bcc @skipShadow
-        stx.w objectIndexShadow
-        lda.w player_posy + 1
-        clc
-        adc #5
-        sta.w objectData.1.pos_y,X
-        lda.w player_posx + 1
-        clc
-        adc #4
-        sta.w objectData.1.pos_x,X
-        eor.w player_posy + 1
-        and #$01
-        ora #$A0
-        sta.w objectData.1.tileid,X
-        lda #%00101010
-        sta.w objectData.1.flags,X
-    @skipShadow:
+    ldy #ENTITY_INDEX_PLAYER
+    pea $0405
+    jsl EntityPutShadow
+    plx
     rtl
 
 PlayerShootTear:
@@ -631,8 +614,8 @@ PlayerShootTear:
     adc #256*4
     sta.w entity_posx,X
     lda.w player_posy
-    sec
-    sbc.w #256*2
+    ; sec
+    ; sbc.w #256*1
     sta.w entity_posy,X
     rts
 @horizontal_skip:

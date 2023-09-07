@@ -265,7 +265,7 @@ SortEntityExecutionOrder:
     ; v = entity_y2[e]
     tax
     ; xba
-    lda.w entity_box_y2,X
+    lda.w entity_ysort,X
     sta.b $02
     ; j = i - 1;
     sty.b $00
@@ -279,7 +279,7 @@ SortEntityExecutionOrder:
         lda.w entityExecutionOrder,X
         tax
         ; A = entity_y2[X]
-        lda.w entity_box_y2,X
+        lda.w entity_ysort,X
         cmp.b $02
         bcc @endinnerloop
         beq @endinnerloop
@@ -396,4 +396,37 @@ GetEntityCollisionAt:
     ldy #0
     rtl
 
+; place entity shadow for entity at index Y
+; assumes 16 bit index, 8 bit accumulator
+; Parameters:
+;   offs x [db] $05
+;   offs y [db] $04
+EntityPutShadow:
+    .INDEX 16
+    .ACCU 8
+    ldx.w objectIndexShadow
+    cpx.w objectIndex
+    bcc @skipShadow
+    @inner:
+        dex
+        dex
+        dex
+        dex
+        stx.w objectIndexShadow
+        lda.w entity_posy+1,Y
+        clc
+        adc $04,S
+        sta.w objectData.1.pos_y,X
+        lda.w entity_posx+1,Y
+        clc
+        adc $05,S
+        sta.w objectData.1.pos_x,X
+        eor.w entity_posy+1,Y
+        and #$00
+        ora #$A0
+        sta.w objectData.1.tileid,X
+        lda #%00101010
+        sta.w objectData.1.flags,X
+    @skipShadow:
+    rtl
 .ENDS

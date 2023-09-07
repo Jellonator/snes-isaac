@@ -165,7 +165,7 @@ entity_zombie_tick:
         sec
         sbc #10
         sta.w objectData.1.pos_y,X
-        lda #%00101001
+        lda #%00100001
         sta.w objectData.1.flags,X
         sta.w objectData.2.flags,X
         lda.b $00
@@ -179,7 +179,7 @@ entity_zombie_tick:
         sta.w objectData.1.pos_x,X
         lda.w entity_posy + 1,Y
         sta.w objectData.1.pos_y,X
-        lda #%00101001
+        lda #%00100001
         sta.w objectData.1.flags,X
     +
     ; add to partition
@@ -191,7 +191,9 @@ entity_zombie_tick:
     sta.w entity_box_x2,Y
     lda.w entity_box_y1,Y
     clc
-    adc #16
+    adc #8
+    sta.w entity_ysort,Y
+    adc #8
     sta.w entity_box_y2,Y
     ; set some flags
     lda #ENTITY_MASK_TEAR
@@ -218,29 +220,9 @@ entity_zombie_tick:
     inx
     inx
     stx.w objectIndex
-    cpx.w objectIndexShadow
-    bcs @skipShadow
-        ldx.w objectIndexShadow
-        dex
-        dex
-        dex
-        dex
-        stx.w objectIndexShadow
-        lda.w entity_posy+1,Y
-        clc
-        adc #5
-        sta.w objectData.1.pos_y,X
-        lda.w entity_posx+1,Y
-        clc
-        adc #4
-        sta.w objectData.1.pos_x,X
-        eor.w entity_posy+1,Y
-        and #$01
-        ora #$A0
-        sta.w objectData.1.tileid,X
-        lda #%00101010
-        sta.w objectData.1.flags,X
-    @skipShadow:
+    pea $0405
+    jsl EntityPutShadow
+    plx
     ; Check collision with player
     sep #$20
     lda.w player_box_x1

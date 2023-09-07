@@ -5,6 +5,7 @@
 
 .DEFINE MONSTRO_WIDTH 64
 .DEFINE MONSTRO_HEIGHT 24
+.DEFINE MONSTRO_CENTER_Y 20
 .DEFINE MONSTRO_TILE_X_OFFS 0
 .DEFINE MONSTRO_TILE_Y_OFFS -24
 
@@ -115,7 +116,7 @@ entity_boss_monstro_tick:
         .ENDR
     .ENDR
     ; Flags
-    lda #%00101001
+    lda #%00100001
     .REPT 3 INDEX iy
         .REPT 4 INDEX ix
             sta.w objectData.{iy * 4 + ix + 1}.flags,X
@@ -152,7 +153,9 @@ entity_boss_monstro_tick:
     sta.w entity_box_x2,Y
     lda.w entity_box_y1,Y
     clc
-    adc #MONSTRO_HEIGHT
+    adc #MONSTRO_CENTER_Y
+    sta.w entity_ysort,Y
+    adc #MONSTRO_HEIGHT - MONSTRO_CENTER_Y
     sta.w entity_box_y2,Y
 ; set some flags
     sep #$20

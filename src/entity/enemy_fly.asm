@@ -158,7 +158,9 @@ entity_basic_fly_tick:
     sep #$30 ; 8B AXY
     xba
     clc
-    adc #15
+    adc #8
+    sta.w entity_ysort,Y
+    adc #7
     sta.w entity_box_y2,Y
 ; load & set gfx
     rep #$20
@@ -183,7 +185,7 @@ entity_basic_fly_tick:
     sec
     sbc #8
     sta.w objectData.1.pos_y,X
-    lda #%00101001
+    lda #%00100001
     sta.w objectData.1.flags,X
     ; add to partition
     .EntityAddHitbox 2, 2
@@ -206,29 +208,9 @@ entity_basic_fly_tick:
     inx
     inx
     stx.w objectIndex
-    cpx.w objectIndexShadow
-    bcs @skipShadow
-        ldx.w objectIndexShadow
-        dex
-        dex
-        dex
-        dex
-        stx.w objectIndexShadow
-        lda.w entity_posy+1,Y
-        clc
-        adc #4
-        sta.w objectData.1.pos_y,X
-        lda.w entity_posx+1,Y
-        clc
-        adc #4
-        sta.w objectData.1.pos_x,X
-        eor.w entity_posy+1,Y
-        and #$01
-        ora #$A0
-        sta.w objectData.1.tileid,X
-        lda #%00101010
-        sta.w objectData.1.flags,X
-    @skipShadow:
+    pea $0404
+    jsl EntityPutShadow
+    plx
     ; Check collision with player
     sep #$20
     lda.w player_box_x1

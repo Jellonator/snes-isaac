@@ -23,6 +23,7 @@
 .define entity_box_y2 (private_base_entity_combined_box_x2y2 - 1)
 .define entity_mask (private_base_entity_combined_mask_signal - 2)
 .define entity_signal (private_base_entity_combined_mask_signal - 1)
+.define entity_ysort (private_entity_ysort_order - 2)
 
 .define player_posx (ENTITY_INDEX_PLAYER + entity_posx)
 .define player_posy (ENTITY_INDEX_PLAYER + entity_posy)

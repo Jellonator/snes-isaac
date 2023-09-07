@@ -170,6 +170,18 @@ Start2:
     rep #$20 ; 16 bit A
     PLA
     PLA
+    PEA $8000 + bankbyte(palettes@isaac.w)
+    PEA palettes@isaac.w
+    jsl CopyPalette
+    rep #$20 ; 16 bit A
+    PLA
+    PLA
+    PEA $9000 + bankbyte(palettes@tear.w)
+    PEA palettes@tear.w
+    jsl CopyPalette
+    rep #$20 ; 16 bit A
+    PLA
+    PLA
     PEA $0000 + bankbyte(palettes@basement.w)
     PEA palettes@basement.w
     jsl CopyPalette
@@ -355,7 +367,7 @@ tile_data_loop:
     lda #%00010011
     sta SCRNDESTM
     ; show BG1 on sub screen
-    lda #%00000001
+    lda #%00000011
     sta SCRNDESTS
     ; Setup color math and windowing
     lda #%00000010

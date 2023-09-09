@@ -138,4 +138,7 @@
     ; Grabbing vqueue buffer space should be rare anyways.
     ; $2000 - $087C = $1784
     vqueueBinData INSTANCEOF byte_t 1 ($2000 - (255 * _sizeof_vqueueminiop_t) - (VQUEUE_MAX_SIZE * _sizeof_vqueueop_t))
+; Ground data
+    groundCharacterData ds $0C00
+    groundTileData dsw 32*32
 .ENDS

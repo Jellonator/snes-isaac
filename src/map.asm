@@ -463,15 +463,15 @@ BlockVariantAddresses:
 .ENDR
 
 BlockEmptyVariants:
-    .dw $002A
+    .dw deft($2A, 2)
 BlockRockVariants:
-    .dw ($00A0 | 1024*1)
+    .dw deft($A0, 3)
 BlockRockTintedVariants:
-    .dw ($00A2 | 1024*1)
+    .dw deft($A2, 3)
 BlockPoopVariants:
-    .dw ($0080 | 1024*1) ; 0: full
-    .dw ($0082 | 1024*1) ; 1: slightly damaged
-    .dw ($0084 | 1024*1) ; 2: mostly damaged
+    .dw deft($80, 3) ; 0: full
+    .dw deft($82, 3) ; 1: slightly damaged
+    .dw deft($84, 3) ; 2: mostly damaged
 
 .DSTRUCT RoomDefinitionTest INSTANCEOF roomdefinition_t VALUES
     doorMask:   .db DOOR_DEF_MASK
@@ -491,69 +491,93 @@ BlockPoopVariants:
 .ENDST
 
 EmptyRoomTiles:
-.dw $0002 $0004 $0004 $0004 $0004 $0004 $0004 $0004 $0004 $0004 $0004 $0004 $0004 $0004 $0004 $4002
-.dw $0022 $0024 $0026 $0026 $0026 $0026 $0026 $0026 $0026 $0026 $0026 $0026 $0026 $0026 $4024 $4022
-;              [                                                                       ]
-.dw $0022 $0006 $0008 $000A $000A $000A $000A $000A $000A $000A $000A $000A $000A $4008 $4006 $4022
-.dw $0022 $0006 $0028 $002A $002A $002A $002A $002A $002A $002A $002A $002A $002A $4028 $4006 $4022
-.dw $0022 $0006 $0028 $002A $002A $002A $002A $002A $002A $002A $002A $002A $002A $4028 $4006 $4022
-.dw $0022 $0006 $0028 $002A $002A $002A $002A $002A $002A $002A $002A $002A $002A $4028 $4006 $4022
-.dw $0022 $0006 $0028 $002A $002A $002A $002A $002A $002A $002A $002A $002A $002A $4028 $4006 $4022
-.dw $0022 $0006 $0028 $002A $002A $002A $002A $002A $002A $002A $002A $002A $002A $4028 $4006 $4022
-.dw $0022 $0006 $0028 $002A $002A $002A $002A $002A $002A $002A $002A $002A $002A $4028 $4006 $4022
-.dw $0022 $0006 $8008 $800A $800A $800A $800A $800A $800A $800A $800A $800A $800A $C008 $4006 $4022
-;              [                                                                       ]
-.dw $0022 $8024 $8026 $8026 $8026 $8026 $8026 $8026 $8026 $8026 $8026 $8026 $8026 $8026 $C024 $4022
-.dw $8002 $8004 $8004 $8004 $8004 $8004 $8004 $8004 $8004 $8004 $8004 $8004 $8004 $8004 $8004 $C002
-.dw $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000
-.dw $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000
-.dw $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000
-.dw $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000 $0000
+; row 0
+.dw deft($02, 2)
+.REPT 14
+    .dw deft($04, 2)
+.ENDR
+.dw deft($04, 2) | T_FLIPH
+; row 1
+.dw deft($22, 2)
+.dw deft($24, 2)
+.REPT 12
+    .dw deft($26, 2)
+.ENDR
+.dw deft($24, 2) | T_FLIPH
+.dw deft($22, 2) | T_FLIPH
+; rows 2-9
+.REPT 8
+    .dw deft($22, 2)
+    .dw deft($06, 2)
+    .REPT 12
+        .dw 0
+    .ENDR
+    .dw deft($06, 2) | T_FLIPH
+    .dw deft($22, 2) | T_FLIPH
+.ENDR
+; row 10
+.dw deft($22, 2)
+.dw deft($24, 2) | T_FLIPV
+.REPT 12
+    .dw deft($26, 2) | T_FLIPV
+.ENDR
+.dw deft($24, 2) | T_FLIPH | T_FLIPV
+.dw deft($22, 2) | T_FLIPH
+; row 11
+.dw deft($02, 2) | T_FLIPV
+.REPT 14
+    .dw deft($04, 2) | T_FLIPV
+.ENDR
+.dw deft($02, 2) | T_FLIPH | T_FLIPV
+; row 12-15
+.REPT 16*4
+    .dw 0
+.ENDR
 
 ; INDEXED BY method
 ; 4B per item
 ; (doortype & F0) >> 4
 DoorTileBaseTable_TOP:
-    .dw deft($26, 0), deft($26, 0) ; 0 wall
-    .dw deft($88, 0), deft($8A, 0) ; 1 key
-    .dw deft($26, 0), deft($26, 0) ; 2 wall
-    .dw deft($26, 0), deft($26, 0) ; 3 wall
-    .dw deft($68, 0), deft($6A, 0) ; 4 room finish
-    .dw deft($26, 0), deft($26, 0) ; 5 wall
-    .dw deft($26, 0), deft($26, 0) ; 6 wall
-    .dw deft($26, 0), deft($26, 0) ; 7 wall
+    .dw deft($26, 2), deft($26, 2) ; 0 wall
+    .dw deft($88, 2), deft($8A, 2) ; 1 key
+    .dw deft($26, 2), deft($26, 2) ; 2 wall
+    .dw deft($26, 2), deft($26, 2) ; 3 wall
+    .dw deft($68, 2), deft($6A, 2) ; 4 room finish
+    .dw deft($26, 2), deft($26, 2) ; 5 wall
+    .dw deft($26, 2), deft($26, 2) ; 6 wall
+    .dw deft($26, 2), deft($26, 2) ; 7 wall
     .REPT 8
-        .dw deft($48, 0), deft($4A, 0) ; 8 open
+        .dw deft($48, 2), deft($4A, 2) ; 8 open
     .ENDR
 
 DoorTileBaseTable_LEFT:
-    .dw deft($06, 0), deft($06, 0) ; 0 wall
-    .dw deft($CC, 0), deft($EC, 0) ; 1 key
-    .dw deft($06, 0), deft($06, 0) ; 2 wall
-    .dw deft($06, 0), deft($06, 0) ; 3 wall
-    .dw deft($CA, 0), deft($EA, 0) ; 4 room finish
-    .dw deft($06, 0), deft($06, 0) ; 5 wall
-    .dw deft($06, 0), deft($06, 0) ; 6 wall
-    .dw deft($06, 0), deft($06, 0) ; 7 wall
+    .dw deft($06, 2), deft($06, 2) ; 0 wall
+    .dw deft($CC, 2), deft($EC, 2) ; 1 key
+    .dw deft($06, 2), deft($06, 2) ; 2 wall
+    .dw deft($06, 2), deft($06, 2) ; 3 wall
+    .dw deft($CA, 2), deft($EA, 2) ; 4 room finish
+    .dw deft($06, 2), deft($06, 2) ; 5 wall
+    .dw deft($06, 2), deft($06, 2) ; 6 wall
+    .dw deft($06, 2), deft($06, 2) ; 7 wall
     .REPT 8
-        .dw deft($C8, 0), deft($E8, 0) ; 8 open
+        .dw deft($C8, 2), deft($E8, 2) ; 8 open
     .ENDR
 
 ; INDEX BY type
 ; 4B per item
 ; doortype & 0xF
 DoorTileTopperTable_TOP:
-    .dw deft($04, 0), deft($04, 0) ; 0 wall
-    .dw deft($4C, 0), deft($4E, 0) ; 1 normal
-    .dw deft($6C, 0), deft($6E, 0) ; 2 item
-    .dw deft($8C, 0), deft($8E, 0) ; 3 shop
-    .dw deft($AC, 0), deft($AE, 0) ; 4 boss
+    .dw deft($04, 2), deft($04, 2) ; 0 wall
+    .dw deft($4C, 2), deft($4E, 2) ; 1 normal
+    .dw deft($6C, 2), deft($6E, 2) ; 2 item
+    .dw deft($8C, 2), deft($8E, 2) ; 3 shop
+    .dw deft($AC, 2), deft($AE, 2) ; 4 boss
 
 DoorTileTopperTable_LEFT:
-    .dw deft($22, 0), deft($22, 0) ; 0 wall
-    .dw deft($C0, 0), deft($E0, 0) ; 1 normal
-    .dw deft($C2, 0), deft($E2, 0) ; 2 item
-    .dw deft($C4, 0), deft($E4, 0) ; 3 shop
-    .dw deft($C6, 0), deft($E6, 0) ; 4 boss
+    .dw deft($22, 2), deft($22, 2) ; 0 wall
+    .dw deft($C0, 2), deft($E0, 2) ; 1 normal
+    .dw deft($C2, 2), deft($E2, 2) ; 2 item
+    .dw deft($C4, 2), deft($E4, 2) ; 3 shop
+    .dw deft($C6, 2), deft($E6, 2) ; 4 boss
 
 .ENDS

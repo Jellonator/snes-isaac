@@ -20,55 +20,77 @@ EmptySpriteData:
     .ENDR
 DefaultUiData:
     .REPT 32
-        .dw $0000
+        .dw 0
     .ENDR
-    .dw $0000 $2C02 $2C03 $2C03 $6C02
+    .dw 0
+    .dw deft($02,6) | T_HIGHP
+    .dw deft($03,6) | T_HIGHP
+    .dw deft($03,6) | T_HIGHP
+    .dw deft($02,6) | T_HIGHP | T_FLIPH
     .REPT 8
         .dw 0
     .ENDR
     .dw 0, 0, 0
     .REPT 16
-        .dw $0000
+        .dw 0
     .ENDR
-    .dw $0000 $2C12 $0000 $0000 $6C12
-    .dw deft($01,3) | T_HIGHP, deft($70, 4) | T_HIGHP, deft($70, 4) | T_HIGHP
+    .dw 0
+    .dw deft($12,6) | T_HIGHP
+    .dw 0
+    .dw 0
+    .dw deft($12,6) | T_HIGHP | T_FLIPH
+    .dw deft($01,6) | T_HIGHP
+    .dw deft($70,7) | T_HIGHP
+    .dw deft($70,7) | T_HIGHP
     .REPT 24
-        .dw $0000
+        .dw 0
     .ENDR
-    .dw $0000 $2C12 $0000 $0000 $6C12
-    .dw deft($11,4) | T_HIGHP, deft($70, 4) | T_HIGHP, deft($70, 4) | T_HIGHP
+    .dw 0
+    .dw deft($12,6) | T_HIGHP
+    .dw 0
+    .dw 0
+    .dw deft($12,6) | T_HIGHP | T_FLIPH
+    .dw deft($11,7) | T_HIGHP
+    .dw deft($70,7) | T_HIGHP
+    .dw deft($70,7) | T_HIGHP
     .REPT 24
-        .dw $0000
+        .dw 0
     .ENDR
-    .dw $0000 $AC02 $AC03 $AC03 $EC02
-    .dw deft($10,2) | T_HIGHP, deft($70, 4) | T_HIGHP, deft($70, 4) | T_HIGHP
+    .dw 0
+    .dw deft($02,6) | T_HIGHP | T_FLIPV
+    .dw deft($03,6) | T_HIGHP | T_FLIPV
+    .dw deft($03,6) | T_HIGHP | T_FLIPV
+    .dw deft($02,6) | T_HIGHP | T_FLIPH
+    .dw deft($10,5) | T_HIGHP
+    .dw deft($70,7) | T_HIGHP
+    .dw deft($70,7) | T_HIGHP
     .REPT 24
-        .dw $0000
+        .dw 0
     .ENDR
-    .dw $0000
-    .dw $0000
-    .dw $2C16
+    .dw 0
+    .dw 0
+    .dw deft($16,6) | T_HIGHP
     .REPT 31
-        .dw $0000
+        .dw 0
     .ENDR
-    .dw $2C25
+    .dw deft($25,6) | T_HIGHP
     .REPT 31
-        .dw $0000
+        .dw 0
     .ENDR
-    .dw $2C34
+    .dw deft($34,6) | T_HIGHP
     .REPT 29
-        .dw $0000
+        .dw 0
     .ENDR
     @end:
 MapTiles:
-    .dw $2000 ; empty
-    .dw $2C08 ; normal
-    .dw $2C09 ; item
-    .dw $2C0A ; boss
-    .dw $2C0B ; shop
-    .dw $280C ; sacrifice
-    .dw $280D ; curse
-    .dw $2C0E ; secret
+    .dw deft($00, 0) | T_HIGHP ; empty
+    .dw deft($08, 6) | T_HIGHP ; normal
+    .dw deft($09, 6) | T_HIGHP ; item
+    .dw deft($0A, 6) | T_HIGHP ; boss
+    .dw deft($0B, 6) | T_HIGHP ; shop
+    .dw deft($0C, 5) | T_HIGHP ; sacrifice
+    .dw deft($0D, 5) | T_HIGHP ; curse
+    .dw deft($0E, 6) | T_HIGHP ; secret
 SpriteIndexToExtMaskXS:
     .db %00000011 %00001100 %00110000 %11000000
 SpriteIndexToExtMaskX:
@@ -186,21 +208,6 @@ InitialPathfindingData:
 .bank $20
 .SECTION "ExtraData2"
 
-DefaultBackgroundCharacterData:
-.REPT 24 INDEX iy ; 24 tiles
-    .REPT 16 INDEX ix ; by 16 tiles
-        ; 8 x 8 px, 2bpp
-        .dw $00FF
-        .dw $00FF
-        .dw $00FF
-        .dw $00FF
-        .dw $00FF
-        .dw $00FF
-        .dw $00FF
-        .dw $00FF
-    .ENDR
-.ENDR
-
 DefaultBackgroundTileData:
 .REPT 32 INDEX iy ; 32 tiles
     .REPT 32 INDEX ix ; by 32 tiles
@@ -208,10 +215,9 @@ DefaultBackgroundTileData:
             ; Let's just trust that the first UI tile will always be empty
             .dw 24*16 + $100
         .ELSE
-            .dw %0001000000000000 | ((iy - 8) * 24 + ix - 4)
+            .dw %0000000000000000 | ((iy - 8) * 24 + ix - 4)
         .ENDIF
     .ENDR
 .ENDR
-
 
 .ENDS

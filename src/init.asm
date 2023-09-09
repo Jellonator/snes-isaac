@@ -182,31 +182,37 @@ Start2:
     rep #$20 ; 16 bit A
     PLA
     PLA
-    PEA $0000 + bankbyte(palettes@basement.w)
+    PEA $0000 + bankbyte(palettes@basement_ground1.w)
+    PEA palettes@basement_ground1.w
+    jsl CopyPalette
+    rep #$20 ; 16 bit A
+    PLA
+    PLA
+    PEA $2000 + bankbyte(palettes@basement.w)
     PEA palettes@basement.w
     jsl CopyPalette
     rep #$20 ; 16 bit A
     PLA
     PLA
-    PEA $1000 + bankbyte(palettes@basement2.w)
+    PEA $3000 + bankbyte(palettes@basement2.w)
     PEA palettes@basement2.w
     jsl CopyPalette
     rep #$20 ; 16 bit A
     PLA
     PLA
-    PEA $2000 + bankbyte(palettes@ui_light.w)
+    PEA $5000 + bankbyte(palettes@ui_light.w)
     PEA palettes@ui_light.w
     jsl CopyPalette
     rep #$20 ; 16 bit A
     PLA
     PLA
-    PEA $3000 + bankbyte(palettes@ui_gold.w)
+    PEA $6000 + bankbyte(palettes@ui_gold.w)
     PEA palettes@ui_gold.w
     jsl CopyPalette
     rep #$20 ; 16 bit A
     PLA
     PLA
-    PEA $4000 + bankbyte(palettes@ui_dark.w)
+    PEA $7000 + bankbyte(palettes@ui_dark.w)
     PEA palettes@ui_dark.w
     jsl CopyPalette
     rep #$20 ; 16 bit A
@@ -345,7 +351,7 @@ tile_data_loop:
     and #%0000000000111111
     cmp #32.w
     bcs tile_data_loop@copyzero
-    lda.l TileData.w,x
+    lda.l EmptyRoomTiles,X
     inx
     inx
     jmp @store

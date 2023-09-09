@@ -76,6 +76,19 @@ SpriteIndexToExtMaskX:
 SpriteIndexToExtMaskS:
     .db %00000010 %00001000 %00100000 %10000000
 
+SpriteIndexToExtMaskXS_16:
+    .REPT 8 INDEX i
+        .dw (%00000011 << (i * 2))
+    .ENDR
+SpriteIndexToExtMaskX_16:
+    .REPT 8 INDEX i
+        .dw (%00000001 << (i * 2))
+    .ENDR
+SpriteIndexToExtMaskS_16:
+    .REPT 8 INDEX i
+        .dw (%00000010 << (i * 2))
+    .ENDR
+
 ;-------------;
 ; DATA TABLES ;
 ;-------------;
@@ -167,5 +180,38 @@ InitialPathfindingData:
 .REPT 16*4
     .db $04 ; up
 .ENDR
+
+.ENDS
+
+.bank $20
+.SECTION "ExtraData2"
+
+DefaultBackgroundCharacterData:
+.REPT 24 INDEX iy ; 24 tiles
+    .REPT 16 INDEX ix ; by 16 tiles
+        ; 8 x 8 px, 2bpp
+        .dw $00FF
+        .dw $00FF
+        .dw $00FF
+        .dw $00FF
+        .dw $00FF
+        .dw $00FF
+        .dw $00FF
+        .dw $00FF
+    .ENDR
+.ENDR
+
+DefaultBackgroundTileData:
+.REPT 32 INDEX iy ; 32 tiles
+    .REPT 32 INDEX ix ; by 32 tiles
+        .IF (iy < 8) || (iy >= 24) || (ix < 4) || (ix >= 28)
+            ; Let's just trust that the first UI tile will always be empty
+            .dw 24*16 + $100
+        .ELSE
+            .dw %0001000000000000 | ((iy - 8) * 24 + ix - 4)
+        .ENDIF
+    .ENDR
+.ENDR
+
 
 .ENDS

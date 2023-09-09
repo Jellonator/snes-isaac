@@ -95,7 +95,7 @@ _projectile_update_sprite:
         and #$00
         ora #$A0
         sta.w objectData.1.tileid,Y
-        lda #%00101010
+        lda #%00011010
         sta.w objectData.1.flags,Y
     @skipShadow:
     rts

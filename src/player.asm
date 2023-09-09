@@ -1035,6 +1035,16 @@ _MakeWaitScrollSub2:
         stx SREG
         ldx.w SVAR+1
         stx SREG
+        lda.w SVAR
+        .IF SREG == BG2VOFS
+            clc
+            adc #32
+        .ENDIF
+        tax
+        stx SREG+2 ; scroll floor
+        xba
+        tax
+        stx SREG+2 ; scroll floor
     ; Upload objects to OAM
         stz OAMADDR
         lda #512+32

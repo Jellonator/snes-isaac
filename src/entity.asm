@@ -421,12 +421,87 @@ EntityPutShadow:
         clc
         adc $05,S
         sta.w objectData.1.pos_x,X
-        eor.w entity_posy+1,Y
-        and #$00
-        ora #$A0
+        lda #$A0
         sta.w objectData.1.tileid,X
-        lda #%00101010
+        lda #%00011010
         sta.w objectData.1.flags,X
     @skipShadow:
     rtl
+
+; place big entity shadow for entity at index Y
+; assumes 16 bit index, 8 bit accumulator
+; Parameters:
+;   offs x [db] $05
+;   offs y [db] $04
+EntityPutBigShadow:
+    rep #$30
+    lda.w objectIndexShadow
+    sec
+    sbc #12
+    cmp.w objectIndex
+    bcc @skipShadow
+        sep #$20
+        tax
+        stx.w objectIndexShadow
+        lda.w entity_posy+1,Y
+        clc
+        adc $04,S
+        .REPT 3 INDEX i
+            sta.w objectData.{i+1}.pos_y,X
+        .ENDR
+        lda.w entity_posx+1,Y
+        clc
+        adc $05,S
+        .REPT 3 INDEX i
+            .IF i > 0
+                adc #16
+            .ENDIF
+            sta.w objectData.{i+1}.pos_x,X
+        .ENDR
+        lda #$A2
+        .REPT 3 INDEX i
+            .IF i > 0
+                inc A
+                inc A
+            .ENDIF
+            sta.w objectData.{i+1}.tileid,X
+        .ENDR
+        lda #%00011010
+        .REPT 3 INDEX i
+            sta.w objectData.{i+1}.flags,X
+        .ENDR
+        ; now, need to make sprites big
+        rep #$20
+        ; phy
+        txa
+        ;
+        lsr
+        lsr
+        tax
+        and #$03
+        sta.b $00 ; $00 = subindex
+        ;
+        txa
+        lsr
+        lsr
+        tax ; X = INDEX
+        ;
+        lda #%101010
+        .REPT 4
+            dec.b $00
+            bmi +
+            asl
+            asl
+        .ENDR
+        +:
+        ; ...
+        ora.w objectDataExt,X
+        ; A |= 0b010101 << $00
+        sta.w objectDataExt,X
+        ; end
+        ; ply
+        rtl
+    @skipShadow:
+    rtl
+
 .ENDS

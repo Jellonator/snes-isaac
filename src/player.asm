@@ -38,13 +38,13 @@ _PlayerNextHealthValueTable:
     .db HEALTH_NULL           ; eternal
 
 _PlayerHealthTileValueTable:
-    .dw $0000 ; null
-    .dw $2832 ; red empty
-    .dw $2831 ; red half
-    .dw $2830 ; red full
-    .dw $2C33 ; spirit half
-    .dw $2C30 ; spirit full
-    .dw $0000 ; eternal
+    .dw deft($00, 0) | T_HIGHP ; null
+    .dw deft($32, 5) | T_HIGHP ; red empty
+    .dw deft($31, 5) | T_HIGHP ; red half
+    .dw deft($30, 5) | T_HIGHP ; red full
+    .dw deft($33, 6) | T_HIGHP ; spirit half
+    .dw deft($30, 6) | T_HIGHP ; spirit full
+    .dw deft($00, 5) | T_HIGHP ; eternal
 
 ; Render heart at slot Y
 _PlayerRenderSingleHeart:

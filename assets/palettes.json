@@ -30,5 +30,9 @@
     {
         "name": "enemy_attack_fly",
         "src": "assets/sprites/enemy/attack_fly.hex"
+    },
+    {
+        "name": "basement_ground1",
+        "src": "assets/palettes/basement_ground_1.hex"
     }
 ]

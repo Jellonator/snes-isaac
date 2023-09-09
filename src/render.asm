@@ -222,4 +222,45 @@ InitializeUI:
     sta MDMAEN ; begin transfer
     rtl
 
+InitializeBackground:
+    ; write character data
+    rep #$20 ; 16 bit A
+    lda #24 * 16 * 8 * 2
+    sta DMA0_SIZE ; number of bytes
+    lda #loword(sprites@basement_ground_base)
+    sta DMA0_SRCL ; source address
+    lda #BG3_CHARACTER_BASE_ADDR
+    sta $2116 ; VRAM address
+    sep #$20 ; 8 bit A
+    lda #bankbyte(sprites@basement_ground_base)
+    sta DMA0_SRCH ; source bank
+    lda #$80
+    sta $2115 ; VRAM address increment flags
+    lda #%00000001
+    sta DMA0_CTL ; write to PPU, absolute address, auto increment, 2 bytes at a time
+    lda #$18
+    sta DMA0_DEST ; Write to VRAM
+    lda #$01
+    sta MDMAEN ; begin transfer
+    ; tile data
+    rep #$20 ; 16 bit A
+    lda #_sizeof_DefaultBackgroundTileData
+    sta DMA0_SIZE ; number of bytes
+    lda #loword(DefaultBackgroundTileData)
+    sta DMA0_SRCL ; source address
+    lda #BG3_TILE_BASE_ADDR
+    sta $2116 ; VRAM address
+    sep #$20 ; 8 bit A
+    lda #bankbyte(DefaultBackgroundTileData)
+    sta DMA0_SRCH ; source bank
+    lda #$80
+    sta $2115 ; VRAM address increment flags
+    lda #%00000001
+    sta DMA0_CTL ; write to PPU, absolute address, auto increment, 2 bytes at a time
+    lda #$18
+    sta DMA0_DEST ; Write to VRAM
+    lda #$01
+    sta MDMAEN ; begin transfer
+    rtl
+
 .ENDS

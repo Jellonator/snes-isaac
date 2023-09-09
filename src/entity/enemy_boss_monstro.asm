@@ -144,6 +144,10 @@ entity_boss_monstro_tick:
         inc.w objectIndex
     .ENDR
     ldy $08
+    pea (MONSTRO_HEIGHT - 14) + ($100*10)
+    jsl EntityPutBigShadow
+    plx
+    
 ; add to partition
     sep #$30
     .EntityAddHitbox (MONSTRO_WIDTH+15)/16,(MONSTRO_HEIGHT+15)/16

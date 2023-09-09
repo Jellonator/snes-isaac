@@ -212,13 +212,6 @@ Start2:
     rep #$20 ; 16 bit A
     PLA
     PLA
-    ; Set background color
-    sep #$20 ; 8 bit A
-    stz CGADDR
-    lda #%01100011
-    sta CGDATA
-    lda #%00001100
-    sta CGDATA
     ; copy sprite to VRAM
     pea SPRITE1_BASE_ADDR
     pea 32
@@ -325,6 +318,8 @@ Start2:
     pla
     pla
     jsl InitializeUI
+    ; setup BG3 (background)
+    jsl InitializeBackground
     ; Set up tilemap. First, write empty in all slots
     rep #$30 ; 16 bit X, Y, Z
     lda #BG2_TILE_BASE_ADDR
@@ -364,29 +359,29 @@ tile_data_loop:
     bne tile_data_loop
     sep #$30 ; 8 bit X, Y, Z
     ; show sprites and BG2 on main screen
-    lda #%00010011
+    lda #%00010111
     sta SCRNDESTM
     ; show BG1 on sub screen
-    lda #%00000011
+    lda #%11100100
     sta SCRNDESTS
     ; Setup color math and windowing
     lda #%00000010
     sta CGWSEL
-    lda #%01110111
+    lda #%01110100
     sta CGADSUB
-    lda #%00000001
-    sta SCRNDESTMW
+    stz SCRNDESTMW
     stz SCRNDESTSW
-    stz WH0
-    lda #$80
-    sta WH1
-    sta WH2
-    lda #$FF
-    sta WH3
     stz W34SEL
     stz WOBJSEL
     lda #%00001011
     sta W12SEL
+    ; Set background color
+    sep #$20 ; 8 bit A
+    stz CGADDR
+    lda #%0
+    sta CGDATA
+    lda #%0
+    sta CGDATA
     ; re-enable rendering
     lda #%00001111
     sta INIDISP
@@ -397,6 +392,8 @@ tile_data_loop:
     sta BG2VOFS
     lda #$FF
     sta BG2VOFS
+    stz BG3VOFS
+    stz BG3VOFS
     rep #$30
     ; init rng
     jsl RngGameInitialize

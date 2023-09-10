@@ -496,7 +496,7 @@ EmptyRoomTiles:
 .REPT 14
     .dw deft($04, 2)
 .ENDR
-.dw deft($04, 2) | T_FLIPH
+.dw deft($02, 2) | T_FLIPH
 ; row 1
 .dw deft($22, 2)
 .dw deft($24, 2)

@@ -31,6 +31,7 @@ UpdateLoop:
     jsl entity_tick_all
     jsl Room_Tick
     jsr UpdateRest
+    jsl GroundProcessOps
     ; Finally, check if room should be changed
     jsr PlayerCheckEnterRoom
     ; End update code

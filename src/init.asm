@@ -431,6 +431,8 @@ tile_data_loop:
     jsl EntityInfoInitialize
     ; clear pathfinding data
     jsl player_initialize_pathfinding_data
+    ; clear ground data
+    jsl GroundOpClear
     ; init player
     jsr PlayerInit
     jmp UpdateLoop

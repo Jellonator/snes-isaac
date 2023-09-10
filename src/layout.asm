@@ -139,6 +139,18 @@
     ; $2000 - $087C = $1784
     vqueueBinData INSTANCEOF byte_t 1 ($2000 - (255 * _sizeof_vqueueminiop_t) - (VQUEUE_MAX_SIZE * _sizeof_vqueueop_t))
 ; Ground data
-    groundCharacterData ds $0C00
-    groundTileData dsw 32*32
+    groundCharacterData ds $0C00*2
+    
+    ; list of tiles currently in the queue, so we don't duplicate ops
+    groundTilesInList ds (32*32) / 8
+    ; start of list; add new ops to
+    groundOpListStart dw
+    ; end of list; read ops from
+    groundOpListEnd dw
+
+    ; groundlist operations
+    groundOpList_palette ds MAX_GROUND_OPS
+    groundOpList_line ds MAX_GROUND_OPS
+    groundOpList_startPx ds MAX_GROUND_OPS
+    groundOpList_endPx ds MAX_GROUND_OPS
 .ENDS

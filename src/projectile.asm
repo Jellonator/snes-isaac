@@ -143,8 +143,8 @@ _ProjectileTileHandlerTable:
 _projectile_delete:
     rep #$30
     ldy.b PROJECTILE_TMP_IDX
-    jsl entity_free ; tail call optimization
-    rtl
+    jml entity_free ; tail call optimization
+
 
 projectile_tick__:
     .INDEX 16
@@ -198,7 +198,9 @@ projectile_tick__:
     tax
     lda.l GameTileToRoomTileIndexTable,X
     cmp #97
-    bcs _projectile_delete ; remove if oob
+    bcc +
+        jmp _projectile_delete ; remove if oob
+    +:
     tay
     ; intermission: skip collision checking if too damn high up
     ldx.b PROJECTILE_TMP_IDX

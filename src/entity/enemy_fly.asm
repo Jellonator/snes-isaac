@@ -51,6 +51,7 @@ entity_basic_fly_tick:
     and.w entity_signal,Y
     beq +
         ; We have perished
+        jsl EntityPutSplatter
         jsl entity_free
         rts
     +:

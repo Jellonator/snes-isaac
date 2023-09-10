@@ -57,6 +57,10 @@ entity_zombie_tick:
     lda #ENTITY_SIGNAL_KILL
     and.w entity_signal,Y
     beq @not_kill
+        phy
+        jsl EntityPutSplatter
+        sep #$30
+        ply
         lda.w entity_variant,Y
         bne @not_headless
             ; We have perished

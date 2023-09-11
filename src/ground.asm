@@ -19,7 +19,6 @@
 ; character data is stored as 24x16 tiles
 
 _PxDataTbl_End:
-    ; .db %00000000
     .db %10000000
     .db %11000000
     .db %11100000
@@ -38,6 +37,12 @@ _PxDataTbl_Start:
     .db %00000111
     .db %00000011
     .db %00000001
+
+GroundReset:
+    sep #$20
+    lda #1
+    sta.l needResetEntireGround
+    jmp GroundOpClear
 
 GroundOpClear:
     rep #$20
@@ -88,6 +93,7 @@ _BitTbl:
 .DEFINE end_subi $0E
 .DEFINE bytei $10
 .DEFINE tile_index $12
+.DEFINE tmp2 $14
 
 _AddTileToQueue:
     rep #$30
@@ -159,19 +165,6 @@ _AddTileToQueue:
     lda.w #$7F
     sta.w loword(vqueueOps.1.aAddr+2),Y
     ; vram_addr = (row * 8 * 3 + column) * 8
-    ; lda.b tile_row
-    ; asl
-    ; asl
-    ; asl
-    ; sta.b tmp
-    ; asl
-    ; clc
-    ; adc.b tmp
-    ; clc
-    ; adc.b start_i
-    ; asl
-    ; asl
-    ; asl
     lda.b bytei
     and #$FFF0
     lsr
@@ -180,10 +173,9 @@ _AddTileToQueue:
     asl
     clc
     adc #loword(groundCharacterData)
-    ; lda #0
     sta.w loword(vqueueOps.1.aAddr),Y
     ; numBytes = 16
-    lda #16*4
+    lda #16
     sta.w loword(vqueueOps.1.numBytes),Y
 @skipThis:
     rts
@@ -270,10 +262,23 @@ GroundProcessOps:
             lda.l _PxDataTbl_Start,X
             ldx.b end_subi
             and.l _PxDataTbl_End,X
+            sta.b tmp2
 ;   tiles[tilebyte_index] |= value
-            ldx.b bytei
-            ora.w loword(groundCharacterData)+1,X
-            sta.w loword(groundCharacterData)+1,X
+            ldy.b bytei
+
+            lda.w loword(groundCharacterData),Y
+            eor.b tmp2
+            sta.b tmp
+
+            lda.w loword(groundCharacterData)+1,Y
+            pha
+            ora.b tmp2
+            sta.w loword(groundCharacterData)+1,Y
+
+            pla
+            and.b tmp2
+            ora.b tmp
+            sta.w loword(groundCharacterData),Y
 ;   tilepalettes[tile_index] = palette
             jsr _AddTileToQueue
             rep #$20
@@ -283,10 +288,24 @@ GroundProcessOps:
 ; tiles[tilebyte_index] |= _PxDataTbl_Start[start_index % 8]
             sep #$20
             ldx.b start_subi
-            lda.l _PxDataTbl_Start,X
-            ldx.b bytei
-            ora.w loword(groundCharacterData)+1,X
-            sta.w loword(groundCharacterData)+1,X
+            ldy.b bytei
+
+            lda.w loword(groundCharacterData),Y
+            eor.l _PxDataTbl_Start,X
+            sta.b tmp
+
+            ; H = (H | C)
+            lda.w loword(groundCharacterData)+1,Y
+            pha
+            ora.l _PxDataTbl_Start,X
+            sta.w loword(groundCharacterData)+1,Y
+
+            ; L = (L xor C) | (H & C)
+            pla
+            and.l _PxDataTbl_Start,X
+            ora.b tmp
+            sta.w loword(groundCharacterData),Y
+
             jsr _AddTileToQueue
             rep #$20
 ; ++ start_index;
@@ -304,9 +323,16 @@ GroundProcessOps:
             @inner_loop:
 ;   tiles[tilebyte_index] |= 0xFF
                 sep #$20
-                lda #$FF
                 ldx.b bytei
+
+                lda.w loword(groundCharacterData),X
+                eor #$FF
+                ora.w loword(groundCharacterData)+1,X
+                sta.w loword(groundCharacterData),X
+
+                lda #$FF
                 sta.w loword(groundCharacterData)+1,X
+
                 jsr _AddTileToQueue
                 rep #$20
 ;   tilebyte_index += 16
@@ -325,10 +351,22 @@ GroundProcessOps:
 ; tiles[tilebyte_index] |= _PxDataTbl_End[end_index % 8]
             sep #$20
             ldx.b end_subi
-            lda.l _PxDataTbl_End,X
-            ldx.b bytei
-            ora.w loword(groundCharacterData)+1,X
-            sta.w loword(groundCharacterData)+1,X
+            ldy.b bytei
+
+            lda.w loword(groundCharacterData),Y
+            eor.l _PxDataTbl_End,X
+            sta.b tmp
+
+            lda.w loword(groundCharacterData)+1,Y
+            pha
+            ora.l _PxDataTbl_End,X
+            sta.w loword(groundCharacterData)+1,Y
+
+            pla
+            and.l _PxDataTbl_End,X
+            ora.b tmp
+            sta.w loword(groundCharacterData),Y
+
             jsr _AddTileToQueue
             rep #$20
     ; next index

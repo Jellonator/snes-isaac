@@ -66,6 +66,8 @@ InitializeRoomSlot:
 LoadRoomSlotIntoLevel:
     ; first, clear existing level
     jsl entity_free_all
+    ; then, clear floor
+    jsl GroundReset
     sep #$30 ; 8 bit AXY
     ; Turn slot index into slot address in X
     lda #lobyte(_sizeof_roominfo_t)

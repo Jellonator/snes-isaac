@@ -509,33 +509,34 @@ EntityPutBigShadow:
 EntityPutSplatter:
     rep #$10
     sep #$20
-    lda.w entity_box_y1,Y
+    lda.w entity_ysort,Y
     sta.b $06
     lda #GROUND_PALETTE_RED
     sta.b $04
-    ; pea ($0100 * 7) + GROUND_PALETTE_RED
     .REPT 8 INDEX i
         sep #$20
         lda.w entity_box_x1,Y
         .IF i == 0 || i == 7
             clc
-            adc #6 
+            adc #6 + ((i # 3) - 1)
             sta $07
             lda #4
             sta $05
         .ELIF i == 1 || i == 6
             clc
-            adc #3 
+            adc #3 + ((i # 3) - 1)
             sta $07
             lda #10
             sta $05
         .ELIF i == 2 || i == 5
             clc
-            adc #1
+            adc #1 + ((i # 3) - 1)
             sta $07
             lda #14
             sta $05
         .ELIF i == 3 || i == 4
+            clc
+            adc #0 + ((i # 3) - 1)
             sta $07
             lda #16
             sta $05

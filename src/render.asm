@@ -52,13 +52,21 @@ VBlank2:
     sta DMA0_DEST
     lda #$01
     sta MDMAEN
+    ; check if ground needs reloading
+    sep #$20 ; 8 bit A
+    lda.l needResetEntireGround
+    beq @skipUpdateGround
+        lda #0
+        sta.l needResetEntireGround
+        jsl InitializeBackground
+@skipUpdateGround:
     ; Check if minimap needs updating
     sep #$20 ; 8 bit A
     lda.w numTilesToUpdate
     cmp #$FF
     bne @skipUpdateAllTiles
-    stz.w numTilesToUpdate
-    jsr UpdateEntireMinimap
+        stz.w numTilesToUpdate
+        jsr UpdateEntireMinimap
 @skipUpdateAllTiles:
     jsl ProcessVQueue
     sep #$20 ; 8 bit A
@@ -251,6 +259,8 @@ InitializeBackground:
     lda #BG3_TILE_BASE_ADDR
     sta $2116 ; VRAM address
     sep #$20 ; 8 bit A
+    lda #0
+    sta.l needResetEntireGround
     lda #bankbyte(DefaultBackgroundTileData)
     sta DMA0_SRCH ; source bank
     lda #$80

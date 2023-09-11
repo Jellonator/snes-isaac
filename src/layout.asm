@@ -147,6 +147,8 @@
     groundOpListStart dw
     ; end of list; read ops from
     groundOpListEnd dw
+    ; if true, reset entire ground
+    needResetEntireGround db
 
     ; groundlist operations
     groundOpList_palette ds MAX_GROUND_OPS

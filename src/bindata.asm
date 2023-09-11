@@ -60,7 +60,7 @@ DefaultUiData:
     .dw deft($02,6) | T_HIGHP | T_FLIPV
     .dw deft($03,6) | T_HIGHP | T_FLIPV
     .dw deft($03,6) | T_HIGHP | T_FLIPV
-    .dw deft($02,6) | T_HIGHP | T_FLIPH
+    .dw deft($02,6) | T_HIGHP | T_FLIPH | T_FLIPV
     .dw deft($10,5) | T_HIGHP
     .dw deft($70,7) | T_HIGHP
     .dw deft($70,7) | T_HIGHP

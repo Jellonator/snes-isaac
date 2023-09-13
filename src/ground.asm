@@ -38,11 +38,17 @@ _PxDataTbl_Start:
     .db %00000011
     .db %00000001
 
+GroundFullUpdate:
+    sep #$20
+    lda #1
+    sta.l needResetEntireGround
+    rtl
+
 GroundReset:
     sep #$20
     lda #1
     sta.l needResetEntireGround
-    jmp GroundOpClear
+    ; jmp GroundOpClear
 
 GroundOpClear:
     rep #$20

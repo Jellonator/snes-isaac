@@ -1038,14 +1038,121 @@ _MakeWaitScrollSub2:
         lda.w SVAR
         .IF SREG == BG2VOFS
             clc
-            adc #32
+            adc #56
         .ENDIF
         tax
         stx SREG+2 ; scroll floor
         xba
         tax
         stx SREG+2 ; scroll floor
-    ; Upload objects to OAM
+        ; Depending on scroll value, upload tile data.
+        ; We want to upload the line that has just came into view.
+        rep #$20 ; 16 bit A
+        .IF SREG == BG2HOFS
+        ; right / left
+            ; source address = ADDR + column * 8
+            ; inc address by 8 each update
+            lda.w SVAR
+            clc
+            .IF AMT > 0
+                adc #216
+            .ELSE
+                adc #224
+            .ENDIF
+            and #$00F8
+            cmp #24*8
+            bcc +
+                jmp @skipUpload
+            +:
+            sta.b $00
+            sep #$20 ; 8 bit A
+            ; source bank
+            lda #bankbyte(sprites@basement_ground_base)
+            sta DMA0_SRCH
+            ; VRAM address increment flags
+            lda #$80
+            sta VMAIN
+            ; write to PPU, absolute address, auto increment, 2 bytes at a time
+            lda #%00000001
+            sta DMA0_CTL
+            ; Write to VRAM
+            lda #$18
+            sta DMA0_DEST
+            ; begin transfer
+            rep #$30
+            .REPT 16 INDEX i
+                rep #$20
+                    lda.b $00
+                    clc
+                    adc #(8 * 24 * i) + BG3_CHARACTER_BASE_ADDR
+                    sta VMADDR
+                    lda.b $00
+                    asl
+                    clc
+                    adc #(16 * 24 * i) + loword(sprites@basement_ground_base)
+                    sta DMA0_SRCL
+                ; number of bytes
+                lda #8 * 2
+                sta DMA0_SIZE
+                sep #$20
+                lda #$0001
+                sta MDMAEN
+            .ENDR
+        .ELIF SREG == BG2VOFS
+        ; up / down
+            ; number of bytes
+            lda #24 * 8 * 2
+            sta DMA0_SIZE
+            ; source address = ADDR + row * 24 * 8
+            lda.w SVAR
+            clc
+            .IF AMT > 0
+                adc #184
+            .ELSE
+                adc #224
+            .ENDIF
+            and #$00F8
+            cmp #16*8
+            bcc + 
+                jmp @skipUpload
+            +:
+            asl
+            asl
+            asl
+            sta.b $00
+            asl
+            clc
+            adc.b $00
+            sta.b $00
+            asl
+            clc
+            adc #loword(sprites@basement_ground_base)
+            sta DMA0_SRCL
+            ; VRAM address
+            lda.b $00
+            clc
+            adc #BG3_CHARACTER_BASE_ADDR
+            sta VMADDR
+            sep #$20 ; 8 bit A
+            ; source bank
+            lda #bankbyte(sprites@basement_ground_base)
+            sta DMA0_SRCH
+            ; VRAM address increment flags
+            lda #$80
+            sta VMAIN
+            ; write to PPU, absolute address, auto increment, 2 bytes at a time
+            lda #%00000001
+            sta DMA0_CTL
+            ; Write to VRAM
+            lda #$18
+            sta DMA0_DEST
+            ; begin transfer
+            lda #$01
+            sta MDMAEN
+        .ENDIF
+        @skipUpload:
+        ; Upload objects to OAM
+        rep #$20
         stz OAMADDR
         lda #512+32
         sta DMA0_SIZE
@@ -1065,7 +1172,9 @@ _MakeWaitScrollSub2:
         rep #$20 ; 16 bit A
     ; loop
         dec TEMP1
-        bne @loopWait
+        beq +
+        jmp @loopWait
+        +:
     rts
 .ENDM
 

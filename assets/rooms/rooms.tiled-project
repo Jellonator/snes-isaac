@@ -6,7 +6,8 @@
     "folders": [
         "."
     ],
-    "objectTypesFile": "",
+    "properties": [
+    ],
     "propertyTypes": [
     ]
 }

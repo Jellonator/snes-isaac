@@ -189,7 +189,7 @@ spriteman_new_sprite_ref:
     plx
     sta.l vqueueOps.1.aAddr,X
     clc
-    adc #128
+    adc #64
     sta.l vqueueOps.2.aAddr,X
     sep #$20 ; 8B A
     phx

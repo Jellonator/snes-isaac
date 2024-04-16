@@ -21,6 +21,12 @@
         ]
     },
     {
+        "id": "item",
+        "rooms": [
+            "item_rooms/basic.tmx"
+        ]
+    },
+    {
         "id": "type_start",
         "rooms": [
             "empty.tmx"

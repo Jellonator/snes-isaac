@@ -18,12 +18,14 @@ json_sprites = json.load(open("assets/sprites.json"))
 
 out_inc = open("include/assets.inc", 'w')
 
-out_inc.write("palettes:\n")
+out_inc.write(".BANK $40 SLOT \"ROM\"\n")
+out_inc.write(".SECTION \"IMPORTED_PALETTES\" SEMISUPERFREE BANKS 127-40\n")
+
 for palette in json_palettes:
     name = palette["name"]
-    out_inc.write("\t@{}:\n".format(name))
-    out_inc.write("\t\t.incbin \"palettes/{}.bin\"\n".format(name))
-    out_inc.write("\t\t@@end:\n");
+    out_inc.write("palettes.{}:\n".format(name))
+    out_inc.write("\t.incbin \"palettes/{}.bin\"\n".format(name))
+    # out_inc.write("\t@end:\n")
     palettebin = open(os.path.join(PALETTE_PATH, "{}.bin".format(name)), 'wb')
     with open(palette["src"], 'r') as hexfh:
         for hexline in hexfh.readlines():
@@ -32,6 +34,8 @@ for palette in json_palettes:
             b = int(hexline[4:6], 16) >> 3
             value = (b << 10) + (g << 5) + r
             palettebin.write(struct.pack("<H", value))
+
+out_inc.write(".ENDS\n")
 
 def write_image_tile(bin, imageindices, depth, tilex, tiley, width):
     indices = []
@@ -62,7 +66,9 @@ def write_image_tile(bin, imageindices, depth, tilex, tiley, width):
                     value2 |= 1 << (7-i)
             bin.write(struct.pack("<BB", value1, value2))
 
-out_inc.write("sprites:\n")
+# out_inc.write("sprites:\n")
+sprite_number = 1
+
 for sprite in json_sprites:
     name = sprite["name"]
     # image = Image.open(sprite["src"]).convert("RGBA")
@@ -74,13 +80,24 @@ for sprite in json_sprites:
     if sprite["depth"] not in [4, 16]:
         raise RuntimeError("Invalid depth {} for {}".format(sprite["depth"], sprite["src"]))
     sprite_out_path = os.path.join(SPRITE_PATH, "{}.bin".format(name))
-    # Write info to assets.inc
-    out_inc.write("\t@{}:\n".format(name))
-    out_inc.write("\t\t.incbin \"sprites/{}.bin\"\n".format(name))
-    out_inc.write("\t\t@@end:\n")
+    # section header
+    out_inc.write(".BANK $40 SLOT \"ROM\"\n")
+    out_inc.write(".SECTION \"IMPORTED_SPRITE_{}\" SEMISUPERFREE BANKS 127-40\n".format(sprite_number))
+    sprite_number += 1
+    # section data
+    out_inc.write("spritedata.{}:\n".format(name))
+    out_inc.write("\t.incbin \"sprites/{}.bin\"\n".format(name))
+    # out_inc.write("\t@end:\n")
+    # section output
+    out_inc.write(".ENDS\n")
     # Write to binary file
     spritebin = open(sprite_out_path, 'wb')
-    for ty in range(height // 8):
-        for tx in range(width // 8):
-            write_image_tile(spritebin, imagedata, sprite["depth"], tx, ty, width)
-
+    # get size
+    size = sprite["size"] if "size" in sprite else 1
+    ntilesx = width // 8
+    ntilesy = height // 8
+    for ty in range(0, ntilesy, size):
+        for tx in range(0, ntilesx, size):
+            for ty2 in range(ty, ty+size, 1):
+                for tx2 in range(tx, tx+size, 1):
+                    write_image_tile(spritebin, imagedata, sprite["depth"], tx2, ty2, width)

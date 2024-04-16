@@ -221,21 +221,28 @@ EntityDefinitions:
             spawngroup: .db ENTITY_SPAWNGROUP_NEVER
         .ENDST
     .ENDR
-    ; 128 : Attack fly
+    ; 128 : Item Pedastal
+    .DSTRUCT @item_pedastal INSTANCEOF entitytypeinfo_t VALUES
+        init_func: .dw item_pedastal_init
+        tick_func: .dw item_pedastal_tick
+        free_func: .dw item_pedastal_free
+        spawngroup: .db ENTITY_SPAWNGROUP_ONCE
+    .ENDST
+    ; 129 : Attack fly
     .DSTRUCT @enemy_attack_fly INSTANCEOF entitytypeinfo_t VALUES
         init_func: .dw entity_basic_fly_init
         tick_func: .dw entity_basic_fly_tick
         free_func: .dw entity_basic_fly_free
         spawngroup: .db ENTITY_SPAWNGROUP_ENEMY
     .ENDST
-    ; 129 : zombie
+    ; 130 : zombie
     .DSTRUCT @enemy_zombie INSTANCEOF entitytypeinfo_t VALUES
         init_func: .dw entity_zombie_init
         tick_func: .dw entity_zombie_tick
         free_func: .dw entity_zombie_free
         spawngroup: .db ENTITY_SPAWNGROUP_ENEMY
     .ENDST
-    ; 130 : monstro
+    ; 131 : monstro
     .DSTRUCT @boss_monstro INSTANCEOF entitytypeinfo_t VALUES
         init_func: .dw entity_boss_monstro_init
         tick_func: .dw entity_boss_monstro_tick
@@ -503,8 +510,6 @@ EntityPutBigShadow:
         rtl
     @skipShadow:
     rtl
-
-
 
 EntityPutSplatter:
     rep #$10

@@ -45,5 +45,6 @@
 .define projectile_flags private_entity_custom.2 - 2
 .define projectile_height private_entity_custom.3 - 2
 .define projectile_velocz private_entity_custom.4 - 2
+.define projectile_damage private_base_entity_combined_state_timer - 2
 
 .DEFINE tempData $7EFF00

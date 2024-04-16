@@ -47,9 +47,9 @@ entity_boss_monstro_init:
             txa
             sta.w entity_char_custom.{iy * 4 + ix + 1},Y
             ; write to slot
-            pea bankbyte(sprites@boss_monstro) * $0101 ; >2
-            pea loword(sprites@boss_monstro) + (64 * ix + 128 * 4 * iy) ; >2
-            pea loword(sprites@boss_monstro) + (64 * ix + 128 * 4 * iy + 64 * 4) ; >2
+            pea bankbyte(spritedata.boss_monstro) * $0101 ; >2
+            pea loword(spritedata.boss_monstro) + (64 * ix + 128 * 4 * iy) ; >2
+            pea loword(spritedata.boss_monstro) + (64 * ix + 128 * 4 * iy + 64 * 4) ; >2
             jsl spriteman_write_sprite_to_raw_slot
             rep #$30
             pla ; <2

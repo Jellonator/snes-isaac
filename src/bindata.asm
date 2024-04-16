@@ -1,9 +1,9 @@
 .include "base.inc"
 
-.bank $40
-.SECTION "Graphics" FREE
+; .bank $40
+; .SECTION "Graphics" FREE
 .include "assets.inc"
-.ENDS
+; .ENDS
 
 .include "roompools.inc"
 

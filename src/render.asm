@@ -235,12 +235,12 @@ InitializeBackground:
     rep #$20 ; 16 bit A
     lda #24 * 16 * 8 * 2
     sta DMA0_SIZE ; number of bytes
-    lda #loword(sprites@basement_ground_base)
+    lda #loword(spritedata.basement_ground_base)
     sta DMA0_SRCL ; source address
     lda #BG3_CHARACTER_BASE_ADDR
     sta $2116 ; VRAM address
     sep #$20 ; 8 bit A
-    lda #bankbyte(sprites@basement_ground_base)
+    lda #bankbyte(spritedata.basement_ground_base)
     sta DMA0_SRCH ; source bank
     lda #$80
     sta $2115 ; VRAM address increment flags

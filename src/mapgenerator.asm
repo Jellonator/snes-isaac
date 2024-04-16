@@ -350,6 +350,8 @@ _SetupRoomX:
     beq @room_normal
     cmp #ROOMTYPE_BOSS
     beq @room_boss
+    cmp #ROOMTYPE_ITEM
+    beq @room_item
     bra @room_empty ; uh oh; something has gone wrong probably. Just make it empty
     @room_normal:
         ; normal room type
@@ -367,6 +369,15 @@ _SetupRoomX:
         sta.b currentRoomPoolBase+2
         rep #$30 ; 16b AXY
         lda #loword(RoomPoolDefinitions@boss_basement)
+        sta.b currentRoomPoolBase
+        bra @end
+    @room_item:
+        ; item room type
+        sep #$30
+        lda #bankbyte(RoomPoolDefinitions@item)
+        sta.b currentRoomPoolBase+2
+        rep #$30 ; 16b AXY
+        lda #loword(RoomPoolDefinitions@item)
         sta.b currentRoomPoolBase
         bra @end
     @room_empty:
@@ -597,7 +608,8 @@ BeginMapGeneration:
         ._UpdateDoors (DOOR_OPEN | DOOR_TYPE_BOSS | DOOR_METHOD_FINISH_ROOM)
     ; ITEM
         ldx.b mapgenAvailableTiles+1
-        ._UpdateDoors (DOOR_CLOSED | DOOR_TYPE_TREASURE | DOOR_METHOD_KEY)
+        ; ._UpdateDoors (DOOR_CLOSED | DOOR_TYPE_TREASURE | DOOR_METHOD_KEY)
+        ._UpdateDoors (DOOR_OPEN | DOOR_TYPE_TREASURE | DOOR_METHOD_FINISH_ROOM)
     ; SHOP
         ldx.b mapgenAvailableTiles+2
         ._UpdateDoors (DOOR_CLOSED | DOOR_TYPE_SHOP | DOOR_METHOD_KEY)

@@ -158,62 +158,62 @@ Start2:
     lda #%00000000 | (SPRITE1_BASE_ADDR >> 13) | ((SPRITE2_BASE_ADDR - SPRITE1_BASE_ADDR - $1000) >> 9)
     sta OBSEL
     ; copy palettes to CGRAM
-    PEA $C000 + bankbyte(palettes@isaac.w)
-    PEA palettes@isaac.w
+    PEA $C000 + bankbyte(palettes.isaac.w)
+    PEA palettes.isaac.w
     jsl CopyPalette
     rep #$20 ; 16 bit A
     PLA
     PLA
-    PEA $D000 + bankbyte(palettes@tear.w)
-    PEA palettes@tear.w
+    PEA $D000 + bankbyte(palettes.tear.w)
+    PEA palettes.tear.w
     jsl CopyPalette
     rep #$20 ; 16 bit A
     PLA
     PLA
-    PEA $8000 + bankbyte(palettes@isaac.w)
-    PEA palettes@isaac.w
+    PEA $8000 + bankbyte(palettes.isaac.w)
+    PEA palettes.isaac.w
     jsl CopyPalette
     rep #$20 ; 16 bit A
     PLA
     PLA
-    PEA $9000 + bankbyte(palettes@tear.w)
-    PEA palettes@tear.w
+    PEA $9000 + bankbyte(palettes.tear.w)
+    PEA palettes.tear.w
     jsl CopyPalette
     rep #$20 ; 16 bit A
     PLA
     PLA
-    PEA $0000 + bankbyte(palettes@basement_ground1.w)
-    PEA palettes@basement_ground1.w
+    PEA $0000 + bankbyte(palettes.basement_ground1.w)
+    PEA palettes.basement_ground1.w
     jsl CopyPalette
     rep #$20 ; 16 bit A
     PLA
     PLA
-    PEA $2000 + bankbyte(palettes@basement.w)
-    PEA palettes@basement.w
+    PEA $2000 + bankbyte(palettes.basement.w)
+    PEA palettes.basement.w
     jsl CopyPalette
     rep #$20 ; 16 bit A
     PLA
     PLA
-    PEA $3000 + bankbyte(palettes@basement2.w)
-    PEA palettes@basement2.w
+    PEA $3000 + bankbyte(palettes.basement2.w)
+    PEA palettes.basement2.w
     jsl CopyPalette
     rep #$20 ; 16 bit A
     PLA
     PLA
-    PEA $5000 + bankbyte(palettes@ui_light.w)
-    PEA palettes@ui_light.w
+    PEA $5000 + bankbyte(palettes.ui_light.w)
+    PEA palettes.ui_light.w
     jsl CopyPalette
     rep #$20 ; 16 bit A
     PLA
     PLA
-    PEA $6000 + bankbyte(palettes@ui_gold.w)
-    PEA palettes@ui_gold.w
+    PEA $6000 + bankbyte(palettes.ui_gold.w)
+    PEA palettes.ui_gold.w
     jsl CopyPalette
     rep #$20 ; 16 bit A
     PLA
     PLA
-    PEA $7000 + bankbyte(palettes@ui_dark.w)
-    PEA palettes@ui_dark.w
+    PEA $7000 + bankbyte(palettes.ui_dark.w)
+    PEA palettes.ui_dark.w
     jsl CopyPalette
     rep #$20 ; 16 bit A
     PLA
@@ -222,9 +222,9 @@ Start2:
     pea SPRITE1_BASE_ADDR
     pea 32
     sep #$20 ; 8 bit A
-    lda #bankbyte(sprites@isaac_head)
+    lda #bankbyte(spritedata.isaac_head)
     pha
-    pea sprites@isaac_head
+    pea spritedata.isaac_head
     jsl CopySprite
     sep #$20 ; 8 bit A
     pla
@@ -236,9 +236,9 @@ Start2:
     pea BG2_CHARACTER_BASE_ADDR
     pea 256
     sep #$20 ; 8 bit A
-    lda #bankbyte(sprites@basement)
+    lda #bankbyte(spritedata.basement)
     pha
-    pea sprites@basement
+    pea spritedata.basement
     jsl CopySprite
     sep #$20 ; 8 bit A
     pla
@@ -250,9 +250,9 @@ Start2:
     pea BG1_CHARACTER_BASE_ADDR
     pea 16*4
     sep #$20 ; 8 bit A
-    lda #bankbyte(sprites@UI)
+    lda #bankbyte(spritedata.UI)
     pha
-    pea sprites@UI
+    pea spritedata.UI
     jsl CopySprite
     sep #$20 ; 8 bit A
     pla
@@ -264,9 +264,9 @@ Start2:
     pea BG1_CHARACTER_BASE_ADDR + 16*4*8*2
     pea 16*3
     sep #$20 ; 8 bit A
-    lda #bankbyte(sprites@UI_font)
+    lda #bankbyte(spritedata.UI_font)
     pha
-    pea sprites@UI_font
+    pea spritedata.UI_font
     jsl CopySprite
     sep #$20 ; 8 bit A
     pla
@@ -278,9 +278,9 @@ Start2:
     pea BG1_CHARACTER_BASE_ADDR + 16*7*8*2
     pea 16*1
     sep #$20 ; 8 bit A
-    lda #bankbyte(sprites@UI_numbers)
+    lda #bankbyte(spritedata.UI_numbers)
     pha
-    pea sprites@UI_numbers
+    pea spritedata.UI_numbers
     jsl CopySprite
     sep #$20 ; 8 bit A
     pla
@@ -292,9 +292,9 @@ Start2:
     pea SPRITE1_BASE_ADDR + 16*32 ; VRAM address
     pea 4 ; num tiles
     sep #$20 ; 8 bit A
-    lda #bankbyte(sprites@isaac_tear)
+    lda #bankbyte(spritedata.isaac_tear)
     pha
-    pea sprites@isaac_tear ; address
+    pea spritedata.isaac_tear ; address
     jsl CopySprite
     sep #$20 ; 8 bit A
     pla
@@ -306,9 +306,9 @@ Start2:
     pea SPRITE1_BASE_ADDR + 64*32 ; VRAM address
     pea 128
     sep #$20 ; 8 bit A
-    lda #bankbyte(sprites@default_sprites)
+    lda #bankbyte(spritedata.default_sprites)
     pha
-    pea sprites@default_sprites ; address
+    pea spritedata.default_sprites ; address
     jsl CopySprite
     sep #$20 ; 8 bit A
     pla

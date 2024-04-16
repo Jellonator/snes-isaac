@@ -13,6 +13,7 @@ SOURCES  := bindata.asm\
 			entity/enemy_fly.asm\
 			entity/enemy_zombie.asm\
 			entity/enemy_boss_monstro.asm\
+			entity/item_pedastal.asm\
 			init.asm\
 			ground.asm\
 			layout.asm\
@@ -20,6 +21,7 @@ SOURCES  := bindata.asm\
 			map.asm\
 			mapgenerator.asm\
 			player.asm\
+			playeritem.asm\
 			projectile.asm\
 			render.asm\
 			rng.asm\

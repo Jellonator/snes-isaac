@@ -136,20 +136,27 @@ _PlayerHandleDamaged:
     +:
     rtl
 
+Player.reset_stats:
+    rep #$20
+    lda #PLAYER_STATBASE_ACCEL
+    sta.w playerData.stat_accel
+    lda #PLAYER_STATBASE_SPEED
+    sta.w playerData.stat_speed
+    lda #PLAYER_STATBASE_TEAR_DELAY
+    sta.w playerData.stat_tear_delay
+    lda #PLAYER_STATBASE_TEAR_SPEED
+    sta.w playerData.stat_tear_speed
+    lda #PLAYER_STATBASE_DAMAGE
+    sta.w playerData.stat_damage
+    rtl
+
 PlayerInit:
     rep #$20 ; 16 bit A
     stz.w joy1held
     stz.w joy1press
     stz.w joy1raw
-    lda #24
-    sta.w playerData.stat_accel
-    lda #128*3
-    sta.w playerData.stat_speed
-    lda #24
-    sta.w playerData.stat_tear_delay
-    lda #$0100
-    sta.w playerData.stat_tear_speed
     lda #0
+    sta.w playerData.flags
     sta.w player_velocx
     sta.w player_velocy
     stz.w player_damageflag
@@ -169,6 +176,8 @@ PlayerInit:
     sta.w playerData.healthSlots.2
     sta.w playerData.healthSlots.3
     jsl _PlayerRenderAllHearts
+    jsl Item.reset_items
+    jsl Player.reset_stats
     rts
 
 PlayerUpdate:
@@ -184,6 +193,8 @@ PlayerUpdate:
     bpl +
         stz.w playerData.invuln_timer
     +:
+; check stats
+    jsl Item.check_and_recalculate
 ; remove from partition
     sep #$30
     lda.w player_box_y1
@@ -524,8 +535,8 @@ PlayerShootTear:
     lda #$0800
     sta.w projectile_height,X
     ; ; dmg; TODO: implement tear damage
-    ; lda #3
-    ; sta.w projectile_damage,X
+    lda.w playerData.stat_damage
+    sta.w projectile_damage,X
 ; check direction
     lda.w joy1held
     bit #JOY_Y
@@ -1038,7 +1049,7 @@ _MakeWaitScrollSub2:
         lda.w SVAR
         .IF SREG == BG2VOFS
             clc
-            adc #56
+            adc #32
         .ENDIF
         tax
         stx SREG+2 ; scroll floor
@@ -1067,7 +1078,7 @@ _MakeWaitScrollSub2:
             sta.b $00
             sep #$20 ; 8 bit A
             ; source bank
-            lda #bankbyte(sprites@basement_ground_base)
+            lda #bankbyte(spritedata.basement_ground_base)
             sta DMA0_SRCH
             ; VRAM address increment flags
             lda #$80
@@ -1089,7 +1100,7 @@ _MakeWaitScrollSub2:
                     lda.b $00
                     asl
                     clc
-                    adc #(16 * 24 * i) + loword(sprites@basement_ground_base)
+                    adc #(16 * 24 * i) + loword(spritedata.basement_ground_base)
                     sta DMA0_SRCL
                 ; number of bytes
                 lda #8 * 2
@@ -1126,7 +1137,7 @@ _MakeWaitScrollSub2:
             sta.b $00
             asl
             clc
-            adc #loword(sprites@basement_ground_base)
+            adc #loword(spritedata.basement_ground_base)
             sta DMA0_SRCL
             ; VRAM address
             lda.b $00
@@ -1135,7 +1146,7 @@ _MakeWaitScrollSub2:
             sta VMADDR
             sep #$20 ; 8 bit A
             ; source bank
-            lda #bankbyte(sprites@basement_ground_base)
+            lda #bankbyte(spritedata.basement_ground_base)
             sta DMA0_SRCH
             ; VRAM address increment flags
             lda #$80

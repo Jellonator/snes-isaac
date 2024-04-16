@@ -38,6 +38,7 @@
     flags db ; vhoopppN
 .ENDST
 
+.DEFINE PLAYER_MAX_ITEM_COUNT 255
 ; Player object
 .STRUCT playerextdata_t
     tear_timer dw
@@ -45,22 +46,26 @@
     stat_accel dw
     stat_tear_delay dw
     stat_tear_speed dw
+    stat_damage dw
     flags dw
     invuln_timer dw
     healthSlots INSTANCEOF byte_t HEALTHSLOT_COUNT
+    ; Total number of items that the player has
+    playerItemCount db
+    ; List of all items that the player has, in order of collected
+    playerItemList ds PLAYER_MAX_ITEM_COUNT
+    ; Number of each individual item that the player owns.
+    ; Allows for stat upgrades to stack
+    playerItemStackNumber ds 256
 .ENDST
 
-; ENSURE tear_t is some kind of power of 2, that way
-; multiplication/division is easy
-; currently, size is 16
-.STRUCT tear_t
-    speed instanceof position_t
-    pos instanceof position_t
-    lifetime dw ; frames before this tear is removed
-    size db ; size; [0-3]
-    type db
-    damage dw
-    flags dw
+.STRUCT itemdef_t
+    sprite_index db
+    sprite_palette db
+    flags db
+    on_pickup dl
+    name ds 32
+    tagline ds 32
 .ENDST
 
 ; Tear array info
@@ -131,20 +136,20 @@
 
 ; VQueue mini operation
 ; Used directly with DMA transfer to VADDR and VDATA
-.STRUCT vqueueminiop_t
+.STRUCT vqueueminiop_t SIZE 4
     vramAddr dw
     data dw
 .ENDST
 
 ; Entity Info
 
-.STRUCT entityspriteinfo_t
+.STRUCT entityspriteinfo_t SIZE 4
     sprite_addr dw
     sprite_bank db
     nframes db
 .ENDST
 
-.STRUCT entitytypeinfo_t
+.STRUCT entitytypeinfo_t SIZE 8
     init_func dw
     tick_func dw
     free_func dw

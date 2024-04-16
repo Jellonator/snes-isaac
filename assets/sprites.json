@@ -37,12 +37,14 @@
     {
         "name": "enemy_attack_fly",
         "src": "assets/sprites/enemy/attack_fly.raw",
-        "depth": 16
+        "depth": 16,
+        "size": 2
     },
     {
         "name": "enemy_zombie",
         "src": "assets/sprites/enemy/zombie.raw",
-        "depth": 16
+        "depth": 16,
+        "size": 2
     },
     {
         "name": "boss_monstro",
@@ -58,5 +60,17 @@
         "name": "basement_ground_base",
         "src": "assets/sprites/basement_ground_base.raw",
         "depth": 4
+    },
+    {
+        "name": "items",
+        "src": "assets/sprites/items0.raw",
+        "depth": 16,
+        "size": 2
+    },
+    {
+        "name": "item_pedastal",
+        "src": "assets/sprites/item_pedastal.raw",
+        "depth": 16,
+        "size": 2
     }
 ]

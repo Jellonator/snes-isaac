@@ -249,7 +249,7 @@ projectile_tick__:
         ; reduce HP
         lda.w entity_health,Y
         sec
-        sbc #4
+        sbc.w projectile_damage,X
         sta.w entity_health,Y
         bcs +
             ; kill target

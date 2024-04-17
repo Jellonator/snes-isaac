@@ -721,3 +721,39 @@
         .ENDIF
 
 .ENDM
+
+; Entity Utilities
+
+.MACRO .EntityEasySetBox ARGS width, height
+    sep #$20
+
+    lda.w entity_box_x1,Y
+    clc
+    adc #width
+    sta.w entity_box_x2,Y
+
+    lda.w entity_box_y1,Y
+    clc
+    adc #height
+    sta.w entity_box_y2,Y
+.ENDM
+
+.MACRO .EntityEasyCheckPlayerCollision ARGS addr
+    sep #$20
+
+    lda.w entity_box_x1,Y
+    cmp.w player_box_x2
+    bpl addr
+
+    lda.w entity_box_x2,Y
+    cmp.w player_box_x1
+    bmi addr
+
+    lda.w entity_box_y1,Y
+    cmp.w player_box_y2
+    bpl addr
+
+    lda.w entity_box_y2,Y
+    cmp.w player_box_y1
+    bmi addr
+.ENDM

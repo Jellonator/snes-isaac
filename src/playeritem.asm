@@ -39,6 +39,15 @@ Item.check_and_recalculate:
     +:
     ; reset stats to base
     jsl Player.reset_stats
+    ; check items
+    lda.w playerData.playerItemStackNumber + ITEMID_SAD_ONION
+    and #$00FF
+    beq +
+        lda.w playerData.stat_tear_delay
+        sec
+        sbc #8
+        sta.w playerData.stat_tear_delay
+    +:
     rtl
 
 _empty_pickup:

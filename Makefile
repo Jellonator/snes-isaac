@@ -20,6 +20,7 @@ SOURCES  := bindata.asm\
 			main.asm\
 			map.asm\
 			mapgenerator.asm\
+			palettes.asm\
 			player.asm\
 			playeritem.asm\
 			projectile.asm\

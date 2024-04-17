@@ -3,13 +3,19 @@
 ## Sprite palettes
 
 Keep in mind: palettes 0-3 ignore color math effects,
-though this isn't that big of an issue.
+HOWEVER: palettes 4-7 obey color math effects.
+Since we use sprites for shadows (which are transparent), this limits us to four opaque palettes.
 
-Palettes 0-3 are for enemies and other objects, and are allocated as needed.
-Palettes 4 and 5 are reserved for either champion enemies or bosses.
-Palettes 6 and 7 are reserved for the player and their tears (and possibly other things).
+For each palette:
+Color 0: transparent
+Color 1: black
+Color 2: white
+Color 3: neutral (grey-ish)
+Colors 4-15 are split into four groups of three colors consisting of a base, a shade, and a highlight
 
-Colors 0-2 of every palette: transparent, black, and white.
-Fourth color is typically some neutral color (typically gray)
+Palette 0: base palette. Used by isaac and his tears. Always loaded.
+    (flesh) (blood) (tear/water)
 
-Colors 4-15
+Palettes 1-3 are dynamically loaded.
+
+Palettes 4-7 will be used for shadows/highlights as needed.

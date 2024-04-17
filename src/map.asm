@@ -66,6 +66,7 @@ InitializeRoomSlot:
 LoadRoomSlotIntoLevel:
     ; first, clear existing level
     jsl entity_free_all
+    jsl Palette.init_data
     ; then, clear floor (callee is responsible for clearing the )
     jsl GroundOpClear
     sep #$30 ; 8 bit AXY

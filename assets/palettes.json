@@ -1,11 +1,7 @@
 [
     {
-        "name": "isaac",
-        "src": "assets/palettes/isaac.hex"
-    },
-    {
-        "name": "tear",
-        "src": "assets/palettes/tear.hex"
+        "name": "palette0",
+        "src": "assets/palettes/palette0.hex"
     },
     {
         "name": "basement",
@@ -28,11 +24,11 @@
         "src": "assets/palettes/ui_light.hex"
     },
     {
-        "name": "enemy_attack_fly",
-        "src": "assets/sprites/enemy/attack_fly.hex"
-    },
-    {
         "name": "basement_ground1",
         "src": "assets/palettes/basement_ground_1.hex"
+    },
+    {
+        "name": "item_sad_onion",
+        "src": "assets/palettes/item_onion.hex"
     }
 ]

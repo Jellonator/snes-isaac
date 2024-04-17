@@ -61,7 +61,7 @@
 
 .STRUCT itemdef_t
     sprite_index db
-    sprite_palette db
+    sprite_palette dw
     flags db
     on_pickup dl
     name ds 32

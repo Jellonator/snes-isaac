@@ -430,7 +430,7 @@ EntityPutShadow:
         sta.w objectData.1.pos_x,X
         lda #$A0
         sta.w objectData.1.tileid,X
-        lda #%00011010
+        lda #%00011000
         sta.w objectData.1.flags,X
     @skipShadow:
     rtl
@@ -473,7 +473,7 @@ EntityPutBigShadow:
             .ENDIF
             sta.w objectData.{i+1}.tileid,X
         .ENDR
-        lda #%00011010
+        lda #%00011000
         .REPT 3 INDEX i
             sta.w objectData.{i+1}.flags,X
         .ENDR

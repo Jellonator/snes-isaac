@@ -58,6 +58,8 @@
     objectDataExt dsb 32 ; 2 bits per object: Xs
     objectIndex dw
     objectIndexShadow dw
+; Palette data
+    paletteUsageData dsw 16
 ; VQueue data
     vqueueNumOps dw
     vqueueNumMiniOps dw

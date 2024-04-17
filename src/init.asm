@@ -158,26 +158,14 @@ Start2:
     lda #%00000000 | (SPRITE1_BASE_ADDR >> 13) | ((SPRITE2_BASE_ADDR - SPRITE1_BASE_ADDR - $1000) >> 9)
     sta OBSEL
     ; copy palettes to CGRAM
-    PEA $C000 + bankbyte(palettes.isaac.w)
-    PEA palettes.isaac.w
+    PEA $C000 + bankbyte(palettes.palette0.w)
+    PEA palettes.palette0.w
     jsl CopyPalette
     rep #$20 ; 16 bit A
     PLA
     PLA
-    PEA $D000 + bankbyte(palettes.tear.w)
-    PEA palettes.tear.w
-    jsl CopyPalette
-    rep #$20 ; 16 bit A
-    PLA
-    PLA
-    PEA $8000 + bankbyte(palettes.isaac.w)
-    PEA palettes.isaac.w
-    jsl CopyPalette
-    rep #$20 ; 16 bit A
-    PLA
-    PLA
-    PEA $9000 + bankbyte(palettes.tear.w)
-    PEA palettes.tear.w
+    PEA $8000 + bankbyte(palettes.palette0.w)
+    PEA palettes.palette0.w
     jsl CopyPalette
     rep #$20 ; 16 bit A
     PLA
@@ -411,6 +399,7 @@ tile_data_loop:
     jsl table_clear_sprite
     jsl spriteman_init
     plb
+    jsl Palette.init_data
     ; Initialize other variables
     sep #$30
     lda #bankbyte(mapTileSlotTable)

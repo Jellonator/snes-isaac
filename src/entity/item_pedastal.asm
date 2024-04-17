@@ -5,6 +5,7 @@
 
 .DEFINE _item_gfxptr_pedastal entity_char_custom.1
 .DEFINE _item_gfxptr_item entity_char_custom.2
+.DEFINE _item_palette entity_char_custom.3
 
 item_pedastal_init:
     .ACCU 16
@@ -30,6 +31,23 @@ item_pedastal_init:
     ply
     txa
     sta.w _item_gfxptr_pedastal,Y
+    ; find palette slot for pedastal
+    phy
+    jsl Palette.find_available_opaque
+    rep #$30
+    ply
+    txa
+    sta.w _item_palette,Y
+    ; upload palette
+    lda.w entity_variant,Y
+    and #$00FF
+    asl
+    tax
+    lda.l Item.items,X
+    tax
+    lda.l $010000 + itemdef_t.sprite_palette,X
+    lda.w _item_palette,Y
+    jsl Palette.queue_upload
     rts
 
 item_pedastal_free:

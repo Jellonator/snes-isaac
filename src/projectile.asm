@@ -65,7 +65,7 @@ _projectile_update_sprite:
     sta.w objectData.1.pos_y,Y
     lda #$21
     sta.w objectData.1.tileid,Y
-    lda #%00100010
+    lda #%00100000
     sta.w objectData.1.flags,Y
     lda.w projectile_type,X
     bpl +
@@ -95,7 +95,7 @@ _projectile_update_sprite:
         and #$00
         ora #$A0
         sta.w objectData.1.tileid,Y
-        lda #%00011010
+        lda #%00011000
         sta.w objectData.1.flags,Y
     @skipShadow:
     rts

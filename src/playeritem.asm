@@ -46,25 +46,25 @@ _empty_pickup:
 
 .DSTRUCT Item.definitions.null INSTANCEOF itemdef_t VALUES
     sprite_index: .db 0
-    sprite_palette: .db 0
-    flags: .db 0
-    on_pickup: .dl _empty_pickup
-    name: .db "Sad Onion", 0
-    tagline: .db "test", 0
-.ENDST
-
-.DSTRUCT Item.definitions.sad_onion INSTANCEOF itemdef_t VALUES
-    sprite_index: .db 0
-    sprite_palette: .db 0
+    sprite_palette: .dw 0
     flags: .db 0
     on_pickup: .dl _empty_pickup
     name: .db "null", 0
     tagline: .db "null", 0
 .ENDST
 
+.DSTRUCT Item.definitions.sad_onion INSTANCEOF itemdef_t VALUES
+    sprite_index: .db 0
+    sprite_palette: .dw palettes.item_sad_onion
+    flags: .db 0
+    on_pickup: .dl _empty_pickup
+    name: .db "Sad Onion", 0
+    tagline: .db "Tears Up", 0
+.ENDST
+
 .DSTRUCT Item.definitions.spoon_bender INSTANCEOF itemdef_t VALUES
     sprite_index: .db 1
-    sprite_palette: .db 0
+    sprite_palette: .dw 0
     flags: .db 0
     on_pickup: .dl _empty_pickup
     name: .db "null", 0
@@ -73,7 +73,7 @@ _empty_pickup:
 
 .DSTRUCT Item.definitions.growth_hormones INSTANCEOF itemdef_t VALUES
     sprite_index: .db 2
-    sprite_palette: .db 0
+    sprite_palette: .dw 0
     flags: .db 0
     on_pickup: .dl _empty_pickup
     name: .db "null", 0
@@ -82,7 +82,7 @@ _empty_pickup:
 
 .DSTRUCT Item.definitions.brother_bobby INSTANCEOF itemdef_t VALUES
     sprite_index: .db 3
-    sprite_palette: .db 0
+    sprite_palette: .dw 0
     flags: .db 0
     on_pickup: .dl _empty_pickup
     name: .db "null", 0
@@ -91,7 +91,7 @@ _empty_pickup:
 
 .DSTRUCT Item.definitions.wire_coat_hanger INSTANCEOF itemdef_t VALUES
     sprite_index: .db 0
-    sprite_palette: .db 0
+    sprite_palette: .dw 0
     flags: .db 0
     on_pickup: .dl _empty_pickup
     name: .db "null", 0
@@ -100,7 +100,7 @@ _empty_pickup:
 
 .DSTRUCT Item.definitions.dinner INSTANCEOF itemdef_t VALUES
     sprite_index: .db 0
-    sprite_palette: .db 0
+    sprite_palette: .dw 0
     flags: .db 0
     on_pickup: .dl _empty_pickup
     name: .db "null", 0

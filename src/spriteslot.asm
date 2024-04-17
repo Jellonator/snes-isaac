@@ -58,8 +58,12 @@ spriteman_write_sprite_to_raw_slot:
     inc.w vqueueNumOps
     tay
 
-; vramaddr[0] = spritemem + SPRITE2_BASE_ADDR
+; mode[] = VQUEUE_MODE_VRAM
     .ChangeDataBank $7F
+    lda #VQUEUE_MODE_VRAM
+    sta.w loword(vqueueOps.1.mode),Y ; both param and bAddr
+    sta.w loword(vqueueOps.2.mode),Y
+; vramaddr[0] = spritemem + SPRITE2_BASE_ADDR
     txa
     asl
     tax
@@ -69,10 +73,6 @@ spriteman_write_sprite_to_raw_slot:
     clc
     adc #$100
     sta.w loword(vqueueOps.2.vramAddr),Y
-; param[] = 0b00000001, bAddr[] = $18
-    lda #(%00000001 + ($0100 * $18))
-    sta.w loword(vqueueOps.1.param),Y ; both param and bAddr
-    sta.w loword(vqueueOps.2.param),Y
 ; numBytes[] = 2 * 2 * (8 * 8 * 4) / 8 = 128
     lda #64
     sta.w loword(vqueueOps.1.numBytes),Y
@@ -156,6 +156,10 @@ spriteman_new_sprite_ref:
     clc
     adc #2
     sta.w vqueueNumOps
+; param[] = 0b00000001, bAddr[] = $18
+    lda #VQUEUE_MODE_VRAM
+    sta.l vqueueOps.1.mode,X ; both param and bAddr
+    sta.l vqueueOps.2.mode,X
 ; vramaddr[0] = spritemem.x * 32 + spritemem.y * 64 + SPRITE2_BASE_ADDR
     lda loword(spriteTableValue.1.spritemem),Y
     and #$00FF
@@ -169,10 +173,6 @@ spriteman_new_sprite_ref:
     clc
     adc #$100
     sta.l vqueueOps.2.vramAddr,X
-; param[] = 0b00000001, bAddr[] = $18
-    lda #(%00000001 + ($0100 * $18))
-    sta.l vqueueOps.1.param,X ; both param and bAddr
-    sta.l vqueueOps.2.param,X
     ; numBytes = 2 * 2 * (8 * 8 * 4) / 8 = 128
     lda #64
     sta.l vqueueOps.1.numBytes,X

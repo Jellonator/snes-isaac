@@ -457,15 +457,13 @@
     asl
     asl
     asl
-    clc
-    adc.w vqueueNumOps
 .ENDM
 
 ; Clobbers A
 .MACRO .VQueueOpIncX
     txa
     clc
-    adc #9
+    adc #8
     tax
 .ENDM
 

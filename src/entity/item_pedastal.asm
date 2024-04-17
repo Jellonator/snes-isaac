@@ -46,7 +46,9 @@ item_pedastal_init:
     lda.l Item.items,X
     tax
     lda.l $010000 + itemdef_t.sprite_palette,X
+    tax
     lda.w _item_palette,Y
+    txy
     jsl Palette.queue_upload
     rts
 
@@ -101,14 +103,18 @@ item_pedastal_tick:
     clc
     adc.w entity_posy + 1,Y
     sec
-    sbc #8
+    sbc #12
     sta.w objectData.1.pos_y,X
     adc #20
     sta.w entity_ysort,Y
     ; flags
     lda #%00100001
-    sta.w objectData.1.flags,X
     sta.w objectData.2.flags,X
+    lda.w _item_palette,Y
+    and #$07
+    asl
+    ora #%00100001
+    sta.w objectData.1.flags,X
     ; increment object index
     .SetCurrentObjectS
     ldx.w objectIndex

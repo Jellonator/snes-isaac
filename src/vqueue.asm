@@ -11,29 +11,72 @@ ClearVQueue:
     stz.w vqueueNumMiniOps
     rtl
 
-ProcessVQueue:
-    sep #$20 ; 8b A
-    lda.w vqueueNumOps
-    beq @process_vqueue_end
-    lda #$80
-    sta.w VMAIN
-    rep #$30 ; 16b AXY
-    ldx #loword(vqueueOps)
-@process_vqueue_loop: ; do {
-    lda.l vqueueOps,X
-    sta.w VMADDR
-    inx
-    inx
-    lda #6
-    ldy #DMA0_CTL
-    mvn $7F,$00
+_proc_vqueue_vram:
+    .ACCU 16
+    .INDEX 16
+    lda #(%00000001 + ($0100 * $18))
+    sta.l DMA0_CTL
+    lda.w vqueueOps.1.vramAddr,Y
+    sta.l VMADDR
+    lda.w vqueueOps.1.aAddr,Y
+    sta.l DMA0_SRCL
+    lda.w vqueueOps.1.aAddr+2,Y
+    sta.l DMA0_SRCH
+    lda.w vqueueOps.1.numBytes,Y
+    sta.l DMA0_SIZE
     lda #$0001
-    sta.w MDMAEN
+    sta.l MDMAEN
+    jmp ProcessVQueue@process_vqueue_loop_continue
+
+_proc_vqueue_cgram:
+    .ACCU 16
+    .INDEX 16
+    lda #(%00000000 + ($0100 * $22))
+    sta.l DMA0_CTL
+    lda.w vqueueOps.1.vramAddr,Y
+    sep #$20
+    sta.l CGADDR
+    rep #$20
+    lda.w vqueueOps.1.aAddr,Y
+    sta.l DMA0_SRCL
+    lda.w vqueueOps.1.aAddr+2,Y
+    sta.l DMA0_SRCH
+    lda.w vqueueOps.1.numBytes,Y
+    sta.l DMA0_SIZE
+    lda #$0001
+    sta.l MDMAEN
+    jmp ProcessVQueue@process_vqueue_loop_continue
+
+_proc_modes:
+    .dw _proc_vqueue_vram
+    .dw _proc_vqueue_cgram
+
+ProcessVQueue:
+    phb
+    .ChangeDataBank $7F
+    rep #$30 ; 8b A
+    lda.l vqueueNumOps
+    and #$00FF
+    beq @process_vqueue_end
+    sta.b $00
+    lda #$80
+    sta.l VMAIN
+    ldy #0
+@process_vqueue_loop: ; do {
+    lda.w vqueueOps.1.mode,Y
+    and #$00FF
+    tax
+    jmp (_proc_modes,X)
+@process_vqueue_loop_continue:
+    tya
+    clc
+    adc #_sizeof_vqueueop_t
+    tay
     ; while (--vqueueNumOps != 0);
-    dec.w vqueueNumOps
+    dec.b $00
     bne @process_vqueue_loop
 @process_vqueue_end:
-    rep #$30 ; 16b AXY
+    plb
     stz.w vqueueNumOps
     lda.w #loword(vqueueBinData)
     sta.w vqueueBinOffset

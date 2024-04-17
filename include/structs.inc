@@ -124,14 +124,14 @@
     mapHeightLimit db
 .ENDST
 
+.DEFINE VQUEUE_MODE_VRAM 0
+.DEFINE VQUEUE_MODE_CGRAM 2
 ; Defines structure for VQueue operation
-; Laid out such that operations can be easily performed with MVP
-.STRUCT vqueueop_t
+.STRUCT vqueueop_t SIZE 8
     vramAddr dw
-    param db
-    bAddr db
     aAddr dl
     numBytes dw
+    mode db
 .ENDST
 
 ; VQueue mini operation

@@ -118,8 +118,8 @@ LoadRoomSlotIntoLevel:
     clc
     adc.w gameRoomBG2Offset
     sta.l vqueueOps.1.vramAddr,X
-    lda #(%00000001 + ($0100 * $18))
-    sta.l vqueueOps.1.param,X ; both param and bAddr
+    lda #VQUEUE_MODE_VRAM
+    sta.l vqueueOps.1.mode,X ; VRAM mode
     lda.w vqueueBinOffset
     sta.l vqueueOps.1.aAddr,X
     clc

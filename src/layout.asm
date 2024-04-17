@@ -59,7 +59,7 @@
     objectIndex dw
     objectIndexShadow dw
 ; Palette data
-    paletteUsageData dsw 16
+    paletteUsageData ds 16
 ; VQueue data
     vqueueNumOps dw
     vqueueNumMiniOps dw
@@ -132,6 +132,7 @@
 ; Perhaps will be used for decompressed animated sprites?
 .RAMSECTION "7F" BANK $7F SLOT "FullMemory" ORGA $0000 FORCE
 ; VQueue data
+    tmp ds 256
     ; ops + miniops: $087C
     vqueueOps INSTANCEOF vqueueop_t VQUEUE_MAX_SIZE
     vqueueMiniOps INSTANCEOF vqueueminiop_t 255
@@ -139,7 +140,7 @@
     ; so if we somehow overreach this, we've messed something up bad.
     ; Grabbing vqueue buffer space should be rare anyways.
     ; $2000 - $087C = $1784
-    vqueueBinData INSTANCEOF byte_t 1 ($2000 - (255 * _sizeof_vqueueminiop_t) - (VQUEUE_MAX_SIZE * _sizeof_vqueueop_t))
+    vqueueBinData INSTANCEOF byte_t 1 ($2000 - (255 * _sizeof_vqueueminiop_t) - (VQUEUE_MAX_SIZE * _sizeof_vqueueop_t) - 256)
 ; Ground data
     groundCharacterData ds $0C00*2
     

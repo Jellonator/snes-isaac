@@ -26,7 +26,7 @@ SpriteDefs:
 
 .DefineSprite "sprite.boss.monstro", spritedata.boss_monstro, 12, 1
 
-.DefineSprite "sprite.item", spritedata.items, 1, 1
+.DefineSprite "sprite.item", spritedata.items, 1, 64
 
 .DefineSprite "sprite.item_pedastal", spritedata.item_pedastal, 1, 1
 

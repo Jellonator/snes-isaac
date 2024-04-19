@@ -30,5 +30,9 @@
     {
         "name": "item_sad_onion",
         "src": "assets/palettes/item_onion.hex"
+    },
+    {
+        "name": "item_growth_hormones",
+        "src": "assets/palettes/item_growth_hormones.hex"
     }
 ]

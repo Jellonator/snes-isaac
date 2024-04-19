@@ -159,15 +159,15 @@ _AddTileToQueue:
     asl
     tay
     ; inc vqueue index
-    ; lda.l vqueueNumOps
-    ; inc A
-    ; sta.l vqueueNumOps
+    lda.l vqueueNumOps
+    inc A
+    sta.l vqueueNumOps
     ; set param, bAddr for vmem
     sep #$20
     lda #VQUEUE_MODE_VRAM
     sta.w loword(vqueueOps.1.mode),Y
     ; set aAddr bank
-    lda.w #$7F
+    lda #$7F
     sta.w loword(vqueueOps.1.aAddr+2),Y
     ; vram_addr = (row * 8 * 3 + column) * 8
     rep #$20

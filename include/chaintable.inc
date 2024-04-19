@@ -125,6 +125,8 @@
         ; X->ptr = Y
         tya
         sta.w ptrTable,X
+        ; setup return value
+        tyx
         ldy #0
         rtl
 

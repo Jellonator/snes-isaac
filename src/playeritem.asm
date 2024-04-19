@@ -7,10 +7,10 @@ Item.reset_items:
     sep #$30
     stz.w playerData.playerItemCount
     ldx #0
+    -:
         stz.w playerData.playerItemStackNumber,X
         inx
-        beq +
-    +:
+        bne -
     stz.w playerData.playerItemStackNumber+255
     rtl
 
@@ -30,6 +30,22 @@ Item.add:
     tsb.w playerData.flags
     rtl
 
+; simple multiplication routine somewhat optimized for small multiplicands
+.MACRO .ADDMULTITEM ARGS itemid, mult
+    ldx.w playerData.playerItemStackNumber + itemid
+    cpx #0
+    beq @@@@@@\.\@end
+    clc
+@@@@@@\.\@loop:
+    adc #mult
+    dex
+    bne @@@@@@\.\@loop
+@@@@@@\.\@end:
+.ENDM
+
+.DEFINE PLAYER_TEAR_RATE_MINIMUM 4
+.DEFINE PLAYER_SPEED_MAXIMUM 48
+.DEFINE PLAYER_SPEED_MINIMUM 12
 Item.check_and_recalculate:
     rep #$20
     lda #PLAYER_FLAG_INVALIDATE_ITEM_CACHE
@@ -39,15 +55,30 @@ Item.check_and_recalculate:
     +:
     ; reset stats to base
     jsl Player.reset_stats
-    ; check items
-    lda.w playerData.playerItemStackNumber + ITEMID_SAD_ONION
-    and #$00FF
-    beq +
-        lda.w playerData.stat_tear_delay
-        sec
-        sbc #8
-        sta.w playerData.stat_tear_delay
-    +:
+    rep #$20
+    sep #$10
+    ; TEAR RATE
+    lda #0
+    .ADDMULTITEM ITEMID_SAD_ONION 4
+    sta.b $00
+    lda.w playerData.stat_tear_delay
+    sec
+    sbc.b $00
+    .AMAX P_IMM PLAYER_TEAR_RATE_MINIMUM
+    sta.w playerData.stat_tear_delay
+    ; DAMAGE
+    lda.w playerData.stat_damage
+    .ADDMULTITEM ITEMID_GROWTH_HORMONES 3
+    sta.w playerData.stat_damage
+    ; SPEED (speed = 16 × ACCEL)
+    lda.w playerData.stat_accel
+    .ADDMULTITEM ITEMID_GROWTH_HORMONES 4
+    sta.w playerData.stat_accel
+    asl
+    asl
+    asl
+    asl
+    sta.w playerData.stat_speed
     rtl
 
 _empty_pickup:
@@ -82,7 +113,7 @@ _empty_pickup:
 
 .DSTRUCT Item.definitions.growth_hormones INSTANCEOF itemdef_t VALUES
     sprite_index: .db 2
-    sprite_palette: .dw 0
+    sprite_palette: .dw palettes.item_growth_hormones
     flags: .db 0
     on_pickup: .dl _empty_pickup
     name: .db "null", 0

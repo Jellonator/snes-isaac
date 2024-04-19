@@ -23,7 +23,11 @@ true_item_pedastal_init:
     lda.w entity_variant,Y
     and #$00FF
     asl
-    asl
+    tax
+    lda.l Item.items,X
+    tax
+    lda.l $010000 + itemdef_t.sprite_index,X
+    and #$00FF
     clc
     adc #sprite.item.0
     phy

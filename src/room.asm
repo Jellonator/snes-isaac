@@ -66,6 +66,37 @@ _room_spawn_entities:
     inx
     bra @loop
 @end:
+; deserialize entities
+    stz.b $30
+    @loop_deserialize:
+        lda.b $30
+        cmp #ENTITY_STORE_COUNT
+        beq @end_deserialize
+        asl
+        asl
+        asl
+        clc
+        adc currentRoomInfoAddress
+        tax
+        lda.l $7E0000 + roominfo_t.entityStoreTable + entitystore_t.type,X
+        and #$00FF
+        beq @end_deserialize
+        lda.l $7E0000 + roominfo_t.entityStoreTable + entitystore_t.type,X
+        ; create entity
+        phx
+        php
+        jsl entity_create
+        plp
+        plx
+        lda.l $7E0000 + roominfo_t.entityStoreTable + entitystore_t.posx,X
+        sta.w entity_posx,Y
+        lda.l $7E0000 + roominfo_t.entityStoreTable + entitystore_t.posy,X
+        sta.w entity_posy,Y
+        lda.l $7E0000 + roominfo_t.entityStoreTable + entitystore_t.state,X
+        sta.w entity_state,Y
+        inc.b $30
+        jmp @loop_deserialize
+@end_deserialize:
     rts
 
 Room_Init:
@@ -176,6 +207,79 @@ Room_Tick:
         ; no enemies
         jsr _Room_No_Enemies
     +:
+    rtl
+
+_Room_Serialize_Entities:
+    phb
+    .ChangeDataBank $7E
+    ; jsl SortEntityExecutionOrder
+    rep #$30 ; 16B AXY
+    lda #0
+    sta.b $00
+    ldx.w numEntities
+    beq @end
+    @loop:
+        phx
+        lda.w entityExecutionOrder-1,X
+        and #$00FF
+        tay
+        lda.w entity_type,Y
+        and #$00FF
+        .MultiplyStatic 8
+        tax
+        ; php
+        ; jsr (EntityDefinitions + entitytypeinfo_t.tick_func,X)
+        lda.l EntityDefinitions + entitytypeinfo_t.flags,X
+        and #ENTITY_TYPE_FLAG_SERIALIZE
+        beq +
+            lda.b $00
+            ; skip serialization if full
+            cmp #24
+            beq +
+            ; serialization step
+            asl
+            asl
+            asl
+            clc
+            adc.b currentRoomInfoAddress
+            tax
+            lda.w entity_type,Y
+            sta.w roominfo_t.entityStoreTable + entitystore_t.type,X
+            lda.w entity_state,Y
+            sta.w roominfo_t.entityStoreTable + entitystore_t.state,X
+            lda.w entity_posy,Y
+            sta.w roominfo_t.entityStoreTable + entitystore_t.posy,X
+            lda.w entity_posx,Y
+            sta.w roominfo_t.entityStoreTable + entitystore_t.posx,X
+            inc.b $00
+        +:
+        ; plp
+        plx
+        dex
+        bne @loop
+@end:
+    ; clear rest
+@loop2:
+    lda.b $00
+    cmp #24
+    beq @end2
+    asl
+    asl
+    asl
+    clc
+    adc.b currentRoomInfoAddress
+    tax
+    stz.w roominfo_t.entityStoreTable + entitystore_t.type,X
+    inc.b $00
+    jmp @loop2
+@end2:
+    plb
+    rts
+
+; Call when the current room is to be unloaded
+Room_Unload:
+    ; serialize entities
+    jsr _Room_Serialize_Entities
     rtl
 
 .ENDS

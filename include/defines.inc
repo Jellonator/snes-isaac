@@ -252,16 +252,6 @@
 ; Signaled when an entity is killed (or otherwise needs to handle its own removal)
 .DEFINE ENTITY_SIGNAL_KILL $01
 
-; Entity spawn groups: used to decide which entities to spawn
-; Entities that should always be spawned every time the room is entered
-.DEFINE ENTITY_SPAWNGROUP_ALWAYS $03
-; Entities that should be spawned when entering non-completed rooms
-.DEFINE ENTITY_SPAWNGROUP_ENEMY $02
-; Entities that should only spawn the first time you enter a room
-.DEFINE ENTITY_SPAWNGROUP_ONCE $01
-; Don't spawn these; here for completion's sake
-.DEFINE ENTITY_SPAWNGROUP_NEVER $00
-
 ; Pathfinding data
 
 .DEFINE PATH_DIR_NULL 0

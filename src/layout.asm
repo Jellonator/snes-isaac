@@ -132,18 +132,19 @@
 ; Perhaps will be used for decompressed animated sprites?
 .RAMSECTION "7F" BANK $7F SLOT "FullMemory" ORGA $0000 FORCE
 ; VQueue data
-    tmp ds 256
-    ; ops + miniops: $087C
     vqueueOps INSTANCEOF vqueueop_t VQUEUE_MAX_SIZE
     vqueueMiniOps INSTANCEOF vqueueminiop_t 255
     ; at least 4K of potential DMA data. We can only transfer ~5K per frame ($1400),
     ; so if we somehow overreach this, we've messed something up bad.
     ; Grabbing vqueue buffer space should be rare anyways.
     ; $2000 - $087C = $1784
-    vqueueBinData INSTANCEOF byte_t 1 ($2000 - (255 * _sizeof_vqueueminiop_t) - (VQUEUE_MAX_SIZE * _sizeof_vqueueop_t) - 256)
+    vqueueBinData INSTANCEOF byte_t 1 ($2000 - (255 * _sizeof_vqueueminiop_t) - (VQUEUE_MAX_SIZE * _sizeof_vqueueop_t))
+; Player sprite buffer
+    ; 32 sprites × 4 tiles/sprite × 32 bytes/tile = $1000 bytes
+    playerSpriteBuffer ds 32 * 4 * 32
 ; Ground data
+    ; character data for ground tiles
     groundCharacterData ds $0C00*2
-    
     ; list of tiles currently in the queue, so we don't duplicate ops
     groundTilesInList ds (32*32) / 8
     ; start of list; add new ops to
@@ -152,7 +153,6 @@
     groundOpListEnd dw
     ; if true, reset entire ground
     needResetEntireGround db
-
     ; groundlist operations
     groundOpList_palette ds MAX_GROUND_OPS
     groundOpList_line ds MAX_GROUND_OPS

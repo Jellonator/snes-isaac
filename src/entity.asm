@@ -227,6 +227,7 @@ EntityDefinitions:
         tick_func: .dw item_pedastal_tick
         free_func: .dw item_pedastal_free
         spawngroup: .db ENTITY_SPAWNGROUP_ONCE
+        flags: .db ENTITY_TYPE_FLAG_SERIALIZE
     .ENDST
     ; 129 : Attack fly
     .DSTRUCT @enemy_attack_fly INSTANCEOF entitytypeinfo_t VALUES

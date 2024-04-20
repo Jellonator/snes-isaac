@@ -4,28 +4,30 @@ Essentials:
 - [ ] Special rooms (item, shop, boss, start)
     * [X] Implement room pools for special room types
     * [X] Starting room
-    * [ ] item room (semi-implemented; need items first)
+    * [X] item room (semi-implemented; need items first)
     * [ ] shop room (semi-implemented; need items, pickups, and coins first)
     * [ ] boss room (semi-implemented; need bosses first)
-- [ ] Door types and open methods (e.g. lock the item room; don't open doors until enemies are defeated)
+- [X] Door types and open methods (e.g. lock the item room; don't open doors until enemies are defeated)
     * [X] Implement door flags/enums
     * [X] Prevent player from entering closed doors
-    * [ ] Close doors when entering combat rooms
-    * [ ] Open certain doors after defeating all enemies
+    * [X] Close doors when entering combat rooms
+    * [X] Open certain doors after defeating all enemies
     * [X] Give different visuals to different door types
-    * [ ] Allow door states/visuals to change mid-room
+    * [X] Allow door states/visuals to change mid-room
     * [X] Door type depends on room type
 - [ ] Might need to keep better track of end room locations / generate them if they don't already exist
 - [ ] Save entity data when leaving a room
-- [ ] Don't respawn enemies for completed rooms
+- [X] Don't respawn enemies for completed rooms
 - [ ] Items
-    * [ ] Item rooms contain item pedestal
-    * [ ] Player can pick up items
-    * [ ] Items with basic stat effects
+    * [X] Item rooms contain item pedestal
+    * [X] Player can pick up items
+    * [X] Items with basic stat effects
     * [ ] Items with effects
     * [ ] Active Items
+    * [ ] Item pools
 - [ ] Bosses
-    * [ ] Implement basic boss
+    * [X] Implement basic boss
+    * [ ] Implement an actual boss with AI
     * [ ] Room should spawn an item after completing
     * [ ] Room should spawn entrance to next floor after completing
 

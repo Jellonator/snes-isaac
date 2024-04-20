@@ -136,6 +136,7 @@ entity_boss_monstro_tick:
     .ENDR
     ; inc object index
     ; (there's probably a more efficient way to do this but idc)
+    rep #$30
     .REPT 12 INDEX i
         .SetCurrentObjectS
         inc.w objectIndex

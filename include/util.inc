@@ -738,7 +738,7 @@
     sta.w entity_box_y2,Y
 .ENDM
 
-.MACRO .EntityEasyCheckPlayerCollision ARGS addr
+.MACRO .EntityEasyCheckPlayerCollision_Box ARGS addr
     sep #$20
 
     lda.w entity_box_x1,Y
@@ -754,6 +754,54 @@
     bpl addr
 
     lda.w entity_box_y2,Y
+    cmp.w player_box_y1
+    bmi addr
+.ENDM
+
+.MACRO .EntityEasyCheckPlayerCollision_Rect ARGS addr, left, right, top, bottom
+    sep #$20
+
+    lda.w entity_box_x1,Y
+    clc
+    adc #left
+    cmp.w player_box_x2
+    bpl addr
+
+    lda.w entity_box_x2,Y
+    clc
+    adc #right
+    cmp.w player_box_x1
+    bmi addr
+
+    lda.w entity_box_y1,Y
+    clc
+    adc #top
+    cmp.w player_box_y2
+    bpl addr
+
+    lda.w entity_box_y2,Y
+    clc
+    adc #bottom
+    cmp.w player_box_y1
+    bmi addr
+.ENDM
+
+.MACRO .EntityEasyCheckPlayerCollision_Center ARGS addr, offx, offy
+    sep #$20
+
+    lda.w entity_box_x1,Y
+    clc
+    adc #offx
+    cmp.w player_box_x2
+    bpl addr
+    cmp.w player_box_x1
+    bmi addr
+
+    lda.w entity_box_y1,Y
+    clc
+    adc #offy
+    cmp.w player_box_y2
+    bpl addr
     cmp.w player_box_y1
     bmi addr
 .ENDM

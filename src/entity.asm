@@ -38,12 +38,14 @@ EraseHitbox:
     .EraseHitboxLite
     rts
 
-; Create an entity of type A
+; Create an entity of type/variant A
 ; Returns reference as Y
 entity_create:
-    rep #$30 ; 16B XY
+    rep #$10 ; 16B XY
     sep #$20 ; 8B A
     ; first: find next free slot
+    pha
+    xba
     pha
     ldy #ENTITY_FIRST_CUSTOM_INDEX
     ; for character entities, start from ENTITY_CHARACTER_MAX instead.
@@ -62,6 +64,8 @@ entity_create:
     ; init entity
     lda #0
     xba
+    pla
+    sta.w entity_variant,Y
     pla
     sta.w entity_type,Y
     rep #$20 ; 16B A
@@ -213,7 +217,14 @@ EntityDefinitions:
         free_func: .dw projectile_entity_free
         spawngroup: .db ENTITY_SPAWNGROUP_NEVER
     .ENDST
-    .REPT (128 - 2 - 1) INDEX i
+    ; 3: Pickup
+    .DSTRUCT @pickup INSTANCEOF entitytypeinfo_t VALUES
+        init_func: .dw entity_pickup_init
+        tick_func: .dw entity_pickup_tick
+        free_func: .dw entity_pickup_free
+        spawngroup: .db ENTITY_SPAWNGROUP_ONCE
+    .ENDST
+    .REPT (128 - 3 - 1) INDEX i
         .DSTRUCT @null_pad{i+1} INSTANCEOF entitytypeinfo_t VALUES
             init_func: .dw _e_null
             tick_func: .dw _e_null

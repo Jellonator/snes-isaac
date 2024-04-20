@@ -122,7 +122,7 @@ true_item_pedastal_tick_base:
     sta.w objectData.1.flags,X
     ; check player position, and potentially change state
     .EntityEasySetBox 16 12
-    .EntityEasyCheckPlayerCollision @no_player_col
+    .EntityEasyCheckPlayerCollision_Box @no_player_col
         sep #$20
         lda #STATE_PICKUP
         sta.w entity_state,Y
@@ -130,6 +130,7 @@ true_item_pedastal_tick_base:
         sta.w entity_timer,Y
 @no_player_col:
     ; increment object index
+    rep #$30
     .SetCurrentObjectS
     ldx.w objectIndex
     inx
@@ -188,6 +189,7 @@ true_item_pedastal_tick_pickup:
     ora #%00100001
     sta.w objectData.1.flags,X
     ; increment index
+    rep #$30
     phy
     php
     .SetCurrentObjectS
@@ -223,6 +225,7 @@ true_item_pedastal_tick_empty:
     ; flags
     lda #%00100001
     sta.w objectData.1.flags,X
+    rep #$30
     .SetCurrentObjectS
     ldx.w objectIndex
     inx

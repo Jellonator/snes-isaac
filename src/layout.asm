@@ -90,6 +90,7 @@
     private_entity_char_statfx INSTANCEOF entitycharacterstatuseffectdata_t 2
 ; Common entity data
     currentRoomEnemyCount dw
+    currentRoomDoSpawnReward db
     ; spatial collision data (for entities)
     spatial_partition INSTANCEOF spatialpartitionlayer_t SPATIAL_LAYER_COUNT
     ; pathfinding data

@@ -38,7 +38,8 @@ EraseHitbox:
     .EraseHitboxLite
     rts
 
-; Create an entity of type/variant A
+; Create an entity of type+variant A
+; lower byte is type, upper byte is variant
 ; Returns reference as Y
 entity_create:
     rep #$10 ; 16B XY
@@ -358,6 +359,9 @@ EntityInfoInitialize:
     sta.l numEntities
     lda #ENTITY_INDEX_PLAYER
     sta.l entityExecutionOrder
+    ; clear entity spawn context
+    lda #ENTITY_SPAWN_CONTEXT_STANDARD
+    sta.b entitySpawnContext
     rtl
 
 SpatialPartitionClear:

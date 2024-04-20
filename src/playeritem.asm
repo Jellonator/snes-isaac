@@ -104,7 +104,7 @@ _empty_pickup:
 
 .DSTRUCT Item.definitions.spoon_bender INSTANCEOF itemdef_t VALUES
     sprite_index: .db 1
-    sprite_palette: .dw 0
+    sprite_palette: .dw palettes.palette0
     flags: .db 0
     on_pickup: .dl _empty_pickup
     name: .db "null", 0
@@ -122,7 +122,7 @@ _empty_pickup:
 
 .DSTRUCT Item.definitions.brother_bobby INSTANCEOF itemdef_t VALUES
     sprite_index: .db 3
-    sprite_palette: .dw 0
+    sprite_palette: .dw palettes.palette0
     flags: .db 0
     on_pickup: .dl _empty_pickup
     name: .db "null", 0
@@ -130,8 +130,8 @@ _empty_pickup:
 .ENDST
 
 .DSTRUCT Item.definitions.wire_coat_hanger INSTANCEOF itemdef_t VALUES
-    sprite_index: .db 0
-    sprite_palette: .dw 0
+    sprite_index: .db 4
+    sprite_palette: .dw palettes.palette0
     flags: .db 0
     on_pickup: .dl _empty_pickup
     name: .db "null", 0
@@ -139,8 +139,8 @@ _empty_pickup:
 .ENDST
 
 .DSTRUCT Item.definitions.dinner INSTANCEOF itemdef_t VALUES
-    sprite_index: .db 0
-    sprite_palette: .dw 0
+    sprite_index: .db 5
+    sprite_palette: .dw palettes.palette0
     flags: .db 0
     on_pickup: .dl _empty_pickup
     name: .db "null", 0

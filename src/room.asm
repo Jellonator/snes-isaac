@@ -9,7 +9,9 @@
 _room_spawn_entities:
 ; spawn entities
     rep #$30 ; 16B AXY
-    lda currentRoomDefinition
+    lda #ENTITY_SPAWN_CONTEXT_ROOMSPAWN
+    sta.b entitySpawnContext
+    lda.b currentRoomDefinition
     tax
     lda.l $020000 + roomdefinition_t.numObjects,X
     and #$00FF
@@ -67,6 +69,8 @@ _room_spawn_entities:
     bra @loop
 @end:
 ; deserialize entities
+    lda #ENTITY_SPAWN_CONTEXT_DESERIALIZE
+    sta.b entitySpawnContext
     stz.b $30
     @loop_deserialize:
         lda.b $30
@@ -97,6 +101,8 @@ _room_spawn_entities:
         inc.b $30
         jmp @loop_deserialize
 @end_deserialize:
+    lda #ENTITY_SPAWN_CONTEXT_STANDARD
+    sta.b entitySpawnContext
     rts
 
 Room_Init:
@@ -200,6 +206,18 @@ _Room_Spawn_Reward:
     sta.w entity_posy,Y
     rts
 
+_Room_Spawn_Boss_Reward:
+    rep #$30
+    lda #ENTITY_TYPE_ITEM_PEDASTAL | ($0100 * ENTITY_ITEMPEDASTAL_POOL_BOSS)
+    php
+    jsl entity_create
+    plp
+    lda #120 * $0100
+    sta.w entity_posx,Y
+    lda #(120 + 32) * $0100
+    sta.w entity_posy,Y
+    rts
+
 _Room_Complete:
     jsr _Room_Open_Doors
     jsl updateAllDoorsInRoom
@@ -208,13 +226,21 @@ _Room_Complete:
     lda.w mapTileFlagsTable,X
     ora #MAPTILE_COMPLETED
     sta.w mapTileFlagsTable,X
-    ; spawn coin in center
+    ; spawn room reward
     phx
     php
     sep #$20
     lda.w currentRoomDoSpawnReward
     beq +
+        sep #$10
+        ldx.b loadedRoomIndex
+        lda.w mapTileTypeTable,X
+        cmp #ROOMTYPE_BOSS
+        beq @spawnBossReward
         jsr _Room_Spawn_Reward
+        jmp +
+    @spawnBossReward:
+        jsr _Room_Spawn_Boss_Reward
     +:
     plp
     plx

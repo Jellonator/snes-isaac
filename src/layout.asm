@@ -19,6 +19,7 @@
     ; ... used for a variety of purposes I guess. Just treat them as temp vars
     currentConsideredTileX dw
     currentConsideredTileY dw
+    entitySpawnContext dw
 ; long pointers to current room's doors
     mapDoorNorth dl
     mapDoorEast dl

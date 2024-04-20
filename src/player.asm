@@ -150,6 +150,37 @@ Player.reset_stats:
     sta.w playerData.stat_damage
     rtl
 
+Player.update_money_display:
+    rep #$30 ; 16B AXY
+    ; inc vqueue
+    lda.w vqueueNumMiniOps
+    asl
+    asl
+    tax
+    inc.w vqueueNumMiniOps
+    inc.w vqueueNumMiniOps
+    ; first, determine offset
+    lda #BG1_TILE_BASE_ADDR + $46
+    sta.l vqueueMiniOps.1.vramAddr,X
+    lda #BG1_TILE_BASE_ADDR + $47
+    sta.l vqueueMiniOps.2.vramAddr,X
+    ; now, determine character
+    lda.w playerData.money
+    and #$00F0
+    lsr
+    lsr
+    lsr
+    lsr
+    clc
+    adc #$3C70
+    sta.l vqueueMiniOps.1.data,X
+    lda.w playerData.money
+    and #$000F
+    clc
+    adc #$3C70
+    sta.l vqueueMiniOps.2.data,X
+    rtl
+
 PlayerInit:
     rep #$20 ; 16 bit A
     stz.w joy1held
@@ -170,6 +201,9 @@ PlayerInit:
         stz.w playerData.healthSlots + (i * 2)
     .ENDR
     stz.w playerData.invuln_timer
+    stz.w playerData.money
+    stz.w playerData.keys
+    stz.w playerData.bombs
     sep #$30
     lda #HEALTH_REDHEART_FULL
     sta.w playerData.healthSlots.1

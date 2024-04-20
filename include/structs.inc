@@ -50,6 +50,10 @@
     stat_tear_delay dw
     stat_tear_speed dw
     stat_damage dw
+; pickups
+    money dw
+    keys dw
+    bombs dw
 ; health
     healthSlots INSTANCEOF byte_t HEALTHSLOT_COUNT
 ; items

@@ -22,20 +22,21 @@ Essentials:
     * [X] Item rooms contain item pedestal
     * [X] Player can pick up items
     * [X] Items with basic stat effects
+    * [ ] on-pickup items (e.g. health up)
     * [ ] Items with effects
     * [ ] Active Items
-    * [ ] Item pools
+    * [X] Item pools
 - [ ] Bosses
     * [X] Implement basic boss
     * [ ] Implement an actual boss with AI
-    * [ ] Room should spawn an item after completing
+    * [X] Room should spawn an item after completing
     * [ ] Room should spawn entrance to next floor after completing
 
 Bonus:
 - [ ] Secret rooms with bombable walls
-- [ ] Room rewards
-    * [ ] Only for combat rooms
-    * [ ] Only directly after completing a room
+- [X] Room rewards
+    * [X] Only for combat rooms
+    * [X] Only directly after completing a room
 - [ ] More special rooms
     * [ ] Secret
     * [ ] Sacrifice

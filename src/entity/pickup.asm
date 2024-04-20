@@ -6,8 +6,8 @@
 _variant_sprite_tileflag:
     .dw $0000 ; 0 - null
     .dw $2080 ; 1 - penny
-    .dw $2080 ; 2 - nickle
-    .dw $2080 ; 3 - dime
+    .dw $2086 ; 2 - nickle
+    .dw $2088 ; 3 - dime
     .dw $2084 ; 4 - bomb
     .dw $2082 ; 5 - key
 
@@ -31,6 +31,7 @@ true_entity_pickup_tick:
     ; Y position
     lda.w entity_posy + 1,Y
     sta.w objectData.1.pos_y,X
+    sta.w entity_ysort,Y
     rep #$30
     .SetCurrentObjectS
     ldx.w objectIndex
@@ -43,6 +44,20 @@ true_entity_pickup_tick:
     ; collision detection
     .EntityEasySetBox 16 16
     .EntityEasyCheckPlayerCollision_Center @no_player_col, 8, 10
+        ; add money
+        ; TODO: add other handling
+        sep #$08 ; enable decimal
+        rep #$20 ; 16b A
+        lda.w playerData.money
+        clc
+        adc #$01
+        sta.w playerData.money
+        rep #$08 ; disable decimal
+        phy
+        php
+        jsl Player.update_money_display
+        plp
+        ply
         ; KILL
         jsl entity_free
     @no_player_col:

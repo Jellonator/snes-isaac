@@ -11,10 +11,58 @@
 .BANK $02 SLOT "ROM"
 .SECTION "Entity Item Pedastal" SUPERFREE
 
+_item_pedastal_get_variant_from_pool:
+    .ACCU 16
+    .INDEX 16
+    lda.w entity_variant,Y
+    and #$00FF
+    cmp #ENTITY_ITEMPEDASTAL_POOL_BOSS
+    beq @pool_boss
+@pool_item_room:
+    lda #Item.pool.item_room@end - Item.pool.item_room
+    ldx #loword(Item.pool.item_room)
+    jmp @begin
+@pool_boss:
+    lda #Item.pool.boss@end - Item.pool.boss
+    ldx #loword(Item.pool.boss)
+    jmp @begin
+@begin:
+    pha
+    phy
+    php
+    jsl RngGeneratorUpdate16
+    sta.l DIVU_DIVIDEND
+    plp
+    ply
+    pla
+    sta.l DIVU_DIVISOR
+    .REPT 8
+        nop
+    .ENDR
+    txa
+    clc
+    adc.l DIVU_REMAINDER
+    tax
+    lda.l $010000 * bankbyte(Item.pool.item_room),X
+    sep #$20
+    sta.w entity_variant,Y
+    rts
+
 true_item_pedastal_init:
     .ACCU 16
     .INDEX 16
+    ; get item from pool if not deserializing
+    lda.b entitySpawnContext
+    cmp #ENTITY_SPAWN_CONTEXT_DESERIALIZE
+    beq +
+        phy
+        php
+        jsr _item_pedastal_get_variant_from_pool
+        plp
+        ply
+    +:
     ; init state
+    lda #0
     sep #$20
     lda #STATE_BASE
     sta.w entity_state,Y

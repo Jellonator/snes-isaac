@@ -77,12 +77,13 @@
 .ENDST
 
 ; Serialized entity data
-.STRUCT entitystore_t
-    x db
-    y db
+.STRUCT entitystore_t SIZE 8
     type db
     variant db
-    ext dw
+    posx dw
+    posy dw
+    state db
+    timer db
 .ENDST
 
 ; Actual generated room data, laid out in RAM
@@ -92,8 +93,8 @@
     ; tile[97] is a solid block
     tileTypeTable INSTANCEOF byte_t ROOM_TILE_COUNT + 2
     tileVariantTable INSTANCEOF byte_t ROOM_TILE_COUNT + 2
-    ; entityStoreTable INSTANCEOF entitystore_t ENTITY_STORE_COUNT
     roomDefinition dw
+    entityStoreTable INSTANCEOF entitystore_t ENTITY_STORE_COUNT
 .ENDST
 
 ; Structure which defines object spawning rules
@@ -149,12 +150,26 @@
     nframes db
 .ENDST
 
+; Entity spawn groups: used to decide which entities to spawn
+; Entities that should always be spawned every time the room is entered
+.DEFINE ENTITY_SPAWNGROUP_ALWAYS $03
+; Entities that should be spawned when entering non-completed rooms
+.DEFINE ENTITY_SPAWNGROUP_ENEMY $02
+; Entities that should only spawn the first time you enter a room
+.DEFINE ENTITY_SPAWNGROUP_ONCE $01
+; Don't spawn these; here for completion's sake
+.DEFINE ENTITY_SPAWNGROUP_NEVER $00
+
+; if set, then entity should be serialized when room is unloaded.
+; in general, only set this for entities with ENTITY_SPAWNGROUP_ONCE
+.DEFINE ENTITY_TYPE_FLAG_SERIALIZE $01
+
 .STRUCT entitytypeinfo_t SIZE 8
     init_func dw
     tick_func dw
     free_func dw
     spawngroup db
-    padding db
+    flags db
 .ENDST
 
 ; Custom entity data

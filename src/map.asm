@@ -13,10 +13,10 @@ InitializeRoomSlot:
     ; Put room definition address into ZP so that it can be used with
     ; direct indirect long addressing mode
     lda $04,s
-    sta $0A
+    sta.b $0A
     sep #$20 ; 8 bit A, 16 bit XY
     lda $06,s
-    sta $0C
+    sta.b $0C
     ; Turn slot index into slot address in X
     lda #lobyte(_sizeof_roominfo_t)
     sta.l MULTS_A
@@ -26,6 +26,7 @@ InitializeRoomSlot:
     sta.l MULTS_B
     rep #$30 ; 16 bit AXY
     lda.l MULTS_RESULT_LOW
+    sta.b $0D ; store pointer for later use
     tax
     lda $04,s
     sta.l roomSlotTiles.1.roomDefinition,X
@@ -58,6 +59,12 @@ InitializeRoomSlot:
     lda #0
     sta.l roomSlotTiles.1.tileVariantTable,X
     sta.l roomSlotTiles.1.tileVariantTable+1,X
+    ; Clear entity store table
+    ldx.b $0D
+    lda #0
+    .REPT ENTITY_STORE_COUNT INDEX i
+        sta.l roomSlotTiles.1.entityStoreTable.{i+1}.type,X
+    .ENDR
     rtl
 
 ; Initialize a room slot from a room definition
@@ -67,7 +74,7 @@ LoadRoomSlotIntoLevel:
     ; first, clear existing level
     jsl entity_free_all
     jsl Palette.init_data
-    ; then, clear floor (callee is responsible for clearing the )
+    ; then, clear floor
     jsl GroundOpClear
     sep #$30 ; 8 bit AXY
     ; Turn slot index into slot address in X

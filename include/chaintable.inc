@@ -1,20 +1,28 @@
 ; Implementation for 'hash' table using coalesced chaining.
 ; * 'hash' in quotation marks since our hash function is just H(x) = x % N
 ; * keys are assumed to be 16b
-; * insertion and deletion can be a little bit inefficient (as a treat), but search should be somewhat speedy
+; * Insertion, deletion, and search are O(N) worst case, O(1) best case.
+;   best case assumes few entries have shared hashes.
 
-; Three key states for each table entry:
-; * empty                  (0, -1) (high bit of ptr is 1)
-; * has value, no pointer  (X, -1) (high bit of ptr is 1)
-; * has value, has pointer (X, Y)
-; note that this means that the inserted value can not be 0 (though its hash can still be 0)
+; Three states for each table entry:
+; * empty key, no pointer  (0, -1) (high bit of ptr is 1)
+; * valid key, no pointer  (X, -1) (high bit of ptr is 1)
+; * valid key, has pointer (X, Y)
+; note that this means that the inserted key can not be 0 (though its hash can still be 0)
 
 ; valueTable and ptrTable must both be 16b tables, with space reserved for (nBuckets + nCellar)*2 bytes each
-; nBuckets is the number of buckets to reserve for actual values
+; nBuckets is the number of buckets to reserve for actual values. It must be a power of 2.
 ; nCellar is extra space to reserve for the purpose of reducing overhead of hash table
 ; To hold N values, nBuckets + nCellar must be at least N.
 ; It is recommended, however, that nBuckets >= N, where N is the expected maximum number of elements in the table.
 ; It is suggested that nCellar = nBuckets / 5
+;
+; This macro will generate a few methods, whose name depends on the supplied postfix:
+; table_clear - Clears the table
+; table_insert_dup - Insert a key into the table, allowing duplicate entries
+; table_insert_unique - Insert a key into the table, but doesn't allow duplicate entries
+; table_find - Returns a pointer into the table for the given key
+; table_remove - Removes a key from the table
 .MACRO .MakeChainTableStatic ARGS valueTable, ptrTable, nBuckets, nCellar, postfix
     ; total size = buckets + cellar
 

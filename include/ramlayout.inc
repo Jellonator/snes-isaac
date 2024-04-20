@@ -48,3 +48,5 @@
 .define projectile_damage private_base_entity_combined_state_timer - 2
 
 .DEFINE tempData $7EFF00
+
+.DEFINE currentRoomInfoAddress currentRoomTileTypeTableAddress

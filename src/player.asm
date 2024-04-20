@@ -965,8 +965,8 @@ PlayerCheckEnterRoom:
     jsr @initialize
     jmp WaitScrollDown
 @initialize:
-; Set player speed to 0
-    sep #$30 ; 16 bit A
+; unload previous room
+    jsl Room_Unload
 ; Load room
     sep #$30 ; 8 bit AXY
     ldx.b loadedRoomIndex

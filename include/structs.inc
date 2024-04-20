@@ -41,15 +41,18 @@
 .DEFINE PLAYER_MAX_ITEM_COUNT 255
 ; Player object
 .STRUCT playerextdata_t
+    flags dw
+    invuln_timer dw
     tear_timer dw
+; stats
     stat_speed dw
     stat_accel dw
     stat_tear_delay dw
     stat_tear_speed dw
     stat_damage dw
-    flags dw
-    invuln_timer dw
+; health
     healthSlots INSTANCEOF byte_t HEALTHSLOT_COUNT
+; items
     ; Total number of items that the player has
     playerItemCount db
     ; List of all items that the player has, in order of collected

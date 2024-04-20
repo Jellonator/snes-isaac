@@ -127,6 +127,15 @@ Room_Init:
     pha
     jsr _room_spawn_entities
     sep #$30
+    stz.w currentRoomDoSpawnReward
+    rep #$20
+    lda.w currentRoomEnemyCount
+    beq +
+        sep #$30
+        lda #1
+        sta.w currentRoomDoSpawnReward
+    +:
+    sep #$30
     pla
 ; close doors if there are enemies in the room, and the room isn't marked as completed
 ; otherwise, mark room as completed
@@ -180,6 +189,17 @@ _Room_Close_Doors:
     .ENDR
     rts
 
+_Room_Spawn_Reward:
+    rep #$30
+    lda #ENTITY_TYPE_PICKUP | ($0100 * ENTITY_PICKUP_VARIANT_PENNY)
+    php
+    jsl entity_create
+    plp
+    lda #120 * $0100
+    sta.w entity_posx,Y
+    sta.w entity_posy,Y
+    rts
+
 _Room_Complete:
     jsr _Room_Open_Doors
     jsl updateAllDoorsInRoom
@@ -188,6 +208,17 @@ _Room_Complete:
     lda.w mapTileFlagsTable,X
     ora #MAPTILE_COMPLETED
     sta.w mapTileFlagsTable,X
+    ; spawn coin in center
+    phx
+    php
+    sep #$20
+    lda.w currentRoomDoSpawnReward
+    beq +
+        jsr _Room_Spawn_Reward
+    +:
+    plp
+    plx
+    ;
     rts
 
 _Room_No_Enemies:

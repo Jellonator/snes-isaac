@@ -14,6 +14,7 @@ SOURCES  := bindata.asm\
 			entity/enemy_zombie.asm\
 			entity/enemy_boss_monstro.asm\
 			entity/item_pedastal.asm\
+			entity/pickup.asm\
 			init.asm\
 			ground.asm\
 			layout.asm\

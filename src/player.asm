@@ -510,6 +510,8 @@ PlayerRender:
 
 PlayerShootTear:
     sep #$20
+    lda #0
+    xba
     lda #ENTITY_TYPE_PROJECTILE
     jsl entity_create
     rep #$30 ; 16 bit AXY

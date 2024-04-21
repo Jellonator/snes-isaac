@@ -91,9 +91,7 @@ _projectile_update_sprite:
         sta.w objectData.1.pos_y,Y
         lda.w entity_posx+1,X
         sta.w objectData.1.pos_x,Y
-        eor.w entity_posy+1,X
-        and #$00
-        ora #$A0
+        lda #$A1
         sta.w objectData.1.tileid,Y
         lda #%00011000
         sta.w objectData.1.flags,Y

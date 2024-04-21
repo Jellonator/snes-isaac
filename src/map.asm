@@ -581,13 +581,13 @@ DoorTileTopperTable_TOP:
     .dw deft($4C, 2), deft($4E, 2) ; 1 normal
     .dw deft($6C, 2), deft($6E, 2) ; 2 item
     .dw deft($8C, 2), deft($8E, 2) ; 3 shop
-    .dw deft($AC, 2), deft($AE, 2) ; 4 boss
+    .dw deft($AC, 3), deft($AE, 3) ; 4 boss
 
 DoorTileTopperTable_LEFT:
     .dw deft($22, 2), deft($22, 2) ; 0 wall
     .dw deft($C0, 2), deft($E0, 2) ; 1 normal
     .dw deft($C2, 2), deft($E2, 2) ; 2 item
     .dw deft($C4, 2), deft($E4, 2) ; 3 shop
-    .dw deft($C6, 2), deft($E6, 2) ; 4 boss
+    .dw deft($C6, 3), deft($E6, 3) ; 4 boss
 
 .ENDS

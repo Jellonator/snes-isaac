@@ -43,7 +43,22 @@ Item.add:
 @@@@@@\.\@end:
 .ENDM
 
-.DEFINE PLAYER_TEAR_RATE_MINIMUM 4
+; For tear rate: tear is shot when counter reaches $3C00
+; $0100 is once per second
+; $1800 is 2.5 per second
+; $3C00 is once per tick
+
+; +1 index should be small tear up
+; +4 index should be large tear up (small onion)
+Item.tear_rate_base_table:
+    .dw $3C00 / 240.0
+    .dw $3C00 / 120.0
+    .dw $3C00 / 60.0
+    .REPT 256 INDEX i
+        .dw $3C00 * sqrt(i + 3.0) * 2.5 / 240.0
+    .ENDR
+
+.DEFINE PLAYER_TEAR_RATE_MAXIMUM 64
 .DEFINE PLAYER_SPEED_MAXIMUM 48
 .DEFINE PLAYER_SPEED_MINIMUM 12
 Item.check_and_recalculate:
@@ -58,14 +73,14 @@ Item.check_and_recalculate:
     rep #$20
     sep #$10
     ; TEAR RATE
-    lda #0
+    lda #PLAYER_STATBASE_TEAR_RATE_INDEX
     .ADDMULTITEM ITEMID_SAD_ONION 4
-    sta.b $00
-    lda.w playerData.stat_tear_delay
-    sec
-    sbc.b $00
-    .AMAX P_IMM PLAYER_TEAR_RATE_MINIMUM
-    sta.w playerData.stat_tear_delay
+    .ADDMULTITEM ITEMID_WIRE_COAT_HANGER 4
+    .AMIN P_IMM PLAYER_TEAR_RATE_MAXIMUM
+    asl
+    tax
+    lda.l Item.tear_rate_base_table,X
+    sta.w playerData.stat_tear_rate
     ; DAMAGE
     lda.w playerData.stat_damage
     .ADDMULTITEM ITEMID_GROWTH_HORMONES 3

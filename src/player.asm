@@ -142,8 +142,8 @@ Player.reset_stats:
     sta.w playerData.stat_accel
     lda #PLAYER_STATBASE_SPEED
     sta.w playerData.stat_speed
-    lda #PLAYER_STATBASE_TEAR_DELAY
-    sta.w playerData.stat_tear_delay
+    lda #PLAYER_STATBASE_TEAR_RATE
+    sta.w playerData.stat_tear_rate
     lda #PLAYER_STATBASE_TEAR_SPEED
     sta.w playerData.stat_tear_speed
     lda #PLAYER_STATBASE_DAMAGE
@@ -491,18 +491,28 @@ PlayerUpdate:
 ; handle player shoot
     rep #$30 ; 16b AXY
     lda.w playerData.tear_timer
-    cmp.w playerData.stat_tear_delay ; if tear_timer < stat_tear_delay: ++tear_timer
+    clc
+    adc.w playerData.stat_tear_rate
+    sta.w playerData.tear_timer
+    cmp #$3C00
     bcc @tear_not_ready
     ; check inputs
     lda.w joy1held
     bit #(JOY_A|JOY_B|JOY_Y|JOY_X)
-    beq @end_tear_code
+    beq @player_did_not_fire
     jsr PlayerShootTear
-    jmp @end_tear_code
-@tear_not_ready:
-    inc A
+    rep #$20
+    lda.w playerData.tear_timer
+    sec
+    sbc #$3C00
+    ; .AMINU P_ABS playerData.stat_tear_rate
+    ; lda #0
+    rts
+@player_did_not_fire:
+    lda #$3C00
     sta.w playerData.tear_timer
-@end_tear_code:
+    rts
+@tear_not_ready:
     rts
 
 PlayerRender:

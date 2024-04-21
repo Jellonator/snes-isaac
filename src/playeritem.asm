@@ -72,7 +72,7 @@ Item.check_and_recalculate:
     jsl Player.reset_stats
     rep #$20
     sep #$10
-    ; TEAR RATE
+; TEAR RATE
     lda #PLAYER_STATBASE_TEAR_RATE_INDEX
     .ADDMULTITEM ITEMID_SAD_ONION 4
     .ADDMULTITEM ITEMID_WIRE_COAT_HANGER 4
@@ -81,14 +81,18 @@ Item.check_and_recalculate:
     tax
     lda.l Item.tear_rate_base_table,X
     sta.w playerData.stat_tear_rate
-    ; DAMAGE
+; DAMAGE
     lda.w playerData.stat_damage
     .ADDMULTITEM ITEMID_GROWTH_HORMONES 3
+    .AMAX P_IMM 1 ; always at least 1 damage
     sta.w playerData.stat_damage
-    ; SPEED (speed = 16 × ACCEL)
+; SPEED
     lda.w playerData.stat_accel
     .ADDMULTITEM ITEMID_GROWTH_HORMONES 4
+    .AMAX P_IMM PLAYER_SPEED_MINIMUM
+    .AMIN P_IMM PLAYER_SPEED_MAXIMUM
     sta.w playerData.stat_accel
+    ; speed = 16 × ACCEL
     asl
     asl
     asl

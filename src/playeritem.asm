@@ -28,6 +28,15 @@ Item.add:
     rep #$20
     lda #PLAYER_FLAG_INVALIDATE_ITEM_CACHE
     tsb.w playerData.flags
+    ; call pickup code
+    rep #$30
+    txa
+    and #$00FF
+    asl
+    tax
+    lda.l Item.items,X
+    tax
+    jsr (itemdef_t.on_pickup,X)
     rtl
 
 ; simple multiplication routine somewhat optimized for small multiplicands
@@ -101,7 +110,11 @@ Item.check_and_recalculate:
     rtl
 
 _empty_pickup:
-    rtl
+    rts
+
+_health_up_pickup:
+    jsl Player.health_up
+    rts
 
 .DSTRUCT Item.definitions.null INSTANCEOF itemdef_t VALUES
     sprite_index: .db 0
@@ -161,7 +174,7 @@ _empty_pickup:
     sprite_index: .db 5
     sprite_palette: .dw palettes.palette0
     flags: .db 0
-    on_pickup: .dl _empty_pickup
+    on_pickup: .dl _health_up_pickup
     name: .db "null", 0
     tagline: .db "null", 0
 .ENDST

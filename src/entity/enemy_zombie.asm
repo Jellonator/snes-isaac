@@ -6,6 +6,9 @@
 .DEFINE _zombie_gfxptr.1 entity_char_custom.1
 .DEFINE _zombie_gfxptr.2 entity_char_custom.2
 
+.DEFINE BASE_HEALTH_MAIN 20
+.DEFINE BASE_HEALTH_BODY 12
+
 entity_zombie_init:
     .ACCU 16
     .INDEX 16
@@ -13,7 +16,7 @@ entity_zombie_init:
     ; default info
     tya
     sta.w entity_timer,Y
-    lda #10
+    lda #BASE_HEALTH_MAIN
     sta.w entity_health,Y
     sep #$20
     lda #0
@@ -70,7 +73,7 @@ entity_zombie_tick:
         lda #0
         sta.w entity_variant,Y
         rep #$20
-        lda #10
+        lda #BASE_HEALTH_BODY
         sta.w entity_health,Y
     @not_kill:
 ; move

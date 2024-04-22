@@ -136,6 +136,22 @@ _PlayerHandleDamaged:
     +:
     rtl
 
+Player.health_up:
+    sep #$30
+    ldy #HEALTHSLOT_COUNT-1
+    @loop:
+        ; move health slots over one
+        lda.w playerData.healthSlots,Y
+        sta.w playerData.healthSlots+1,Y
+        cpy #0
+        beq @end
+        dey
+        jmp @loop
+@end:
+    lda #HEALTH_REDHEART_FULL
+    sta.w playerData.healthSlots,Y
+    jmp _PlayerRenderAllHearts
+
 Player.reset_stats:
     rep #$20
     lda #PLAYER_STATBASE_ACCEL
@@ -1155,6 +1171,24 @@ _MakeWaitScrollSub2:
                 lda #$0001
                 sta MDMAEN
             .ENDR
+            ; next, clear tile data to defaults
+            lda #$81
+            sta VMAIN
+            rep #$30
+            lda.b $00
+            lsr
+            lsr
+            lsr
+            clc
+            adc #$0104 + BG3_TILE_BASE_ADDR
+            sta VMADDR
+            lda.b $00
+            lsr
+            lsr
+            lsr
+            .REPT 16
+                sta VMDATA
+            .ENDR
         .ELIF SREG == BG2VOFS
         ; up / down
             ; number of bytes
@@ -1173,6 +1207,7 @@ _MakeWaitScrollSub2:
             bcc + 
                 jmp @skipUpload
             +:
+            sta.b $02
             asl
             asl
             asl
@@ -1206,6 +1241,22 @@ _MakeWaitScrollSub2:
             ; begin transfer
             lda #$01
             sta MDMAEN
+            ; update tiles
+            rep #$20
+            lda.b $02
+            asl
+            asl
+            clc
+            adc #$0104 + BG3_TILE_BASE_ADDR
+            sta VMADDR
+            lda.b $02
+            clc
+            asl
+            adc $02
+            .REPT 24
+                sta VMDATA
+                inc A
+            .ENDR
         .ENDIF
         @skipUpload:
         ; Upload objects to OAM

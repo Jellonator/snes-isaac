@@ -424,6 +424,7 @@ GroundAddOp:
     lda $07
     clc
     adc $05
+    dec A
     cmp #32
     bcc @skipAdd
     .AMINU P_IMM, 224

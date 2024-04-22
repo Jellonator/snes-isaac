@@ -1,0 +1,12 @@
+[
+    {
+        "name": "poop1",
+        "src": "assets/splats/poop1.raw",
+        "palette": "GROUND_PALETTE_BROWN"
+    },
+    {
+        "name": "peesplat",
+        "src": "assets/splats/peesplat.raw",
+        "palette": "GROUND_PALETTE_YELLOW"
+    }
+]

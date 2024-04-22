@@ -123,6 +123,30 @@ _projectile_tile_poop:
     sta [currentRoomTileTypeTableAddress],Y
     rep #$20 ; 16 bit A
     jsl HandleTileChanged
+    ; put splotch
+    sep #$20 ; 8 bit A
+    tyx
+    lda.l RoomTileToXTable,X
+    asl
+    asl
+    asl
+    asl
+    clc
+    adc #32
+    sta.b $07
+    lda.l RoomTileToYTable,X
+    asl
+    asl
+    asl
+    asl
+    clc
+    adc #64
+    sta.b $06
+    phy
+    php
+    jsl Splat.poop1
+    plp
+    ply
     rts
 
 _ProjectileTileHandlerTable:

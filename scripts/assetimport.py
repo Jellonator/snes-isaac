@@ -15,6 +15,7 @@ if not os.path.exists(PALETTE_PATH):
 
 json_palettes = json.load(open("assets/palettes.json"))
 json_sprites = json.load(open("assets/sprites.json"))
+json_splats = json.load(open("assets/splats.json"))
 
 out_inc = open("include/assets.inc", 'w')
 
@@ -104,3 +105,85 @@ for sprite in json_sprites:
             for ty2 in range(ty, ty+size, 1):
                 for tx2 in range(tx, tx+size, 1):
                     write_image_tile(spritebin, imagedata, sprite["depth"], tx2, ty2, width)
+
+splat_number = 1
+
+def insert_splat_run(out, x, y, length, ctx):
+    # LENGTH
+    # if ctx["length"] == None or abs(ctx["length"] - length) > 1:
+    out.write(
+"""    lda #{}
+    sta.b $05
+""".format(length))
+    # elif length == ctx["length"] + 1:
+    #     out.write("    inc.b $05\n")
+    # elif length == ctx["length"] - 1:
+    #     out.write("    dec.b $05\n")
+    # X
+    if x == ctx["x"] + 1:
+        out.write("    inc.b $07\n")
+    elif x == ctx["x"] - 1:
+        out.write("    dec.b $07\n")
+    elif x != ctx["x"]:
+        out.write(
+"""    lda.b $07
+    clc
+    adc #{}
+    sta.b $07
+""".format(x - ctx["x"]))
+    # Y
+    if y == ctx["y"] + 1:
+        out.write("    inc.b $06\n")
+    elif y == ctx["y"] - 1:
+        out.write("    dec.b $06\n")
+    elif y != ctx["y"]:
+        out.write(
+"""    lda.b $06
+    clc
+    adc #{}
+    sta.b $06
+""".format(y - ctx["y"]))
+    # Finalize
+    out.write(
+"""    jsl GroundAddOp
+    sep #$20
+""")
+    ctx["length"] = length
+    ctx["x"] = x
+    ctx["y"] = y
+
+for splat in json_splats:
+    name = splat["name"]
+    imagefh = open(splat["src"], 'rb')
+    width, height = struct.unpack("<II", imagefh.read(8))
+    imagedata = imagefh.read()
+    if width*height != len(imagedata):
+        raise RuntimeError("Invalid image size {}x{} in {}".format(width, height, splat["src"]))
+    out_inc.write(".BANK {} SLOT \"ROM\"\n".format(minbank))
+    out_inc.write(".SECTION \"IMPORTED_SPLAT_{}\" SUPERFREE\n".format(splat_number))
+    splat_number += 1
+    out_inc.write(
+"""Splat.{}:
+    sep #$30
+    lda #{}
+    sta.b $04
+""".format(name, splat["palette"]))
+    context = {
+        "x": 0,
+        "y": 0,
+        "length": None
+    }
+    # print(imagedata)
+    # print(imagedata[0] == 0)
+    for iy in range(height):
+        ix = 0
+        while ix < width:
+            if imagedata[iy*width+ix] != 0:
+                cx = ix
+                ix += 1
+                while ix < width and imagedata[iy*width+ix] != 0:
+                    ix += 1
+                insert_splat_run(out_inc, cx, iy, ix-cx, context)
+            ix += 1
+    out_inc.write("    rtl\n")
+    out_inc.write(".ENDS\n")

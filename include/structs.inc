@@ -55,7 +55,8 @@
     keys dw
     bombs dw
 ; health
-    healthSlots INSTANCEOF byte_t HEALTHSLOT_COUNT
+    ; extra slot allows small optimizations
+    healthSlots INSTANCEOF byte_t HEALTHSLOT_COUNT + 1
 ; items
     ; Total number of items that the player has
     playerItemCount db

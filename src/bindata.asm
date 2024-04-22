@@ -209,7 +209,7 @@ DefaultBackgroundTileData:
     .REPT 32 INDEX ix ; by 32 tiles
         .IF (iy < 8) || (iy >= 24) || (ix < 4) || (ix >= 28)
             ; Let's just trust that the first UI tile will always be empty
-            .dw 24*16 + $100
+            .dw (BG1_CHARACTER_BASE_ADDR / 8)
         .ELSE
             .dw %0000000000000000 | ((iy - 8) * 24 + ix - 4)
         .ENDIF

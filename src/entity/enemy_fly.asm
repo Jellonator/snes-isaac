@@ -6,6 +6,8 @@
 .DEFINE _fly_fgxptr.1 entity_char_custom.1
 .DEFINE _fly_fgxptr.2 entity_char_custom.2
 
+.DEFINE BASE_HEALTH 12
+
 entity_basic_fly_init:
     .ACCU 16
     .INDEX 16
@@ -13,7 +15,7 @@ entity_basic_fly_init:
     ; default info
     tya
     sta.w entity_timer,Y
-    lda #10
+    lda #BASE_HEALTH
     sta.w entity_health,Y
     sep #$20
     lda #0

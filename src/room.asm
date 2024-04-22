@@ -163,6 +163,27 @@ Room_Init:
 @finish_close_doors:
     php
     jsl updateAllDoorsInRoom
+    ; pee splat if player is on low health
+    jsl Player.get_effective_health
+    sep #$20
+    cmp #1
+    bne +
+        lda.w player_box_x1
+        sta.b $07
+        sec
+        sbc #3
+        lda.w player_box_y1
+        sta.b $06
+        jsl Splat.peesplat
+        lda.w player_box_x1
+        clc
+        adc #3
+        sta.b $07
+        lda.w player_box_y1
+        inc A
+        sta.b $06
+        jsl Splat.peesplat
+    +:
     plp
     rtl
 

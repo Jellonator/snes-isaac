@@ -46,6 +46,15 @@ _PlayerHealthTileValueTable:
     .dw deft($30, 6) | T_HIGHP ; spirit full
     .dw deft($00, 5) | T_HIGHP ; eternal
 
+_PlayerHealthEffectiveValueTable:
+    .db 0 ; null
+    .db 0 ; red empty
+    .db 1 ; red half
+    .db 2 ; red full
+    .db 1 ; spirit half
+    .db 2 ; spirit full
+    .db 1 ; eternal
+
 ; Render heart at slot Y
 _PlayerRenderSingleHeart:
     rep #$30 ; 16B AXY
@@ -147,6 +156,27 @@ Player.health_up:
         beq @end
         dey
         jmp @loop
+@end:
+    lda #HEALTH_REDHEART_FULL
+    sta.w playerData.healthSlots,Y
+    jmp _PlayerRenderAllHearts
+
+Player.get_effective_health:
+    sep #$30
+    stz.b $00
+    ldy #HEALTHSLOT_COUNT-1
+    @loop:
+        lda.w playerData.healthSlots,Y
+        tax
+        lda.b $00
+        clc
+        adc.l _PlayerHealthEffectiveValueTable,X
+        sta.b $00
+        dey
+        bpl @loop
+    lda.b $00
+    rtl
+        
 @end:
     lda #HEALTH_REDHEART_FULL
     sta.w playerData.healthSlots,Y
@@ -1188,6 +1218,8 @@ _MakeWaitScrollSub2:
             lsr
             .REPT 16
                 sta VMDATA
+                clc
+                adc #24
             .ENDR
         .ELIF SREG == BG2VOFS
         ; up / down

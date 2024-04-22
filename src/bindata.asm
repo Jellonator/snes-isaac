@@ -186,6 +186,24 @@ GameTileToRoomTileIndexTable:
         .db 97
     .ENDR
 
+RoomTileToXTable:
+    .REPT 8
+        .REPT 12 INDEX i
+            .db i
+        .ENDR
+    .ENDR
+    .db 0
+    .db 0
+
+RoomTileToYTable:
+    .REPT 8 INDEX i
+        .REPT 12
+            .db i
+        .ENDR
+    .ENDR
+    .db 0
+    .db 0
+
 InitialPathfindingData:
 .REPT 16*4
     .db $01 ; down

@@ -1,7 +1,6 @@
 .include "base.inc"
 
-.BANK $00 SLOT "ROM"
-.SECTION "SpriteDefs"
+.SECTION "SpriteDefs" BANK ROMBANK_BASE SLOT "ROM" ORGA $8000 SEMIFREE
 
 .DEFINE currid 1
 SpriteDefs:

@@ -18,8 +18,11 @@ json_sprites = json.load(open("assets/sprites.json"))
 
 out_inc = open("include/assets.inc", 'w')
 
-out_inc.write(".BANK $40 SLOT \"ROM\"\n")
-out_inc.write(".SECTION \"IMPORTED_PALETTES\" SEMISUPERFREE BANKS 127-40\n")
+maxbank="63"
+minbank="32"
+
+out_inc.write(".BANK {} SLOT \"ROM\"\n".format(minbank))
+out_inc.write(".SECTION \"IMPORTED_PALETTES\" SEMISUPERFREE BANKS {}-{}\n".format(maxbank,minbank))
 
 for palette in json_palettes:
     name = palette["name"]
@@ -81,8 +84,8 @@ for sprite in json_sprites:
         raise RuntimeError("Invalid depth {} for {}".format(sprite["depth"], sprite["src"]))
     sprite_out_path = os.path.join(SPRITE_PATH, "{}.bin".format(name))
     # section header
-    out_inc.write(".BANK $40 SLOT \"ROM\"\n")
-    out_inc.write(".SECTION \"IMPORTED_SPRITE_{}\" SEMISUPERFREE BANKS 127-40\n".format(sprite_number))
+    out_inc.write(".BANK {} SLOT \"ROM\"\n".format(minbank))
+    out_inc.write(".SECTION \"IMPORTED_SPRITE_{}\" SEMISUPERFREE BANKS {}-{}\n".format(sprite_number,maxbank,minbank))
     sprite_number += 1
     # section data
     out_inc.write("spritedata.{}:\n".format(name))

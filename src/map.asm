@@ -454,8 +454,7 @@ updateAllDoorsInRoom:
 
 .ENDS
 
-.BANK $00 SLOT "ROM"
-.SECTION "LevelData" FREE
+.SECTION "LevelData" BANK ROMBANK_BASE SLOT "ROM" ORGA $8000 SEMIFREE
 
 BlockVariantAddresses:
 .REPT 256 INDEX i

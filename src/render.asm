@@ -1,15 +1,13 @@
 .include "base.inc"
 
-.BANK $00 SLOT "ROM"
-.SECTION "RenderInterrupt" FREE
+.SECTION "RenderInterrupt" BANK ROMBANK_BASE SLOT "ROM" ORGA $8000 SEMIFREE
 
 VBlank:
     jml VBlank2
 
 .ENDS
 
-.BANK $01 SLOT "ROM"
-.SECTION "RenderCode" FREE
+.SECTION "RenderCode" BANK $01 SLOT "ROM" FREE
 
 VBlank2:
     sei ; disable interrupts

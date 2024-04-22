@@ -1,14 +1,10 @@
 .include "base.inc"
 
-; .bank $40
-; .SECTION "Graphics" FREE
 .include "assets.inc"
-; .ENDS
 
 .include "roompools.inc"
 
-.bank $00
-.SECTION "ExtraData"
+.SECTION "ExtraData" BANK ROMBANK_BASE SLOT "ROM" ORGA $8000 SEMIFREE
 EmptyData:
     .dw $0000
 EmptySpriteData:

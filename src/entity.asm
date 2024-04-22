@@ -224,6 +224,7 @@ EntityDefinitions:
         tick_func: .dw entity_pickup_tick
         free_func: .dw entity_pickup_free
         spawngroup: .db ENTITY_SPAWNGROUP_ONCE
+        flags: .db ENTITY_TYPE_FLAG_SERIALIZE
     .ENDST
     .REPT (128 - 3 - 1) INDEX i
         .DSTRUCT @null_pad{i+1} INSTANCEOF entitytypeinfo_t VALUES

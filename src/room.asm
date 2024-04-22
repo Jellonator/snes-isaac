@@ -13,7 +13,7 @@ _room_spawn_entities:
     sta.b entitySpawnContext
     lda.b currentRoomDefinition
     tax
-    lda.l $020000 + roomdefinition_t.numObjects,X
+    lda.l $C20000 + roomdefinition_t.numObjects,X
     and #$00FF
     tay ; Y = num entities
     beq @end
@@ -25,7 +25,7 @@ _room_spawn_entities:
     ; Get and create entity
     phy ; >2
     phx ; >2
-    lda $020000 + objectdef_t.objectType,X
+    lda $C20000 + objectdef_t.objectType,X
     .MultiplyStatic 8
     tax
     sep #$20
@@ -34,7 +34,7 @@ _room_spawn_entities:
     rep #$20
     bcc @no_spawn
         plx ; <2
-        lda $020000 + objectdef_t.objectType,X
+        lda.l $C20000 + objectdef_t.objectType,X
         phx ; >2
         jsl entity_create
         rep #$30
@@ -47,11 +47,11 @@ _room_spawn_entities:
         sta.w entity_velocy,Y
         ; set X,Y
         sep #$20 ; 8B A
-        lda $020000 + objectdef_t.x,X ; X coord
+        lda $C20000 + objectdef_t.x,X ; X coord
         clc
         adc #ROOM_LEFT
         sta.w entity_posx+1,Y
-        lda $020000 + objectdef_t.y,X ; Y coord
+        lda $C20000 + objectdef_t.y,X ; Y coord
         clc
         adc #ROOM_TOP
         sta.w entity_posy+1,Y

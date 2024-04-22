@@ -107,9 +107,7 @@ Init:
     IRQBRK EmptyHandler
 .ENDEMUVECTOR
 
-.BANK $00 SLOT "ROM"
-.ORG $0000
-.SECTION "InitVector" SEMIFREE
+.SECTION "InitVector" BANK ROMBANK_BASE SLOT "ROM" ORGA $8000 SEMIFREE
 
 EmptyHandler:
     rti

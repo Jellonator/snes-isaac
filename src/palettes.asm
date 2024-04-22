@@ -1,7 +1,6 @@
 .include "base.inc"
 
-.BANK $00 SLOT "ROM"
-.SECTION "PaletteHandling"
+.SECTION "PaletteHandling" BANK ROMBANK_BASE SLOT "ROM" ORGA $8000 SEMIFREE
 
 ; Initialize all palette data to default
 Palette.init_data:

@@ -74,7 +74,7 @@ true_item_pedastal_init:
     tax
     lda.l Item.items,X
     tax
-    lda.l $010000 + itemdef_t.sprite_index,X
+    lda.l $C10000 + itemdef_t.sprite_index,X
     and #$00FF
     clc
     adc #sprite.item.0
@@ -106,7 +106,7 @@ true_item_pedastal_init:
     tax
     lda.l Item.items,X
     tax
-    lda.l $010000 + itemdef_t.sprite_palette,X
+    lda.l $C10000 + itemdef_t.sprite_palette,X
     tax
     lda.w _item_palette,Y
     txy

@@ -30,6 +30,7 @@ Item.add:
     tsb.w playerData.flags
     ; call pickup code
     rep #$30
+    stz.w playerData.tear_timer
     txa
     and #$00FF
     asl
@@ -122,7 +123,7 @@ _health_up_pickup:
     flags: .db 0
     on_pickup: .dl _empty_pickup
     name: .db "null", 0
-    tagline: .db "null", 0
+    tagline: .db "Wait, What?", 0
 .ENDST
 
 .DSTRUCT Item.definitions.sad_onion INSTANCEOF itemdef_t VALUES
@@ -139,8 +140,8 @@ _health_up_pickup:
     sprite_palette: .dw palettes.palette0
     flags: .db 0
     on_pickup: .dl _empty_pickup
-    name: .db "null", 0
-    tagline: .db "null", 0
+    name: .db "Spoon Bender", 0
+    tagline: .db "Homing Shots", 0
 .ENDST
 
 .DSTRUCT Item.definitions.growth_hormones INSTANCEOF itemdef_t VALUES
@@ -148,8 +149,8 @@ _health_up_pickup:
     sprite_palette: .dw palettes.item_growth_hormones
     flags: .db 0
     on_pickup: .dl _empty_pickup
-    name: .db "null", 0
-    tagline: .db "null", 0
+    name: .db "Growth Hormones", 0
+    tagline: .db "Damage and Speed Up", 0
 .ENDST
 
 .DSTRUCT Item.definitions.brother_bobby INSTANCEOF itemdef_t VALUES
@@ -157,8 +158,8 @@ _health_up_pickup:
     sprite_palette: .dw palettes.palette0
     flags: .db 0
     on_pickup: .dl _empty_pickup
-    name: .db "null", 0
-    tagline: .db "null", 0
+    name: .db "Brother Bobby", 0
+    tagline: .db "Best Friend", 0
 .ENDST
 
 .DSTRUCT Item.definitions.wire_coat_hanger INSTANCEOF itemdef_t VALUES
@@ -166,8 +167,8 @@ _health_up_pickup:
     sprite_palette: .dw palettes.palette0
     flags: .db 0
     on_pickup: .dl _empty_pickup
-    name: .db "null", 0
-    tagline: .db "null", 0
+    name: .db "Wire Coat Hanger", 0
+    tagline: .db "Tears Up", 0
 .ENDST
 
 .DSTRUCT Item.definitions.dinner INSTANCEOF itemdef_t VALUES
@@ -175,8 +176,17 @@ _health_up_pickup:
     sprite_palette: .dw palettes.palette0
     flags: .db 0
     on_pickup: .dl _health_up_pickup
-    name: .db "null", 0
-    tagline: .db "null", 0
+    name: .db "Dinner", 0
+    tagline: .db "Health Up", 0
+.ENDST
+
+.DSTRUCT Item.definitions.chocolate_milk INSTANCEOF itemdef_t VALUES
+    sprite_index: .db 6
+    sprite_palette: .dw palettes.item_chocolate_milk
+    flags: .db 0
+    on_pickup: .dl _empty_pickup
+    name: .db "Chocolate Milk", 0
+    tagline: .db "Charge Tears", 0
 .ENDST
 
 Item.items:
@@ -186,7 +196,8 @@ Item.items:
     .dw Item.definitions.brother_bobby
     .dw Item.definitions.wire_coat_hanger
     .dw Item.definitions.dinner
-    .REPT 256-6
+    .dw Item.definitions.chocolate_milk
+    .REPT 256-7
         .dw Item.definitions.null
     .ENDR
 
@@ -196,7 +207,7 @@ Item.items:
 
 Item.pool.item_room:
     .db ITEMID_SAD_ONION
-    .db ITEMID_SPOON_BENDER
+    .db ITEMID_CHOCOLATE_MILK
     @end:
 
 Item.pool.boss:

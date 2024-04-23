@@ -536,7 +536,11 @@ PlayerUpdate:
     ; set flags/mask
     lda #ENTITY_MASK_PROJECTILE
     sta.w player_mask
+    sep #$30 ; 16b AXY
+    lda.w playerData.playerItemStackNumber+ITEMID_CHOCOLATE_MILK
+    bnel _player_handle_shoot_chocolate_milk
 ; handle player shoot
+_player_handle_shoot_standard:
     rep #$30 ; 16b AXY
     lda.w playerData.tear_timer
     clc
@@ -549,10 +553,12 @@ PlayerUpdate:
     bit #(JOY_A|JOY_B|JOY_Y|JOY_X)
     beq @player_did_not_fire
     jsr PlayerShootTear
+    jsr _set_tear_size_from_damage
     rep #$20
     lda.w playerData.tear_timer
     sec
     sbc #$3C00
+    sta.w playerData.tear_timer
     ; .AMINU P_ABS playerData.stat_tear_rate
     ; lda #0
     rts
@@ -561,6 +567,105 @@ PlayerUpdate:
     sta.w playerData.tear_timer
     rts
 @tear_not_ready:
+    rts
+
+_player_handle_shoot_chocolate_milk:
+    rep #$30
+    ; check inputs
+    lda.w joy1held
+    bit #(JOY_A|JOY_B|JOY_Y|JOY_X)
+    beq @finish_charge
+    sta.w playerData.input_buffer
+    ; holding button, so charge up
+@keep_charging:
+    lda.w playerData.stat_tear_rate
+    clc
+    adc.w playerData.tear_timer
+    cmp #$F000
+    bcs @cap_charge ; overshot max
+    cmp.w playerData.stat_tear_rate
+    bcc @cap_charge ; overshot max and overflowed
+    jmp @store_charge
+@cap_charge:
+    lda #$F000
+@store_charge:
+    sta.w playerData.tear_timer
+    rts
+@finish_charge:
+    lda.w playerData.tear_timer
+    beq @end
+    cmp #$0600
+    bcc @keep_charging
+    ; shoot tear
+    lda.w playerData.input_buffer
+    sta.w joy1held
+    jsr PlayerShootTear
+    ; we still have projectile in X
+    ; handle bottom byte of damage
+    sep #$20
+    rep #$10
+    lda.w projectile_damage,X
+    sta.w MULTU_A
+    lda.w playerData.tear_timer+1
+    sta.w MULTU_B
+    nop ; +2 | 2
+    nop ; +2 | 4
+    nop ; +2 | 6
+    rep #$20 ; +3 | 9
+    lda.w MULTU_RESULT
+    sta.b $00
+    ; top byte of damage
+    sep #$20
+    lda.w projectile_damage+1,X
+    sta.w MULTU_A
+    lda.w playerData.tear_timer+1
+    sta.w MULTU_B
+    nop ; +2 | 2
+    nop ; +2 | 4
+    nop ; +2 | 6
+    rep #$20 ; +3 | 9
+    lda.w MULTU_RESULT
+    sta.b $02
+    ; divide low byte properly
+    lda.b $00
+    sta.w DIVU_DIVIDEND
+    sep #$20
+    lda #$3C
+    sta.w DIVU_DIVISOR
+    ; divide high byte by $3C, multiply by $100. Comes out to ~×4
+    ; this may bias high damages to be even higher, but idc
+    rep #$20 ;  +3 | 3
+    lda.b $02 ; +4 | 7
+    asl ;       +2 | 9
+    asl ;       +2 | 11
+    clc ;       +2 | 13
+    stz.w playerData.tear_timer ; +5 | 18
+    adc.w DIVU_QUOTIENT
+    .AMAXU P_IMM 1
+    sta.w projectile_damage,X
+    jsr _set_tear_size_from_damage
+    ; DAMAGE = projectile_damage * timer / $3C00
+    rts
+@end:
+    rep #$30
+    stz.w playerData.tear_timer
+    rts
+
+_set_tear_size_from_damage:
+    rep #$30
+    lda.w projectile_damage,X
+    inc A
+    clc
+    .REPT 8 INDEX i
+    lsr
+    bne +
+        lda #i
+        sta.w projectile_size,X
+        rts
+    +:
+    .ENDR
+    lda #9
+    sta.w projectile_size,X
     rts
 
 PlayerRender:
@@ -610,7 +715,7 @@ PlayerShootTear:
     sty.b TempTearIdx
     tyx
 ; set player info
-    stz.w playerData.tear_timer
+    ; stz.w playerData.tear_timer
     lda.w playerData.flags
     eor #PLAYER_FLAG_EYE
     sta.w playerData.flags
@@ -621,7 +726,7 @@ PlayerShootTear:
     ; size
     stz.w projectile_flags,X
     sep #$20
-    lda #1
+    lda #3
     sta.w projectile_size,X
     ; type
     lda #PROJECTILE_TYPE_PLAYER_BASIC

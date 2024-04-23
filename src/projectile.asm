@@ -63,7 +63,9 @@ _projectile_update_sprite:
     sec
     sbc.w projectile_height+1,X
     sta.w objectData.1.pos_y,Y
-    lda #$21
+    lda #$20
+    clc
+    adc.w projectile_size,X
     sta.w objectData.1.tileid,Y
     lda #%00100000
     sta.w objectData.1.flags,Y

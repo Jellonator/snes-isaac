@@ -49,6 +49,7 @@
     stat_accel dw
     stat_tear_rate dw
     stat_tear_speed dw
+    stat_tear_lifetime dw
     stat_damage dw
 ; pickups
     money dw

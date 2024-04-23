@@ -51,30 +51,91 @@ projectile_entity_free:
 projectile_slot_free:
     rtl
 
+_big_projectile_update_sprite:
+    .INDEX 16
+    .ACCU 8
+    asl
+    clc
+    adc #$40 - 12
+    sta.w objectData.1.tileid,Y
+    lda.w entity_posx+1,X
+    sbc #3 ; we know that carry should always be clear, so just substract 3
+    sta.w objectData.1.pos_x,Y
+    lda.w entity_posy+1,X
+    ; sec
+    sbc.w projectile_height+1,X
+    sbc #4
+    sta.w objectData.1.pos_y,Y
+    lda #%00100000
+    sta.w objectData.1.flags,Y
+    ; lda.w projectile_type,X
+    ; bpl +
+    ;     ; different gfx for enemy projectile
+    ;     lda #%00101110
+    ;     sta.w objectData.1.flags,Y
+    ; +:
+    phx
+    php
+    rep #$30
+    .SetCurrentObjectS
+    plp
+    .INDEX 16
+    .ACCU 8
+    plx
+    ldy.w objectIndex
+    iny
+    iny
+    iny
+    iny
+    ; special handling for projectile shadows
+    sty.w objectIndex
+    cpy.w objectIndexShadow
+    bcs @skipShadow
+        ldy.w objectIndexShadow
+        dey
+        dey
+        dey
+        dey
+        sty.w objectIndexShadow
+        lda.w entity_posy+1,X
+        sta.w objectData.1.pos_y,Y
+        lda.w entity_posx+1,X
+        sta.w objectData.1.pos_x,Y
+        lda #$A1
+        sta.w objectData.1.tileid,Y
+        lda #%00011000
+        sta.w objectData.1.flags,Y
+    @skipShadow:
+    rts
+
 _projectile_update_sprite:
     ; send to OAM
     sep #$20 ; 8A, 16XY
     rep #$10
     tyx
     ldy.w objectIndex
+    lda.w projectile_size,X
+    cmp #6
+    bcc +
+        jmp _big_projectile_update_sprite
+    +:
+    clc
+    adc #$20
+    sta.w objectData.1.tileid,Y
     lda.w entity_posx+1,X
     sta.w objectData.1.pos_x,Y
     lda.w entity_posy+1,X
     sec
     sbc.w projectile_height+1,X
     sta.w objectData.1.pos_y,Y
-    lda #$20
-    clc
-    adc.w projectile_size,X
-    sta.w objectData.1.tileid,Y
     lda #%00100000
     sta.w objectData.1.flags,Y
-    lda.w projectile_type,X
-    bpl +
-        ; different gfx for enemy projectile
-        lda #%00101110
-        sta.w objectData.1.flags,Y
-    +:
+    ; lda.w projectile_type,X
+    ; bpl +
+    ;     ; different gfx for enemy projectile
+    ;     lda #%00101110
+    ;     sta.w objectData.1.flags,Y
+    ; +:
     iny
     iny
     iny

@@ -44,6 +44,7 @@
     flags dw
     invuln_timer dw
     tear_timer dw
+    input_buffer dw
 ; stats
     stat_speed dw
     stat_accel dw

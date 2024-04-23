@@ -34,5 +34,9 @@
     {
         "name": "item_growth_hormones",
         "src": "assets/palettes/item_growth_hormones.hex"
+    },
+    {
+        "name": "item_chocolate_milk",
+        "src": "assets/palettes/item_chocolate_milk.hex"
     }
 ]

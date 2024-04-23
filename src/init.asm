@@ -275,19 +275,21 @@ Start2:
     pla
     pla
     ; copy tear to VRAM
-    pea SPRITE1_BASE_ADDR + 16*32 ; VRAM address
-    pea 4 ; num tiles
-    sep #$20 ; 8 bit A
-    lda #bankbyte(spritedata.isaac_tear)
-    pha
-    pea spritedata.isaac_tear ; address
-    jsl CopySprite
-    sep #$20 ; 8 bit A
-    pla
-    rep #$20 ; 16 bit A
-    pla
-    pla
-    pla
+    .REPT 6 INDEX i
+        pea SPRITE1_BASE_ADDR + 16*32 + 256*i ; VRAM address
+        pea 8 ; num tiles
+        sep #$20 ; 8 bit A
+        lda #bankbyte(spritedata.isaac_tear)
+        pha
+        pea spritedata.isaac_tear + 8*i*32 ; address
+        jsl CopySprite
+        sep #$20 ; 8 bit A
+        pla
+        rep #$20 ; 16 bit A
+        pla
+        pla
+        pla
+    .ENDR
     ; copy default sprites to VRAM
     pea SPRITE1_BASE_ADDR + 64*32 ; VRAM address
     pea 128

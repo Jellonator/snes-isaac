@@ -9,9 +9,6 @@
 .DEFINE MONSTRO_TILE_X_OFFS 0
 .DEFINE MONSTRO_TILE_Y_OFFS -24
 
-; .DEFINE MONSTRO_POS_Z private_ext_entity_custom.13
-; .DEFINE MONSTRO_VELOC_Z private_ext_entity_custom.15
-
 .ENUMID 1
 ; state when monstro is idle
 .ENUMID MONSTRO_STATE_IDLE

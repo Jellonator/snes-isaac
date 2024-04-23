@@ -22,7 +22,7 @@ Essentials:
     * [X] Item rooms contain item pedestal
     * [X] Player can pick up items
     * [X] Items with basic stat effects
-    * [ ] on-pickup items (e.g. health up)
+    * [X] on-pickup items (e.g. health up)
     * [ ] Items with effects
     * [ ] Active Items
     * [X] Item pools

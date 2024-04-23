@@ -194,6 +194,8 @@ Player.reset_stats:
     sta.w playerData.stat_tear_speed
     lda #PLAYER_STATBASE_DAMAGE
     sta.w playerData.stat_damage
+    lda #PLAYER_STATBASE_TEAR_LIFETIME
+    sta.w playerData.stat_tear_lifetime
     rtl
 
 Player.update_money_display:
@@ -614,12 +616,13 @@ PlayerShootTear:
     sta.w playerData.flags
 ; set base projectile info
     ; life
-    lda #100
+    lda.w playerData.stat_tear_lifetime
     sta.w projectile_lifetime,X
     ; size
     stz.w projectile_flags,X
     sep #$20
-    stz.w projectile_size,X
+    lda #1
+    sta.w projectile_size,X
     ; type
     lda #PROJECTILE_TYPE_PLAYER_BASIC
     sta.w projectile_type,X
@@ -648,8 +651,8 @@ PlayerShootTear:
     sta.w entity_velocx,X
     lda.w player_velocy
     .ShiftRight_SIGN 1, FALSE
-    .AMIN P_IMM, 32
-    .AMAX P_IMM, -64
+    .AMIN P_IMM, $0100 * 0.25
+    .AMAX P_IMM, -$0100
     sec
     sbc.w playerData.stat_tear_speed
     sta.w entity_velocy,X
@@ -659,8 +662,8 @@ PlayerShootTear:
     sta.w entity_velocy,X
     lda.w player_velocx
     .ShiftRight_SIGN 1, FALSE
-    .AMIN P_IMM, 32
-    .AMAX P_IMM, -64
+    .AMIN P_IMM, $0100 * 0.25
+    .AMAX P_IMM, -$0100
     sec
     sbc.w playerData.stat_tear_speed
     sta.w entity_velocx,X
@@ -670,8 +673,8 @@ PlayerShootTear:
     sta.w entity_velocy,X
     lda.w player_velocx
     .ShiftRight_SIGN 1, FALSE
-    .AMAX P_IMM, -32
-    .AMAX P_IMM, 64
+    .AMAX P_IMM, -$0100 * 0.25
+    .AMIN P_IMM, $0100
     clc
     adc.w playerData.stat_tear_speed
     sta.w entity_velocx,X
@@ -681,8 +684,8 @@ PlayerShootTear:
     sta.w entity_velocx,X
     lda.w player_velocy
     .ShiftRight_SIGN 1, FALSE
-    .AMAX P_IMM, -32
-    .AMAX P_IMM, 64
+    .AMAX P_IMM, -$0100 * 0.25
+    .AMIN P_IMM, $0100
     clc
     adc.w playerData.stat_tear_speed
     sta.w entity_velocy,X

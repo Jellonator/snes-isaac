@@ -110,15 +110,10 @@ splat_number = 1
 
 def insert_splat_run(out, x, y, length, ctx):
     # LENGTH
-    # if ctx["length"] == None or abs(ctx["length"] - length) > 1:
     out.write(
 """    lda #{}
     sta.b $05
 """.format(length))
-    # elif length == ctx["length"] + 1:
-    #     out.write("    inc.b $05\n")
-    # elif length == ctx["length"] - 1:
-    #     out.write("    dec.b $05\n")
     # X
     if x == ctx["x"] + 1:
         out.write("    inc.b $07\n")

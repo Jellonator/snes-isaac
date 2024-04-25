@@ -88,11 +88,26 @@ MapTiles:
     .dw deft($0D, 5) | T_HIGHP ; curse
     .dw deft($0E, 6) | T_HIGHP ; secret
 SpriteIndexToExtMaskXS:
-    .db %00000011 %00001100 %00110000 %11000000
+    .REPT 128 / 4
+        .db %00000011 0 0 0
+        .db %00001100 0 0 0
+        .db %00110000 0 0 0
+        .db %11000000 0 0 0
+    .ENDR
 SpriteIndexToExtMaskX:
-    .db %00000001 %00000100 %00010000 %01000000
+    .REPT 128 / 4
+        .db %00000001 0 0 0
+        .db %00000100 0 0 0
+        .db %00010000 0 0 0
+        .db %01000000 0 0 0
+    .ENDR
 SpriteIndexToExtMaskS:
-    .db %00000010 %00001000 %00100000 %10000000
+    .REPT 128 / 4
+        .db %00000010 0 0 0
+        .db %00001000 0 0 0
+        .db %00100000 0 0 0
+        .db %10000000 0 0 0
+    .ENDR
 
 SpriteIndexToExtMaskXS_16:
     .REPT 8 INDEX i

@@ -179,20 +179,8 @@ true_item_pedastal_tick_base:
 @no_player_col:
     ; increment object index
     rep #$30
-    .SetCurrentObjectS
-    ldx.w objectIndex
-    inx
-    inx
-    inx
-    inx
-    stx.w objectIndex
-    .SetCurrentObjectS
-    ldx.w objectIndex
-    inx
-    inx
-    inx
-    inx
-    stx.w objectIndex
+    .SetCurrentObjectS_Inc
+    .SetCurrentObjectS_Inc
     rtl
 
 true_item_pedastal_tick_pickup:
@@ -240,13 +228,7 @@ true_item_pedastal_tick_pickup:
     rep #$30
     phy
     php
-    .SetCurrentObjectS
-    ldx.w objectIndex
-    inx
-    inx
-    inx
-    inx
-    stx.w objectIndex
+    .SetCurrentObjectS_Inc
     ; rtl
     plp
     ply
@@ -274,13 +256,7 @@ true_item_pedastal_tick_empty:
     lda #%00100001
     sta.w objectData.1.flags,X
     rep #$30
-    .SetCurrentObjectS
-    ldx.w objectIndex
-    inx
-    inx
-    inx
-    inx
-    stx.w objectIndex
+    .SetCurrentObjectS_Inc
     rtl
 
 .ENDS

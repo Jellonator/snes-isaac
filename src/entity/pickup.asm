@@ -33,13 +33,7 @@ true_entity_pickup_tick:
     sta.w objectData.1.pos_y,X
     sta.w entity_ysort,Y
     rep #$30
-    .SetCurrentObjectS
-    ldx.w objectIndex
-    inx
-    inx
-    inx
-    inx
-    stx.w objectIndex
+    .SetCurrentObjectS_Inc
     ply
     ; collision detection
     .EntityEasySetBox 16 16

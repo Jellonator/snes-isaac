@@ -135,11 +135,7 @@ entity_boss_monstro_tick:
     ; (there's probably a more efficient way to do this but idc)
     rep #$30
     .REPT 12 INDEX i
-        .SetCurrentObjectS
-        inc.w objectIndex
-        inc.w objectIndex
-        inc.w objectIndex
-        inc.w objectIndex
+        .SetCurrentObjectS_Inc
     .ENDR
     ldy $08
     pea (MONSTRO_HEIGHT - 14) + ($100*10)

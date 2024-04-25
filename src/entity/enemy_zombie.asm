@@ -213,8 +213,7 @@ entity_zombie_tick:
     lda.w entity_variant,Y
     and #$00FF
     beq +
-        .SetCurrentObjectS
-        .IncrementObjectIndex
+        .SetCurrentObjectS_Inc
     +:
     .SetCurrentObjectS
     ply

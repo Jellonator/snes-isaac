@@ -204,20 +204,6 @@ Start2:
     rep #$20 ; 16 bit A
     PLA
     PLA
-    ; copy sprite to VRAM
-    pea SPRITE1_BASE_ADDR
-    pea 32
-    sep #$20 ; 8 bit A
-    lda #bankbyte(spritedata.isaac_head)
-    pha
-    pea spritedata.isaac_head
-    jsl CopySprite
-    sep #$20 ; 8 bit A
-    pla
-    rep #$20 ; 16 bit A
-    pla
-    pla
-    pla
     ; copy tilemap to VRAM
     pea BG2_CHARACTER_BASE_ADDR
     pea 256

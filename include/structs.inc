@@ -45,6 +45,14 @@
     invuln_timer dw
     tear_timer dw
     input_buffer dw
+    active_body_frame db
+    active_head_frame db
+    body_flags db
+    head_flags db
+    walk_frame db
+    walk_timer dw
+    facingdir_head db
+    facingdir_body db
 ; stats
     stat_speed dw
     stat_accel dw

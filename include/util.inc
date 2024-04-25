@@ -181,16 +181,16 @@
 .MACRO .AMAXU ARGS method, addr
     .g_instruction cmp, method, addr
     bcs @@@@@\.\@
-    .g_instruction lda, method, addr
-@@@@@\.\@:
+        .g_instruction lda, method, addr
+    @@@@@\.\@:
 .ENDM
 
 ; Minimum of A register and value, unsigned
 .MACRO .AMINU ARGS method, addr
     .g_instruction cmp, method, addr
     bcc @@@@@\.\@
-    .g_instruction lda, method, addr
-@@@@@\.\@:
+        .g_instruction lda, method, addr
+    @@@@@\.\@:
 .ENDM
 
 ; Calculate the absolute value of A
@@ -198,19 +198,19 @@
 ; e.g.: ADC, SBC, DEC, INC, AND, ORA, EOR, ASL, LSR, ROL, ROR, LDA, PLA, TXA, and TYA
 ; some other instructions also set the N flag but may either refer to a
 ; different register (e.g. LDX), or don't reflect the current value of A (e.g. CMP)
-.MACRO ABS_A16_POSTLOAD
+.MACRO .ABS_A16_POSTLOAD
     bpl @@@@@\.\@
-    eor #FFFF
-    inc
+    eor.w #$FFFF
+    inc A
 @@@@@\.\@:
 .ENDM
 
 ; Calculate the absolute value of A
 ; ONLY use after an instruction that loads the value into A (checks N flag)
-.MACRO ABS_A8_POSTLOAD
+.MACRO .ABS_A8_POSTLOAD
     bpl @@@@@\.\@
-    eor #FF
-    inc
+    eor.b #$FF
+    inc A
 @@@@@\.\@:
 .ENDM
 
@@ -313,51 +313,66 @@
     lda.w objectIndex
     lsr
     lsr
-    tay
-    and #3
-    tax
-    tya
     lsr
     lsr
     tay
+    ldx.w objectIndex
     lda.l SpriteIndexToExtMaskS,X
-    and #$FF
     ora.w objectDataExt,Y
     sta.w objectDataExt,Y
+.ENDM
+
+.MACRO .SetCurrentObjectS_Inc
+    .SetCurrentObjectS
+    inx
+    inx
+    inx
+    inx
+    stx.w objectIndex
 .ENDM
 
 .MACRO .SetCurrentObjectX
     lda.w objectIndex
     lsr
     lsr
-    tay
-    and #3
-    tax
-    tya
     lsr
     lsr
     tay
+    ldx.w objectIndex
     lda.l SpriteIndexToExtMaskX,X
-    and #$FF
     ora.w objectDataExt,Y
     sta.w objectDataExt,Y
+.ENDM
+
+.MACRO .SetCurrentObjectX_Inc
+    .SetCurrentObjectX
+    inx
+    inx
+    inx
+    inx
+    stx.w objectIndex
 .ENDM
 
 .MACRO .SetCurrentObjectXS
     lda.w objectIndex
     lsr
     lsr
-    tay
-    and #3
-    tax
-    tya
     lsr
     lsr
     tay
+    ldx.w objectIndex
     lda.l SpriteIndexToExtMaskXS,X
-    and #$FF
     ora.w objectDataExt,Y
     sta.w objectDataExt,Y
+.ENDM
+
+.MACRO .SetCurrentObjectXS_Inc
+    .SetCurrentObjectXS
+    inx
+    inx
+    inx
+    inx
+    stx.w objectIndex
 .ENDM
 
 .MACRO .GetObjectPos_X

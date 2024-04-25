@@ -2,7 +2,8 @@
     {
         "name": "isaac_head",
         "src": "assets/sprites/isaac_head.raw",
-        "depth": 16
+        "depth": 16,
+        "size": 2
     },
     {
         "name": "basement",

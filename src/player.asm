@@ -260,6 +260,315 @@ PlayerInit:
     jsl _PlayerRenderAllHearts
     jsl Item.reset_items
     jsl Player.reset_stats
+    stz.w playerData.walk_frame
+    sep #$30
+    lda #2
+    jsl Player.set_head_frame@upload_frame
+    sep #$30
+    lda #2
+    jsl Player.set_body_frame@upload_frame
+    rts
+
+; Set head frame to A
+Player.set_head_frame:
+    sep #$30
+    cmp.w playerData.active_head_frame
+    bne @upload_frame
+        rtl ; - same frame, no upload
+    @upload_frame:
+    sta.w playerData.active_head_frame
+; upload
+    ; inc ops
+    rep #$30
+    lda.l vqueueNumOps
+    asl
+    asl
+    asl
+    tax
+    lda.l vqueueNumOps
+    inc A
+    inc A
+    sta.l vqueueNumOps
+    ; mode[] = VQUEUE_MODE_VRAM
+    sep #$20
+    lda #VQUEUE_MODE_VRAM
+    sta.l vqueueOps.1.mode,X
+    sta.l vqueueOps.2.mode,X
+    ; set aAddr bank
+    lda #bankbyte(spritedata.isaac_head)
+    sta.l vqueueOps.1.aAddr+2,X
+    sta.l vqueueOps.2.aAddr+2,X
+    ; aAddr[0] = spritedata.isaac_head + frame×128
+    ; aAddr[1] = spritedata.isaac_head + frame×128 + 64
+    rep #$30
+    lda.w playerData.active_head_frame
+    and #$00FF
+    xba
+    lsr
+    clc
+    adc #loword(spritedata.isaac_head)
+    sta.l vqueueOps.1.aAddr,X
+    clc
+    adc #64
+    sta.l vqueueOps.2.aAddr,X
+    ; vAddr[0] = SPRITE1_BASE_ADDR + $0000
+    ; vAddr[1] = SPRITE1_BASE_ADDR + $0100
+    lda #SPRITE1_BASE_ADDR
+    sta.l vqueueOps.1.vramAddr,X
+    lda #SPRITE1_BASE_ADDR + $0100
+    sta.l vqueueOps.2.vramAddr,X
+    ; numBytes[] = 64
+    lda #64
+    sta.l vqueueOps.1.numBytes,X
+    sta.l vqueueOps.2.numBytes,X
+; end upload
+    rtl
+
+; Set body frame to A
+Player.set_body_frame:
+    sep #$30
+    cmp.w playerData.active_body_frame
+    bne @upload_frame
+        rtl ; - same frame, no upload
+    @upload_frame:
+    sta.w playerData.active_body_frame
+; upload
+    ; inc ops
+    rep #$30
+    lda.l vqueueNumOps
+    asl
+    asl
+    asl
+    tax
+    lda.l vqueueNumOps
+    inc A
+    inc A
+    sta.l vqueueNumOps
+    ; mode[] = VQUEUE_MODE_VRAM
+    sep #$20
+    lda #VQUEUE_MODE_VRAM
+    sta.l vqueueOps.1.mode,X
+    sta.l vqueueOps.2.mode,X
+    ; set aAddr bank
+    lda #bankbyte(spritedata.isaac_head)
+    sta.l vqueueOps.1.aAddr+2,X
+    sta.l vqueueOps.2.aAddr+2,X
+    ; aAddr[0] = spritedata.isaac_head + frame×128
+    ; aAddr[1] = spritedata.isaac_head + frame×128 + 64
+    rep #$30
+    lda.w playerData.active_body_frame
+    and #$00FF
+    xba
+    lsr
+    clc
+    adc #loword(spritedata.isaac_head)
+    sta.l vqueueOps.1.aAddr,X
+    clc
+    adc #64
+    sta.l vqueueOps.2.aAddr,X
+    ; vAddr[0] = SPRITE1_BASE_ADDR + $0020
+    ; vAddr[1] = SPRITE1_BASE_ADDR + $0120
+    lda #SPRITE1_BASE_ADDR + $0020
+    sta.l vqueueOps.1.vramAddr,X
+    lda #SPRITE1_BASE_ADDR + $0120
+    sta.l vqueueOps.2.vramAddr,X
+    ; numBytes[] = 64
+    lda #64
+    sta.l vqueueOps.1.numBytes,X
+    sta.l vqueueOps.2.numBytes,X
+; end upload
+    rtl
+
+_update_player_animation_vx:
+    rep #$30
+    lda.w player_velocx
+    beq @not_moving
+    .ABS_A16_POSTLOAD
+    clc
+    adc.w playerData.walk_timer
+    cmp #$0C00
+    bcs @next_frame
+    sta.w playerData.walk_timer
+    jmp @upload_frame
+@not_moving:
+    stz.w playerData.walk_timer
+    sep #$20
+    stz.w playerData.walk_frame
+    jmp @upload_frame
+@next_frame:
+    stz.w playerData.walk_timer
+    sep #$20
+    lda.w playerData.walk_frame
+    inc A
+    cmp #6
+    bcc +
+        lda #0
+    +:
+    sta.w playerData.walk_frame
+@upload_frame:
+    sep #$30
+    lda.w playerData.walk_frame
+    clc
+    adc #24
+    jsl Player.set_body_frame
+    rep #$30
+    lda.w player_velocx
+    bpl +
+        sep #$20
+        lda #%01100000
+        sta.w playerData.body_flags 
+    +:
+    rts
+
+_update_player_animation_vy:
+    rep #$30
+    lda.w player_velocy
+    beq @not_moving
+    .ABS_A16_POSTLOAD
+    clc
+    adc.w playerData.walk_timer
+    cmp #$0C00
+    bcs @next_frame
+    sta.w playerData.walk_timer
+    jmp @upload_frame
+@not_moving:
+    stz.w playerData.walk_timer
+    sep #$20
+    stz.w playerData.walk_frame
+    jmp @upload_frame
+@next_frame:
+    stz.w playerData.walk_timer
+    sep #$20
+    lda.w playerData.walk_frame
+    inc A
+    cmp #6
+    bcc +
+        lda #0
+    +:
+    sta.w playerData.walk_frame
+@upload_frame:
+    sep #$30
+    lda.w playerData.walk_frame
+    clc
+    adc #16
+    jsl Player.set_body_frame
+    rts
+
+_update_player_animation:
+    sep #$20
+    lda #%00100000
+    sta.w playerData.body_flags
+    sta.w playerData.head_flags
+    lda #FACINGDIR_DOWN
+    sta.w playerData.facingdir_body
+    lda #0
+    jsl Player.set_head_frame
+    rep #$30
+    lda.w player_velocx
+    .ABS_A16_POSTLOAD
+    sta.b $00
+    lda.w player_velocy
+    .ABS_A16_POSTLOAD
+    cmp.b $00
+    bcs @update_y
+        sep #$10
+        lda.w player_velocx
+        beq @nomovex
+            ldy #FACINGDIR_RIGHT
+            cmp #0
+            bpl +
+                ldy #FACINGDIR_LEFT
+            +:
+            sty.w playerData.facingdir_body
+        @nomovex:
+        jsr _update_player_animation_vx
+        jmp @end
+    @update_y:
+        sep #$10
+        lda.w player_velocy
+        beq @nomovey
+            ldy #FACINGDIR_DOWN
+            cmp #0
+            bpl +
+                ldy #FACINGDIR_UP
+            +:
+            sty.w playerData.facingdir_body
+        @nomovey:
+        jsr _update_player_animation_vy
+    @end:
+    ; update head sprite
+    jsr _update_player_head_facing
+    sep #$30
+    lda.w playerData.playerItemStackNumber+ITEMID_CHOCOLATE_MILK
+    bne @chocolate_milk
+; regular
+    ldy #0
+    lda.w playerData.tear_timer+1
+    cmp #$1E
+    bcs +
+        ldy #4
+    +:
+    tya
+    clc
+    adc.w playerData.facingdir_head
+    jsl Player.set_head_frame
+    rts
+@chocolate_milk:
+    lda.w playerData.tear_timer+1
+    bne +
+        lda.w playerData.facingdir_head
+        jsl Player.set_head_frame
+        rts
+    +:
+    cmp #$F0
+    bcc +
+        lda #12
+        clc
+        adc.w playerData.facingdir_head
+        jsl Player.set_head_frame
+        rts
+    +:
+    lda #8
+    clc
+    adc.w playerData.facingdir_head
+    jsl Player.set_head_frame
+    rts
+
+_update_player_head_facing:
+    rep #$20
+    sep #$10
+    lda.w joy1held
+    bit #(JOY_A|JOY_B|JOY_Y|JOY_X)
+    bne +
+        ; not facing, use body
+        ldy.w playerData.facingdir_body
+        sty.w playerData.facingdir_head
+        rts
+    +:
+    bit #JOY_Y
+    beq +
+        ; face left
+        ldy #FACINGDIR_LEFT
+        sty.w playerData.facingdir_head
+        rts
+    +
+    bit #JOY_A
+    beq +
+        ; face right
+        ldy #FACINGDIR_RIGHT
+        sty.w playerData.facingdir_head
+        rts
+    +
+    bit #JOY_B
+    beq +
+        ; face down
+        ldy #FACINGDIR_DOWN
+        sty.w playerData.facingdir_head
+        rts
+    +
+    ; face up
+    ldy #FACINGDIR_UP
+    sty.w playerData.facingdir_head
     rts
 
 PlayerUpdate:
@@ -493,6 +802,7 @@ PlayerUpdate:
     ; move
     jsr PlayerMoveHorizontal
     jsr PlayerMoveVertical
+    jsr _update_player_animation
 ; setup partition
     sep #$30
     ; add to partition
@@ -674,7 +984,7 @@ PlayerRender:
     ; update render data
     lda.w playerData.invuln_timer
     bit #$08
-    bne @invis_frame
+    bnel @invis_frame
         ldx.w objectIndex
         lda.w player_posx+1
         sta.w objectData.1.pos_x,X
@@ -685,16 +995,15 @@ PlayerRender:
         sbc #10
         sta.w objectData.1.pos_y,X
         stz.w objectData.1.tileid,X
-        lda #$02
+        lda #2
         sta.w objectData.2.tileid,X
-        lda #%00100000
+        lda.w playerData.head_flags
         sta.w objectData.1.flags,X
+        lda.w playerData.body_flags
         sta.w objectData.2.flags,X
         rep #$30 ; 16 bit AXY
-        .SetCurrentObjectS
-        .IncrementObjectIndex
-        .SetCurrentObjectS
-        .IncrementObjectIndex
+        .SetCurrentObjectS_Inc
+        .SetCurrentObjectS_Inc
 @invis_frame:
     ; put shadow
     sep #$20
@@ -847,8 +1156,18 @@ PlayerMoveHorizontal:
     beq @skipmove
     clc
     adc.w player_posx
-    .AMAXU P_DIR, $00
-    .AMINU P_DIR, $02
+    ; EXPANSION OF: .AMAXU P_DIR, $00
+        .g_instruction cmp, P_DIR, $00
+        bcs +
+            .g_instruction lda, P_DIR, $00
+            stz.w player_velocx
+        +:
+    ; EXPANSION OF: .AMINU P_DIR, $02
+        .g_instruction cmp, P_DIR, $02
+        bcc +
+            .g_instruction lda, P_DIR, $02
+            stz.w player_velocx
+        +:
     sta.w player_posx
     lda.w player_velocx
     cmp #0
@@ -898,6 +1217,7 @@ PlayerMoveLeft:
     adc #(ROOM_LEFT + 16 - PLAYER_HITBOX_LEFT)*256
 ; apply position
     .AMAXU P_ABS, player_posx
+    stz.w player_velocx
     sta.w player_posx
 @end:
     rts
@@ -943,6 +1263,7 @@ PlayerMoveRight:
     adc #(ROOM_LEFT - PLAYER_HITBOX_RIGHT)*256-1
 ; apply position
     .AMINU P_ABS, player_posx
+    stz.w player_velocx
     sta.w player_posx
 @end:
     rts
@@ -954,8 +1275,18 @@ PlayerMoveVertical:
     beq @skipmove
     clc
     adc.w player_posy
-    .AMAXU P_DIR, $04
-    .AMINU P_DIR, $06
+    ; EXPANSION OF: .AMAXU P_DIR, $04
+        .g_instruction cmp, P_DIR, $04
+        bcs +
+            .g_instruction lda, P_DIR, $04
+            stz.w player_velocy
+        +:
+    ; EXPANSION OF: .AMINU P_DIR, $06
+        .g_instruction cmp, P_DIR, $06
+        bcc +
+            .g_instruction lda, P_DIR, $06
+            stz.w player_velocy
+        +:
     sta.w player_posy
     lda.w player_velocy
     cmp #0
@@ -1005,6 +1336,7 @@ PlayerMoveUp:
     adc #(ROOM_TOP + 16 - PLAYER_HITBOX_TOP)*256
 ; apply position
     .AMAXU P_ABS, player_posy
+    stz.w player_velocy
     sta.w player_posy
 @end:
     rts
@@ -1050,6 +1382,7 @@ PlayerMoveDown:
     adc #(ROOM_TOP - PLAYER_HITBOX_BOTTOM)*256 - 1
 ; apply position
     .AMINU P_ABS, player_posy
+    stz.w player_velocy
     sta.w player_posy
 @end:
     rts

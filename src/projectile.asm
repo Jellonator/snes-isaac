@@ -230,6 +230,22 @@ _projectile_delete:
     ldy.b PROJECTILE_TMP_IDX
     jml entity_free ; tail call optimization
 
+Tear.set_size_from_damage:
+    rep #$30
+    lda.w projectile_damage,X
+    inc A
+    clc
+    .REPT 8 INDEX i
+    lsr
+    bne +
+        lda #i
+        sta.w projectile_size,X
+        rtl
+    +:
+    .ENDR
+    lda #9
+    sta.w projectile_size,X
+    rtl
 
 projectile_tick__:
     .INDEX 16
@@ -333,6 +349,7 @@ projectile_tick__:
         sta.w entity_velocy,Y
         ; reduce HP
         lda.w entity_health,Y
+        sta.b $00
         sec
         sbc.w projectile_damage,X
         sta.w entity_health,Y
@@ -344,6 +361,21 @@ projectile_tick__:
             sta.w entity_signal,Y
             rep #$30
         +:
+        ; if damage < targethp or !(flags&POLYPHEMUS): kill
+        lda.w projectile_damage,X
+        cmp.b $00
+        bcc @hit_and_kill
+        lda.w projectile_flags,X
+        and #PROJECTILE_FLAG_POLYPHEMUS
+        beq @hit_and_kill
+        ; reduce damage
+        lda.w projectile_damage,X
+        sec
+        sbc.b $00
+        sta.w projectile_damage,X
+        jsl Tear.set_size_from_damage
+        jmp @skipCollisionHandler
+    @hit_and_kill:
         jmp _projectile_delete
 @skipCollisionHandler:
     rep #$10

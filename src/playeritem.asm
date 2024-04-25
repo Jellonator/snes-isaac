@@ -41,13 +41,14 @@ Item.add:
     rtl
 
 ; simple multiplication routine somewhat optimized for small multiplicands
-.MACRO .ADDMULTITEM ARGS itemid, mult
+.MACRO .ADDMULTITEM ARGS itemid, addmethod, addamount
     ldx.w playerData.playerItemStackNumber + itemid
     cpx #0
     beq @@@@@@\.\@end
     clc
 @@@@@@\.\@loop:
-    adc #mult
+    ; adc #mult
+    .g_instruction adc, addmethod, addamount
     dex
     bne @@@@@@\.\@loop
 @@@@@@\.\@end:
@@ -68,7 +69,8 @@ Item.tear_rate_base_table:
         .dw $3C00 * sqrt(i + 3.0) * 2.5 / 240.0
     .ENDR
 
-.DEFINE PLAYER_TEAR_RATE_MAXIMUM 64
+.DEFINE PLAYER_TEAR_RATE_INDEX_MAXIMUM 64
+.DEFINE PLAYER_TEAR_RATE_VALUE_MINIMUM ($3C00 / 240.0)
 .DEFINE PLAYER_SPEED_MAXIMUM 48
 .DEFINE PLAYER_SPEED_MINIMUM 12
 Item.check_and_recalculate:
@@ -81,24 +83,33 @@ Item.check_and_recalculate:
     ; reset stats to base
     jsl Player.reset_stats
     rep #$20
+    stz.w playerData.tearflags
     sep #$10
 ; TEAR RATE
     lda #PLAYER_STATBASE_TEAR_RATE_INDEX
-    .ADDMULTITEM ITEMID_SAD_ONION 4
-    .ADDMULTITEM ITEMID_WIRE_COAT_HANGER 4
-    .AMIN P_IMM PLAYER_TEAR_RATE_MAXIMUM
+    .ADDMULTITEM ITEMID_SAD_ONION, P_IMM, 4
+    .ADDMULTITEM ITEMID_WIRE_COAT_HANGER, P_IMM, 4
+    .AMIN P_IMM PLAYER_TEAR_RATE_INDEX_MAXIMUM
     asl
     tax
     lda.l Item.tear_rate_base_table,X
+    ldx.w playerData.playerItemStackNumber + ITEMID_POLYPHEMUS
+    beq +
+        lsr
+    +:
+    .AMAXU P_IMM PLAYER_TEAR_RATE_VALUE_MINIMUM
     sta.w playerData.stat_tear_rate
 ; DAMAGE
     lda.w playerData.stat_damage
-    .ADDMULTITEM ITEMID_GROWTH_HORMONES 3
+    .ADDMULTITEM ITEMID_GROWTH_HORMONES, P_IMM, 3
+    .ADDMULTITEM ITEMID_POLYPHEMUS, P_IMM, 3
     .AMAX P_IMM 1 ; always at least 1 damage
+    sta.b $00
+    .ADDMULTITEM ITEMID_POLYPHEMUS, P_DIR, $00
     sta.w playerData.stat_damage
 ; SPEED
     lda.w playerData.stat_accel
-    .ADDMULTITEM ITEMID_GROWTH_HORMONES 4
+    .ADDMULTITEM ITEMID_GROWTH_HORMONES, P_IMM, 4
     .AMAX P_IMM PLAYER_SPEED_MINIMUM
     .AMIN P_IMM PLAYER_SPEED_MAXIMUM
     sta.w playerData.stat_accel
@@ -108,6 +119,13 @@ Item.check_and_recalculate:
     asl
     asl
     sta.w playerData.stat_speed
+; tear flags
+    lda #0
+    ldx.w playerData.playerItemStackNumber + ITEMID_POLYPHEMUS
+    beq +
+        ora #PROJECTILE_FLAG_POLYPHEMUS
+    +:
+    sta.w playerData.tearflags
     rtl
 
 _empty_pickup:
@@ -189,6 +207,15 @@ _health_up_pickup:
     tagline: .db "Charge Tears", 0
 .ENDST
 
+.DSTRUCT Item.definitions.polyphemus INSTANCEOF itemdef_t VALUES
+    sprite_index: .db 7
+    sprite_palette: .dw palettes.palette0
+    flags: .db 0
+    on_pickup: .dl _empty_pickup
+    name: .db "Polyphemus", 0
+    tagline: .db "Mega Tears", 0
+.ENDST
+
 Item.items:
     .dw Item.definitions.sad_onion
     .dw Item.definitions.spoon_bender
@@ -197,6 +224,7 @@ Item.items:
     .dw Item.definitions.wire_coat_hanger
     .dw Item.definitions.dinner
     .dw Item.definitions.chocolate_milk
+    .dw Item.definitions.polyphemus
     .REPT 256-7
         .dw Item.definitions.null
     .ENDR
@@ -208,6 +236,7 @@ Item.items:
 Item.pool.item_room:
     .db ITEMID_SAD_ONION
     .db ITEMID_CHOCOLATE_MILK
+    .db ITEMID_POLYPHEMUS
     @end:
 
 Item.pool.boss:

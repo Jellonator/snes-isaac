@@ -196,6 +196,7 @@ Player.reset_stats:
     sta.w playerData.stat_damage
     lda #PLAYER_STATBASE_TEAR_LIFETIME
     sta.w playerData.stat_tear_lifetime
+    stz.w playerData.tearflags
     rtl
 
 Player.update_money_display:
@@ -863,7 +864,7 @@ _player_handle_shoot_standard:
     bit #(JOY_A|JOY_B|JOY_Y|JOY_X)
     beq @player_did_not_fire
     jsr PlayerShootTear
-    jsr _set_tear_size_from_damage
+    jsl Tear.set_size_from_damage
     rep #$20
     lda.w playerData.tear_timer
     sec
@@ -953,29 +954,12 @@ _player_handle_shoot_chocolate_milk:
     adc.w DIVU_QUOTIENT
     .AMAXU P_IMM 1
     sta.w projectile_damage,X
-    jsr _set_tear_size_from_damage
+    jsl Tear.set_size_from_damage
     ; DAMAGE = projectile_damage * timer / $3C00
     rts
 @end:
     rep #$30
     stz.w playerData.tear_timer
-    rts
-
-_set_tear_size_from_damage:
-    rep #$30
-    lda.w projectile_damage,X
-    inc A
-    clc
-    .REPT 8 INDEX i
-    lsr
-    bne +
-        lda #i
-        sta.w projectile_size,X
-        rts
-    +:
-    .ENDR
-    lda #9
-    sta.w projectile_size,X
     rts
 
 PlayerRender:
@@ -1033,7 +1017,8 @@ PlayerShootTear:
     lda.w playerData.stat_tear_lifetime
     sta.w projectile_lifetime,X
     ; size
-    stz.w projectile_flags,X
+    lda.w playerData.tearflags
+    sta.w projectile_flags,X
     sep #$20
     lda #3
     sta.w projectile_size,X
@@ -1043,7 +1028,7 @@ PlayerShootTear:
     rep #$20
     lda #$0800
     sta.w projectile_height,X
-    ; ; dmg; TODO: implement tear damage
+    ; dmg
     lda.w playerData.stat_damage
     sta.w projectile_damage,X
 ; check direction

@@ -53,6 +53,7 @@
     walk_timer dw
     facingdir_head db
     facingdir_body db
+    tearflags dw
 ; stats
     stat_speed dw
     stat_accel dw

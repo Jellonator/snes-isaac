@@ -176,6 +176,17 @@ true_item_pedastal_tick_base:
         sta.w entity_state,Y
         lda #60
         sta.w entity_timer,Y
+        lda #60
+        sta.w playerData.anim_wait_timer
+        phy
+        php
+        lda #22
+        jsl Player.set_head_frame
+        sep #$30
+        lda #30
+        jsl Player.set_body_frame
+        plp
+        ply
 @no_player_col:
     ; increment object index
     rep #$30
@@ -217,7 +228,7 @@ true_item_pedastal_tick_pickup:
     ; Y position
     lda.w player_box_y1
     sec
-    sbc #32
+    sbc #28
     sta.w objectData.1.pos_y,X
     lda.w _item_palette,Y
     and #$07

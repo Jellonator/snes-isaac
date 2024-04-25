@@ -205,6 +205,11 @@
 @@@@@\.\@:
 .ENDM
 
+.MACRO .NEG_A16
+    eor.w #$FFFF
+    inc A
+.ENDM
+
 ; Calculate the absolute value of A
 ; ONLY use after an instruction that loads the value into A (checks N flag)
 .MACRO .ABS_A8_POSTLOAD
@@ -212,6 +217,11 @@
     eor.b #$FF
     inc A
 @@@@@\.\@:
+.ENDM
+
+.MACRO .NEG_A8
+    eor.w #$FF
+    inc A
 .ENDM
 
 .define BYTES_PER_TILE16 32

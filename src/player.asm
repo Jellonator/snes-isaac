@@ -263,6 +263,11 @@ PlayerInit:
     jsl Player.reset_stats
     stz.w playerData.walk_frame
     sep #$30
+    stz.w playerData.anim_wait_timer
+    stz.w playerData.head_offset_y
+    lda #FACINGDIR_DOWN
+    sta.w playerData.facingdir_head
+    sta.w playerData.facingdir_body
     lda #2
     jsl Player.set_head_frame@upload_frame
     sep #$30
@@ -380,6 +385,8 @@ Player.set_body_frame:
 ; end upload
     rtl
 
+.DEFINE PLAYER_WALK_TIMER_FRAME_DELAY $0900
+
 _update_player_animation_vx:
     rep #$30
     lda.w player_velocx
@@ -387,7 +394,7 @@ _update_player_animation_vx:
     .ABS_A16_POSTLOAD
     clc
     adc.w playerData.walk_timer
-    cmp #$0C00
+    cmp #PLAYER_WALK_TIMER_FRAME_DELAY
     bcs @next_frame
     sta.w playerData.walk_timer
     jmp @upload_frame
@@ -421,14 +428,47 @@ _update_player_animation_vx:
     +:
     rts
 
+_update_player_animation_vy_up:
+    rep #$30
+    lda.w player_velocy
+    .NEG_A16
+    clc
+    adc.w playerData.walk_timer
+    cmp #PLAYER_WALK_TIMER_FRAME_DELAY
+    bcs @next_frame
+    sta.w playerData.walk_timer
+    jmp @upload_frame
+@not_moving:
+    stz.w playerData.walk_timer
+    sep #$20
+    stz.w playerData.walk_frame
+    jmp @upload_frame
+@next_frame:
+    stz.w playerData.walk_timer
+    sep #$20
+    lda.w playerData.walk_frame
+    dec A
+    cmp #6
+    bcc +
+        lda #5
+    +:
+    sta.w playerData.walk_frame
+@upload_frame:
+    sep #$30
+    lda.w playerData.walk_frame
+    clc
+    adc #16
+    jsl Player.set_body_frame
+    rts
+
 _update_player_animation_vy:
     rep #$30
     lda.w player_velocy
     beq @not_moving
-    .ABS_A16_POSTLOAD
+    bmil _update_player_animation_vy_up
     clc
     adc.w playerData.walk_timer
-    cmp #$0C00
+    cmp #PLAYER_WALK_TIMER_FRAME_DELAY
     bcs @next_frame
     sta.w playerData.walk_timer
     jmp @upload_frame
@@ -457,11 +497,18 @@ _update_player_animation_vy:
 
 _update_player_animation:
     sep #$20
+    lda.w playerData.anim_wait_timer
+    beq +
+        dec A
+        sta.w playerData.anim_wait_timer
+        rts
+    +
     lda #%00100000
     sta.w playerData.body_flags
     sta.w playerData.head_flags
     lda #FACINGDIR_DOWN
     sta.w playerData.facingdir_body
+    stz.w playerData.head_offset_y
     lda #0
     jsl Player.set_head_frame
     rep #$30
@@ -498,15 +545,21 @@ _update_player_animation:
         jsr _update_player_animation_vy
     @end:
     ; update head sprite
-    jsr _update_player_head_facing
     sep #$30
     lda.w playerData.playerItemStackNumber+ITEMID_CHOCOLATE_MILK
     bne @chocolate_milk
 ; regular
+    lda.w playerData.tear_timer+1
+    cmp #$1E
+    bcc +
+        jsr _update_player_head_facing
+    +
+    sep #$30
     ldy #0
     lda.w playerData.tear_timer+1
     cmp #$1E
     bcs +
+        inc.w playerData.head_offset_y
         ldy #4
     +:
     tya
@@ -515,6 +568,8 @@ _update_player_animation:
     jsl Player.set_head_frame
     rts
 @chocolate_milk:
+    jsr _update_player_head_facing
+    sep #$30
     lda.w playerData.tear_timer+1
     bne +
         lda.w playerData.facingdir_head
@@ -977,6 +1032,8 @@ PlayerRender:
         sta.w objectData.2.pos_y,X
         sec
         sbc #10
+        clc
+        adc.w playerData.head_offset_y
         sta.w objectData.1.pos_y,X
         stz.w objectData.1.tileid,X
         lda #2

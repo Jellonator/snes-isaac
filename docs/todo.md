@@ -16,14 +16,14 @@ Essentials:
     * [X] Allow door states/visuals to change mid-room
     * [X] Door type depends on room type
 - [ ] Might need to keep better track of end room locations / generate them if they don't already exist
-- [ ] Save entity data when leaving a room
+- [X] Save entity data when leaving a room
 - [X] Don't respawn enemies for completed rooms
 - [ ] Items
     * [X] Item rooms contain item pedestal
     * [X] Player can pick up items
     * [X] Items with basic stat effects
     * [X] on-pickup items (e.g. health up)
-    * [ ] Items with effects
+    * [X] Items with effects
     * [ ] Active Items
     * [X] Item pools
 - [ ] Bosses

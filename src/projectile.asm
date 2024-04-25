@@ -230,19 +230,31 @@ _projectile_delete:
     ldy.b PROJECTILE_TMP_IDX
     jml entity_free ; tail call optimization
 
-Tear.set_size_from_damage:
-    rep #$30
-    lda.w projectile_damage,X
-    inc A
-    clc
-    .REPT 8 INDEX i
-    lsr
-    bne +
-        lda #i
+.MACRO ._tear_size_damage_macro ARGS size, damage
+    .ACCU 16
+    cmp #damage + 1
+    bcs +
+        sep #$20
+        lda #size
         sta.w projectile_size,X
         rtl
     +:
-    .ENDR
+    .ACCU 16
+.ENDM
+
+Tear.set_size_from_damage:
+    rep #$30
+    lda.w projectile_damage,X
+    ._tear_size_damage_macro 0, 1
+    ._tear_size_damage_macro 1, 3
+    ._tear_size_damage_macro 2, 6
+    ._tear_size_damage_macro 3, 10
+    ._tear_size_damage_macro 4, 15
+    ._tear_size_damage_macro 5, 21
+    ._tear_size_damage_macro 6, 28
+    ._tear_size_damage_macro 7, 36
+    ._tear_size_damage_macro 8, 45
+    sep #$20
     lda #9
     sta.w projectile_size,X
     rtl
@@ -365,6 +377,7 @@ projectile_tick__:
         lda.w projectile_damage,X
         cmp.b $00
         bcc @hit_and_kill
+        beq @hit_and_kill
         lda.w projectile_flags,X
         and #PROJECTILE_FLAG_POLYPHEMUS
         beq @hit_and_kill

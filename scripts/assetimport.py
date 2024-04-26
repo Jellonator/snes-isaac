@@ -22,6 +22,9 @@ out_inc = open("include/assets.inc", 'w')
 maxbank="63"
 minbank="32"
 
+MASK_MODE_INTERLACE = "interlace"
+MASK_MODE_NONE = ""
+
 out_inc.write(".BANK {} SLOT \"ROM\"\n".format(minbank))
 out_inc.write(".SECTION \"IMPORTED_PALETTES\" SEMISUPERFREE BANKS {}-{}\n".format(maxbank,minbank))
 
@@ -41,7 +44,7 @@ for palette in json_palettes:
 
 out_inc.write(".ENDS\n")
 
-def write_image_tile(bin, imageindices, depth, tilex, tiley, width):
+def write_image_tile(bin, imageindices, depth, tilex, tiley, width, mask_mode):
     indices = []
     for py in range(8):
         y = tiley * 8 + py
@@ -58,8 +61,8 @@ def write_image_tile(bin, imageindices, depth, tilex, tiley, width):
             if indices[i + iy*8] & 2 != 0:
                 value2 |= 1 << (7-i)
         bin.write(struct.pack("<BB", value1, value2))
+    # Write second two bitplanes intertwined
     if depth == 16:
-        # Write second two bitplanes intertwined
         for iy in range(8):
             value1 = 0
             value2 = 0
@@ -69,6 +72,14 @@ def write_image_tile(bin, imageindices, depth, tilex, tiley, width):
                 if indices[i + iy*8] & 8 != 0:
                     value2 |= 1 << (7-i)
             bin.write(struct.pack("<BB", value1, value2))
+    # Write out mask, if interlaced
+    if mask_mode == MASK_MODE_INTERLACE:
+        for iy in range(8):
+            value = 0
+            for i in range(8):
+                if indices[i + iy*8] != 0:
+                    value |= 1 << (7-i)
+            bin.write(struct.pack("<BB", value, value))
 
 # out_inc.write("sprites:\n")
 sprite_number = 1
@@ -84,6 +95,11 @@ for sprite in json_sprites:
     if sprite["depth"] not in [4, 16]:
         raise RuntimeError("Invalid depth {} for {}".format(sprite["depth"], sprite["src"]))
     sprite_out_path = os.path.join(SPRITE_PATH, "{}.bin".format(name))
+    mask_mode = ""
+    if "mask" in sprite:
+        mask_mode = sprite["mask"]
+        if not mask_mode in [MASK_MODE_INTERLACE]:
+            raise RuntimeError("Invalid mask mode \"{}\" for {}".format(mask_mode, sprite["src"]))
     # section header
     out_inc.write(".BANK {} SLOT \"ROM\"\n".format(minbank))
     out_inc.write(".SECTION \"IMPORTED_SPRITE_{}\" SEMISUPERFREE BANKS {}-{}\n".format(sprite_number,maxbank,minbank))
@@ -104,7 +120,7 @@ for sprite in json_sprites:
         for tx in range(0, ntilesx, size):
             for ty2 in range(ty, ty+size, 1):
                 for tx2 in range(tx, tx+size, 1):
-                    write_image_tile(spritebin, imagedata, sprite["depth"], tx2, ty2, width)
+                    write_image_tile(spritebin, imagedata, sprite["depth"], tx2, ty2, width, mask_mode)
 
 splat_number = 1
 

@@ -126,7 +126,8 @@ Item.check_and_recalculate:
         ora #PROJECTILE_FLAG_POLYPHEMUS
     +:
     sta.w playerData.tearflags
-    rtl
+    jml Costume.player_recalculate
+    ; rtl
 
 _empty_pickup:
     rts

@@ -231,6 +231,7 @@ Player.update_money_display:
     rtl
 
 PlayerInit:
+    jsl Costume.player_reset
     rep #$20 ; 16 bit A
     stz.w joy1held
     stz.w joy1press
@@ -301,18 +302,18 @@ Player.set_head_frame:
     sta.l vqueueOps.1.mode,X
     sta.l vqueueOps.2.mode,X
     ; set aAddr bank
-    lda #bankbyte(spritedata.isaac_head)
+    lda #$7F
     sta.l vqueueOps.1.aAddr+2,X
     sta.l vqueueOps.2.aAddr+2,X
-    ; aAddr[0] = spritedata.isaac_head + frame×128
-    ; aAddr[1] = spritedata.isaac_head + frame×128 + 64
+    ; aAddr[0] = playerSpriteBuffer + frame×128
+    ; aAddr[1] = playerSpriteBuffer + frame×128 + 64
     rep #$30
     lda.w playerData.active_head_frame
     and #$00FF
     xba
     lsr
     clc
-    adc #loword(spritedata.isaac_head)
+    adc #loword(playerSpriteBuffer)
     sta.l vqueueOps.1.aAddr,X
     clc
     adc #64
@@ -356,18 +357,18 @@ Player.set_body_frame:
     sta.l vqueueOps.1.mode,X
     sta.l vqueueOps.2.mode,X
     ; set aAddr bank
-    lda #bankbyte(spritedata.isaac_head)
+    lda #$7F
     sta.l vqueueOps.1.aAddr+2,X
     sta.l vqueueOps.2.aAddr+2,X
-    ; aAddr[0] = spritedata.isaac_head + frame×128
-    ; aAddr[1] = spritedata.isaac_head + frame×128 + 64
+    ; aAddr[0] = playerSpriteBuffer + frame×128
+    ; aAddr[1] = playerSpriteBuffer + frame×128 + 64
     rep #$30
     lda.w playerData.active_body_frame
     and #$00FF
     xba
     lsr
     clc
-    adc #loword(spritedata.isaac_head)
+    adc #loword(playerSpriteBuffer)
     sta.l vqueueOps.1.aAddr,X
     clc
     adc #64

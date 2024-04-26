@@ -73,5 +73,17 @@
         "src": "assets/sprites/item_pedastal.raw",
         "depth": 16,
         "size": 2
+    },
+    {
+        "name": "costume_polyphemus",
+        "src": "assets/sprites/costume/polyphemus.raw",
+        "depth": 16,
+        "size": 2
+    },
+    {
+        "name": "costume_wire_coat_hanger",
+        "src": "assets/sprites/costume/wire_coat_hanger.raw",
+        "depth": 16,
+        "size": 2
     }
 ]

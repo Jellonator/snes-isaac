@@ -9,6 +9,7 @@ ALDFLAGS := -S -v
 PY       := python3
 
 SOURCES  := bindata.asm\
+			costume.asm\
 			entity.asm\
 			entity/enemy_fly.asm\
 			entity/enemy_zombie.asm\

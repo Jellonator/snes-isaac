@@ -362,9 +362,6 @@ tile_data_loop:
     sta CGDATA
     lda #%0
     sta CGDATA
-    ; re-enable rendering
-    lda #%00001111
-    sta INIDISP
     cli ; Enable interrupts and joypad
     lda #$81
     sta NMITIMEN
@@ -401,7 +398,8 @@ tile_data_loop:
     stz.w gameRoomScrollX
     lda #-32
     sta.w gameRoomScrollY
-    stz.w is_game_update_running
+    lda #1
+    sta.w is_game_update_running
     ; clear entity table
     jsl EntityInfoInitialize
     ; clear pathfinding data
@@ -410,6 +408,11 @@ tile_data_loop:
     jsl GroundOpClear
     ; init player
     jsr PlayerInit
+    ; re-enable rendering
+    sep #$20
+    lda #%00001111
+    sta INIDISP
+    stz.w is_game_update_running
     jmp UpdateLoop
 
 .ENDS

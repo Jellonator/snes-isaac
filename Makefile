@@ -13,6 +13,7 @@ SOURCES  := bindata.asm\
 			entity.asm\
 			entity/enemy_fly.asm\
 			entity/enemy_zombie.asm\
+			entity/enemy_boss_duke_of_flies.asm\
 			entity/enemy_boss_monstro.asm\
 			entity/item_pedastal.asm\
 			entity/pickup.asm\
@@ -36,7 +37,14 @@ SOURCES  := bindata.asm\
 OBJECTS  := $(SOURCES:%.asm=$(OBJDIR)/%.obj)
 PALETTES := $(wildcard assets/palettes/*.hex)
 SPRITES  := $(wildcard assets/sprites/*.raw)
-INCLUDES := $(wildcard include/*.inc) include/assets.inc
+INCLUDES := include/base.inc\
+			include/chaintable.inc\
+			include/defines.inc\
+			include/header.inc\
+			include/ramlayout.inc\
+			include/registers.inc\
+			include/structs.inc\
+			include/util.inc
 
 Test.smc: Test.link $(OBJECTS)
 	mkdir -p $(BINDIR)
@@ -45,6 +53,10 @@ Test.smc: Test.link $(OBJECTS)
 Test.link:
 	echo -e -n "[objects]$(OBJECTS:%.obj=\n%.obj)" > Test.link
 
+# include/roompools.inc: $(PALETTES) $(SPRITES) assets/rooms/roompools.json
+# 	echo MAKING ROOMPOOL INC
+# 	$(PY) scripts/roomimport.py
+
 include/assets.inc: $(PALETTES) $(SPRITES) assets/palettes.json assets/sprites.json
 	echo MAKING ASSET INC
 	mkdir -p include/palettes/
@@ -52,6 +64,11 @@ include/assets.inc: $(PALETTES) $(SPRITES) assets/palettes.json assets/sprites.j
 	$(PY) scripts/assetimport.py
 
 $(OBJDIR)/%.obj: $(SRCDIR)/%.asm $(INCLUDES)
+	mkdir -p $(OBJDIR)
+	mkdir -p $(OBJDIR)/entity
+	$(AC) $(AFLAGS) -o $@ $<
+
+$(OBJDIR)/bindata.obj: $(SRCDIR)/bindata.asm $(INCLUDES) include/assets.inc include/roompools.inc
 	mkdir -p $(OBJDIR)
 	mkdir -p $(OBJDIR)/entity
 	$(AC) $(AFLAGS) -o $@ $<

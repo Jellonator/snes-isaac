@@ -222,8 +222,8 @@ _ProjectileTileHandlerTable:
 .ENDR
 
 .define PROJECTILE_TMP_IDX $20
-.define PROJECTILE_TMP_POSX $01
-.define PROJECTILE_TMP_POSY $02
+; .define PROJECTILE_TMP_POSX $01
+; .define PROJECTILE_TMP_POSY $02
 .define PROJECTILE_TMP_VAL $12
 _projectile_delete:
     rep #$30
@@ -288,7 +288,7 @@ projectile_tick__:
     sep #$20
     clc
     adc #$04
-    sta.b PROJECTILE_TMP_POSX
+    ; sta.b PROJECTILE_TMP_POSX
     lsr
     lsr
     lsr
@@ -304,7 +304,7 @@ projectile_tick__:
     sep #$30
     clc
     adc #$04
-    sta.b PROJECTILE_TMP_POSY
+    ; sta.b PROJECTILE_TMP_POSY
 ; Check tile
     and #$F0
     ora.b PROJECTILE_TMP_VAL

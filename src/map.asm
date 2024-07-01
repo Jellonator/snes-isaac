@@ -466,6 +466,12 @@ BlockVariantAddresses:
         .dw BlockRockTintedVariants
     .ELIF i == BLOCK_POOP
         .dw BlockPoopVariants
+    .ELIF i == BLOCK_LOGS
+        .dw BlockPoopVariants
+    .ELIF i == BLOCK_SPIKE
+        .dw BlockPoopVariants
+    .ELIF i == BLOCK_METAL
+        .dw BlockPoopVariants
     .ELSE
         .dw BlockEmptyVariants
     .ENDIF
@@ -481,23 +487,14 @@ BlockPoopVariants:
     .dw deft($80, 3) ; 0: full
     .dw deft($82, 3) ; 1: slightly damaged
     .dw deft($84, 3) ; 2: mostly damaged
-
-.DSTRUCT RoomDefinitionTest INSTANCEOF roomdefinition_t VALUES
-    doorMask:   .db DOOR_DEF_MASK
-    roomSize:   .db ROOM_SIZE_REGULAR
-    numObjects: .db 0
-    tileData:
-        ;            ;;;;;
-        .db 0 0 0 0 0 0 0 0 0 0 0 0
-        .db 0 1 1 0 0 0 0 0 0 2 2 0
-        .db 0 1 0 0 0 0 0 0 0 0 2 0
-        .db 0 0 0 0 0 0 0 0 0 0 0 0 ;
-        .db 0 0 0 0 0 0 0 0 0 0 0 0 ;
-        .db 0 1 0 0 0 0 0 0 0 0 3 0
-        .db 0 2 3 0 0 0 0 0 0 3 3 0
-        .db 0 0 0 0 0 0 0 0 0 0 0 0
-        ;            ;;;;;
-.ENDST
+BlockMetalVariants:
+    .dw deft($62, 3)
+BlockSpikeVariants:
+    .dw deft($40, 3) ; 0: out
+    .dw deft($42, 3) ; 1: retractable
+    .dw deft($44, 3) ; 2: retracted
+BlockLogVariants:
+    .dw deft($60, 3)
 
 EmptyRoomTiles:
 ; row 0
@@ -569,7 +566,7 @@ DoorTileBaseTable_LEFT:
     .dw deft($06, 2), deft($06, 2) ; 6 wall
     .dw deft($06, 2), deft($06, 2) ; 7 wall
     .REPT 8
-        .dw deft($C8, 2), deft($E8, 2) ; 8 open
+        .dw deft($C8, 2), deft($E8, 2) ; open
     .ENDR
 
 ; INDEX BY type
@@ -581,6 +578,9 @@ DoorTileTopperTable_TOP:
     .dw deft($6C, 2), deft($6E, 2) ; 2 item
     .dw deft($8C, 2), deft($8E, 2) ; 3 shop
     .dw deft($AC, 3), deft($AE, 3) ; 4 boss
+    .REPT 16-5
+        .dw deft($04, 2), deft($04, 2) ; wall
+    .ENDR
 
 DoorTileTopperTable_LEFT:
     .dw deft($22, 2), deft($22, 2) ; 0 wall
@@ -588,5 +588,8 @@ DoorTileTopperTable_LEFT:
     .dw deft($C2, 2), deft($E2, 2) ; 2 item
     .dw deft($C4, 2), deft($E4, 2) ; 3 shop
     .dw deft($C6, 3), deft($E6, 3) ; 4 boss
+    .REPT 16-5
+        .dw deft($22, 2), deft($22, 2) ; wall
+    .ENDR
 
 .ENDS

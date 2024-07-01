@@ -19,12 +19,14 @@
 .ENUMID MONSTRO_STATE_JUMP_PREPARE
 .ENUMID MONSTRO_STATE_JUMP_PREPARE_BIG
 
+.DEFINE MONSTRO_BASE_HEALTH 350
+
 entity_boss_monstro_init:
     .ACCU 16
     .INDEX 16
     inc.w currentRoomEnemyCount
     ; default info
-    lda #100
+    lda #MONSTRO_BASE_HEALTH
     sta.w entity_health,Y
     lda #10
     sta.w entity_timer,Y

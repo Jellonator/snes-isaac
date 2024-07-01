@@ -26,10 +26,10 @@ _room_spawn_entities:
     phy ; >2
     phx ; >2
     lda $C20000 + objectdef_t.objectType,X
-    .MultiplyStatic 8
+    ; .MultiplyStatic 2
     tax
     sep #$20
-    lda.l EntityDefinitions + entitytypeinfo_t.spawngroup,X
+    lda.l EntityDef_SpawnGroup,X
     cmp $03 + 4,S
     rep #$20
     bcc @no_spawn
@@ -303,11 +303,11 @@ _Room_Serialize_Entities:
         tay
         lda.w entity_type,Y
         and #$00FF
-        .MultiplyStatic 8
+        ; .MultiplyStatic 8
         tax
         ; php
         ; jsr (EntityDefinitions + entitytypeinfo_t.tick_func,X)
-        lda.l EntityDefinitions + entitytypeinfo_t.flags,X
+        lda.l EntityDef_Flags,X
         and #ENTITY_TYPE_FLAG_SERIALIZE
         beq +
             lda.b $00

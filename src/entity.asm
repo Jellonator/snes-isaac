@@ -70,10 +70,10 @@ entity_create:
     pla
     sta.w entity_type,Y
     rep #$20 ; 16B A
-    .MultiplyStatic 8
+    .MultiplyStatic 2
     tax
     phy
-    jsr (EntityDefinitions + entitytypeinfo_t.init_func,X)
+    jsr (EntityDef_InitFunc, X)
     ply
     ; insert into execution order
     lda.l numEntities
@@ -93,10 +93,10 @@ entity_free:
     .ChangeDataBank $7E
     lda.w entity_type,Y
     and.w #$00FF
-    .MultiplyStatic 8
+    .MultiplyStatic 2
     tax
     phy
-    jsr (EntityDefinitions + entitytypeinfo_t.free_func,X)
+    jsr (EntityDef_FreeFunc,X)
     ply
     ; set type to 0
     sep #$20
@@ -146,10 +146,10 @@ entity_free_all:
     lda.w entity_type,Y
     and.w #$00FF
     beq @skip_ent ; skip if type == 0
-    .MultiplyStatic 8
+    .MultiplyStatic 2
     tax
     phy
-    jsr (EntityDefinitions + entitytypeinfo_t.free_func,X)
+    jsr (EntityDef_FreeFunc,X)
     ply
     ; set type to 0
     sep #$20
@@ -180,10 +180,10 @@ entity_tick_all:
         tay
         lda.w entity_type,Y
         and #$00FF
-        .MultiplyStatic 8
+        .MultiplyStatic 2
         tax
         php
-        jsr (EntityDefinitions + entitytypeinfo_t.tick_func,X)
+        jsr (EntityDef_TickFunc,X)
         plp
         plx
         dex
@@ -196,73 +196,117 @@ _player_tick:
     jsl PlayerRender
     rts
 
-EntityDefinitions:
-    ; 0: Null
-    .DSTRUCT @null INSTANCEOF entitytypeinfo_t VALUES
-        init_func: .dw _e_null
-        tick_func: .dw _e_null
-        free_func: .dw _e_null
-        spawngroup: .db ENTITY_SPAWNGROUP_NEVER
-    .ENDST
-    ; 1: Player
-    .DSTRUCT @player INSTANCEOF entitytypeinfo_t VALUES
-        init_func: .dw _e_null
-        tick_func: .dw _player_tick
-        free_func: .dw _e_null
-        spawngroup: .db ENTITY_SPAWNGROUP_NEVER
-    .ENDST
-    ; 2: Projectile
-    .DSTRUCT @projectile INSTANCEOF entitytypeinfo_t VALUES
-        init_func: .dw projectile_entity_init
-        tick_func: .dw projectile_entity_tick
-        free_func: .dw projectile_entity_free
-        spawngroup: .db ENTITY_SPAWNGROUP_NEVER
-    .ENDST
-    ; 3: Pickup
-    .DSTRUCT @pickup INSTANCEOF entitytypeinfo_t VALUES
-        init_func: .dw entity_pickup_init
-        tick_func: .dw entity_pickup_tick
-        free_func: .dw entity_pickup_free
-        spawngroup: .db ENTITY_SPAWNGROUP_ONCE
-        flags: .db ENTITY_TYPE_FLAG_SERIALIZE
-    .ENDST
-    .REPT (128 - 3 - 1) INDEX i
-        .DSTRUCT @null_pad{i+1} INSTANCEOF entitytypeinfo_t VALUES
-            init_func: .dw _e_null
-            tick_func: .dw _e_null
-            free_func: .dw _e_null
-            spawngroup: .db ENTITY_SPAWNGROUP_NEVER
-        .ENDST
-    .ENDR
-    ; 128 : Item Pedastal
-    .DSTRUCT @item_pedastal INSTANCEOF entitytypeinfo_t VALUES
-        init_func: .dw item_pedastal_init
-        tick_func: .dw item_pedastal_tick
-        free_func: .dw item_pedastal_free
-        spawngroup: .db ENTITY_SPAWNGROUP_ONCE
-        flags: .db ENTITY_TYPE_FLAG_SERIALIZE
-    .ENDST
-    ; 129 : Attack fly
-    .DSTRUCT @enemy_attack_fly INSTANCEOF entitytypeinfo_t VALUES
-        init_func: .dw entity_basic_fly_init
-        tick_func: .dw entity_basic_fly_tick
-        free_func: .dw entity_basic_fly_free
-        spawngroup: .db ENTITY_SPAWNGROUP_ENEMY
-    .ENDST
-    ; 130 : zombie
-    .DSTRUCT @enemy_zombie INSTANCEOF entitytypeinfo_t VALUES
-        init_func: .dw entity_zombie_init
-        tick_func: .dw entity_zombie_tick
-        free_func: .dw entity_zombie_free
-        spawngroup: .db ENTITY_SPAWNGROUP_ENEMY
-    .ENDST
-    ; 131 : monstro
-    .DSTRUCT @boss_monstro INSTANCEOF entitytypeinfo_t VALUES
-        init_func: .dw entity_boss_monstro_init
-        tick_func: .dw entity_boss_monstro_tick
-        free_func: .dw entity_boss_monstro_free
-        spawngroup: .db ENTITY_SPAWNGROUP_ENEMY
-    .ENDST
+.MACRO ._DefineEntity ARGS index, initf, tickf, freef, spawngroup, flags
+    .DEFINE _Array_EntityDef_InitFunc.{index} initf
+    .DEFINE _Array_EntityDef_TickFunc.{index} tickf
+    .DEFINE _Array_EntityDef_FreeFunc.{index} freef
+    .DEFINE _Array_EntityDef_SpawnGroup.{index} spawngroup
+    .IFDEFM \6
+        .DEFINE _Array_EntityDef_Flags.{index} flags
+    .ENDIF
+.ENDM
+
+._DefineEntity 0,\
+    _e_null,\
+    _e_null,\
+    _e_null,\
+    ENTITY_SPAWNGROUP_NEVER
+
+._DefineEntity ENTITY_TYPE_PLAYER,\
+    _e_null,\
+    _player_tick,\
+    _e_null,\
+    ENTITY_SPAWNGROUP_NEVER
+
+._DefineEntity ENTITY_TYPE_PROJECTILE,\
+    projectile_entity_init,\
+    projectile_entity_tick,\
+    projectile_entity_free,\
+    ENTITY_SPAWNGROUP_NEVER
+
+._DefineEntity ENTITY_TYPE_PICKUP,\
+    entity_pickup_init,\
+    entity_pickup_tick,\
+    entity_pickup_free,\
+    ENTITY_SPAWNGROUP_ONCE,\
+    ENTITY_TYPE_FLAG_SERIALIZE
+
+._DefineEntity ENTITY_TYPE_ITEM_PEDASTAL,\
+    item_pedastal_init,\
+    item_pedastal_tick,\
+    item_pedastal_free,\
+    ENTITY_SPAWNGROUP_ONCE,\
+    ENTITY_TYPE_FLAG_SERIALIZE
+
+._DefineEntity ENTITY_TYPE_ENEMY_ATTACK_FLY,\
+    entity_basic_fly_init,\
+    entity_basic_fly_tick,\
+    entity_basic_fly_free,\
+    ENTITY_SPAWNGROUP_ENEMY
+
+._DefineEntity ENTITY_TYPE_ENEMY_ZOMBIE,\
+    entity_zombie_init,\
+    entity_zombie_tick,\
+    entity_zombie_free,\
+    ENTITY_SPAWNGROUP_ENEMY
+
+._DefineEntity ENTITY_TYPE_ENEMY_BOSS_MONSTRO,\
+    entity_boss_duke_of_flies_init,\
+    entity_boss_duke_of_flies_tick,\
+    entity_boss_duke_of_flies_free,\
+    ENTITY_SPAWNGROUP_ENEMY
+
+._DefineEntity ENTITY_TYPE_ENEMY_BOSS_DUKE_OF_FLIES,\
+    entity_boss_monstro_init,\
+    entity_boss_monstro_tick,\
+    entity_boss_monstro_free,\
+    ENTITY_SPAWNGROUP_ENEMY
+
+
+EntityDef_InitFunc:
+.REPT 256 INDEX index
+    .IFDEF _Array_EntityDef_InitFunc.{index}
+        .DW _Array_EntityDef_InitFunc.{index}
+    .ELSE
+        .DW _e_null
+    .ENDIF
+.ENDR
+
+EntityDef_TickFunc:
+.REPT 256 INDEX index
+    .IFDEF _Array_EntityDef_TickFunc.{index}
+        .DW _Array_EntityDef_TickFunc.{index}
+    .ELSE
+        .DW _e_null
+    .ENDIF
+.ENDR
+
+EntityDef_FreeFunc:
+.REPT 256 INDEX index
+    .IFDEF _Array_EntityDef_FreeFunc.{index}
+        .DW _Array_EntityDef_FreeFunc.{index}
+    .ELSE
+        .DW _e_null
+    .ENDIF
+.ENDR
+
+EntityDef_SpawnGroup:
+.REPT 256 INDEX index
+    .IFDEF _Array_EntityDef_SpawnGroup.{index}
+        .DB _Array_EntityDef_SpawnGroup.{index}
+    .ELSE
+        .DB 0
+    .ENDIF
+.ENDR
+
+EntityDef_Flags:
+.REPT 256 INDEX index
+    .IFDEF _Array_EntityDef_Flags.{index}
+        .DB _Array_EntityDef_Flags.{index}
+    .ELSE
+        .DB 0
+    .ENDIF
+.ENDR
 
 .ENDS
 
@@ -452,6 +496,74 @@ EntityPutShadow:
     @skipShadow:
     rtl
 
+; place medium-sized entity shadow for entity at index Y
+; assumes 16 bit index, 8 bit accumulator
+; Parameters:
+;   offs x [db] $05
+;   offs y [db] $04
+EntityPutMediumShadow:
+    rep #$30
+    lda.w objectIndexShadow
+    sec
+    sbc #8
+    cmp.w objectIndex
+    bcc @skipShadow
+        sep #$20
+        tax
+        stx.w objectIndexShadow
+        lda.w entity_posy+1,Y
+        clc
+        adc $04,S
+        sta.w objectData.1.pos_y,X
+        sta.w objectData.2.pos_y,X
+        lda.w entity_posx+1,Y
+        clc
+        adc $05,S
+        clc
+        sta.w objectData.1.pos_x,X
+        adc #16
+        sta.w objectData.2.pos_x,X
+        lda #$A2
+        sta.w objectData.1.tileid,X
+        sta.w objectData.2.tileid,X
+        lda #%00011000
+        sta.w objectData.1.flags,X
+        lda #%01011000
+        sta.w objectData.2.flags,X
+        ; now, need to make sprites big
+        rep #$20
+        ; phy
+        txa
+        ;
+        lsr
+        lsr
+        tax
+        and #$03
+        sta.b $00 ; $00 = subindex
+        ;
+        txa
+        lsr
+        lsr
+        tax ; X = INDEX
+        ;
+        lda #%1010
+        .REPT 4
+            dec.b $00
+            bmi +
+            asl
+            asl
+        .ENDR
+        +:
+        ; ...
+        ora.w objectDataExt,X
+        ; A |= 0b010101 << $00
+        sta.w objectDataExt,X
+        ; end
+        ; ply
+        rtl
+    @skipShadow:
+    rtl
+
 ; place big entity shadow for entity at index Y
 ; assumes 16 bit index, 8 bit accumulator
 ; Parameters:
@@ -476,6 +588,7 @@ EntityPutBigShadow:
         lda.w entity_posx+1,Y
         clc
         adc $05,S
+        clc
         .REPT 3 INDEX i
             .IF i > 0
                 adc #16
@@ -483,17 +596,16 @@ EntityPutBigShadow:
             sta.w objectData.{i+1}.pos_x,X
         .ENDR
         lda #$A2
-        .REPT 3 INDEX i
-            .IF i > 0
-                inc A
-                inc A
-            .ENDIF
-            sta.w objectData.{i+1}.tileid,X
-        .ENDR
+        sta.w objectData.1.tileid,X
+        sta.w objectData.3.tileid,X
+        inc A
+        inc A
+        sta.w objectData.2.tileid,X
         lda #%00011000
-        .REPT 3 INDEX i
-            sta.w objectData.{i+1}.flags,X
-        .ENDR
+        sta.w objectData.1.flags,X
+        sta.w objectData.2.flags,X
+        lda #%01011000
+        sta.w objectData.3.flags,X
         ; now, need to make sprites big
         rep #$20
         ; phy

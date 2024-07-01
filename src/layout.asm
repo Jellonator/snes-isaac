@@ -142,8 +142,8 @@
     ; $2000 - $087C = $1784
     vqueueBinData INSTANCEOF byte_t 1 ($2000 - (255 * _sizeof_vqueueminiop_t) - (VQUEUE_MAX_SIZE * _sizeof_vqueueop_t))
 ; Player sprite buffer
-    ; 32 sprites × 4 tiles/sprite × 32 bytes/tile = $1000 bytes
-    playerSpriteBuffer ds 32 * 4 * 32
+    ; 64 sprites × 4 tiles/sprite × 32 bytes/tile = $2000 bytes
+    playerSpriteBuffer ds 64 * 4 * 32
 ; Ground data
     ; character data for ground tiles
     groundCharacterData ds $0C00*2

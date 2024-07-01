@@ -185,14 +185,6 @@
 ; in general, only set this for entities with ENTITY_SPAWNGROUP_ONCE
 .DEFINE ENTITY_TYPE_FLAG_SERIALIZE $01
 
-.STRUCT entitytypeinfo_t SIZE 8
-    init_func dw
-    tick_func dw
-    free_func dw
-    spawngroup db
-    flags db
-.ENDST
-
 ; Custom entity data
 .STRUCT entitycustomdata_t
     for_entity dsw ENTITY_TOTAL_MAX

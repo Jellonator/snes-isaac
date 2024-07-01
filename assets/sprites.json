@@ -53,6 +53,11 @@
         "depth": 16
     },
     {
+        "name": "boss_duke_of_flies",
+        "src": "assets/sprites/enemy/duke_of_flies.raw",
+        "depth": 16
+    },
+    {
         "name": "default_sprites",
         "src": "assets/sprites/default_sprites.raw",
         "depth": 16

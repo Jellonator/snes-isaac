@@ -30,6 +30,7 @@ UpdateLoop:
     jsl player_update_pathfinding_data
     jsl entity_tick_all
     jsl Room_Tick
+    jsl Floor_Tick
     jsr UpdateRest
     jsl GroundProcessOps
     ; Finally, check if room should be changed

@@ -139,11 +139,24 @@
     roomList ds 0
 .ENDST
 
+; defines a 'chapter' - includes palette, tileset, room pools, etc.
+.STRUCT chapterdefinition_t
+    name ds 32
+.ENDST
+
+.DEFINE ROOMGEN_ITEM $01
+.DEFINE ROOMGEN_SHOP $02
+.DEFINE ROOMGEN_BOSS $04
+.DEFINE ROOMGEN_SECRET $08
+
+.DEFINE ROOMGEN_DEFAULT (ROOMGEN_ITEM | ROOMGEN_SHOP | ROOMGEN_BOSS | ROOMGEN_SECRET)
+
+; defines a 'floor'
 .STRUCT floordefinition_t
-    numRooms db
-    numRoomsRand db
-    mapWidthLimit db
-    mapHeightLimit db
+    chapter db
+    number db
+    size db
+    roomgen dw
 .ENDST
 
 .DEFINE VQUEUE_MODE_VRAM 0

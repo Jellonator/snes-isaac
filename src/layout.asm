@@ -71,6 +71,11 @@
     gameRoomScrollY dw
 ; Current room data
     currentRoomGroundData dl
+    roomBrightness db
+; Floor data
+    currentFloorIndex dw
+    currentFloorPointer dw
+    floorFlags dw
 ; Commonly used entity data
     entity_data_begin ds 0
     private_base_entity_combined_type_variant dsw ENTITY_TOTAL_MAX

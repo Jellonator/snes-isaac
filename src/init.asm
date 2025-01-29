@@ -408,9 +408,12 @@ tile_data_loop:
     jsl GroundOpClear
     ; init player
     jsr PlayerInit
+    ; init floor
+    jsl Floor_Init
     ; re-enable rendering
     sep #$20
     lda #%00001111
+    sta.w roomBrightness
     sta INIDISP
     stz.w is_game_update_running
     jmp UpdateLoop

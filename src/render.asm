@@ -69,7 +69,7 @@ VBlank2:
     jsl ProcessVQueue
     sep #$20 ; 8 bit A
     pla ; compensate for phb earlier
-    lda #%00001111
+    lda.w roomBrightness
     sta INIDISP
     jsr ReadInput
     stz.w is_game_update_running

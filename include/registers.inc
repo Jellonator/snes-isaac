@@ -2,6 +2,7 @@
 .define OBSEL $2101
 .define OAMADDR $2102
 .define OAMDATA $2104
+.define MOSAIC $2106
 .define BGMODE $2105
 .define BG1SC $2107
 .define BG2SC $2108

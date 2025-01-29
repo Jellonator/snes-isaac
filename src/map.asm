@@ -91,6 +91,8 @@ LoadRoomSlotIntoLevel:
     beq @ground_start
     jmp @ground_default
     @ground_start:
+        lda.w currentFloorIndex
+        bne @ground_default
         .CopyGroundAddr spritedata.basement_ground_starting_room
         jmp @ground_end
     @ground_default:

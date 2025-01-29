@@ -239,6 +239,18 @@ _Room_Spawn_Boss_Reward:
     sta.w entity_posy,Y
     rts
 
+_Room_Spawn_Trapdoor:
+    rep #$30
+    lda #ENTITY_TYPE_TRAPDOOR
+    php
+    jsl entity_create
+    plp
+    lda #120 * $0100
+    sta.w entity_posx,Y
+    lda #(120) * $0100
+    sta.w entity_posy,Y
+    rts
+
 _Room_Complete:
     jsr _Room_Open_Doors
     jsl updateAllDoorsInRoom
@@ -262,6 +274,7 @@ _Room_Complete:
         jmp +
     @spawnBossReward:
         jsr _Room_Spawn_Boss_Reward
+        jsr _Room_Spawn_Trapdoor
     +:
     plp
     plx

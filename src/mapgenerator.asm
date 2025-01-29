@@ -262,9 +262,9 @@ _InitializeRoomX:
 ; set up map data
     lda $03+1,S
     cmp #ROOMTYPE_START
-    bne + ; start becomes normal room
-        lda #ROOMTYPE_NORMAL
-    +:
+    ; bne + ; start becomes normal room
+    ;     lda #ROOMTYPE_NORMAL
+    ; +:
     sta.w mapTileTypeTable,X
     stz.w mapTileFlagsTable,X
     lda.w numUsedMapSlots
@@ -348,6 +348,8 @@ _SetupRoomX:
     lda.w loword(roomSlotRoomType),X
     cmp #ROOMTYPE_NORMAL
     beq @room_normal
+    cmp #ROOMTYPE_START
+    beq @room_empty
     cmp #ROOMTYPE_BOSS
     beq @room_boss
     cmp #ROOMTYPE_ITEM

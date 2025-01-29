@@ -9,8 +9,8 @@
 .DEFINE duke_target_velocx entity_char_custom.10
 .DEFINE duke_target_velocy entity_char_custom.11
 
-.DEFINE TARGET_VELOC $080
-.DEFINE ACCEL_VELOC $0004
+.DEFINE TARGET_VELOC $060
+.DEFINE ACCEL_VELOC $0002
 
 ; state when boss is idle
 .DEFINE STATE_IDLE 0

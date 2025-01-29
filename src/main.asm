@@ -47,6 +47,8 @@ UpdateRest:
     beq @skip_regenerate_map
     jsl BeginMapGeneration
     sep #$30 ; 8 bit AXY
+    lda #1
+    sta.l needResetEntireGround
     lda #0
     pha
     jsl LoadRoomSlotIntoLevel

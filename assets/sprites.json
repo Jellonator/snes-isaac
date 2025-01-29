@@ -68,6 +68,11 @@
         "depth": 4
     },
     {
+        "name": "basement_ground_starting_room",
+        "src": "assets/sprites/basement_ground_starting_room.raw",
+        "depth": 4
+    },
+    {
         "name": "items",
         "src": "assets/sprites/items0.raw",
         "depth": 16,

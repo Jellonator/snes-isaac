@@ -67,6 +67,15 @@ InitializeRoomSlot:
     .ENDR
     rtl
 
+.MACRO .CopyGroundAddr ARGS addr
+    lda #bankbyte(addr)
+    sta.w currentRoomGroundData+2
+    lda #hibyte(addr)
+    sta.w currentRoomGroundData+1
+    lda #lobyte(addr)
+    sta.w currentRoomGroundData+0
+.ENDM
+
 ; Initialize a room slot from a room definition
 ; Push order:
 ;   room slot index         [db] $04
@@ -74,6 +83,20 @@ LoadRoomSlotIntoLevel:
     ; first, clear existing level
     jsl entity_free_all
     jsl Palette.init_data
+    ; determine current ground data
+    sep #$30 ; 8 bit AXY
+    ldx.b loadedRoomIndex
+    lda.w mapTileTypeTable,X
+    cmp #ROOMTYPE_START
+    beq @ground_start
+    jmp @ground_default
+    @ground_start:
+        .CopyGroundAddr spritedata.basement_ground_starting_room
+        jmp @ground_end
+    @ground_default:
+        .CopyGroundAddr spritedata.basement_ground_base
+        ; jmp @ground_end
+    @ground_end:
     ; then, clear floor
     jsl GroundOpClear
     sep #$30 ; 8 bit AXY

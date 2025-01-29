@@ -1654,7 +1654,7 @@ _MakeWaitScrollSub2:
             sta.b $00
             sep #$20 ; 8 bit A
             ; source bank
-            lda #bankbyte(spritedata.basement_ground_base)
+            lda.w currentRoomGroundData+2
             sta DMA0_SRCH
             ; VRAM address increment flags
             lda #$80
@@ -1676,7 +1676,9 @@ _MakeWaitScrollSub2:
                     lda.b $00
                     asl
                     clc
-                    adc #(16 * 24 * i) + loword(spritedata.basement_ground_base)
+                    adc #(16 * 24 * i)
+                    clc
+                    adc.w currentRoomGroundData
                     sta DMA0_SRCL
                 ; number of bytes
                 lda #8 * 2
@@ -1734,7 +1736,7 @@ _MakeWaitScrollSub2:
             sta.b $00
             asl
             clc
-            adc #loword(spritedata.basement_ground_base)
+            adc.w currentRoomGroundData
             sta DMA0_SRCL
             ; VRAM address
             lda.b $00
@@ -1743,7 +1745,7 @@ _MakeWaitScrollSub2:
             sta VMADDR
             sep #$20 ; 8 bit A
             ; source bank
-            lda #bankbyte(spritedata.basement_ground_base)
+            lda.w currentRoomGroundData+2
             sta DMA0_SRCH
             ; VRAM address increment flags
             lda #$80

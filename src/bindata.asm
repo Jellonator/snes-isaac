@@ -63,18 +63,7 @@ DefaultUiData:
     .REPT 24
         .dw 0
     .ENDR
-    .dw 0
-    .dw 0
-    .dw deft($16,6) | T_HIGHP
-    .REPT 31
-        .dw 0
-    .ENDR
-    .dw deft($25,6) | T_HIGHP
-    .REPT 31
-        .dw 0
-    .ENDR
-    .dw deft($34,6) | T_HIGHP
-    .REPT 29
+    .REPT 96
         .dw 0
     .ENDR
     @end:
@@ -87,6 +76,7 @@ MapTiles:
     .dw deft($0C, 5) | T_HIGHP ; sacrifice
     .dw deft($0D, 5) | T_HIGHP ; curse
     .dw deft($0E, 6) | T_HIGHP ; secret
+    .dw deft($08, 6) | T_HIGHP ; start
 SpriteIndexToExtMaskXS:
     .REPT 128 / 4
         .db %00000011 0 0 0
@@ -123,7 +113,7 @@ SpriteIndexToExtMaskS_16:
     .ENDR
 
 ;-------------;
-; DATA TABLES ;
+; MATH TABLES ;
 ;-------------;
 
 ; sin/cos

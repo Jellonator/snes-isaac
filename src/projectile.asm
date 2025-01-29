@@ -222,8 +222,8 @@ _ProjectileTileHandlerTable:
 .ENDR
 
 .define PROJECTILE_TMP_IDX $20
-; .define PROJECTILE_TMP_POSX $01
-; .define PROJECTILE_TMP_POSY $02
+.define PROJECTILE_TMP_POSX $01
+.define PROJECTILE_TMP_POSY $02
 .define PROJECTILE_TMP_VAL $12
 _projectile_delete:
     rep #$30
@@ -288,7 +288,7 @@ projectile_tick__:
     sep #$20
     clc
     adc #$04
-    ; sta.b PROJECTILE_TMP_POSX
+    sta.b PROJECTILE_TMP_POSX
     lsr
     lsr
     lsr
@@ -304,7 +304,7 @@ projectile_tick__:
     sep #$30
     clc
     adc #$04
-    ; sta.b PROJECTILE_TMP_POSY
+    sta.b PROJECTILE_TMP_POSY
 ; Check tile
     and #$F0
     ora.b PROJECTILE_TMP_VAL
@@ -348,16 +348,18 @@ projectile_tick__:
     cpy #0
     beq @skipCollisionHandler
         ; found object:
-        ; Add veloc
+        ; update veloc
         rep #$30
         ldx.b PROJECTILE_TMP_IDX
-        lda.w entity_velocx,X
+        ; lda.w entity_velocx,X
+        ; .ShiftRight_SIGN 1, FALSE
+        lda.w entity_velocx,Y
         .ShiftRight_SIGN 1, FALSE
-        adc.w entity_velocx,Y
         sta.w entity_velocx,Y
-        lda.w entity_velocy,X
+        ; lda.w entity_velocy,X
+        ; .ShiftRight_SIGN 1, FALSE
+        lda.w entity_velocy,Y
         .ShiftRight_SIGN 1, FALSE
-        adc.w entity_velocy,Y
         sta.w entity_velocy,Y
         ; reduce HP
         lda.w entity_health,Y

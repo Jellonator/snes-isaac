@@ -62,12 +62,12 @@ GroundOpClear:
     rep #$20 ; 16 bit A
     lda #24 * 16 * 8 * 2
     sta DMA0_SIZE ; number of bytes
-    lda #loword(spritedata.basement_ground_base)
+    lda.w currentRoomGroundData
     sta DMA0_SRCL ; source address
     lda #groundCharacterData
     sta WMADDL
     sep #$20 ; 8 bit A
-    lda #bankbyte(spritedata.basement_ground_base)
+    lda.w currentRoomGroundData+2
     sta DMA0_SRCH ; source bank
     lda #$7F
     sta WMADDH

@@ -614,19 +614,28 @@
 
 .MACRO .ShiftRight_SIGN ARGS num, do_cmp
     .IF num > 0
-        clc
         .IF do_cmp
             cmp #0
         .ENDIF
-        bpl +++++
+        bpl @@@@@\.\@pos
+            sec
             .IF num > 1
                 ora #((2^(num-1)) - 1)
             .ENDIF
-            sec
-        +++++:
-        .REPT num
-            ror
-        .ENDR
+            .REPT num
+                ror
+            .ENDR
+            ; ora #((2^(num-1)) - 1) << num
+            ; sec
+            jmp @@@@@\.\@end
+        @@@@@\.\@pos:
+            .REPT num
+                lsr
+            .ENDR
+        ; .REPT num
+        ;     ror
+        ; .ENDR
+        @@@@@\.\@end:
     .ENDIF
 .ENDM
 

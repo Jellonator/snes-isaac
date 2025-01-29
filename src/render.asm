@@ -77,11 +77,11 @@ VBlank2:
     rti
 
 UpdateEntireMinimap:
-    sep #$30 ; 8 bit AXY
+    sep #$30 ; 8 bit XY
+    rep #$20 ; 16 bit A
     lda #$80
     sta $2115
     .REPT MAP_MAX_HEIGHT INDEX i
-        rep #$30 ; 16 bit AXY
         lda #BG1_TILE_BASE_ADDR + i*32 + 32 - MAP_MAX_WIDTH
         sta VMADDR
         ldy #i*MAP_MAX_WIDTH
@@ -91,7 +91,7 @@ UpdateEntireMinimap:
 
 UpdateMinimapLine:
     .ACCU 16
-    .INDEX 16
+    .INDEX 8
     .REPT MAP_MAX_WIDTH
         lda.w mapTileTypeTable,Y
         and #$00FF
@@ -233,12 +233,12 @@ InitializeBackground:
     rep #$20 ; 16 bit A
     lda #24 * 16 * 8 * 2
     sta DMA0_SIZE ; number of bytes
-    lda #loword(spritedata.basement_ground_base)
+    lda.l currentRoomGroundData
     sta DMA0_SRCL ; source address
     lda #BG3_CHARACTER_BASE_ADDR
     sta $2116 ; VRAM address
     sep #$20 ; 8 bit A
-    lda #bankbyte(spritedata.basement_ground_base)
+    lda.l currentRoomGroundData+2
     sta DMA0_SRCH ; source bank
     lda #$80
     sta $2115 ; VRAM address increment flags

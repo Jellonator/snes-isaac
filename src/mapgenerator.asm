@@ -530,7 +530,13 @@ BeginMapGeneration:
     pla
     lda.b start_pos
     jsr _PushAdjacentEmptyTilesA
-    ldy #10
+    rep #$30
+    lda.l currentFloorPointer
+    tax
+    lda.l FLOOR_DEFINITION_BASE + floordefinition_t.size,X
+    dec A
+    tay
+    sep #$30
 @loop_add_tiles: ; do {
     phy
         ; Determine endpoint tiles

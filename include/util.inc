@@ -558,6 +558,8 @@
 
 .FUNCTION spriteoffset(spriteId) ((spriteId - 1) * 4)
 
+.FUNCTION hirombankid(addr) (bankbyte(addr) & $3F)
+
 .MACRO .CheapModA8 ARGS num
     .IF num == 1
     .ELIF num > 0 && num <= (2^7) && IS_POW2(num)

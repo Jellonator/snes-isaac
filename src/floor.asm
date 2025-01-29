@@ -4,7 +4,7 @@
 .DEFINE FLOOR_FLAG_FADEIN $02
 .DEFINE FLOOR_FLAG_FADEIN2 $04
 
-.BANK $01 SLOT "ROM"
+.BANK hirombankid(FLOOR_DEFINITION_BASE) SLOT "ROM"
 .SECTION "Floor Code" FREE
 
 ; Generate and enter floor proper
@@ -26,6 +26,7 @@ Floor_Init:
     lda #0
     sta.w floorFlags
     sta.w currentFloorIndex
+    asl
     tax
     lda.l FloorDefinitions,X
     sta.w currentFloorPointer
@@ -91,6 +92,7 @@ Floor_Tick:
         lda.w currentFloorIndex
         inc A
         sta.w currentFloorIndex
+        asl
         tax
         lda.l FloorDefinitions,X
         sta.w currentFloorPointer

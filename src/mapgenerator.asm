@@ -280,6 +280,106 @@ _CalculateAvailableStartingRoomEndpointTiles:
 @end:
     rts
 
+; Similar to _CalculateAvailableEndpointTiles, except we only consider tiles
+; which would create a new endroom
+_CalculateNewEndpointTiles:
+    .ACCU 8
+    .INDEX 8
+    stz.b mapgenNumAvailableEndpointTiles
+    lda.b mapgenNumAvailableTiles
+    bne +
+        rts
+    +:
+    stz $00 ; $00=i
+    dec A
+    ; beq @endloop ; len == 1
+    sta $01 ; $01=j
+@loop:
+    ; Count rooms adjacent to i
+    ldy $00
+    lda.w mapgenAvailableTiles,Y
+    jsr _CountAdjacentFilledRoomsA
+    ldy $03
+    cpy #1 ; Check that there is exactly ONE room next to i
+    bne +
+        ; check that target room has two or three adjacent rooms
+        lda.b $04
+        jsr _CountAdjacentFilledRoomsA
+        ldy.b $03
+        cpy #2
+        beq @isEndpoint_i
+        cpy #3
+        beq @isEndpoint_i
+    +:
+    ; Count rooms adjacent to j
+    ldy $01
+    lda.w mapgenAvailableTiles,Y
+    jsr _CountAdjacentFilledRoomsA
+    ldy $03
+    cpy #1 ; Check that there is exactly ONE room next to j
+    bne +
+        ; check that target room has two or three adjacent rooms
+        lda.b $04
+        jsr _CountAdjacentFilledRoomsA
+        ldy.b $03
+        cpy #2
+        beq @isEndpoint_j
+        cpy #3
+        beq @isEndpoint_j
+    +:
+    ; neither i nor j are endpoints
+    dec $01
+    jmp @continue
+@isEndpoint_i:
+    ; i is endpoint
+    inc.b mapgenNumAvailableEndpointTiles
+    inc $00
+    jmp @continue
+@isEndpoint_j:
+    ; j is endpoint but i is not, so swap and inc i/dec j
+    inc.b mapgenNumAvailableEndpointTiles
+    ldx $00
+    lda.b mapgenAvailableTiles,X
+    sta $07
+    ldx $01
+    lda.b mapgenAvailableTiles,X
+    sta $08
+    lda $07
+    ldx $01
+    sta.b mapgenAvailableTiles,X
+    lda $08
+    ldx $00
+    sta.b mapgenAvailableTiles,X
+    inc $00
+    dec $01
+    ; jmp @continue <- it is here in spirit
+@continue:
+    ; Repeat if (j >= i)
+    lda $00
+    cmp $01
+    bcc @loop
+@endloop:
+    ; Count rooms adjacent to i
+    ldy $00
+    lda.w mapgenAvailableTiles,Y
+    jsr _CountAdjacentFilledRoomsA
+    ldy $03
+    cpy #1 ; Check that there is exactly ONE room next to i
+    bne +
+        ; check that target room has two or three adjacent rooms
+        lda.b $04
+        jsr _CountAdjacentFilledRoomsA
+        ldy.b $03
+        cpy #2
+        beq @inctiles
+        cpy #3
+        beq @inctiles
+    +:
+    rts
+@inctiles:
+    inc.b mapgenNumAvailableEndpointTiles
+    rts
+
 _MoveActiveRoomsIntoAvailableTiles:
     stz.b mapgenNumAvailableEndpointTiles
     ldx.w numUsedMapSlots
@@ -474,23 +574,26 @@ _SetupRoomX:
 ; Count tiles adjacent to A
 ; consumes X
 ; Stores result into $03
+; Stored an adjacent location in $04
 _CountAdjacentFilledRoomsA:
     .ACCU 8
     .INDEX 8
-    sta $02
-    stz $03
+    sta.b $02
+    stz.b $03
     .BranchIfTileOnRightBorderA +
         inc A
         tax
         .BranchIfTileEmptyX +
-            inc $03
+            inc.b $03
+            stx.b $04
     +:
     lda $02
     .BranchIfTileOnLeftBorderA +
         dec A
         tax
         .BranchIfTileEmptyX +
-            inc $03
+            inc.b $03
+            stx.b $04
     +:
     lda $02
     .BranchIfTileOnBottomBorderA +
@@ -498,7 +601,8 @@ _CountAdjacentFilledRoomsA:
         adc #$10
         tax
         .BranchIfTileEmptyX +
-            inc $03
+            inc.b $03
+            stx.b $04
     +:
     lda $02
     .BranchIfTileOnTopBorderA +
@@ -506,7 +610,8 @@ _CountAdjacentFilledRoomsA:
         sbc #$10
         tax
         .BranchIfTileEmptyX +
-            inc $03
+            inc.b $03
+            stx.b $04
     +:
     rts
 
@@ -612,18 +717,19 @@ BeginMapGeneration:
     and #$03
     clc
     adc #6 ; X: [6-9]
-    sta.b start_pos
-    jsl RngGeneratorUpdate4
-    sep #$30 ; 8 bit AXY
-    and #$03
-    clc
-    adc #2 ; Y: [2-5]
-    asl
-    asl
-    asl
-    asl
-    clc
-    adc.b start_pos
+    ; sta.b start_pos
+    ; jsl RngGeneratorUpdate4
+    ; sep #$30 ; 8 bit AXY
+    ; and #$01
+    ; clc
+    ; adc #2 ; Y: [2-3]
+    ; asl
+    ; asl
+    ; asl
+    ; asl
+    ; clc
+    ; adc.b start_pos
+    lda #(8 + 2*16)
     sta.b start_pos
     sta.w loadedRoomIndex
     tax
@@ -646,7 +752,11 @@ BeginMapGeneration:
         lda.w numUsedMapSlots
         cmp #3
         bcc @add_adjacent_to_start
-            jsr _CalculateAvailableEndpointTiles
+            jsr _CalculateNewEndpointTiles
+            lda.b mapgenNumAvailableEndpointTiles
+            bne +
+                jsr _CalculateAvailableEndpointTiles
+            +:
             jmp @skip_adjacent_to_start
     @add_adjacent_to_start:
             jsr _CalculateAvailableStartingRoomEndpointTiles

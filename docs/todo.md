@@ -17,7 +17,7 @@ Essentials:
     * [X] Door type depends on room type
     * [ ] Keys
     * [ ] Locked doors able to be opened with keys
-- [ ] Might need to keep better track of end room locations / generate them if they don't already exist
+- [X] Might need to keep better track of end room locations / generate them if they don't already exist
 - [X] Fix bug where player can spawn in boss room. This happens when the spawn room is an endroom, and is able to be selected as the boss room. Potential fixes: remove spawn room from end room pool, or move spawn room if it was taken.
 - [X] Save entity data when leaving a room
 - [X] Don't respawn enemies for completed rooms
@@ -35,6 +35,7 @@ Essentials:
     * [X] Room should spawn an item after completing
     * [X] Room should spawn entrance to next floor after completing
 - [ ] Update RNG on next floor
+- [ ] Bombs
 
 Bonus:
 - [ ] Secret rooms with bombable walls
@@ -49,7 +50,7 @@ Bonus:
     * [ ] Challenge
 - [ ] Change up map generation depending on floor type (e.g. room layouts specific to floors)
     * [ ] Certain special rooms (i.e. boss rooms) change pools depending on floor
-    * [ ] Swap tiles/palette depending on floor
+    * [X] Swap tiles/palette depending on floor
 - [X] Player costumes
     * [X] RAM buffer
     * [ ] sprite overlay

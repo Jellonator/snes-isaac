@@ -18,7 +18,7 @@ Essentials:
     * [ ] Keys
     * [ ] Locked doors able to be opened with keys
 - [ ] Might need to keep better track of end room locations / generate them if they don't already exist
-- [ ] Fix bug where player can spawn in boss room. This happens when the spawn room is an endroom, and is able to be selected as the boss room. Potential fixes: remove spawn room from end room pool, or move spawn room if it was taken.
+- [X] Fix bug where player can spawn in boss room. This happens when the spawn room is an endroom, and is able to be selected as the boss room. Potential fixes: remove spawn room from end room pool, or move spawn room if it was taken.
 - [X] Save entity data when leaving a room
 - [X] Don't respawn enemies for completed rooms
 - [ ] Items

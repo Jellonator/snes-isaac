@@ -188,11 +188,6 @@ _CalculateAvailableEndpointTiles:
     lda $08
     ldx $00
     sta.b mapgenAvailableTiles,X
-    ; pha
-    ; lda.w mapgenAvailableTiles,Y
-    ; sta.b mapgenAvailableTiles,X
-    ; pla
-    ; sta.w mapgenAvailableTiles,Y
     inc $00
     dec $01
     ; jmp @continue <- it is here in spirit
@@ -202,12 +197,82 @@ _CalculateAvailableEndpointTiles:
     cmp $01
     bcc @loop
 @endloop:
-    ; lda $00
-    ; sta.b mapgenNumAvailableEndpointTiles
     ; Count rooms adjacent to i
     ldy $00
     lda.w mapgenAvailableTiles,Y
     jsr _CountAdjacentFilledRoomsA
+    ldy $03
+    cpy #1 ; Check that there is exactly ONE room next to i
+    bne @end
+    inc.b mapgenNumAvailableEndpointTiles
+@end:
+    rts
+
+; Similar to _CalculateAvailableEndpointTiles, except we only use tiles
+; which are adjacent to the starting room
+_CalculateAvailableStartingRoomEndpointTiles:
+    .ACCU 8
+    .INDEX 8
+    lda.b start_pos
+    sta.b $02
+    stz.b mapgenNumAvailableEndpointTiles
+    lda.b mapgenNumAvailableTiles
+    beq @end
+    stz $00 ; $00=i
+    dec A
+    ; beq @endloop ; len == 1
+    sta $01 ; $01=j
+@loop:
+    ; Count rooms adjacent to i
+    ldy $00
+    lda.w mapgenAvailableTiles,Y
+    jsr _IsTileAdjacent
+    ldy $03
+    cpy #1 ; Check that there is exactly ONE room next to i
+    beq @isEndpoint_i
+    ; Count rooms adjacent to j
+    ldy $01
+    lda.w mapgenAvailableTiles,Y
+    jsr _IsTileAdjacent
+    ldy $03
+    cpy #1 ; Check that there is exactly ONE room next to j
+    beq @isEndpoint_j
+    ; neither i nor j are endpoints
+    dec $01
+    jmp @continue
+@isEndpoint_i:
+    ; i is endpoint
+    inc.b mapgenNumAvailableEndpointTiles
+    inc $00
+    jmp @continue
+@isEndpoint_j:
+    ; j is endpoint but i is not, so swap and inc i/dec j
+    inc.b mapgenNumAvailableEndpointTiles
+    ldx $00
+    lda.b mapgenAvailableTiles,X
+    sta $07
+    ldx $01
+    lda.b mapgenAvailableTiles,X
+    sta $08
+    lda $07
+    ldx $01
+    sta.b mapgenAvailableTiles,X
+    lda $08
+    ldx $00
+    sta.b mapgenAvailableTiles,X
+    inc $00
+    dec $01
+    ; jmp @continue <- it is here in spirit
+@continue:
+    ; Repeat if (j >= i)
+    lda $00
+    cmp $01
+    bcc @loop
+@endloop:
+    ; Count rooms adjacent to i
+    ldy $00
+    lda.w mapgenAvailableTiles,Y
+    jsr _IsTileAdjacent
     ldy $03
     cpy #1 ; Check that there is exactly ONE room next to i
     bne @end
@@ -445,6 +510,44 @@ _CountAdjacentFilledRoomsA:
     +:
     rts
 
+; Sets $03 to `1` if `A` is adjacent to $02
+_IsTileAdjacent:
+    .ACCU 8
+    .INDEX 8
+    pha
+    stz.b $03
+    .BranchIfTileOnRightBorderA +
+        inc A
+        cmp.b $02
+        beq @eq
+    +:
+    lda $01,S
+    .BranchIfTileOnLeftBorderA +
+        dec A
+        cmp.b $02
+        beq @eq
+    +:
+    lda $01,S
+    .BranchIfTileOnBottomBorderA +
+        clc
+        adc #$10
+        cmp.b $02
+        beq @eq
+    +:
+    lda $01,S
+    .BranchIfTileOnTopBorderA +
+        sec
+        sbc #$10
+        cmp.b $02
+        beq @eq
+    +:
+    pla
+    rts
+@eq:
+    inc.b $03
+    pla
+    rts
+
 ; Push tiles adjacent to A
 ; consumes X
 _PushAdjacentEmptyTilesA:
@@ -506,15 +609,15 @@ BeginMapGeneration:
     ; First, choose starting tile
     jsl RngGeneratorUpdate4
     sep #$30 ; 8 bit AXY
-    and #$07
+    and #$03
     clc
-    adc #4 ; X: [4-11]
+    adc #6 ; X: [6-9]
     sta.b start_pos
     jsl RngGeneratorUpdate4
     sep #$30 ; 8 bit AXY
-    and #$07
+    and #$03
     clc
-    adc #1 ; Y: [1-8]
+    adc #2 ; Y: [2-5]
     asl
     asl
     asl
@@ -540,7 +643,14 @@ BeginMapGeneration:
 @loop_add_tiles: ; do {
     phy
         ; Determine endpoint tiles
-        jsr _CalculateAvailableEndpointTiles
+        lda.w numUsedMapSlots
+        cmp #3
+        bcc @add_adjacent_to_start
+            jsr _CalculateAvailableEndpointTiles
+            jmp @skip_adjacent_to_start
+    @add_adjacent_to_start:
+            jsr _CalculateAvailableStartingRoomEndpointTiles
+    @skip_adjacent_to_start:
         ; First, get random tile
         jsl RngGeneratorUpdate8
         .ACCU 16 ; Rng changes A to 16

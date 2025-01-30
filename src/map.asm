@@ -503,7 +503,7 @@ BlockVariantAddresses:
 .ENDR
 
 BlockEmptyVariants:
-    .dw deft($2A, 2)
+    .dw deft($20, 2)
 BlockRockVariants:
     .dw deft($A0, 3)
 BlockRockTintedVariants:

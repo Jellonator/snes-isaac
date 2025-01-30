@@ -11,6 +11,16 @@
         "depth": 16
     },
     {
+        "name": "stage_caves",
+        "src": "assets/sprites/stage_caves.raw",
+        "depth": 16
+    },
+    {
+        "name": "stage_caves_ground",
+        "src": "assets/sprites/stage_caves_ground.raw",
+        "depth": 16
+    },
+    {
         "name": "isaac_tear",
         "src": "assets/sprites/tear_8px.raw",
         "depth": 16

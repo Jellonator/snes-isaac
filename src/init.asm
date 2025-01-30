@@ -168,24 +168,6 @@ Start2:
     rep #$20 ; 16 bit A
     PLA
     PLA
-    PEA $0000 + bankbyte(palettes.basement_ground1.w)
-    PEA palettes.basement_ground1.w
-    jsl CopyPalette
-    rep #$20 ; 16 bit A
-    PLA
-    PLA
-    PEA $2000 + bankbyte(palettes.basement.w)
-    PEA palettes.basement.w
-    jsl CopyPalette
-    rep #$20 ; 16 bit A
-    PLA
-    PLA
-    PEA $3000 + bankbyte(palettes.basement2.w)
-    PEA palettes.basement2.w
-    jsl CopyPalette
-    rep #$20 ; 16 bit A
-    PLA
-    PLA
     PEA $5000 + bankbyte(palettes.ui_light.w)
     PEA palettes.ui_light.w
     jsl CopyPalette
@@ -204,20 +186,6 @@ Start2:
     rep #$20 ; 16 bit A
     PLA
     PLA
-    ; copy tilemap to VRAM
-    pea BG2_CHARACTER_BASE_ADDR
-    pea 256
-    sep #$20 ; 8 bit A
-    lda #bankbyte(spritedata.basement)
-    pha
-    pea spritedata.basement
-    jsl CopySprite
-    sep #$20 ; 8 bit A
-    pla
-    rep #$20 ; 16 bit A
-    pla
-    pla
-    pla
     ; copy UI to VRAM
     pea BG1_CHARACTER_BASE_ADDR
     pea 16*4

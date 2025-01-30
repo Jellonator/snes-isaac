@@ -38,5 +38,13 @@
     {
         "name": "item_chocolate_milk",
         "src": "assets/palettes/item_chocolate_milk.hex"
+    },
+    {
+        "name": "stage_caves1",
+        "src": "assets/palettes/stage_caves1.hex"
+    },
+    {
+        "name": "stage_caves_ground",
+        "src": "assets/palettes/stage_caves_ground.hex"
     }
 ]

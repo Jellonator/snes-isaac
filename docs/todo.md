@@ -6,7 +6,7 @@ Essentials:
     * [X] Starting room
     * [X] item room (semi-implemented; need items first)
     * [ ] shop room (semi-implemented; need items, pickups, and coins first)
-    * [ ] boss room (semi-implemented; need bosses first)
+    * [X] boss room (semi-implemented; need bosses first)
 - [X] Door types and open methods (e.g. lock the item room; don't open doors until enemies are defeated)
     * [X] Implement door flags/enums
     * [X] Prevent player from entering closed doors
@@ -33,7 +33,8 @@ Essentials:
     * [X] Implement basic boss
     * [ ] Implement an actual boss with AI
     * [X] Room should spawn an item after completing
-    * [ ] Room should spawn entrance to next floor after completing
+    * [X] Room should spawn entrance to next floor after completing
+- [ ] Update RNG on next floor
 
 Bonus:
 - [ ] Secret rooms with bombable walls

@@ -142,6 +142,8 @@
 ; defines a 'chapter' - includes palette, tileset, room pools, etc.
 .STRUCT chapterdefinition_t
     name ds 32
+    palettes dsl 4
+    tiledata dl
 .ENDST
 
 .DEFINE ROOMGEN_ITEM $01

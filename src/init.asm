@@ -361,6 +361,8 @@ tile_data_loop:
     sta.b mapDoorSouth+2
     sta.b mapDoorWest+2
     rep #$30
+    lda #0
+    sta.w currentRoomGroundPalette
     lda #BG2_TILE_BASE_ADDR
     sta.w gameRoomBG2Offset
     stz.w gameRoomScrollX

@@ -1702,6 +1702,7 @@ _MakeWaitScrollSub2:
             lsr
             lsr
             lsr
+            ora.w currentRoomGroundPalette
             .REPT 16
                 sta VMDATA
                 clc
@@ -1771,6 +1772,7 @@ _MakeWaitScrollSub2:
             clc
             asl
             adc $02
+            ora.w currentRoomGroundPalette
             .REPT 24
                 sta VMDATA
                 inc A

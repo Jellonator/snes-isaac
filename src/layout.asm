@@ -71,6 +71,7 @@
     gameRoomScrollY dw
 ; Current room data
     currentRoomGroundData dl
+    currentRoomGroundPalette dw
     roomBrightness db
 ; Floor data
     currentFloorIndex dw

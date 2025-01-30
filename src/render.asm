@@ -232,43 +232,40 @@ InitializeBackground:
     ; write character data
     rep #$20 ; 16 bit A
     lda #24 * 16 * 8 * 2
-    sta DMA0_SIZE ; number of bytes
+    sta.w DMA0_SIZE ; number of bytes
     lda.l currentRoomGroundData
-    sta DMA0_SRCL ; source address
+    sta.w DMA0_SRCL ; source address
     lda #BG3_CHARACTER_BASE_ADDR
-    sta $2116 ; VRAM address
+    sta.w VMADDR ; VRAM address
     sep #$20 ; 8 bit A
     lda.l currentRoomGroundData+2
-    sta DMA0_SRCH ; source bank
+    sta.w DMA0_SRCH ; source bank
     lda #$80
-    sta $2115 ; VRAM address increment flags
+    sta.w VMAIN ; VRAM address increment flags
     lda #%00000001
-    sta DMA0_CTL ; write to PPU, absolute address, auto increment, 2 bytes at a time
+    sta.w DMA0_CTL ; write to PPU, absolute address, auto increment, 2 bytes at a time
     lda #$18
-    sta DMA0_DEST ; Write to VRAM
+    sta.w DMA0_DEST ; Write to VRAM
     lda #$01
-    sta MDMAEN ; begin transfer
+    sta.w MDMAEN ; begin transfer
     ; tile data
-    rep #$20 ; 16 bit A
-    lda #_sizeof_DefaultBackgroundTileData
-    sta DMA0_SIZE ; number of bytes
-    lda #loword(DefaultBackgroundTileData)
-    sta DMA0_SRCL ; source address
+    rep #$30 ; 16 bit A
     lda #BG3_TILE_BASE_ADDR
-    sta $2116 ; VRAM address
+    sta.w VMADDR ; VRAM address
     sep #$20 ; 8 bit A
-    lda #0
-    sta.l needResetEntireGround
-    lda #bankbyte(DefaultBackgroundTileData)
-    sta DMA0_SRCH ; source bank
     lda #$80
-    sta $2115 ; VRAM address increment flags
-    lda #%00000001
-    sta DMA0_CTL ; write to PPU, absolute address, auto increment, 2 bytes at a time
-    lda #$18
-    sta DMA0_DEST ; Write to VRAM
-    lda #$01
-    sta MDMAEN ; begin transfer
+    sta.w VMAIN ; VRAM address increment flags
+    rep #$30
+    ldy #32*32
+    ldx #0
+@loop:
+    lda.l DefaultBackgroundTileData,X
+    ora.w currentRoomGroundPalette
+    sta.w VMDATA
+    inx
+    inx
+    dey
+    bne @loop
     rtl
 
 .ENDS

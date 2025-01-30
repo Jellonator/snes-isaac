@@ -96,8 +96,22 @@ LoadRoomSlotIntoLevel:
         .CopyGroundAddr spritedata.basement_ground_starting_room
         jmp @ground_end
     @ground_default:
-        .CopyGroundAddr spritedata.basement_ground_base
-        ; jmp @ground_end
+        rep #$30
+        ldx.w currentFloorPointer
+        lda.l FLOOR_DEFINITION_BASE + floordefinition_t.chapter,X
+        and #$00FF
+        asl
+        tax
+        lda.l ChapterDefinitions,X
+        tax
+        lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.ground,X
+        sta.w currentRoomGroundData
+        sep #$20
+        lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.ground+2,X
+        sta.w currentRoomGroundData+2
+        rep #$20
+        lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.groundPalette,X
+        sta.w currentRoomGroundPalette
     @ground_end:
     ; then, clear floor
     jsl GroundOpClear

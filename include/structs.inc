@@ -144,6 +144,8 @@
     name ds 32
     palettes dsl 4
     tiledata dl
+    ground dl
+    groundPalette dw
 .ENDST
 
 .DEFINE ROOMGEN_ITEM $01

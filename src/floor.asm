@@ -174,6 +174,8 @@ _Floor_Update_Graphics:
         .dl palettes.basement
         .dl palettes.basement2
     tiledata: .dl spritedata.basement
+    ground: .dl spritedata.basement_ground_base
+    groundPalette: .dw 0 * $0400
 .ENDST
 
 ; Caves
@@ -185,6 +187,8 @@ _Floor_Update_Graphics:
         .dl palettes.stage_caves1
         .dl palettes.basement2
     tiledata: .dl spritedata.stage_caves
+    ground: .dl spritedata.stage_caves_ground
+    groundPalette: .dw 2 * $0400
 .ENDST
 
 ChapterDefinitions:

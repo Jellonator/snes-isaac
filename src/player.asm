@@ -494,6 +494,7 @@ PlayerInit:
     jsl Item.reset_items
     jsl Player.reset_stats
     stz.w playerData.walk_frame
+    stz.w playerData.bomb_wait_timer
     sep #$30
     stz.w playerData.anim_wait_timer
     stz.w playerData.head_offset_y
@@ -902,6 +903,32 @@ PlayerUpdate:
             sta.b $00
         .ENDIF
     .ENDR
+; bombs
+    ; check bomb timer
+    sep #$20
+    lda.w playerData.bomb_wait_timer
+    bne @cant_place_bomb
+        ; check bomb count
+        lda.w playerData.bombs
+        beq @end_place_bomb
+        ; check bomb button
+        rep #$30
+        lda.w joy1press
+        bit #JOY_L
+        beq @end_place_bomb
+        ; create bomb at position
+        lda #entityvariant(ENTITY_TYPE_BOMB, 0)
+        jsl entity_create
+        rep #$30
+        lda.w player_posx
+        sta.w entity_posx,Y
+        lda.w player_posy
+        sta.w entity_posy,Y
+        jmp @end_place_bomb
+    @cant_place_bomb:
+        dec A
+        sta.w playerData.bomb_wait_timer
+    @end_place_bomb:
 ; movement
     rep #$30 ; 16 bit AXY
     lda.w playerData.stat_speed

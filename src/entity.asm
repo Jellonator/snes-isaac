@@ -245,6 +245,13 @@ _player_tick:
     ENTITY_SPAWNGROUP_ONCE,\
     ENTITY_TYPE_FLAG_SERIALIZE
 
+._DefineEntity ENTITY_TYPE_BOMB,\
+    entity_bomb_init,\
+    entity_bomb_tick,\
+    entity_bomb_free,\
+    ENTITY_SPAWNGROUP_ONCE,\
+    ENTITY_TYPE_FLAG_SERIALIZE
+
 ._DefineEntity ENTITY_TYPE_ENEMY_ATTACK_FLY,\
     entity_basic_fly_init,\
     entity_basic_fly_tick,\

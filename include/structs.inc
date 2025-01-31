@@ -56,6 +56,7 @@
     tearflags dw
     head_offset_y db
     anim_wait_timer db
+    bomb_wait_timer db
 ; stats
     stat_speed dw
     stat_accel dw

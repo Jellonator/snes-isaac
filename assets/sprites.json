@@ -107,5 +107,11 @@
         "depth": 16,
         "size": 2,
         "mask": "interlace"
+    },
+    {
+        "name": "bomb_explosion",
+        "src": "assets/sprites/explosion.raw",
+        "depth": 16,
+        "size": 8
     }
 ]

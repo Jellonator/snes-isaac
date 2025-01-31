@@ -155,7 +155,6 @@ true_entity_pickup_tick:
     ; rtl
     rep #$30
     phy
-    lda #0
     ; tile ID
     lda.w entity_variant,Y
     and #$00FF

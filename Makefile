@@ -11,6 +11,7 @@ PY       := python3
 SOURCES  := bindata.asm\
 			costume.asm\
 			entity.asm\
+			entity/bomb.asm\
 			entity/enemy_fly.asm\
 			entity/enemy_zombie.asm\
 			entity/enemy_boss_duke_of_flies.asm\

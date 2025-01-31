@@ -42,7 +42,7 @@ _PlayerHealthTileValueTable:
     .dw deft($32, 5) | T_HIGHP ; red empty
     .dw deft($31, 5) | T_HIGHP ; red half
     .dw deft($30, 5) | T_HIGHP ; red full
-    .dw deft($33, 6) | T_HIGHP ; spirit half
+    .dw deft($31, 6) | T_HIGHP ; spirit half
     .dw deft($30, 6) | T_HIGHP ; spirit full
     .dw deft($00, 5) | T_HIGHP ; eternal
 
@@ -175,13 +175,98 @@ Player.Heal:
         iny
         cpy #HEALTHSLOT_COUNT
         bne @loop
+@end:
+    txa
+    rtl
 @end_and_render:
     phx
     php
     jsl _PlayerRenderSingleHeart
     plp
     plx
+    txa
+    rtl
+
+; Returns true (A=1) if player has space for at least one half soul heart
+Player.CanAddSoulHeart:
+    sep #$30
+    ldy #HEALTHSLOT_COUNT-1
+    @loop:
+        lda.w playerData.healthSlots,Y
+        cmp #HEALTH_NULL
+        beq @foundSlot
+        cmp #HEALTH_SOULHEART_HALF
+        beq @foundSlot
+    dey
+    bpl @loop
+    lda #0
+    rtl
+@foundSlot:
+    lda #1
+    rtl
+
+; Adds [A] soul hearts to player
+; Returns [A] as remaining soul hearts to add
+Player.AddSoulHearts
+    sep #$30
+    tax
+    beq @end
+    ; Look for empty slots
+    ldy #0
+    @loop:
+        ; empty -> half heart
+        lda.w playerData.healthSlots,Y
+        cmp #HEALTH_NULL
+        bne ++
+            lda #HEALTH_SOULHEART_HALF
+            sta.w playerData.healthSlots,Y
+            dex
+            beq @end_and_render
+            ; half heart -> full
+            cmp #HEALTH_SOULHEART_HALF
+            bne +
+                lda #HEALTH_SOULHEART_FULL
+                sta.w playerData.healthSlots,Y
+                dex
+                beq @end_and_render
+            +:
+            pha
+            phx
+            php
+            jsl _PlayerRenderSingleHeart
+            plp
+            plx
+            pla
+            jmp @continue
+        ++:
+        ; half heart -> full
+        cmp #HEALTH_SOULHEART_HALF
+        bne +
+            lda #HEALTH_SOULHEART_FULL
+            sta.w playerData.healthSlots,Y
+            dex
+            beq @end_and_render
+            pha
+            phx
+            php
+            jsl _PlayerRenderSingleHeart
+            plp
+            plx
+            pla
+        +:
+    @continue:
+        iny
+        cpy #HEALTHSLOT_COUNT
+        bne @loop
 @end:
+    txa
+    rtl
+@end_and_render:
+    phx
+    php
+    jsl _PlayerRenderSingleHeart
+    plp
+    plx
     txa
     rtl
 

@@ -14,6 +14,105 @@ _variant_sprite_tileflag:
     .dw $20AA ; 7 - heart
     .dw $20AC ; 8 - soul heart
 
+_handle_null:
+    rts
+
+_handle_penny:
+    rep #$30 ; 16b A
+    phy
+    php
+    sep #$08 ; enable decimal
+    lda.w playerData.money
+    clc
+    adc #$01
+    sta.w playerData.money
+    rep #$08 ; disable decimal
+    jsl Player.update_money_display
+    plp
+    ply
+    ; KILL
+    jsl entity_free
+    rts
+
+_handle_nickle:
+    rep #$30 ; 16b A
+    phy
+    php
+    sep #$08 ; enable decimal
+    lda.w playerData.money
+    clc
+    adc #$05
+    sta.w playerData.money
+    rep #$08 ; disable decimal
+    jsl Player.update_money_display
+    plp
+    ply
+    ; KILL
+    jsl entity_free
+    rts
+
+_handle_dime:
+    rep #$30 ; 16b A
+    phy
+    php
+    sep #$08 ; enable decimal
+    lda.w playerData.money
+    clc
+    adc #$10
+    sta.w playerData.money
+    rep #$08 ; disable decimal
+    jsl Player.update_money_display
+    plp
+    ply
+    ; KILL
+    jsl entity_free
+    rts
+
+_handle_bomb:
+    rep #$30 ; 16b A
+    phy
+    php
+    sep #$08 ; enable decimal
+    lda.w playerData.bombs
+    clc
+    adc #$01
+    sta.w playerData.bombs
+    rep #$08 ; disable decimal
+    jsl Player.update_bomb_display
+    plp
+    ply
+    ; KILL
+    jsl entity_free
+    rts
+
+_handle_key:
+    rep #$30 ; 16b A
+    phy
+    php
+    sep #$08 ; enable decimal
+    lda.w playerData.keys
+    clc
+    adc #$01
+    sta.w playerData.keys
+    rep #$08 ; disable decimal
+    jsl Player.update_key_display
+    plp
+    ply
+    ; KILL
+    jsl entity_free
+    rts
+
+_variant_handlers:
+    .dw _handle_null   ; 0 - null
+    .dw _handle_penny  ; 1 - penny
+    .dw _handle_nickle ; 2 - nickle
+    .dw _handle_dime   ; 3 - dime
+    .dw _handle_bomb   ; 4 - bomb
+    .dw _handle_key    ; 5 - key
+    .dw _handle_null   ; 6 - TODO: battery
+    .dw _handle_null   ; 7 - TODO: heart
+    .dw _handle_null   ; 8 - TODO: soul heart
+
 true_entity_pickup_tick:
     ; rtl
     rep #$30
@@ -41,22 +140,12 @@ true_entity_pickup_tick:
     ; collision detection
     .EntityEasySetBox 16 16
     .EntityEasyCheckPlayerCollision_Center @no_player_col, 8, 10
-        ; add money
-        ; TODO: add other handling
-        sep #$08 ; enable decimal
-        rep #$20 ; 16b A
-        lda.w playerData.money
-        clc
-        adc #$01
-        sta.w playerData.money
-        rep #$08 ; disable decimal
-        phy
-        php
-        jsl Player.update_money_display
-        plp
-        ply
-        ; KILL
-        jsl entity_free
+        rep #$30
+        lda.w entity_variant,Y
+        and #$00FF
+        asl
+        tax
+        jsr (_variant_handlers,X)
     @no_player_col:
     rtl
 

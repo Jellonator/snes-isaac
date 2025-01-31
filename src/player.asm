@@ -230,6 +230,68 @@ Player.update_money_display:
     sta.l vqueueMiniOps.2.data,X
     rtl
 
+Player.update_bomb_display:
+    rep #$30 ; 16B AXY
+    ; inc vqueue
+    lda.w vqueueNumMiniOps
+    asl
+    asl
+    tax
+    inc.w vqueueNumMiniOps
+    inc.w vqueueNumMiniOps
+    ; first, determine offset
+    lda #BG1_TILE_BASE_ADDR + $66
+    sta.l vqueueMiniOps.1.vramAddr,X
+    lda #BG1_TILE_BASE_ADDR + $67
+    sta.l vqueueMiniOps.2.vramAddr,X
+    ; now, determine character
+    lda.w playerData.bombs
+    and #$00F0
+    lsr
+    lsr
+    lsr
+    lsr
+    clc
+    adc #$3C70
+    sta.l vqueueMiniOps.1.data,X
+    lda.w playerData.bombs
+    and #$000F
+    clc
+    adc #$3C70
+    sta.l vqueueMiniOps.2.data,X
+    rtl
+
+Player.update_key_display:
+    rep #$30 ; 16B AXY
+    ; inc vqueue
+    lda.w vqueueNumMiniOps
+    asl
+    asl
+    tax
+    inc.w vqueueNumMiniOps
+    inc.w vqueueNumMiniOps
+    ; first, determine offset
+    lda #BG1_TILE_BASE_ADDR + $86
+    sta.l vqueueMiniOps.1.vramAddr,X
+    lda #BG1_TILE_BASE_ADDR + $87
+    sta.l vqueueMiniOps.2.vramAddr,X
+    ; now, determine character
+    lda.w playerData.keys
+    and #$00F0
+    lsr
+    lsr
+    lsr
+    lsr
+    clc
+    adc #$3C70
+    sta.l vqueueMiniOps.1.data,X
+    lda.w playerData.keys
+    and #$000F
+    clc
+    adc #$3C70
+    sta.l vqueueMiniOps.2.data,X
+    rtl
+
 PlayerInit:
     jsl Costume.player_reset
     rep #$20 ; 16 bit A

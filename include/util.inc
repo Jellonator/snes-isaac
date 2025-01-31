@@ -866,7 +866,7 @@
     .IF _ChanceTableV < 0
         .ERROR "Chance table is overfilled"
     .ENDIF
-    .REPT min(0, _ChanceTableV)
+    .REPT max(0, _ChanceTableV)
         .dw value
     .ENDR
 .ENDM
@@ -875,7 +875,7 @@
     .IF _ChanceTableV < 0
         .ERROR "Chance table is overfilled"
     .ENDIF
-    .REPT min(0, _ChanceTableV)
+    .REPT max(0, _ChanceTableV)
         .db value
     .ENDR
 .ENDM

@@ -101,6 +101,90 @@ _PlayerRenderAllHearts:
     bpl @loop
     rtl
 
+; Returns true (A=1) if player has any empty heart containers
+Player.CanHeal:
+    ; check health slots
+    sep #$30
+    ldy #HEALTHSLOT_COUNT-1
+    @loop:
+        lda.w playerData.healthSlots,Y
+        cmp #HEALTH_REDHEART_HALF
+        beq @foundHealth
+        cmp #HEALTH_REDHEART_EMPTY
+        beq @foundHealth
+        dey
+        bpl @loop
+; no health
+    lda #0
+    rtl
+; found health
+@foundHealth:
+    lda #1
+    rtl
+
+; Heals player for [A] half-hearts
+; Returns [A] as remaining health to heal
+Player.Heal:
+    sep #$30
+    tax
+    beq @end
+    ; Look for empty slots
+    ldy #0
+    @loop:
+        ; empty -> half heart
+        lda.w playerData.healthSlots,Y
+        cmp #HEALTH_REDHEART_EMPTY
+        bne ++
+            lda #HEALTH_REDHEART_HALF
+            sta.w playerData.healthSlots,Y
+            dex
+            beq @end_and_render
+            ; half heart -> full
+            cmp #HEALTH_REDHEART_HALF
+            bne +
+                lda #HEALTH_REDHEART_FULL
+                sta.w playerData.healthSlots,Y
+                dex
+                beq @end_and_render
+            +:
+            pha
+            phx
+            php
+            jsl _PlayerRenderSingleHeart
+            plp
+            plx
+            pla
+            jmp @continue
+        ++:
+        ; half heart -> full
+        cmp #HEALTH_REDHEART_HALF
+        bne +
+            lda #HEALTH_REDHEART_FULL
+            sta.w playerData.healthSlots,Y
+            dex
+            beq @end_and_render
+            pha
+            phx
+            php
+            jsl _PlayerRenderSingleHeart
+            plp
+            plx
+            pla
+        +:
+    @continue:
+        iny
+        cpy #HEALTHSLOT_COUNT
+        bne @loop
+@end_and_render:
+    phx
+    php
+    jsl _PlayerRenderSingleHeart
+    plp
+    plx
+@end:
+    txa
+    rtl
+
 _PlayerTakeHealth:
     ; check health slots
     sep #$30

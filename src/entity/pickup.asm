@@ -102,6 +102,25 @@ _handle_key:
     jsl entity_free
     rts
 
+_handle_heart:
+    rep #$30
+    phy
+    php
+    sep #$30
+    lda #2
+    jsl Player.Heal
+    cmp #2
+    beq +
+        ; healed some amount, remove heart
+        plp
+        ply
+        jsl entity_free
+        rts
+    +:
+    plp
+    ply
+    rts
+
 _variant_handlers:
     .dw _handle_null   ; 0 - null
     .dw _handle_penny  ; 1 - penny
@@ -110,7 +129,7 @@ _variant_handlers:
     .dw _handle_bomb   ; 4 - bomb
     .dw _handle_key    ; 5 - key
     .dw _handle_null   ; 6 - TODO: battery
-    .dw _handle_null   ; 7 - TODO: heart
+    .dw _handle_heart  ; 7 - heart
     .dw _handle_null   ; 8 - TODO: soul heart
 
 true_entity_pickup_tick:

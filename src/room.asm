@@ -218,13 +218,19 @@ _Room_Close_Doors:
 
 _Room_Spawn_Reward:
     rep #$30
-    lda #ENTITY_TYPE_PICKUP | ($0100 * ENTITY_PICKUP_VARIANT_PENNY)
+    jsl RngGeneratorUpdate8
+    and #$00FF
+    asl
+    tax
+    lda.l PickupSpawnTable,X
+    beq @no_spawn
     php
     jsl entity_create
     plp
     lda #120 * $0100
     sta.w entity_posx,Y
     sta.w entity_posy,Y
+@no_spawn:
     rts
 
 _Room_Spawn_Boss_Reward:

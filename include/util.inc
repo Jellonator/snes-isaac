@@ -841,3 +841,45 @@
     cmp.w player_box_y1
     bmi addr
 .ENDM
+
+.FUNCTION entityvariant(e, v) (e | (v * $0100))
+
+.MACRO .ChanceTableBegin ARGS x
+    .DEFINE _ChanceTableV x
+.ENDM
+
+.MACRO .ChanceTableDW ARGS probability, value
+    .REDEFINE _ChanceTableV (_ChanceTableV - probability)
+    .REPT probability
+        .dw value
+    .ENDR
+.ENDM
+
+.MACRO .ChanceTableDB ARGS probability, value
+    .REDEFINE _ChanceTableV (_ChanceTableV - probability)
+    .REPT probability
+        .db value
+    .ENDR
+.ENDM
+
+.MACRO .ChanceTableRestDW ARGS value
+    .IF _ChanceTableV < 0
+        .ERROR "Chance table is overfilled"
+    .ENDIF
+    .REPT min(0, _ChanceTableV)
+        .dw value
+    .ENDR
+.ENDM
+
+.MACRO .ChanceTableRestDB ARGS value
+    .IF _ChanceTableV < 0
+        .ERROR "Chance table is overfilled"
+    .ENDIF
+    .REPT min(0, _ChanceTableV)
+        .db value
+    .ENDR
+.ENDM
+
+.MACRO .ChanceTableEnd
+    .UNDEFINE _ChanceTableV
+.ENDM

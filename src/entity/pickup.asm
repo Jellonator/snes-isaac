@@ -6,10 +6,13 @@
 _variant_sprite_tileflag:
     .dw $0000 ; 0 - null
     .dw $2080 ; 1 - penny
-    .dw $2086 ; 2 - nickle
-    .dw $2088 ; 3 - dime
-    .dw $2084 ; 4 - bomb
-    .dw $2082 ; 5 - key
+    .dw $2082 ; 2 - nickle
+    .dw $2084 ; 3 - dime
+    .dw $2088 ; 4 - bomb
+    .dw $208E ; 5 - key
+    .dw $00A8 ; 6 - battery
+    .dw $20AA ; 7 - heart
+    .dw $20AC ; 8 - soul heart
 
 true_entity_pickup_tick:
     ; rtl
@@ -57,6 +60,18 @@ true_entity_pickup_tick:
     @no_player_col:
     rtl
 
+PickupSpawnTable:
+    .ChanceTableBegin 256
+    .ChanceTableDW  48, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_PENNY)
+    .ChanceTableDW   3, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_NICKEL)
+    .ChanceTableDW   1, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_DIME)
+    .ChanceTableDW  50, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_BOMB)
+    .ChanceTableDW  50, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_KEY)
+    .ChanceTableDW  38, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_HEART_FULL)
+    .ChanceTableDW   5, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_HEART_SOUL)
+    .ChanceTableDW  10, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_BATTERY)
+    .ChanceTableRestDW 0
+    .ChanceTableEnd
 .ENDS
 
 .BANK ROMBANK_ENTITYCODE SLOT "ROM"

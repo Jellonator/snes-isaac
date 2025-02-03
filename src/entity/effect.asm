@@ -56,18 +56,18 @@
 .ENDM
 
 _EffectExplosion_Tiles:
-.EffectTile  0, %00000001, -32, -32
-.EffectTile  1, %00000001, -16, -32
-.EffectTile  2, %00000001,   0, -32
-.EffectTile  3, %00000001,  16, -32
-.EffectTile  4, %00000001, -32, -16
-.EffectTile  5, %00000001, -16, -16
-.EffectTile  6, %00000001,   0, -16
-.EffectTile  7, %00000001,  16, -16
-.EffectTile  8, %00000001, -32,   0
-.EffectTile  9, %00000001, -16,   0
-.EffectTile 10, %00000001,   0,   0
-.EffectTile 11, %00000001,  16,   0
+.EffectTile  0, %00100001, -32, -32
+.EffectTile  1, %00100001, -16, -32
+.EffectTile  2, %00100001,   0, -32
+.EffectTile  3, %00100001,  16, -32
+.EffectTile  4, %00100001, -32, -16
+.EffectTile  5, %00100001, -16, -16
+.EffectTile  6, %00100001,   0, -16
+.EffectTile  7, %00100001,  16, -16
+.EffectTile  8, %00100001, -32,   0
+.EffectTile  9, %00100001, -16,   0
+.EffectTile 10, %00100001,   0,   0
+.EffectTile 11, %00100001,  16,   0
 .EffectTileEnd
 
 EntityEffect_Explosion:
@@ -188,7 +188,64 @@ true_entity_effect_free:
 true_entity_effect_tick:
     .ACCU 16
     .INDEX 16
+    .DEFINE STORE_Y $00
+    .DEFINE ARRAY $02
+    .DEFINE POSX $04
+    .DEFINE POSY $06
+    .DEFINE TILE $08
+    ldx.w effect_tile_ptr,Y
+    stx.b TILE
+    sty.b STORE_Y
+    lda.w array_ptr,Y
+    sta.b ARRAY
+    lda.w entity_posx,Y
+    sta.b POSX
+    lda.w entity_posy,Y
+    sta.b POSY
+    lda #0
+    ; draw
+    sep #$20
+    @loop:
+        ldx.b TILE
+        lda.l bankaddr(EntityEffectTypes) + entityeffect_tile_t.tile,X
+        bmi @end
+        tay
+        lda (ARRAY),Y
+        tax
+        lda.l SpriteSlotIndexTable,X
+        ldy.w objectIndex
+        sta.w objectData.1.tileid,Y
+        ldx.b TILE
+        lda.l bankaddr(EntityEffectTypes) + entityeffect_tile_t.offx,X
+        clc
+        adc.b POSX+1
+        sta.w objectData.1.pos_x,Y
+        lda.l bankaddr(EntityEffectTypes) + entityeffect_tile_t.offy,X
+        clc
+        adc.b POSY+1
+        sta.w objectData.1.pos_y,Y
+        lda.l bankaddr(EntityEffectTypes) + entityeffect_tile_t.flags,X
+        sta.w objectData.1.flags,Y
+        ; increment tile
+        inx
+        inx
+        inx
+        inx
+        stx.b TILE
+        ; increment object
+        ; TODO: optimize?
+        rep #$20
+        .SetCurrentObjectS_Inc
+        lda #0
+        sep #$20
+        jmp @loop
+@end:
+    ldy.b STORE_Y
     rtl
+    .UNDEFINE STORE_Y
+    .UNDEFINE ARRAY
+    .UNDEFINE POSX
+    .UNDEFINE POSY
 
 ; Load sprite data in frame stored in `effect_frame_ptr`
 _load_frame:

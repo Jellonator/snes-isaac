@@ -17,8 +17,21 @@ true_entity_bomb_tick:
         phy
         php
         rep #$30
+        lda.w entity_posx,Y
+        pha
+        lda.w entity_posy,Y
+        pha
         lda #entityvariant(ENTITY_TYPE_EFFECT, ENTITY_EFFECT_EXPLOSION)
         jsl entity_create
+        rep #$30
+        pla
+        clc
+        adc #8*$0100
+        sta.w entity_posy,Y
+        pla
+        clc
+        adc #8*$0100
+        sta.w entity_posx,Y
         plp
         ply
         jsl entity_free

@@ -884,7 +884,7 @@
     .UNDEFINE _ChanceTableV
 .ENDM
 
-.FUNCTION spriteoffs(bit_depth, num_tiles, frame) (num_tiles * bit_depth * frame * 32)
+.FUNCTION spriteoffs(bit_depth, num_tiles, frame) (num_tiles * bit_depth * frame * 8)
 
 .FUNCTION bankaddr(addr) (bankbyte(addr) * $10000)
 

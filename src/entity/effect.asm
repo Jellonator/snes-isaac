@@ -114,6 +114,9 @@ true_entity_effect_init:
     sta.w effect_frame_ptr,Y
     ; check available slots. If not enough, switch to null effect
     ldx.w effect_header_ptr,Y
+    lda.l bankaddr(EntityEffectTypes) + entityeffect_header_t.num_frames,X
+    and #$00FF
+    sta.w entity_health,Y
     sep #$20
     lda.l bankaddr(EntityEffectTypes) + entityeffect_header_t.tile_alloc,X
     cmp.w spiteTableAvailableSlots
@@ -241,6 +244,28 @@ true_entity_effect_tick:
         jmp @loop
 @end:
     ldy.b STORE_Y
+    ; decrement frame
+    tyx
+    sep #$20
+    dec.w entity_timer,X
+    bne @no_advance_frame
+        ; advance frame
+        dec.w entity_health,X
+        bne @no_kill
+            ; kill
+            rep #$30
+            jsl entity_free
+            rtl
+    @no_kill:
+        sep #$20
+        lda.w effect_frame_ptr,Y
+        clc
+        adc #_sizeof_entityeffect_frame_t
+        sta.w effect_frame_ptr,Y
+        rep #$30
+        jsr _load_frame
+@no_advance_frame:
+    rep #$30
     rtl
     .UNDEFINE STORE_Y
     .UNDEFINE ARRAY

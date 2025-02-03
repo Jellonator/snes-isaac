@@ -256,8 +256,7 @@ _player_tick:
     entity_effect_init,\
     entity_effect_tick,\
     entity_effect_free,\
-    ENTITY_SPAWNGROUP_ONCE,\
-    ENTITY_TYPE_FLAG_SERIALIZE
+    ENTITY_SPAWNGROUP_ONCE
 
 ._DefineEntity ENTITY_TYPE_ENEMY_ATTACK_FLY,\
     entity_basic_fly_init,\

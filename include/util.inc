@@ -883,3 +883,32 @@
 .MACRO .ChanceTableEnd
     .UNDEFINE _ChanceTableV
 .ENDM
+
+.FUNCTION spriteoffs(bit_depth, num_tiles, frame) (num_tiles * bit_depth * frame * 32)
+
+.FUNCTION bankaddr(addr) (bankbyte(addr) * $10000)
+
+; get next free slot
+; Returns index as X
+; Useful for animated objects which need their own slots
+; Bank needs to be $7E, INDEX and ACCU must be 8
+.MACRO .spriteman_get_raw_slot_lite
+    dec.w loword(spiteTableAvailableSlots)
+    ; ret = *queue->next
+    ldx.w loword(spriteQueueTabNext)+SPRITE_LIST_EMPTY
+    lda.w loword(spriteQueueTabNext),X
+    ; queue->next = queue->next->next (skip X)
+    sta.w loword(spriteQueueTabNext)+SPRITE_LIST_EMPTY
+    ; rtl
+.ENDM
+
+; Free slot in X
+; Bank needs to be $7E, INDEX and ACCU must be 8
+.MACRO .spriteman_free_raw_slot_lite
+    inc.w loword(spiteTableAvailableSlots)
+    lda.w loword(spriteQueueTabNext)+SPRITE_LIST_EMPTY
+    ; X->next = queue->next
+    sta.w loword(spriteQueueTabNext),X
+    ; queue->next = X
+    stx.w loword(spriteQueueTabNext)+SPRITE_LIST_EMPTY
+.ENDM

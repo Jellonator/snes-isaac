@@ -1,11 +1,11 @@
 .FUNCTION MAP_DOOR_MEM_LOC(i) (mapDoorNorth + (i * 3))
 
 .REPT 4 INDEX i
-    .define entity_custom.{i+1} private_entity_custom.{i+1}-2
+    .define entity_custom.{i+1} (private_entity_custom.{i+1}-2)
 .ENDR
 
 .REPT 16 INDEX i
-    .define entity_char_custom.{i+1} private_entity_char_custom.{i+1} - 2
+    .define entity_char_custom.{i+1} (private_entity_char_custom.{i+1}-2)
 .ENDR
 
 .define entity_type (private_base_entity_combined_type_variant - 2)
@@ -39,13 +39,13 @@
 .define player_damageflag (ENTITY_INDEX_PLAYER + entity_health)
 
 ; projectile data
-.define projectile_size private_entity_custom.1 - 2
+.define projectile_size (private_entity_custom.1 - 2)
 .define projectile_type entity_variant ; repurposed variant
 .define projectile_lifetime entity_health ; repurposed health
-.define projectile_flags private_entity_custom.2 - 2
-.define projectile_height private_entity_custom.3 - 2
-.define projectile_velocz private_entity_custom.4 - 2
-.define projectile_damage private_base_entity_combined_state_timer - 2
+.define projectile_flags (private_entity_custom.2 - 2)
+.define projectile_height (private_entity_custom.3 - 2)
+.define projectile_velocz (private_entity_custom.4 - 2)
+.define projectile_damage (private_base_entity_combined_state_timer - 2)
 
 .DEFINE tempData $7EFF00
 

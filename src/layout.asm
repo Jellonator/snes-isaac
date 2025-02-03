@@ -38,9 +38,9 @@
     is_game_update_running dw
 ; RNG state
     ; seed used for entire game
-    gameSeed INSTANCEOF rng_t 
+    gameSeed INSTANCEOF rng_t
     ; stored seed used for game (that way it can be displayed to player)
-    gameSeedStored INSTANCEOF rng_t 
+    gameSeedStored INSTANCEOF rng_t
     ; seed used to generate stage
     stageSeed INSTANCEOF rng_t
 ; map data
@@ -132,6 +132,14 @@
     spriteTablePtr dsw SPRITE_TABLE_TOTAL_SIZE
     spriteTableValue INSTANCEOF spritetab_t SPRITE_TABLE_TOTAL_SIZE
     spriteQueueTabNext ds SPRITE_QUEUE_SIZE+1
+    spiteTableAvailableSlots dw
+    ; contiguous data storage for various purposes
+    ; index as (index * ENTITY_DATA_ARRAY_SIZE)
+    ; in tick functions, Y is (index*2), so simply:
+    ; tya
+    ; .MultiplyStatic (ENTITY_DATA_ARRAY_SIZE/2)
+    ; tay
+    entity_array_data ds (ENTITY_TOTAL_MAX + 1) * ENTITY_DATA_ARRAY_SIZE
 ; extra entity data
     numEntities dw
     entityExecutionOrder ds 256

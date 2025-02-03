@@ -1,7 +1,7 @@
 .include "base.inc"
 
 .BANK $02 SLOT "ROM"
-.SECTION "Entity Pickup" SUPERFREE
+.SECTION "Entity Bomb" SUPERFREE
 
 .DEFINE BOMB1 $208A
 .DEFINE BOMB2 $208C
@@ -14,6 +14,13 @@ true_entity_bomb_tick:
     cmp #0
     bne +
         ; EXPLODE
+        phy
+        php
+        rep #$30
+        lda #entityvariant(ENTITY_TYPE_EFFECT, ENTITY_EFFECT_EXPLOSION)
+        jsl entity_create
+        plp
+        ply
         jsl entity_free
         rtl
     +:

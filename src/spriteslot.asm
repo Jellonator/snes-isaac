@@ -10,6 +10,8 @@ spriteman_init:
     phb
     .ChangeDataBank $7E
     sep #$30
+    lda #64
+    sta.w loword(spiteTableAvailableSlots)
     ldx #SPRITE_TABLE_SIZE
 @loop:
     txa
@@ -23,23 +25,10 @@ spriteman_init:
     plb
     rtl
 
-; get next free slot
-; Returns index as X
-; Useful for animated objects which need their own slots
-; Bank needs to be $7E
-.MACRO .spriteman_get_raw_slot_lite
-    sep #$30 ; 8b AXY
-    ; ret = *queue->next
-    ldx.w loword(spriteQueueTabNext)+SPRITE_LIST_EMPTY
-    lda.w loword(spriteQueueTabNext),X
-    ; queue->next = queue->next->next (skip X)
-    sta.w loword(spriteQueueTabNext)+SPRITE_LIST_EMPTY
-    ; rtl
-.ENDM
-
 spriteman_get_raw_slot:
     phb
     .ChangeDataBank $7E
+    sep #$30
     .spriteman_get_raw_slot_lite
     plb
     rtl
@@ -54,10 +43,9 @@ spriteman_write_sprite_to_raw_slot:
     rep #$30 ; 16 bit AXY
 ; increment vqueueops; just trust that we aren't already in bank $7F
     .VQueueOpToA
-    inc.w vqueueNumOps 
+    inc.w vqueueNumOps
     inc.w vqueueNumOps
     tay
-
 ; mode[] = VQUEUE_MODE_VRAM
     .ChangeDataBank $7F
     lda #VQUEUE_MODE_VRAM
@@ -90,19 +78,10 @@ spriteman_write_sprite_to_raw_slot:
     plb ; <1
     rtl
 
-; Free slot in X
-.MACRO .spriteman_free_raw_slot_lite
-    sep #$30 ; 8b AXY
-    lda.w loword(spriteQueueTabNext)+SPRITE_LIST_EMPTY
-    ; X->next = queue->next
-    sta.w loword(spriteQueueTabNext),X
-    ; queue->next = X
-    stx.w loword(spriteQueueTabNext)+SPRITE_LIST_EMPTY
-.ENDM
-
 spriteman_free_raw_slot:
     phb
     .ChangeDataBank $7E
+    sep #$30
     .spriteman_free_raw_slot_lite
     plb
     rtl
@@ -138,9 +117,8 @@ spriteman_new_sprite_ref:
 @did_insert:
     stx.b $00 ; $00 is 16b sprite table ptr
     ; get sprite slot
+    sep #$30
     .spriteman_get_raw_slot_lite
-    .INDEX 8
-    .ACCU 8
     ; update sprite table
     txa
     rep #$10 ; 16b X, 8b A
@@ -227,7 +205,7 @@ spriteman_unref:
     stx.b $00
     lda.w loword(spriteTableValue.1.spritemem),X
     tax
-    sep #$10 ; 8b XY
+    sep #$30
     .spriteman_free_raw_slot_lite
     rep #$30 ; 16b AXY
     ldx.b $00

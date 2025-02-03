@@ -7,6 +7,8 @@
 .DEFINE BOMB2 $208C
 
 true_entity_bomb_tick:
+    .ACCU 16
+    .INDEX 16
     sep #$20
     lda.w entity_timer,Y
     dec A
@@ -75,6 +77,7 @@ entity_bomb_init:
     sep #$20
     lda #180
     sta.w entity_timer,Y
+    rep #$30
     rts
 
 entity_bomb_free:

@@ -44,6 +44,8 @@ EraseHitbox:
 entity_create:
     rep #$10 ; 16B XY
     sep #$20 ; 8B A
+    phb
+    .ChangeDataBank $7E
     ; first: find next free slot
     pha
     xba
@@ -73,7 +75,9 @@ entity_create:
     .MultiplyStatic 2
     tax
     phy
+    php
     jsr (EntityDef_InitFunc, X)
+    plp
     ply
     ; insert into execution order
     lda.l numEntities
@@ -84,6 +88,7 @@ entity_create:
     inc A
     sta.l numEntities
     ; return
+    plb
     rtl
 
 ; Free the given entity in reference Y
@@ -96,7 +101,9 @@ entity_free:
     .MultiplyStatic 2
     tax
     phy
+    php
     jsr (EntityDef_FreeFunc,X)
+    plp
     ply
     ; set type to 0
     sep #$20
@@ -149,7 +156,9 @@ entity_free_all:
     .MultiplyStatic 2
     tax
     phy
+    php
     jsr (EntityDef_FreeFunc,X)
+    plp
     ply
     ; set type to 0
     sep #$20

@@ -93,7 +93,7 @@ EntityEffect_Null:
     tile_alloc: .db 0
     num_frames: .db 1
 .ENDST
-.EffectFrame 0, 1, 1, 1, _EffectNull_Tiles
+.EffectFrame 0, 0, 0, 1, _EffectNull_Tiles
 
 EntityEffectTypes:
     .dw EntityEffect_Null
@@ -129,12 +129,15 @@ true_entity_effect_init:
         inc A
         sta.w effect_frame_ptr,Y
         tax
+        lda #1
+        sta.w entity_health,Y
     +:
-    rep #$20
     ; set up timer
-    lda #0
-    sta.w private_base_entity_combined_state_timer,Y
+    sep #$20
+    lda #1
+    sta.w entity_timer,Y
     ; allocate sprite slots
+    rep #$20
     phy
     lda.l bankaddr(EntityEffectTypes) + entityeffect_header_t.tile_alloc,X
     and #$00FF
@@ -257,12 +260,12 @@ true_entity_effect_tick:
             jsl entity_free
             rtl
     @no_kill:
-        sep #$20
+        rep #$20
         lda.w effect_frame_ptr,Y
         clc
         adc #_sizeof_entityeffect_frame_t
         sta.w effect_frame_ptr,Y
-        rep #$30
+        ; rep #$30
         jsr _load_frame
 @no_advance_frame:
     rep #$30
@@ -271,6 +274,7 @@ true_entity_effect_tick:
     .UNDEFINE ARRAY
     .UNDEFINE POSX
     .UNDEFINE POSY
+    .UNDEFINE TILE
 
 ; Load sprite data in frame stored in `effect_frame_ptr`
 _load_frame:
@@ -288,6 +292,7 @@ _load_frame:
     ; and #$00FF
     ; sta.b $00
     ; set timer
+    sty.b STORE_Y
     ldx.w effect_frame_ptr,Y
     sep #$20
     lda.l bankaddr(EntityEffectTypes) + entityeffect_frame_t.frames,X
@@ -302,12 +307,14 @@ _load_frame:
     sta.b ARRAY
     ; push initial address
     sep #$20
-    lda.l bankaddr(EntityEffectTypes) + entityeffect_frame_t.sprite+2,X
-    pha ; bank (1B)
     lda.l bankaddr(EntityEffectTypes) + entityeffect_frame_t.columns,X
+    beq @skip_upload
     sta.b COLUMN_ORIGINAL
     lda.l bankaddr(EntityEffectTypes) + entityeffect_frame_t.rows,X
+    beq @skip_upload
     sta.b ROW
+    lda.l bankaddr(EntityEffectTypes) + entityeffect_frame_t.sprite+2,X
+    pha ; bank (1B)
     rep #$20
     lda.l bankaddr(EntityEffectTypes) + entityeffect_frame_t.sprite,X
     pha ; upper half (2B)
@@ -317,7 +324,6 @@ _load_frame:
     clc
     adc $01,S
     pha ; lower half (2B)
-    sty.b $06 ; $06 = Y
     @loop_y:
         lda.b COLUMN_ORIGINAL
         sta.b COLUMN
@@ -350,7 +356,11 @@ _load_frame:
     rep #$30
     pla
     pla
-    ldy.b $06
+    ldy.b STORE_Y
+    rts
+@skip_upload:
+    rep #$30
+    ldy.b STORE_Y
     rts
     .UNDEFINE COLUMN
     .UNDEFINE ROW

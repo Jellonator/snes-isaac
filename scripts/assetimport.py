@@ -3,7 +3,6 @@
 import json
 import struct
 import os
-from PIL import Image
 
 SPRITE_PATH = "include/sprites"
 PALETTE_PATH = "include/palettes"
@@ -86,10 +85,21 @@ sprite_number = 1
 
 for sprite in json_sprites:
     name = sprite["name"]
-    # image = Image.open(sprite["src"]).convert("RGBA")
     imagefh = open(sprite["src"], 'rb')
     width, height = struct.unpack("<II", imagefh.read(8))
     imagedata = imagefh.read()
+    if "crop" in sprite:
+        x = sprite["crop"][0]
+        y = sprite["crop"][1]
+        new_width = sprite["crop"][2]
+        new_height = sprite["crop"][3]
+        ary = bytearray()
+        for iy in range(y, y+new_height):
+            for ix in range(x, x+new_width):
+                ary.append(imagedata[ix + iy*width])
+        imagedata = bytes(ary)
+        width = new_width
+        height = new_height
     if width % 8 != 0 or height % 8 != 0 or width*height != len(imagedata):
         raise RuntimeError("Invalid image size {}x{} in {}".format(width, height, sprite["src"]))
     if sprite["depth"] not in [4, 16]:
@@ -113,13 +123,21 @@ for sprite in json_sprites:
     # Write to binary file
     spritebin = open(sprite_out_path, 'wb')
     # get size
-    size = sprite["size"] if "size" in sprite else 1
+    size_x = 1
+    size_y = 1
+    if "size" in sprite:
+        if isinstance(sprite["size"], int):
+            size_x = sprite["size"]
+            size_y = sprite["size"]
+        else:
+            size_x = sprite["size"][0]
+            size_y = sprite["size"][1]
     ntilesx = width // 8
     ntilesy = height // 8
-    for ty in range(0, ntilesy, size):
-        for tx in range(0, ntilesx, size):
-            for ty2 in range(ty, ty+size, 1):
-                for tx2 in range(tx, tx+size, 1):
+    for ty in range(0, ntilesy, size_y):
+        for tx in range(0, ntilesx, size_x):
+            for ty2 in range(ty, ty+size_y, 1):
+                for tx2 in range(tx, tx+size_x, 1):
                     write_image_tile(spritebin, imagedata, sprite["depth"], tx2, ty2, width, mask_mode)
 
 splat_number = 1

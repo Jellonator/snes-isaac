@@ -59,34 +59,34 @@
 .ENDM
 
 _EffectExplosion_Tiles:
-.EffectTile  0, %00100001, -32, -32
-.EffectTile  1, %00100001, -16, -32
-.EffectTile  2, %00100001,   0, -32
-.EffectTile  3, %00100001,  16, -32
-.EffectTile  4, %00100001, -32, -16
-.EffectTile  5, %00100001, -16, -16
-.EffectTile  6, %00100001,   0, -16
-.EffectTile  7, %00100001,  16, -16
-.EffectTile  8, %00100001, -32,   0
-.EffectTile  9, %00100001, -16,   0
-.EffectTile 10, %00100001,   0,   0
-.EffectTile 11, %00100001,  16,   0
+.EffectTile 1, %01100001, -32, -32
+.EffectTile 0, %01100001, -16, -32
+.EffectTile 0, %00100001,   0, -32
+.EffectTile 1, %00100001,  16, -32
+.EffectTile 3, %01100001, -32, -16
+.EffectTile 2, %01100001, -16, -16
+.EffectTile 2, %00100001,   0, -16
+.EffectTile 3, %00100001,  16, -16
+.EffectTile 5, %01100001, -32,   0
+.EffectTile 4, %01100001, -16,   0
+.EffectTile 4, %00100001,   0,   0
+.EffectTile 5, %00100001,  16,   0
 .EffectTileEnd
 
 EntityEffect_Explosion:
 .DSTRUCT INSTANCEOF entityeffect_header_t VALUES
-    tile_alloc: .db 12
+    tile_alloc: .db 6
     num_frames: .db 8
     palette: .dw loword(palettes.effect_explosion)
 .ENDST
-.EffectFrame spritedata.bomb_explosion + spriteoffs(4, 12*4, 0), 4, 3, 4, _EffectExplosion_Tiles
-.EffectFrame spritedata.bomb_explosion + spriteoffs(4, 12*4, 1), 4, 3, 4, _EffectExplosion_Tiles
-.EffectFrame spritedata.bomb_explosion + spriteoffs(4, 12*4, 2), 4, 3, 4, _EffectExplosion_Tiles
-.EffectFrame spritedata.bomb_explosion + spriteoffs(4, 12*4, 3), 4, 3, 4, _EffectExplosion_Tiles
-.EffectFrame spritedata.bomb_explosion + spriteoffs(4, 12*4, 4), 4, 3, 4, _EffectExplosion_Tiles
-.EffectFrame spritedata.bomb_explosion + spriteoffs(4, 12*4, 5), 4, 3, 4, _EffectExplosion_Tiles
-.EffectFrame spritedata.bomb_explosion + spriteoffs(4, 12*4, 6), 4, 3, 4, _EffectExplosion_Tiles
-.EffectFrame spritedata.bomb_explosion + spriteoffs(4, 12*4, 7), 4, 3, 4, _EffectExplosion_Tiles
+.EffectFrame spritedata.bomb_explosion + spriteoffs(4, 6*4, 0), 2, 3, 4, _EffectExplosion_Tiles
+.EffectFrame spritedata.bomb_explosion + spriteoffs(4, 6*4, 1), 2, 3, 4, _EffectExplosion_Tiles
+.EffectFrame spritedata.bomb_explosion + spriteoffs(4, 6*4, 2), 2, 3, 4, _EffectExplosion_Tiles
+.EffectFrame spritedata.bomb_explosion + spriteoffs(4, 6*4, 3), 2, 3, 4, _EffectExplosion_Tiles
+.EffectFrame spritedata.bomb_explosion + spriteoffs(4, 6*4, 4), 2, 3, 4, _EffectExplosion_Tiles
+.EffectFrame spritedata.bomb_explosion + spriteoffs(4, 6*4, 5), 2, 3, 4, _EffectExplosion_Tiles
+.EffectFrame spritedata.bomb_explosion + spriteoffs(4, 6*4, 6), 2, 3, 4, _EffectExplosion_Tiles
+.EffectFrame spritedata.bomb_explosion + spriteoffs(4, 6*4, 7), 2, 3, 4, _EffectExplosion_Tiles
 
 _EffectNull_Tiles:
 .EffectTileEnd

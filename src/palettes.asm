@@ -92,6 +92,7 @@ Palette.queue_upload:
 
 ; Search for a palette that has [Y] uploaded.
 ; if no such palette exists, claims a new palette.
+; Returns palette in [X]
 Palette.find_or_upload:
     rep #$30
     .REPT 4 INDEX i
@@ -103,7 +104,10 @@ Palette.find_or_upload:
         +:
     .ENDR
     ; none found
+    phy
     jsl Palette.alloc_opaque
+    rep #$30
+    ply
     txa
     phx
     jsl Palette.queue_upload

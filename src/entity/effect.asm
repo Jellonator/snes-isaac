@@ -7,13 +7,16 @@
 .define effect_frame_ptr entity_custom.2
 .define array_ptr entity_custom.3
 .define effect_tile_ptr entity_custom.4
+.define effect_palette_ptr entity_velocx
+.define effect_palette_value entity_velocy
 
-.STRUCT entityeffect_header_t SIZE 2
+.STRUCT entityeffect_header_t SIZE 4
     ; number of tiles to allocate for this effect
     tile_alloc db
     num_frames db
+    palette dw
 .ENDST
-.STRUCT entityeffect_frame_t SIZE 8
+.STRUCT entityeffect_frame_t
     sprite dl
     columns db
     rows db
@@ -74,8 +77,8 @@ EntityEffect_Explosion:
 .DSTRUCT INSTANCEOF entityeffect_header_t VALUES
     tile_alloc: .db 12
     num_frames: .db 8
+    palette: .dw loword(palettes.effect_explosion)
 .ENDST
-
 .EffectFrame spritedata.bomb_explosion + spriteoffs(4, 12*4, 0), 4, 3, 4, _EffectExplosion_Tiles
 .EffectFrame spritedata.bomb_explosion + spriteoffs(4, 12*4, 1), 4, 3, 4, _EffectExplosion_Tiles
 .EffectFrame spritedata.bomb_explosion + spriteoffs(4, 12*4, 2), 4, 3, 4, _EffectExplosion_Tiles
@@ -92,6 +95,7 @@ EntityEffect_Null:
 .DSTRUCT INSTANCEOF entityeffect_header_t VALUES
     tile_alloc: .db 0
     num_frames: .db 1
+    palette: .dw 0
 .ENDST
 .EffectFrame 0, 0, 0, 1, _EffectNull_Tiles
 
@@ -111,6 +115,8 @@ true_entity_effect_init:
     sta.w effect_header_ptr,Y
     inc A
     inc A
+    inc A
+    inc A
     sta.w effect_frame_ptr,Y
     ; check available slots. If not enough, switch to null effect
     ldx.w effect_header_ptr,Y
@@ -125,6 +131,8 @@ true_entity_effect_init:
         rep #$20
         lda #EntityEffect_Null
         sta.w effect_header_ptr,Y
+        inc A
+        inc A
         inc A
         inc A
         sta.w effect_frame_ptr,Y
@@ -164,6 +172,25 @@ true_entity_effect_init:
     ply
     ; load sprite
     jsr _load_frame
+    ; set up palette
+    rep #$30
+    ldx.w effect_header_ptr,Y
+    lda.l bankaddr(EntityEffectTypes) + entityeffect_header_t.palette,X
+    sta.w effect_palette_value,Y
+    beq @skip_palette_upload
+        phy
+        php
+        tay
+        jsl Palette.find_or_upload
+        plp
+        ply
+        txa
+        sta.w effect_palette_ptr,Y
+@skip_palette_upload:
+    ; some other setup
+    sep #$20
+    lda.w entity_posy+1,Y
+    sta.w entity_ysort,Y
     ; end
     rtl
 
@@ -189,6 +216,12 @@ true_entity_effect_free:
     bne @loop
 @end:
     rep #$30
+    ; free palette
+    lda.w effect_palette_value,Y
+    beq @skip_free_palette
+        ldx.w effect_palette_ptr,Y
+        jsl Palette.free
+@skip_free_palette:
     rtl
 
 true_entity_effect_tick:
@@ -199,6 +232,7 @@ true_entity_effect_tick:
     .DEFINE POSX $04
     .DEFINE POSY $06
     .DEFINE TILE $08
+    .DEFINE PALETTE $0A
     ldx.w effect_tile_ptr,Y
     stx.b TILE
     sty.b STORE_Y
@@ -208,6 +242,9 @@ true_entity_effect_tick:
     sta.b POSX
     lda.w entity_posy,Y
     sta.b POSY
+    lda.w effect_palette_ptr,Y
+    and #$07
+    sta.b PALETTE
     lda #0
     ; draw
     sep #$20
@@ -231,6 +268,7 @@ true_entity_effect_tick:
         adc.b POSY+1
         sta.w objectData.1.pos_y,Y
         lda.l bankaddr(EntityEffectTypes) + entityeffect_tile_t.flags,X
+        ora.b PALETTE
         sta.w objectData.1.flags,Y
         ; increment tile
         inx
@@ -275,6 +313,7 @@ true_entity_effect_tick:
     .UNDEFINE POSX
     .UNDEFINE POSY
     .UNDEFINE TILE
+    .UNDEFINE PALETTE
 
 ; Load sprite data in frame stored in `effect_frame_ptr`
 _load_frame:

@@ -46,5 +46,9 @@
     {
         "name": "stage_caves_ground",
         "src": "assets/palettes/stage_caves_ground.hex"
+    },
+    {
+        "name": "effect_explosion",
+        "src": "assets/palettes/effect_explosion.hex"
     }
 ]

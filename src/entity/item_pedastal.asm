@@ -94,7 +94,7 @@ true_item_pedastal_init:
     sta.w _item_gfxptr_pedastal,Y
     ; find palette slot for pedastal
     phy
-    jsl Palette.find_available_opaque
+    jsl Palette.alloc_opaque
     rep #$30
     ply
     txa
@@ -165,7 +165,6 @@ true_item_pedastal_tick_base:
     sta.w objectData.2.flags,X
     lda.w _item_palette,Y
     and #$07
-    asl
     ora #%00100001
     sta.w objectData.1.flags,X
     ; check player position, and potentially change state
@@ -232,7 +231,6 @@ true_item_pedastal_tick_pickup:
     sta.w objectData.1.pos_y,X
     lda.w _item_palette,Y
     and #$07
-    asl
     ora #%00100001
     sta.w objectData.1.flags,X
     ; increment index
@@ -310,6 +308,8 @@ item_pedastal_free:
     lda.w _item_gfxptr_pedastal,Y
     tax
     jsl spriteman_unref
+    lda.w _item_palette
+    jsl Palette.free
     rts
 
 item_pedastal_tick:

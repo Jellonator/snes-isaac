@@ -60,7 +60,8 @@
     objectIndex dw
     objectIndexShadow dw
 ; Palette data
-    paletteUsageData ds 16
+    palettePtr dsw 16
+    paletteRefCount dsw 16
 ; VQueue data
     vqueueNumOps dw
     vqueueNumMiniOps dw

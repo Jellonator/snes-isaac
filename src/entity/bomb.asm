@@ -75,7 +75,7 @@ entity_bomb_init:
     .ACCU 16
     .INDEX 16
     sep #$20
-    lda #180
+    lda #120
     sta.w entity_timer,Y
     rep #$30
     rts

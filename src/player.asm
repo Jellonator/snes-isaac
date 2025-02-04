@@ -1,5 +1,7 @@
 .include "base.inc"
 
+.DEFINE PLAYER_BOMB_PLACE_TIMER 30
+
 .DEFINE TempTileX $08
 .DEFINE TempTileY $0A
 .DEFINE TempTileX2 $0C
@@ -484,7 +486,9 @@ PlayerInit:
     stz.w playerData.invuln_timer
     stz.w playerData.money
     stz.w playerData.keys
-    stz.w playerData.bombs
+    lda #$01
+    sta.w playerData.bombs
+    jsl Player.update_bomb_display
     sep #$30
     lda #HEALTH_REDHEART_FULL
     sta.w playerData.healthSlots.1
@@ -924,6 +928,10 @@ PlayerUpdate:
         sta.w entity_posx,Y
         lda.w player_posy
         sta.w entity_posy,Y
+        lda #PLAYER_BOMB_PLACE_TIMER
+        sta.w playerData.bomb_wait_timer
+        dec.w playerData.bombs
+        jsl Player.update_bomb_display
         jmp @end_place_bomb
     @cant_place_bomb:
         dec A

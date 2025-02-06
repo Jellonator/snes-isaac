@@ -35,7 +35,7 @@ Essentials:
     * [X] Room should spawn an item after completing
     * [X] Room should spawn entrance to next floor after completing
 - [ ] Update RNG on next floor
-- [ ] Bombs
+- [X] Bombs
 
 Bonus:
 - [ ] Secret rooms with bombable walls

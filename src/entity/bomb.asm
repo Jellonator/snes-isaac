@@ -161,6 +161,9 @@ true_entity_bomb_tick:
                                 lda.w entity_signal,Y
                                 ora #ENTITY_SIGNAL_KILL
                                 sta.w entity_signal,Y
+                                lda.w entity_mask,Y
+                                and #$FF ~ ENTITY_MASK_BOMBABLE
+                                sta.w entity_mask,Y
                             +++:
                             sep #$20
                     ++:

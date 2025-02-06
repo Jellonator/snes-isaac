@@ -18,6 +18,7 @@ _Floor_Begin:
     jsl LoadRoomSlotIntoLevel
     sep #$30 ; 8 bit AXY
     pla
+    jsl PlayerEnterFloor
     rts
 
 ; Initialize floor data on game load

@@ -512,6 +512,35 @@ PlayerInit:
     jsl Player.set_body_frame@upload_frame
     rts
 
+; Abridged version of PlayerInit that doesn't reset player items or resources.
+PlayerEnterFloor:
+    rep #$30
+    lda #0
+    sta.w playerData.flags
+    sta.w player_velocx
+    sta.w player_velocy
+    stz.w player_damageflag
+    lda #((32 + 6 * 16 - 8) * 256)
+    sta.w player_posx
+    lda #((64 + 4 * 16 - 8) * 256)
+    sta.w player_posy
+    stz.w playerData.invuln_timer
+    jsr PlayerDiscoverNearbyRooms
+    stz.w playerData.walk_frame
+    stz.w playerData.bomb_wait_timer
+    sep #$30
+    stz.w playerData.anim_wait_timer
+    stz.w playerData.head_offset_y
+    lda #FACINGDIR_DOWN
+    sta.w playerData.facingdir_head
+    sta.w playerData.facingdir_body
+    lda #2
+    jsl Player.set_head_frame@upload_frame
+    sep #$30
+    lda #2
+    jsl Player.set_body_frame@upload_frame
+    rtl
+
 ; Set head frame to A
 Player.set_head_frame:
     sep #$30
@@ -1696,37 +1725,42 @@ PlayerMoveDown:
 @end:
     rts
 
-.MACRO .VQueuePushMiniopForIndex ARGS ROOMINDEX
-; First, set VRAM address
-    lda.w vqueueNumMiniOps
-    asl
-    asl
-    tax
-    inc.w vqueueNumMiniOps
-    lda ROOMINDEX
-    and #$0F
-    sta.l vqueueMiniOps.1.vramAddr,X
-    lda ROOMINDEX
-    and #$F0
-    asl
-    clc
-    adc #BG1_TILE_BASE_ADDR + 32 - MAP_MAX_WIDTH
-    clc
-    adc.l vqueueMiniOps.1.vramAddr,X
-    sta.l vqueueMiniOps.1.vramAddr,X
-; Second, set value
+.MACRO .PlayerDiscoverRoomHelper ARGS is_current
+    lda.w mapTileFlagsTable,X
+    .IF is_current == 1
+        ora #MAPTILE_HAS_PLAYER | MAPTILE_DISCOVERED
+    .ELSE
+        and #$FF ~ MAPTILE_HAS_PLAYER
+        ora #MAPTILE_DISCOVERED
+    .ENDIF
+    sta.w mapTileFlagsTable,X
+    rep #$30
     phx
-    lda ROOMINDEX
-    and #$00FF
-    tay
-    lda.w mapTileTypeTable,Y
-    and #$00FF
-    asl
-    tax
-    lda.l MapTiles,X
+    jsl UpdateMinimapSlot
     plx
-    sta.l vqueueMiniOps.1.data,X
+    sep #$30
 .ENDM
+
+PlayerDiscoverNearbyRooms:
+    sep #$30
+    ldx.b loadedRoomIndex
+    .PlayerDiscoverRoomHelper 1
+    inx
+    .PlayerDiscoverRoomHelper 0
+    dex
+    dex
+    .PlayerDiscoverRoomHelper 0
+    txa
+    sec
+    sbc #15
+    tax
+    .PlayerDiscoverRoomHelper 0
+    txa
+    clc
+    adc #32
+    tax
+    .PlayerDiscoverRoomHelper 0
+    rts
 
 PlayerCheckEnterRoom:
     rep #$30 ; 16b AXY
@@ -1820,11 +1854,7 @@ PlayerCheckEnterRoom:
     rep #$30 ; 16 bit AXY
 ; Update map using vqueue
 ; Note: TempTemp2 contains old tile index
-    .VQueuePushMiniopForIndex loadedRoomIndex
-    lda #$0020
-    ora.l vqueueMiniOps.1.data,X
-    sta.l vqueueMiniOps.1.data,X
-    .VQueuePushMiniopForIndex TempTemp2
+    jsr PlayerDiscoverNearbyRooms
     stz.w player_velocx
     stz.w player_velocy
     rts

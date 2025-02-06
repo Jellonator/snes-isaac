@@ -76,6 +76,10 @@ VBlank2:
     cli ; enable interrupts
     rti
 
+; Update the entire minimap
+; NOTE: this requires blank to be enabled
+; We assume that this will be performed during stage load.
+; Just set numTilesToUpdate to $FF instead.
 UpdateEntireMinimap:
     sep #$30 ; 8 bit XY
     rep #$20 ; 16 bit A
@@ -98,14 +102,96 @@ UpdateMinimapLine:
         asl
         tax
         lda.l MapTiles,X
-        cpy loadedRoomIndex
-        bne +
-        ORA #$0020
+        sta.b $00
+        ; cpy loadedRoomIndex
+        lda.w mapTileFlagsTable,Y
+        bit #MAPTILE_COMPLETED
+        beq +
+            lda #$0010
+            ora.b $00
+            sta.b $00
         +:
+        lda.w mapTileFlagsTable,Y
+        bit #MAPTILE_HAS_PLAYER
+        beq +
+            lda #$0020
+            ora.b $00
+            sta.b $00
+        +:
+        lda.w mapTileFlagsTable,Y
+        bit #MAPTILE_DISCOVERED
+        bne +
+            lda #$0000
+            and.b $00
+            sta.b $00
+        +:
+        ; bne +
+        ; ORA #$0020
+        ; +:
         sta VMDATA
         iny
     .ENDR
     rts
+
+UpdateMinimapSlot:
+    rep #$30
+; set VRAM address
+    lda.w vqueueNumMiniOps
+    asl
+    asl
+    tax
+    inc.w vqueueNumMiniOps
+    lda $04,S
+    and #$0F
+    sta.l vqueueMiniOps.1.vramAddr,X
+    lda $04,S
+    and #$F0
+    asl
+    clc
+    adc #BG1_TILE_BASE_ADDR + 32 - MAP_MAX_WIDTH
+    clc
+    adc.l vqueueMiniOps.1.vramAddr,X
+    sta.l vqueueMiniOps.1.vramAddr,X
+; determine value
+    phx ; PUSH vqueue address
+    lda $04+2,S
+    and #$00FF
+    tay
+    lda.w mapTileTypeTable,Y
+    and #$00FF
+    asl
+    tax
+    lda.l MapTiles,X
+    sta.b $00
+    beq @empty_tile
+; modify value by flags
+    lda.w mapTileFlagsTable,Y
+    bit #MAPTILE_COMPLETED
+    beq +
+        lda #$0010
+        ora.b $00
+        sta.b $00
+    +:
+    lda.w mapTileFlagsTable,Y
+    bit #MAPTILE_HAS_PLAYER
+    beq +
+        lda #$0020
+        ora.b $00
+        sta.b $00
+    +:
+    lda.w mapTileFlagsTable,Y
+    bit #MAPTILE_DISCOVERED
+    bne +
+        lda #$0000
+        and.b $00
+        sta.b $00
+    +:
+@empty_tile:
+; set value
+    lda.b $00
+    plx
+    sta.l vqueueMiniOps.1.data,X
+    rtl
 
 ; Copy palette to CGRAM
 ; PUSH order:

@@ -177,9 +177,10 @@
 .DEFINE ROOM_ZPBUFW_ADDR (256-ROOM_TILE_COUNT) ; 64/$40
 
 ; maptile flags
-.DEFINE MAPTILE_EXPLORED $01
-.DEFINE MAPTILE_HAS_PLAYER $02
-.DEFINE MAPTILE_COMPLETED $04
+.DEFINE MAPTILE_EXPLORED $01   ; indicates that player has entered room
+.DEFINE MAPTILE_HAS_PLAYER $02 ; indicates that player is in the room
+.DEFINE MAPTILE_COMPLETED $04  ; indicates that player has completed the room
+.DEFINE MAPTILE_DISCOVERED $08 ; indicates that player is been in an adjacent room
 ; used for generation step; marks tiles in the mapgenAvailableRooms table
 .DEFINE MAPTILE_AVAILABLE $80
 

@@ -68,7 +68,7 @@ DefaultUiData:
     .ENDR
     @end:
 MapTiles:
-    .dw deft($00, 0) | T_HIGHP ; empty
+    .dw 0 ; empty
     .dw deft($08, 6) | T_HIGHP ; normal
     .dw deft($09, 6) | T_HIGHP ; item
     .dw deft($0A, 6) | T_HIGHP ; boss

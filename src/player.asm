@@ -42,7 +42,7 @@ _PlayerNextHealthValueTable:
 _PlayerHealthTileValueTable:
     .dw deft($00, 0) | T_HIGHP ; null
     .dw deft($32, 5) | T_HIGHP ; red empty
-    .dw deft($31, 5) | T_HIGHP ; red half
+    .dw deft($33, 5) | T_HIGHP ; red half
     .dw deft($30, 5) | T_HIGHP ; red full
     .dw deft($31, 6) | T_HIGHP ; spirit half
     .dw deft($30, 6) | T_HIGHP ; spirit full

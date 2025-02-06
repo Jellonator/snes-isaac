@@ -1745,21 +1745,36 @@ PlayerDiscoverNearbyRooms:
     sep #$30
     ldx.b loadedRoomIndex
     .PlayerDiscoverRoomHelper 1
-    inx
-    .PlayerDiscoverRoomHelper 0
-    dex
-    dex
-    .PlayerDiscoverRoomHelper 0
+    ; right
+    ldx.b loadedRoomIndex
     txa
-    sec
-    sbc #15
-    tax
-    .PlayerDiscoverRoomHelper 0
+    .BranchIfTileOnRightBorderA +
+        inx
+        .PlayerDiscoverRoomHelper 0
+    +:
+    ; left
+    ldx.b loadedRoomIndex
     txa
-    clc
-    adc #32
-    tax
-    .PlayerDiscoverRoomHelper 0
+    .BranchIfTileOnLeftBorderA +
+        dex
+        .PlayerDiscoverRoomHelper 0
+    +:
+    ; top
+    lda.b loadedRoomIndex
+    .BranchIfTileOnTopBorderA +
+        sec
+        sbc #16
+        tax
+        .PlayerDiscoverRoomHelper 0
+    +:
+    ; bottom
+    lda.b loadedRoomIndex
+    .BranchIfTileOnBottomBorderA +
+        clc
+        adc #16
+        tax
+        .PlayerDiscoverRoomHelper 0
+    +:
     rts
 
 PlayerCheckEnterRoom:

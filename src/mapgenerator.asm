@@ -32,39 +32,6 @@
     bcs label
 .ENDM
 
-; Branch if tile is on left border
-; Assume tile is in A
-.MACRO .BranchIfTileOnLeftBorderA ARGS label
-    bit #$0F
-    beq label
-.ENDM
-
-; Branch if tile is on right border
-; Assume tile is in A
-.MACRO .BranchIfTileOnRightBorderA ARGS label
-    inc A
-    bit #$0F
-    bne @@@@@\.\@
-    dec A
-    bra label
-@@@@@\.\@:
-    dec A
-.ENDM
-
-; Branch if tile is on top border
-; Assume tile is in A
-.MACRO .BranchIfTileOnTopBorderA ARGS label
-    bit #$F0
-    beq label
-.ENDM
-
-; Branch if tile is on bottom border
-; Assume tile is in A
-.MACRO .BranchIfTileOnBottomBorderA ARGS label
-    cmp #$90
-    bcs label
-.ENDM
-
 ; Branch if tile is empty
 ; Assumes tile is in X
 ; Tile type is stored in A

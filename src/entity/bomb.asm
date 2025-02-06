@@ -6,7 +6,76 @@
 .DEFINE BOMB1 $208A
 .DEFINE BOMB2 $208C
 
+_bomb_tile_do_nothing:
+    .INDEX 16
+    .ACCU 16
+    rts
+
+_bomb_tile_poop:
+    .INDEX 16
+    .ACCU 16
+    sep #$20 ; 8 bit A
+    lda #0
+    sta [currentRoomTileVariantTableAddress],Y
+    lda #BLOCK_REGULAR
+    sta [currentRoomTileTypeTableAddress],Y
+    rep #$20 ; 16 bit A
+    jsl HandleTileChanged
+    ; put splotch
+    sep #$20 ; 8 bit A
+    tyx
+    lda.l RoomTileToXTable,X
+    asl
+    asl
+    asl
+    asl
+    clc
+    adc #32
+    sta.b $07
+    lda.l RoomTileToYTable,X
+    asl
+    asl
+    asl
+    asl
+    clc
+    adc #64
+    sta.b $06
+    phy
+    php
+    jsl Splat.poop1
+    plp
+    ply
+    rts
+
+_bomb_tile_rock:
+    .INDEX 16
+    .ACCU 16
+    sep #$20 ; 8 bit A
+    lda #0
+    sta [currentRoomTileVariantTableAddress],Y
+    lda #BLOCK_REGULAR
+    sta [currentRoomTileTypeTableAddress],Y
+    rep #$20 ; 16 bit A
+    jsl HandleTileChanged
+    ; TODO: check for tinted rock
+    rts
+
+_ExplosionTileHandlerTable:
+.REPT 256 INDEX i
+    .IF i == BLOCK_POOP
+        .dw _bomb_tile_poop
+    .ELIF i == BLOCK_ROCK
+        .dw _bomb_tile_rock
+    .ELIF i == BLOCK_ROCK_TINTED
+        .dw _bomb_tile_rock
+    .ELSE
+        .dw _bomb_tile_do_nothing
+    .ENDIF
+.ENDR
+
 true_entity_bomb_tick:
+    .DEFINE Y_STORE $10
+    .DEFINE TILE $12
     .ACCU 16
     .INDEX 16
     sep #$20
@@ -14,9 +83,50 @@ true_entity_bomb_tick:
     dec A
     sta.w entity_timer,Y
     cmp #0
-    bne +
+    bnel +
+        sty.b Y_STORE
         ; check collision
-
+        lda.w entity_posy+1,Y
+        sec
+        sbc #8
+        and #$F0
+        sta.b TILE
+        lda.w entity_posx+1,Y
+        sec
+        sbc #8
+        .DivideStatic 16
+        ora.b TILE
+        sta.b TILE
+        stz.b TILE+1
+        rep #$30
+        ldx.b TILE
+        .REPT 3 INDEX iy
+            .REPT 3 INDEX ix
+                lda.l GameTileToRoomTileIndexTable,X
+                and #$00FF
+                tay
+                lda [currentRoomTileTypeTableAddress],Y
+                and #$00FF
+                asl
+                tax
+                jsr (_ExplosionTileHandlerTable,X)
+                rep #$30
+                .IF (ix < 2) && (iy < 2)
+                    inc.b TILE
+                    ldx.b TILE
+                .ELIF (ix == 2) && (iy < 2)
+                    lda.b TILE
+                    clc
+                    adc #16-2
+                    sta.b TILE
+                    tax
+                .ELIF (ix < 2) && (iy == 2)
+                    inc.b TILE
+                    ldx.b TILE
+                .ENDIF
+            .ENDR
+        .ENDR
+        ldy.b Y_STORE
         ; create splat
         sep #$20
         lda.w entity_posx+1,Y
@@ -95,6 +205,8 @@ true_entity_bomb_tick:
     .SetCurrentObjectS_Inc
     ply
     rtl
+    .UNDEFINE Y_STORE
+    .UNDEFINE TILE
 
 .ENDS
 

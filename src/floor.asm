@@ -185,7 +185,7 @@ _Floor_Update_Graphics:
         .dl palettes.stage_caves_ground
         .dl 0
         .dl palettes.stage_caves1
-        .dl palettes.basement2
+        .dl palettes.stage_caves2
     tiledata: .dl spritedata.stage_caves
     ground: .dl spritedata.stage_caves_ground
     groundPalette: .dw 2 * $0400

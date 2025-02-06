@@ -44,6 +44,10 @@
         "src": "assets/palettes/stage_caves1.hex"
     },
     {
+        "name": "stage_caves2",
+        "src": "assets/palettes/stage_caves2.hex"
+    },
+    {
         "name": "stage_caves_ground",
         "src": "assets/palettes/stage_caves_ground.hex"
     },

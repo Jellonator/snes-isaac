@@ -85,7 +85,7 @@ true_entity_bomb_tick:
     cmp #0
     bnel +
         sty.b Y_STORE
-        ; check collision
+        ; break tiles
         lda.w entity_posy+1,Y
         sec
         sbc #8
@@ -135,14 +135,11 @@ true_entity_bomb_tick:
         clc
         adc #4
         sta.b $06
-        phy
-        php
         phb
-        phy
         .ChangeDataBank $00
         jsl Splat.circle
         rep #$10
-        ply
+        ldy.b Y_STORE
         lda.w entity_posx+1,Y
         sec
         sbc #8
@@ -153,12 +150,9 @@ true_entity_bomb_tick:
         sta.b $06
         jsl Splat.big_circle
         plb
-        plp
-        ply
         ; create graphic
-        phy
-        php
         rep #$30
+        ldy.b Y_STORE
         lda.w entity_posx,Y
         pha
         lda.w entity_posy,Y
@@ -174,8 +168,8 @@ true_entity_bomb_tick:
         clc
         adc #8*$0100
         sta.w entity_posx,Y
-        plp
-        ply
+        rep #$30
+        ldy.b Y_STORE
         jsl entity_free
         rtl
     +:

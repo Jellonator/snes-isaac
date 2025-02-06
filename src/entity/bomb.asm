@@ -6,6 +6,13 @@
 .DEFINE BOMB1 $208A
 .DEFINE BOMB2 $208C
 
+.DEFINE EXPLOSION_LEFT -24
+.DEFINE EXPLOSION_RIGHT 24
+.DEFINE EXPLOSION_TOP -24
+.DEFINE EXPLOSION_BOTTOM 24
+
+.DEFINE EXPLOSION_DAMAGE 100
+
 _bomb_tile_do_nothing:
     .INDEX 16
     .ACCU 16
@@ -76,6 +83,10 @@ _ExplosionTileHandlerTable:
 true_entity_bomb_tick:
     .DEFINE Y_STORE $10
     .DEFINE TILE $12
+    .DEFINE TOP $14
+    .DEFINE LEFT $16
+    .DEFINE RIGHT $18
+    .DEFINE BOTTOM $1A
     .ACCU 16
     .INDEX 16
     sep #$20
@@ -85,7 +96,24 @@ true_entity_bomb_tick:
     cmp #0
     bnel +
         sty.b Y_STORE
-        ; break tiles
+        ; put positions
+        lda.w entity_posy+1,Y
+        clc
+        adc #EXPLOSION_TOP
+        sta.b TOP
+        lda.w entity_posx+1,Y
+        clc
+        adc #EXPLOSION_LEFT
+        sta.b LEFT
+        lda.w entity_posx+1,Y
+        clc
+        adc #EXPLOSION_RIGHT
+        sta.b RIGHT
+        lda.w entity_posy+1,Y
+        clc
+        adc #EXPLOSION_BOTTOM
+        sta.b BOTTOM
+        ; get tile
         lda.w entity_posy+1,Y
         sec
         sbc #8
@@ -98,10 +126,48 @@ true_entity_bomb_tick:
         ora.b TILE
         sta.b TILE
         stz.b TILE+1
+        ; check collisions
         rep #$30
         ldx.b TILE
         .REPT 3 INDEX iy
             .REPT 3 INDEX ix
+                ; handle entities
+                sep #$30
+                .REPT SPATIAL_LAYER_COUNT INDEX i
+                    ldy.w spatial_partition.{i+1},X
+                    beql ++++ ; no entities found; skip
+                    lda.w entity_mask,Y
+                    and #ENTITY_MASK_BOMBABLE & $FF
+                    beq ++
+                        lda.b RIGHT
+                        cmp.w entity_box_x1,Y
+                        bcc ++
+                        lda.b LEFT
+                        cmp.w entity_box_x2,Y
+                        bcs ++
+                        lda.b BOTTOM
+                        cmp.w entity_box_y1,Y
+                        bcc ++
+                        lda.b TOP
+                        cmp.w entity_box_y2,Y
+                        bcs ++
+                            rep #$20
+                            lda.w entity_health,Y
+                            sec
+                            sbc #EXPLOSION_DAMAGE
+                            sta.w entity_health,Y
+                            bcs +++
+                                sep #$20
+                                lda.w entity_signal,Y
+                                ora #ENTITY_SIGNAL_KILL
+                                sta.w entity_signal,Y
+                            +++:
+                            sep #$20
+                    ++:
+                .ENDR
+                ++++:
+                rep #$30
+                ; handle tile
                 lda.l GameTileToRoomTileIndexTable,X
                 and #$00FF
                 tay
@@ -201,6 +267,10 @@ true_entity_bomb_tick:
     rtl
     .UNDEFINE Y_STORE
     .UNDEFINE TILE
+    .UNDEFINE TOP
+    .UNDEFINE LEFT
+    .UNDEFINE RIGHT
+    .UNDEFINE BOTTOM
 
 .ENDS
 

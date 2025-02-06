@@ -268,6 +268,9 @@
 ; Objects that can be damaged by bombs
 .DEFINE ENTITY_MASK_BOMBABLE $04
 
+.DEFINE ENTITY_MASKSET_ENEMY (ENTITY_MASK_TEAR | ENTITY_MASK_BOMBABLE)
+.DEFINE ENTITY_MASKSET_PLAYER (ENTITY_MASK_PROJECTILE | ENTITY_MASK_BOMBABLE)
+
 ; Entity Signals: Used to tell an entity to respond to some form of interaction
 ; Signaled when an entity is killed (or otherwise needs to handle its own removal)
 .DEFINE ENTITY_SIGNAL_KILL $01
@@ -316,7 +319,7 @@
 
 .DEFINE GROUND_PALETTE_BROWN ($00 << 2)
 .DEFINE GROUND_PALETTE_RED ($01 << 2)
-.DEFINE GROUND_PALETTE_BLUE ($02 << 2)
+.DEFINE GROUND_PALETTE_GREY ($02 << 2)
 .DEFINE GROUND_PALETTE_YELLOW ($03 << 2)
 
 ; FACING

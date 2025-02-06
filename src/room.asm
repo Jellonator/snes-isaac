@@ -169,9 +169,9 @@ Room_Init:
     cmp #1
     bne +
         lda.w player_box_x1
-        sta.b $07
         sec
         sbc #3
+        sta.b $07
         lda.w player_box_y1
         sta.b $06
         jsl Splat.peesplat

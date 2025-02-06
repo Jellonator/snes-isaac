@@ -66,6 +66,8 @@ entity_create:
 @end:
     ; init entity
     lda #0
+    sta.w entity_mask,Y
+    sta.w entity_signal,Y
     xba
     pla
     sta.w entity_variant,Y

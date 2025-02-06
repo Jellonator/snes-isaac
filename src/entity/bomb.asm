@@ -15,7 +15,37 @@ true_entity_bomb_tick:
     sta.w entity_timer,Y
     cmp #0
     bne +
-        ; EXPLODE
+        ; check collision
+
+        ; create splat
+        sep #$20
+        lda.w entity_posx+1,Y
+        sta.b $07
+        lda.w entity_posy+1,Y
+        clc
+        adc #4
+        sta.b $06
+        phy
+        php
+        phb
+        phy
+        .ChangeDataBank $00
+        jsl Splat.circle
+        rep #$10
+        ply
+        lda.w entity_posx+1,Y
+        sec
+        sbc #8
+        sta.b $07
+        lda.w entity_posy+1,Y
+        sec
+        sbc #4
+        sta.b $06
+        jsl Splat.big_circle
+        plb
+        plp
+        ply
+        ; create graphic
         phy
         php
         rep #$30

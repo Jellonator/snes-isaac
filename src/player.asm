@@ -1167,7 +1167,7 @@ PlayerUpdate:
     adc #8
     sta.w player_box_y2
     ; set flags/mask
-    lda #ENTITY_MASK_PROJECTILE
+    lda #ENTITY_MASKSET_PLAYER
     sta.w player_mask
     sep #$30 ; 16b AXY
     lda.w playerData.playerItemStackNumber+ITEMID_CHOCOLATE_MILK

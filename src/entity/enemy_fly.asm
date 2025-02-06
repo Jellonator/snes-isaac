@@ -193,7 +193,7 @@ entity_basic_fly_tick:
     ; add to partition
     .EntityAddHitbox 2, 2
     ; set some flags
-    lda #ENTITY_MASK_TEAR
+    lda #ENTITY_MASKSET_ENEMY
     sta.w entity_mask,Y
     lda #0
     sta.w entity_signal,Y

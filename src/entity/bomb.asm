@@ -94,7 +94,7 @@ true_entity_bomb_tick:
     dec A
     sta.w entity_timer,Y
     cmp #0
-    bnel +
+    bnel @timer_continue
         sty.b Y_STORE
         ; put positions
         lda.w entity_posy+1,Y
@@ -135,28 +135,28 @@ true_entity_bomb_tick:
                 sep #$30
                 .REPT SPATIAL_LAYER_COUNT INDEX i
                     ldy.w spatial_partition.{i+1},X
-                    beql ++++ ; no entities found; skip
+                    beql @no_ent_{ix}_{iy} ; no entities found; skip
                     lda.w entity_mask,Y
                     and #ENTITY_MASK_BOMBABLE & $FF
-                    beq ++
+                    beq @skip_ent_{ix}_{iy}_{i}
                         lda.b RIGHT
                         cmp.w entity_box_x1,Y
-                        bcc ++
+                        bcc @skip_ent_{ix}_{iy}_{i}
                         lda.b LEFT
                         cmp.w entity_box_x2,Y
-                        bcs ++
+                        bcs @skip_ent_{ix}_{iy}_{i}
                         lda.b BOTTOM
                         cmp.w entity_box_y1,Y
-                        bcc ++
+                        bcc @skip_ent_{ix}_{iy}_{i}
                         lda.b TOP
                         cmp.w entity_box_y2,Y
-                        bcs ++
+                        bcs @skip_ent_{ix}_{iy}_{i}
                             rep #$20
                             lda.w entity_health,Y
                             sec
                             sbc #EXPLOSION_DAMAGE
                             sta.w entity_health,Y
-                            bcs +++
+                            bcs @skip_kill_{ix}_{iy}_{i}
                                 sep #$20
                                 lda.w entity_signal,Y
                                 ora #ENTITY_SIGNAL_KILL
@@ -164,11 +164,11 @@ true_entity_bomb_tick:
                                 lda.w entity_mask,Y
                                 and #$FF ~ ENTITY_MASK_BOMBABLE
                                 sta.w entity_mask,Y
-                            +++:
+                            @skip_kill_{ix}_{iy}_{i}:
                             sep #$20
-                    ++:
+                    @skip_ent_{ix}_{iy}_{i}:
                 .ENDR
-                ++++:
+                @no_ent_{ix}_{iy}:
                 rep #$30
                 ; handle tile
                 lda.l GameTileToRoomTileIndexTable,X
@@ -241,7 +241,7 @@ true_entity_bomb_tick:
         ldy.b Y_STORE
         jsl entity_free
         rtl
-    +:
+    @timer_continue:
     ;
     rep #$30
     phy

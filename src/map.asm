@@ -518,6 +518,7 @@ BlockVariantAddresses:
 
 BlockEmptyVariants:
     .dw deft($20, 2)
+    .dw deft($A4, 3) ; 1: rubble
 BlockRockVariants:
     .dw deft($A0, 3)
 BlockRockTintedVariants:

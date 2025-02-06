@@ -51,7 +51,7 @@ _bomb_tile_rock:
     .INDEX 16
     .ACCU 16
     sep #$20 ; 8 bit A
-    lda #0
+    lda #BLOCK_REGULAR_VARIANT_RUBBLE
     sta [currentRoomTileVariantTableAddress],Y
     lda #BLOCK_REGULAR
     sta [currentRoomTileTypeTableAddress],Y

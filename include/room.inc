@@ -37,11 +37,11 @@
 .DEFINE ROOM_BOTTOM (ROOM_CENTER_Y + 4*16)
 
 ; SERIALIZED ENTITY DATA
-.STRUCT entitystore_t SIZE 8
+.STRUCT entitystore_t SIZE 6
     type db
     variant db
-    posx dw
-    posy dw
+    posx db
+    posy db
     state db
     timer db
 .ENDST

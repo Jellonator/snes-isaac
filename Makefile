@@ -41,14 +41,7 @@ SOURCES  := bindata.asm\
 OBJECTS  := $(SOURCES:%.asm=$(OBJDIR)/%.obj)
 PALETTES := $(wildcard assets/palettes/*.hex)
 SPRITES  := $(wildcard assets/sprites/*.raw)
-INCLUDES := include/base.inc\
-			include/chaintable.inc\
-			include/defines.inc\
-			include/header.inc\
-			include/ramlayout.inc\
-			include/registers.inc\
-			include/structs.inc\
-			include/util.inc
+INCLUDES := $(wildcard include/*.inc)
 
 Test.smc: Test.link $(OBJECTS)
 	mkdir -p $(BINDIR)

@@ -77,8 +77,10 @@ _room_spawn_entities:
         cmp #ENTITY_STORE_COUNT
         beq @end_deserialize
         asl
+        sta.b $32
         asl
-        asl
+        clc
+        adc.b $32
         clc
         adc currentRoomInfoAddress
         tax
@@ -92,9 +94,9 @@ _room_spawn_entities:
         jsl entity_create
         plp
         plx
-        lda.l $7E0000 + roominfo_t.entityStoreTable + entitystore_t.posx,X
+        lda.l $7E0000 + roominfo_t.entityStoreTable + entitystore_t.posx-1,X
         sta.w entity_posx,Y
-        lda.l $7E0000 + roominfo_t.entityStoreTable + entitystore_t.posy,X
+        lda.l $7E0000 + roominfo_t.entityStoreTable + entitystore_t.posy-1,X
         sta.w entity_posy,Y
         lda.l $7E0000 + roominfo_t.entityStoreTable + entitystore_t.state,X
         sta.w entity_state,Y
@@ -335,19 +337,21 @@ _Room_Serialize_Entities:
             beq +
             ; serialization step
             asl
+            sta.b $32
             asl
-            asl
+            clc
+            adc.b $32
             clc
             adc.b currentRoomInfoAddress
             tax
+            lda.w entity_posy,Y
+            sta.w roominfo_t.entityStoreTable + entitystore_t.posy-1,X
+            lda.w entity_posx,Y
+            sta.w roominfo_t.entityStoreTable + entitystore_t.posx-1,X
             lda.w entity_type,Y
             sta.w roominfo_t.entityStoreTable + entitystore_t.type,X
             lda.w entity_state,Y
             sta.w roominfo_t.entityStoreTable + entitystore_t.state,X
-            lda.w entity_posy,Y
-            sta.w roominfo_t.entityStoreTable + entitystore_t.posy,X
-            lda.w entity_posx,Y
-            sta.w roominfo_t.entityStoreTable + entitystore_t.posx,X
             inc.b $00
         +:
         ; plp

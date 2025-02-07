@@ -39,6 +39,7 @@ Essentials:
 - [X] Hide map rooms until revealed
 - [X] Darken unexplored map rooms
 - [ ] Optimize ground decor system for more complex shapes
+- [ ] Improve screen transition
 
 Bonus:
 - [ ] Secret rooms with bombable walls

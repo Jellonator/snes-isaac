@@ -353,13 +353,17 @@ projectile_tick__:
         ldx.b PROJECTILE_TMP_IDX
         ; lda.w entity_velocx,X
         ; .ShiftRight_SIGN 1, FALSE
-        lda.w entity_velocx,Y
-        .ShiftRight_SIGN 1, FALSE
+        lda.w entity_velocx,X
+        .ShiftRight_SIGN 3, FALSE
+        clc
+        adc.w entity_velocx,Y
         sta.w entity_velocx,Y
         ; lda.w entity_velocy,X
         ; .ShiftRight_SIGN 1, FALSE
-        lda.w entity_velocy,Y
-        .ShiftRight_SIGN 1, FALSE
+        lda.w entity_velocy,X
+        .ShiftRight_SIGN 3, FALSE
+        clc
+        adc.w entity_velocy,Y
         sta.w entity_velocy,Y
         ; reduce HP
         lda.w entity_health,Y

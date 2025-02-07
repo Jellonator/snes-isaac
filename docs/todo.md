@@ -58,3 +58,7 @@ Bonus:
 - [X] Player costumes
     * [X] RAM buffer
     * [ ] sprite overlay
+- [ ] Bomb adds velocity to hit objects
+- [ ] Bombs receive velocity from projectiles
+- [ ] Pickups have collision, can push each other
+- [ ] Find empty spots for newly dropped pickups

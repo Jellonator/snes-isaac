@@ -1,31 +1,5 @@
-; test argument against A.
-; if argument > A, set A to argument
 ; as a general rule, macro labels should begin with @@@@@
 ; that way, these labels don't mess with those in code
-
-.ENUMID 0
-.ENUMID P_IMM
-.ENUMID P_ABS
-.ENUMID P_ABS_X
-.ENUMID P_ABS_Y
-.ENUMID P_ABS_IND
-.ENUMID P_ABS_INDL
-.ENUMID P_DIR
-.ENUMID P_DIR_X
-.ENUMID P_DIR_Y
-.ENUMID P_DIR_IND
-.ENUMID P_DIR_INDL
-.ENUMID P_DIR_X_IND
-.ENUMID P_DIR_IND_Y
-.ENUMID P_DIR_INDL_Y
-.ENUMID P_LONG
-.ENUMID P_LONG_X
-.ENUMID P_STACK
-.ENUMID P_STACK_IND_Y
-.ENUMID P_IMPLIED
-.ENUMID P_REL8
-.ENUMID P_REL16
-.ENUMID P_SRC_DEST
 
 ; meta instructions
 .MACRO beql ARGS addr
@@ -69,7 +43,34 @@
     +++++:
 .ENDM
 
-; GENERIC INSTRUCTION
+; GENERIC INSTRUCTIONS
+
+; Generic instruction types
+.ENUMID 0
+.ENUMID P_IMM
+.ENUMID P_ABS
+.ENUMID P_ABS_X
+.ENUMID P_ABS_Y
+.ENUMID P_ABS_IND
+.ENUMID P_ABS_INDL
+.ENUMID P_DIR
+.ENUMID P_DIR_X
+.ENUMID P_DIR_Y
+.ENUMID P_DIR_IND
+.ENUMID P_DIR_INDL
+.ENUMID P_DIR_X_IND
+.ENUMID P_DIR_IND_Y
+.ENUMID P_DIR_INDL_Y
+.ENUMID P_LONG
+.ENUMID P_LONG_X
+.ENUMID P_STACK
+.ENUMID P_STACK_IND_Y
+.ENUMID P_IMPLIED
+.ENUMID P_REL8
+.ENUMID P_REL16
+.ENUMID P_SRC_DEST
+
+; Generic Instruction invokation
 ; Parameters:
 ;   inst   - the instruction
 ;   method - address mode
@@ -120,6 +121,9 @@
     .ENDIF
 .ENDM
 
+; COMPARE
+
+; Begin signed compare: IF less than
 .MACRO .CMPS_BEGIN ARGS method, addr
     sec
     .g_instruction sbc, method, addr
@@ -128,6 +132,7 @@
 @@@@@\@cmps_lesser:
 .ENDM
 
+; Signed Compare: IF greather than
 .MACRO .CMPS_GREATER
     bra @@@@@\@cmps_end
 @@@@@\@cmps_invert:
@@ -135,15 +140,21 @@
 @@@@@\@cmps_greater:
 .ENDM
 
+
+; Signed Compare: IF equal to than
 .MACRO .CMPS_EQUAL
     bra @@@@@\@cmps_end
 @@@@@\@cmps_equal:
 .ENDM
 
+; End signed compare
 .MACRO .CMPS_END
 @@@@@\@cmps_end:
 .ENDM
 
+; MATH
+
+; Generic signed MAXIMUM
 .MACRO .AMAX ARGS method arg
     sec
     .g_instruction sbc, method, arg
@@ -160,7 +171,7 @@
 @@@@@@\.\@end:
 .ENDM
 
-; Minimum of A register and value, signed
+; Generic signed MINIMUM
 .MACRO .AMIN ARGS method, arg
     sec
     .g_instruction sbc, method, arg
@@ -177,7 +188,7 @@
 @@@@@@\.\@end:
 .ENDM
 
-; Maximum of A register and value, unsigned
+; Generic unsigned MAXIMUM
 .MACRO .AMAXU ARGS method, addr
     .g_instruction cmp, method, addr
     bcs @@@@@\.\@
@@ -185,7 +196,7 @@
     @@@@@\.\@:
 .ENDM
 
-; Minimum of A register and value, unsigned
+; Generic unsigned MINIMUM
 .MACRO .AMINU ARGS method, addr
     .g_instruction cmp, method, addr
     bcc @@@@@\.\@
@@ -193,7 +204,7 @@
     @@@@@\.\@:
 .ENDM
 
-; Calculate the absolute value of A
+; Calculate the absolute value of A, in 16b mode
 ; ONLY use after an instruction that loads the value into A (checks N flag)
 ; e.g.: ADC, SBC, DEC, INC, AND, ORA, EOR, ASL, LSR, ROL, ROR, LDA, PLA, TXA, and TYA
 ; some other instructions also set the N flag but may either refer to a
@@ -205,12 +216,13 @@
 @@@@@\.\@:
 .ENDM
 
+; Negate 16b A register
 .MACRO .NEG_A16
     eor.w #$FFFF
     inc A
 .ENDM
 
-; Calculate the absolute value of A
+; Calculate the absolute value of A, in 8b mode
 ; ONLY use after an instruction that loads the value into A (checks N flag)
 .MACRO .ABS_A8_POSTLOAD
     bpl @@@@@\.\@
@@ -219,347 +231,20 @@
 @@@@@\.\@:
 .ENDM
 
+; Negate 8b register
 .MACRO .NEG_A8
     eor.w #$FF
     inc A
 .ENDM
 
-.define BYTES_PER_TILE16 32
-
-.MACRO BEGININTERRUPT
-    phb
-    phd
-    rep #$30
-    pha
-    phx
-    phy
-.ENDM
-
-.MACRO ENDINTERRUPT
-    rep #$30
-    ply
-    plx
-    pla
-    pld
-    plb
-.ENDM
-
-.MACRO .ChangeDataBank ARGS bank
-    pea bank + ($0100*(bank))
-    plb
-    plb
-.ENDM
-
-.MACRO .CopyROMToVQueueBin ARGS ROMADDR, NBYTES
-    rep #$20 ; 16 bit A
-    lda #NBYTES
-    sta DMA0_SIZE
-    lda #loword(ROMADDR)
-    sta DMA0_SRCL
-    lda.w vqueueBinOffset
-    sta WMADDL
-    sep #$20 ; 8 bit A
-    lda #bankbyte(ROMADDR)
-    sta DMA0_SRCH
-    lda #$7F
-    sta WMADDH
-    ; Absolute address, no increment, 1 byte at a time
-    lda #%00000000
-    sta DMA0_CTL
-    ; Write to WRAM
-    lda #$80
-    sta DMA0_DEST
-    lda #$01
-    sta MDMAEN
-.ENDM
-
-.MACRO .ClearWRam ARGS ADDRL, NBYTES
-    rep #$20 ; 16 bit A
-    lda #NBYTES
-    sta DMA0_SIZE
-    lda #loword(EmptyData)
-    sta DMA0_SRCL
-    lda #loword(ADDRL)
-    sta WMADDL
-    sep #$20 ; 8 bit A
-    lda #bankbyte(EmptyData)
-    sta DMA0_SRCH
-    lda #bankbyte(ADDRL)
-    sta WMADDH
-    ; Absolute address, no increment, 1 byte at a time
-    lda #%00001000
-    sta DMA0_CTL
-    ; Write to WRAM
-    lda #$80
-    sta DMA0_DEST
-    lda #$01
-    sta MDMAEN
-.ENDM
-
-.MACRO .ClearWRam_ZP ARGS ADDRL, NBYTES
-    rep #$20 ; 16 bit A
-    lda #NBYTES
-    sta.b <DMA0_SIZE
-    lda #loword(EmptyData)
-    sta.b <DMA0_SRCL
-    lda #loword(ADDRL)
-    sta.l WMADDL
-    sep #$20 ; 8 bit A
-    lda #bankbyte(EmptyData)
-    sta.b <DMA0_SRCH
-    lda #bankbyte(ADDRL)
-    sta.l WMADDH
-    ; Absolute address, no increment, 1 byte at a time
-    lda #%00001000
-    sta.b <DMA0_CTL
-    ; Write to WRAM
-    lda #$80
-    sta.b <DMA0_DEST
-    lda #$01
-    sta.l MDMAEN
-.ENDM
-
-.MACRO .SetCurrentObjectS
-    lda.w objectIndex
-    lsr
-    lsr
-    lsr
-    lsr
-    tay
-    ldx.w objectIndex
-    lda.l SpriteIndexToExtMaskS,X
-    ora.w objectDataExt,Y
-    sta.w objectDataExt,Y
-.ENDM
-
-.MACRO .SetCurrentObjectS_Inc
-    .SetCurrentObjectS
-    inx
-    inx
-    inx
-    inx
-    stx.w objectIndex
-.ENDM
-
-.MACRO .SetCurrentObjectX
-    lda.w objectIndex
-    lsr
-    lsr
-    lsr
-    lsr
-    tay
-    ldx.w objectIndex
-    lda.l SpriteIndexToExtMaskX,X
-    ora.w objectDataExt,Y
-    sta.w objectDataExt,Y
-.ENDM
-
-.MACRO .SetCurrentObjectX_Inc
-    .SetCurrentObjectX
-    inx
-    inx
-    inx
-    inx
-    stx.w objectIndex
-.ENDM
-
-.MACRO .SetCurrentObjectXS
-    lda.w objectIndex
-    lsr
-    lsr
-    lsr
-    lsr
-    tay
-    ldx.w objectIndex
-    lda.l SpriteIndexToExtMaskXS,X
-    ora.w objectDataExt,Y
-    sta.w objectDataExt,Y
-.ENDM
-
-.MACRO .SetCurrentObjectXS_Inc
-    .SetCurrentObjectXS
-    inx
-    inx
-    inx
-    inx
-    stx.w objectIndex
-.ENDM
-
-.MACRO .GetObjectPos_X
-    phy
-    phx
-    txa
-    lsr
-    lsr
-    lsr
-    lsr
-    tay ; Y is index into objectDataExt [0,31]
-    lda $01,S
-    and #3
-    tax ; X is index into SpriteIndexToExtMaskX [0,3]
-    lda.l SpriteIndexToExtMaskX,X
-    and #$FF
-    and.w objectDataExt,Y ; Get X mask
-    beq @@@@@\.\@pos
-@@@@@\.\@neg:
-    plx
-    lda.w objectData.1.pos_x,X
-    and #$FF
-    eor #$FFFF
-    sec
-    adc #1
-    bra @@@@@\.\@end
-@@@@@\.\@pos:
-    plx
-    lda.w objectData.1.pos_x,X
-    and #$FF
-@@@@@\.\@end:
-    ply
-.ENDM
-
-; Put the value A into the sprite at index X
-.MACRO .PutObjectPos_X
-; push
-    phy
-    pha
-    phx
-; Y is index into objectDataExt [0,31]
-    txa
-    lsr
-    lsr
-    lsr
-    lsr
-    tay
-; X is index into SpriteIndexToExtMaskX [0,3]
-    lda $01,S
-    and #3
-    tax
-; Check if A is positive or negative
-    lda $03,S
-    bpl @@@@@\.\@pos
-@@@@@\.\@neg:
-    lda.l SpriteIndexToExtMaskX,X
-    and #$FF
-    ora.w objectDataExt,Y
-    sta.w objectDataExt,Y
-    lda $03,S
-    eor #$FFFF
-    sec
-    adc #1
-    sep #$20 ; 8b A
-    plx
-    sta.w objectData.1.pos_x,X
-    rep #$20 ; 16b A
-    bra @@@@@\.\@end
-@@@@@\.\@pos:
-    lda.l SpriteIndexToExtMaskX,X
-    eor #$FFFF
-    ora #$FF00
-    and.w objectDataExt,Y
-    sta.w objectDataExt,Y
-    lda $03,S
-    sep #$20 ; 8b A
-    plx
-    sta.w objectData.1.pos_x,X
-    rep #$20 ; 16b A
-@@@@@\.\@end:
-    pla
-    ply
-.ENDM
-
-.MACRO .IncrementObjectIndex
-    ldx.w objectIndex
-    inx
-    inx
-    inx
-    inx
-    stx.w objectIndex
-.ENDM
-
-; Clobbers A
-.MACRO .VQueueOpToA
-    lda.w vqueueNumOps
-    asl
-    asl
-    asl
-.ENDM
-
-; Clobbers A
-.MACRO .VQueueOpIncX
-    txa
-    clc
-    adc #8
-    tax
-.ENDM
-
-.MACRO .VQueueBinToX
-    ldx.w vqueueBinOffset
-.ENDM
-
-; Clobbers A
-.MACRO .VQueuePushBinA ARGS amount
-    lda.w vqueueBinOffset
-    adc amount
-    sta.w vqueueBinOffset
-.ENDM
-
-; Clobbers A
-.MACRO .VQueuePushBinI ARGS amount
-    lda.w vqueueBinOffset
-    adc #amount
-    sta.w vqueueBinOffset
-.ENDM
-
-; Clobbers A
-.MACRO .BranchIfTileXYOOB ARGS XMEM, YMEM, LABEL
-    lda XMEM
-    cmp #12
-    bcs LABEL
-    lda YMEM
-    cmp #8
-    bcs LABEL
-.ENDM
-
-.MACRO .PositionToTileIndex ARGS XACCESS, XADDR, YACCESS, YADDR, TMP
-    .g_instruction lda, XACCESS, XADDR
-    lsr
-    lsr
-    lsr
-    lsr
-    sta.b TMP
-    .g_instruction lda, YACCESS, YADDR
-    and #$FF00
-    ora.b TMP
-    tax
-    lda.l GameTileToRoomTileIndexTable,X
-.ENDM
-
-.MACRO .TileXYToIndexA ARGS XMEM, YMEM, TEMPMEM
-    lda YMEM
-    asl
-    asl
-    sta TEMPMEM
-    asl
-    clc
-    adc TEMPMEM
-    adc XMEM
-.ENDM
-
+; TRUE if x is a power of 2
 .FUNCTION IS_POW2(x) !(x & (x - 1))
 
+; returns log₂x
 .FUNCTION log2(x) log(x) / log(2.0)
 
-; define tile
-.FUNCTION deft(chr,pal) (chr | (pal << 10))
-.DEFINE T_HIGHP 0x2000
-.DEFINE T_FLIPH 0x4000
-.DEFINE T_FLIPV 0x8000
-.DEFINE T_FLIPVH 0xC000
-
-.FUNCTION spriteoffset(spriteId) ((spriteId - 1) * 4)
-
-.FUNCTION hirombankid(addr) (bankbyte(addr) & $3F)
-
+; Cheap method of (A % num), in 8b mode
+; only works if 'num' is a power of 2
 .MACRO .CheapModA8 ARGS num
     .IF num == 1
     .ELIF num > 0 && num <= (2^7) && IS_POW2(num)
@@ -569,13 +254,9 @@
     .ENDIF
 .ENDM
 
+; Cheap modulo (A % num), in 16b mode
+; only works if 'num' is a power of 2
 .MACRO .CheapModA16 ARGS num
-    ; .PRINT num "\n"
-    ; .PRINT num-1 "\n"
-    ; .PRINT num & (num - 1)  "\n"
-    ; .PRINT (num & (num - 1))==0 "\n"
-    ; .PRINT IS_POW2(num) "\n"
-    ; .PRINT 2^15  "\n"
     .IF num == 1
     .ELIF num > 1 && num <= (2^15) && IS_POW2(num)
         and.w #(num - 1)
@@ -584,18 +265,22 @@
     .ENDIF
 .ENDM
 
+; shift accumulator left by 'num' (A << num)
 .MACRO .ShiftLeft ARGS num
     .REPT num
         asl
     .ENDR
 .ENDM
 
+; shift accumulator right by 'num' (A >> num)
 .MACRO .ShiftRight ARGS num
     .REPT num
         lsr
     .ENDR
 .ENDM
 
+; Cheap multiplication (A * num)
+; only works if 'num' is a power of 2
 .MACRO .MultiplyStatic ARGS num
     .IF num == 0
     .ELIF IS_POW2(num)
@@ -605,6 +290,9 @@
     .ENDIF
 .ENDM
 
+; Cheap division (A / num)
+; only works if 'num' is a power of 2
+; Rounds down
 .MACRO .DivideStatic ARGS num
     .IF num == 0
     .ELIF IS_POW2(num)
@@ -614,6 +302,10 @@
     .ENDIF
 .ENDM
 
+; Signed right-shift of accumulator (A >> num)
+; e.g. (-16 >> 2) => -4
+; set 'do_cmp' if A was not just loaded into accumulator
+; kinda slow
 .MACRO .ShiftRight_SIGN ARGS num, do_cmp
     .IF num > 0
         .IF do_cmp
@@ -641,104 +333,31 @@
     .ENDIF
 .ENDM
 
-; will only break if value overflows :)
+; Signed left-shift of accumulator (A << num)
+; e.g. (-16 < 2) => -64
+; will break if value overflows :)
 .MACRO .ShiftLeft_SIGN ARGS num
     .REPT num
         asl
     .ENDR
 .ENDM
 
-; COLLISION
+; UTILITY
 
-.MACRO .InsertHitboxLite
-    .REPT SPATIAL_LAYER_COUNT INDEX i
-        ldy.w spatial_partition.{i+1},X
-        bne +++++
-        sta.w spatial_partition.{i+1},X
-        bra @@@@@\.\@
-        +++++:
-    .ENDR
-    @@@@@\.\@:
+; Change data bank to value
+.MACRO .ChangeDataBank ARGS bank
+    pea bank + ($0100*(bank))
+    plb
+    plb
 .ENDM
 
-.MACRO .EraseHitboxLite
-    .REPT SPATIAL_LAYER_COUNT INDEX i
-        cmp.w spatial_partition.{i+1},X
-        beq @@@@@\.\@{i}
-    .ENDR
-    bra @@@@@\.\@end
-    .REPT SPATIAL_LAYER_COUNT INDEX i
-        @@@@@\.\@{i}:
-        .IF (i != (SPATIAL_LAYER_COUNT-1))
-            lda.w spatial_partition.{i+2},X
-            sta.w spatial_partition.{i+1},X
-            ; beq @@@@@\.\@end
-        .ELSE
-            stz.w spatial_partition.{i+1},X
-        .ENDIF
-    .ENDR
-    @@@@@\.\@end:
-.ENDM
+.FUNCTION spriteoffset(spriteId) ((spriteId - 1) * 4)
 
-.MACRO .EntityRemoveHitbox ARGS NUM_X, NUM_Y
-    lda.w entity_posy+1,Y
-    and #$F0
-    sta.b $00
-    lda.w entity_posx+1,Y
-    lsr
-    lsr
-    lsr
-    lsr
-    ora.b $00
-    sta.b $00
-    .REPT NUM_Y INDEX iy
-        tax
-        .REPT NUM_X INDEX ix
-            .IF ix > 0
-                inx
-            .ENDIF
-            tya
-            jsr EraseHitbox
-        .ENDR
-        .IF iy < (NUM_Y-1)
-            lda.b $00
-            clc
-            adc #16
-            sta.b $00
-        .ENDIF
-    .ENDR
-.ENDM
+.FUNCTION hirombankid(addr) (bankbyte(addr) & $3F)
 
-.MACRO .EntityAddHitbox ARGS NUM_X, NUM_Y
-    sty.b $01
-    lda.w entity_posy+1,Y
-    and #$F0
-    sta.b $00
-    lda.w entity_posx+1,Y
-    lsr
-    lsr
-    lsr
-    lsr
-    ora.b $00
-    sta.b $00
-    .REPT NUM_Y INDEX iy
-        tax
-        lda.b $01
-        .REPT NUM_X INDEX ix
-            .IF ix > 0
-                inx
-            .ENDIF
-            jsr InsertHitbox
-        .ENDR
-        .IF iy < (NUM_Y-1)
-            lda.b $00
-            clc
-            adc #16
-            sta.b $00
-        .ENDIF
-    .ENDR
-    ldy.b $01
-.ENDM
+.FUNCTION spriteoffs(bit_depth, num_tiles, frame) (num_tiles * bit_depth * frame * 8)
+
+.FUNCTION bankaddr(addr) (bankbyte(addr) * $10000)
 
 ; Pathing
 
@@ -758,96 +377,14 @@
 
 .ENDM
 
-; Entity Utilities
+; RNG
 
-.MACRO .EntityEasySetBox ARGS width, height
-    sep #$20
-
-    lda.w entity_box_x1,Y
-    clc
-    adc #width
-    sta.w entity_box_x2,Y
-
-    lda.w entity_box_y1,Y
-    clc
-    adc #height
-    sta.w entity_box_y2,Y
-.ENDM
-
-.MACRO .EntityEasyCheckPlayerCollision_Box ARGS addr
-    sep #$20
-
-    lda.w entity_box_x1,Y
-    cmp.w player_box_x2
-    bpl addr
-
-    lda.w entity_box_x2,Y
-    cmp.w player_box_x1
-    bmi addr
-
-    lda.w entity_box_y1,Y
-    cmp.w player_box_y2
-    bpl addr
-
-    lda.w entity_box_y2,Y
-    cmp.w player_box_y1
-    bmi addr
-.ENDM
-
-.MACRO .EntityEasyCheckPlayerCollision_Rect ARGS addr, left, right, top, bottom
-    sep #$20
-
-    lda.w entity_box_x1,Y
-    clc
-    adc #left
-    cmp.w player_box_x2
-    bpl addr
-
-    lda.w entity_box_x2,Y
-    clc
-    adc #right
-    cmp.w player_box_x1
-    bmi addr
-
-    lda.w entity_box_y1,Y
-    clc
-    adc #top
-    cmp.w player_box_y2
-    bpl addr
-
-    lda.w entity_box_y2,Y
-    clc
-    adc #bottom
-    cmp.w player_box_y1
-    bmi addr
-.ENDM
-
-.MACRO .EntityEasyCheckPlayerCollision_Center ARGS addr, offx, offy
-    sep #$20
-
-    lda.w entity_box_x1,Y
-    clc
-    adc #offx
-    cmp.w player_box_x2
-    bpl addr
-    cmp.w player_box_x1
-    bmi addr
-
-    lda.w entity_box_y1,Y
-    clc
-    adc #offy
-    cmp.w player_box_y2
-    bpl addr
-    cmp.w player_box_y1
-    bmi addr
-.ENDM
-
-.FUNCTION entityvariant(e, v) (e | (v * $0100))
-
+; Begin chance table, with 'x' chance units (usually 256)
 .MACRO .ChanceTableBegin ARGS x
     .DEFINE _ChanceTableV x
 .ENDM
 
+; Add 'probability' chances for 'value', 16b
 .MACRO .ChanceTableDW ARGS probability, value
     .REDEFINE _ChanceTableV (_ChanceTableV - probability)
     .REPT probability
@@ -855,6 +392,7 @@
     .ENDR
 .ENDM
 
+; Add 'probability' chances for 'value', 8b
 .MACRO .ChanceTableDB ARGS probability, value
     .REDEFINE _ChanceTableV (_ChanceTableV - probability)
     .REPT probability
@@ -862,6 +400,7 @@
     .ENDR
 .ENDM
 
+; Set remaining changes to 'value', 16b
 .MACRO .ChanceTableRestDW ARGS value
     .IF _ChanceTableV < 0
         .ERROR "Chance table is overfilled"
@@ -871,6 +410,7 @@
     .ENDR
 .ENDM
 
+; Set remaining changes to 'value', 8b
 .MACRO .ChanceTableRestDB ARGS value
     .IF _ChanceTableV < 0
         .ERROR "Chance table is overfilled"
@@ -880,68 +420,7 @@
     .ENDR
 .ENDM
 
+; End chance table
 .MACRO .ChanceTableEnd
     .UNDEFINE _ChanceTableV
-.ENDM
-
-.FUNCTION spriteoffs(bit_depth, num_tiles, frame) (num_tiles * bit_depth * frame * 8)
-
-.FUNCTION bankaddr(addr) (bankbyte(addr) * $10000)
-
-; get next free slot
-; Returns index as X
-; Useful for animated objects which need their own slots
-; Bank needs to be $7E, INDEX and ACCU must be 8
-.MACRO .spriteman_get_raw_slot_lite
-    dec.w loword(spiteTableAvailableSlots)
-    ; ret = *queue->next
-    ldx.w loword(spriteQueueTabNext)+SPRITE_LIST_EMPTY
-    lda.w loword(spriteQueueTabNext),X
-    ; queue->next = queue->next->next (skip X)
-    sta.w loword(spriteQueueTabNext)+SPRITE_LIST_EMPTY
-    ; rtl
-.ENDM
-
-; Free slot in X
-; Bank needs to be $7E, INDEX and ACCU must be 8
-.MACRO .spriteman_free_raw_slot_lite
-    inc.w loword(spiteTableAvailableSlots)
-    lda.w loword(spriteQueueTabNext)+SPRITE_LIST_EMPTY
-    ; X->next = queue->next
-    sta.w loword(spriteQueueTabNext),X
-    ; queue->next = X
-    stx.w loword(spriteQueueTabNext)+SPRITE_LIST_EMPTY
-.ENDM
-
-; Branch if tile is on left border
-; Assume tile is in A
-.MACRO .BranchIfTileOnLeftBorderA ARGS label
-    bit #$0F
-    beq label
-.ENDM
-
-; Branch if tile is on right border
-; Assume tile is in A
-.MACRO .BranchIfTileOnRightBorderA ARGS label
-    inc A
-    bit #$0F
-    bne @@@@@\.\@
-    dec A
-    bra label
-@@@@@\.\@:
-    dec A
-.ENDM
-
-; Branch if tile is on top border
-; Assume tile is in A
-.MACRO .BranchIfTileOnTopBorderA ARGS label
-    bit #$F0
-    beq label
-.ENDM
-
-; Branch if tile is on bottom border
-; Assume tile is in A
-.MACRO .BranchIfTileOnBottomBorderA ARGS label
-    cmp #$90
-    bcs label
 .ENDM

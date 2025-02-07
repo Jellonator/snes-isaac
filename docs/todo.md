@@ -36,8 +36,9 @@ Essentials:
     * [X] Room should spawn entrance to next floor after completing
 - [ ] Update RNG on next floor
 - [X] Bombs
-- [ ] Hide map rooms until revealed
-- [ ] Darken unexplored map rooms
+- [X] Hide map rooms until revealed
+- [X] Darken unexplored map rooms
+- [ ] Optimize ground decor system for more complex shapes
 
 Bonus:
 - [ ] Secret rooms with bombable walls

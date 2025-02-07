@@ -18,5 +18,15 @@
         "name": "big_circle",
         "src": "assets/splats/big_circle.raw",
         "palette": "GROUND_PALETTE_GREY"
+    },
+    {
+        "name": "explode_big",
+        "src": "assets/splats/explode_big.raw",
+        "palette": "GROUND_PALETTE_GREY"
+    },
+    {
+        "name": "explode_small",
+        "src": "assets/splats/explode_small.raw",
+        "palette": "GROUND_PALETTE_GREY"
     }
 ]

@@ -546,27 +546,43 @@ EmptyRoomTiles:
 ; row 1
 .dw deft($22, 2)
 .dw deft($24, 2)
-.REPT 12
+.dw deft($102, 2)
+.REPT 10
     .dw deft($26, 2)
 .ENDR
+.dw deft($106, 2) | T_FLIPH
 .dw deft($24, 2) | T_FLIPH
 .dw deft($22, 2) | T_FLIPH
 ; rows 2-9
-.REPT 8
+.REPT 8 INDEX i
     .dw deft($22, 2)
-    .dw deft($06, 2)
+    .IF i == 0
+        .dw deft($100, 2)
+    .ELIF i == 7
+        .dw deft($100, 2) | T_FLIPV
+    .ELSE
+        .dw deft($06, 2)
+    .ENDIF
     .REPT 12
         .dw 0
     .ENDR
-    .dw deft($06, 2) | T_FLIPH
+    .IF i == 0
+        .dw deft($104, 2) | T_FLIPH
+    .ELIF i == 7
+        .dw deft($104, 2) | T_FLIPH | T_FLIPV
+    .ELSE
+        .dw deft($06, 2) | T_FLIPH
+    .ENDIF
     .dw deft($22, 2) | T_FLIPH
 .ENDR
 ; row 10
 .dw deft($22, 2)
 .dw deft($24, 2) | T_FLIPV
-.REPT 12
+.dw deft($102, 2) | T_FLIPV
+.REPT 10
     .dw deft($26, 2) | T_FLIPV
 .ENDR
+.dw deft($106, 2) | T_FLIPV | T_FLIPH
 .dw deft($24, 2) | T_FLIPH | T_FLIPV
 .dw deft($22, 2) | T_FLIPH
 ; row 11

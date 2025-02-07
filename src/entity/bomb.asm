@@ -206,7 +206,7 @@ true_entity_bomb_tick:
         sta.b $06
         phb
         .ChangeDataBank $00
-        jsl Splat.circle
+        jsl Splat.explode_small
         rep #$10
         ldy.b Y_STORE
         lda.w entity_posx+1,Y
@@ -217,7 +217,7 @@ true_entity_bomb_tick:
         sec
         sbc #4
         sta.b $06
-        jsl Splat.big_circle
+        jsl Splat.explode_big
         plb
         ; create graphic
         rep #$30

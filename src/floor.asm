@@ -137,7 +137,7 @@ _Floor_Update_Graphics:
     .ENDR
     ; upload tiles
     pea BG2_CHARACTER_BASE_ADDR
-    pea 256
+    pea 512
     sep #$20
     lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.tiledata + 2,X
     pha
@@ -176,7 +176,7 @@ _Floor_Update_Graphics:
         .dl palettes.basement2
     tiledata: .dl spritedata.basement
     ground: .dl spritedata.basement_ground_base
-    groundPalette: .dw 0 * $0400
+    groundPalette: .dw 2 * $0400
 .ENDST
 
 ; Caves

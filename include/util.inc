@@ -1,46 +1,93 @@
 ; as a general rule, macro labels should begin with @@@@@
 ; that way, these labels don't mess with those in code
 
-; meta instructions
+; META INSTRUCTIONS
+
+; BRANCH EQUAL LONG
 .MACRO beql ARGS addr
     bne +++++
         jmp addr
     +++++:
 .ENDM
+; BRANCH NOT EQUAL LONG
 .MACRO bnel ARGS addr
     beq +++++
         jmp addr
     +++++:
 .ENDM
+; BRANCH CARRY CLEAR LONG
 .MACRO bccl ARGS addr
     bcs +++++
         jmp addr
     +++++:
 .ENDM
+; BRANCH CARRY SET LONG
 .MACRO bcsl ARGS addr
     bcc +++++
         jmp addr
     +++++:
 .ENDM
+; BRANCH OVERFLOW CLEAR LONG
 .MACRO bvcl ARGS addr
     bvs +++++
         jmp addr
     +++++:
 .ENDM
+; BRANCH OVERFLOW SET LONG
 .MACRO bvsl ARGS addr
     bvc +++++
         jmp addr
     +++++:
 .ENDM
+; BRANCH MINUS LONG / BRANCH NEGATIVE SET LONG
 .MACRO bmil ARGS addr
     bpl +++++
         jmp addr
     +++++:
 .ENDM
+; BRANCH PLUS LONG / BRANCH NEGATIVE CLEAR LONG
 .MACRO bpll ARGS addr
     bmi +++++
         jmp addr
     +++++:
+.ENDM
+; BRANCH LESS THAN UNSIGNED
+.MACRO blsu ARGS addr
+    bcc addr
+.ENDM
+; BRANCH LESS THAN SIGNED
+.MACRO blss ARGS addr
+    bmi addr
+.ENDM
+; BRANCH LESS THAN OR EQUAL UNSIGNED
+.MACRO bleu ARGS addr
+    bcc addr
+    beq addr
+.ENDM
+; BRANCH LESS THAN OR EQUAL SIGNED
+.MACRO bles ARGS addr
+    bmi addr
+    beq addr
+.ENDM
+; BRANCH GREATER THAN UNSIGNED
+.MACRO bgru ARGS addr
+    beq +++++
+        bcs addr
+    +++++:
+.ENDM
+; BRANCH GREATER THAN SIGNED
+.MACRO bgrs ARGS addr
+    beq +++++
+        bpl addr
+    +++++:
+.ENDM
+; BRANCH GREATER THAN OR EQUAL UNSIGNED
+.MACRO bgeu ARGS addr
+    bcs addr
+.ENDM
+; BRANCH GREATER THAN OR EQUAL SIGNED
+.MACRO bges ARGS addr
+    bpl addr
 .ENDM
 
 ; GENERIC INSTRUCTIONS

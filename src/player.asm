@@ -485,10 +485,12 @@ PlayerInit:
     .ENDR
     stz.w playerData.invuln_timer
     stz.w playerData.money
-    stz.w playerData.keys
+    lda #$10
+    sta.w playerData.keys
     lda #$01
     sta.w playerData.bombs
     jsl Player.update_bomb_display
+    jsl Player.update_key_display
     sep #$30
     lda #HEALTH_REDHEART_FULL
     sta.w playerData.healthSlots.1
@@ -1141,7 +1143,7 @@ PlayerUpdate:
 
     lda.w player_posx
     cmp #PLAYER_ROOM_BOUND_LEFT
-    bmi @player_inside_door_h
+    bcc @player_inside_door_h
     cmp #PLAYER_ROOM_BOUND_RIGHT
     beq @player_outside_door_h
     bcs @player_inside_door_h
@@ -1155,7 +1157,7 @@ PlayerUpdate:
 
     lda.w player_posy
     cmp #PLAYER_ROOM_BOUND_TOP
-    bmi player_inside_door_v
+    bcc player_inside_door_v
     cmp #PLAYER_ROOM_BOUND_BOTTOM
     beq player_outside_door_v
     bcs player_inside_door_v
@@ -1169,6 +1171,75 @@ player_outside_door_v:
 ; move
     jsr PlayerMoveHorizontal
     jsr PlayerMoveVertical
+; open doors
+    rep #$30
+    lda.w currentRoomEnemyCount
+    bnel @skip_open_doors
+    .REPT 4 INDEX i
+        lda [MAP_DOOR_MEM_LOC(i)]
+        and #DOOR_MASK_STATUS
+        cmp #DOOR_METHOD_KEY | DOOR_CLOSED
+        bne @skip_door_{i}
+        lda.w joy1held
+        .IF i == 0 ; NORTH
+            bit #JOY_UP
+            beq @skip_door_{i}
+            lda.w player_posy
+            cmp #PLAYER_ROOM_BOUND_TOP
+            bgru @skip_door_{i}
+        .ELIF i == 1 ; EAST
+            bit #JOY_RIGHT
+            beq @skip_door_{i}
+            lda.w player_posx
+            cmp #PLAYER_ROOM_BOUND_RIGHT
+            blsu @skip_door_{i}
+        .ELIF i == 2 ; SOUTH
+            bit #JOY_DOWN
+            beq @skip_door_{i}
+            lda.w player_posy
+            cmp #PLAYER_ROOM_BOUND_BOTTOM
+            blsu @skip_door_{i}
+        .ELIF i == 3 ; WEST
+            bit #JOY_LEFT
+            beq @skip_door_{i}
+            lda.w player_posx
+            cmp #PLAYER_ROOM_BOUND_LEFT
+            bgru @skip_door_{i}
+        .ENDIF
+        .IF i == 0 || i == 2 ; VERTICAL
+            lda.w player_posx
+            cmp #PLAYER_DOOR_BOUND_LEFT
+            bleu @skip_door_{i}
+            cmp #PLAYER_DOOR_BOUND_RIGHT
+            bgru @skip_door_{i}
+        .ELIF i == 1 || i == 3 ; HORIZONTAL
+            lda.w player_posy
+            cmp #PLAYER_DOOR_BOUND_TOP
+            bleu @skip_door_{i}
+            cmp #PLAYER_DOOR_BOUND_BOTTOM
+            bgru @skip_door_{i}
+        .ENDIF
+        ; check keys
+        sep #$08
+        lda.w playerData.keys
+        beq @skip_door_{i}
+        ; decrease keys
+        sec
+        sbc #1
+        sta.w playerData.keys
+        rep #$08
+        jsl Player.update_key_display
+        sep #$30
+        lda [MAP_DOOR_MEM_LOC(i)]
+        ora #DOOR_OPEN
+        sta [MAP_DOOR_MEM_LOC(i)]
+        jsl updateAllDoorsInRoom
+        rep #$30
+        ; open door
+        @skip_door_{i}:
+        rep #$08
+    .ENDR
+@skip_open_doors:
 ; handle animation
     jsr _update_player_animation
 ; setup partition

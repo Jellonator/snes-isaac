@@ -803,8 +803,13 @@ BeginMapGeneration:
         ._UpdateDoors (DOOR_OPEN | DOOR_TYPE_BOSS | DOOR_METHOD_FINISH_ROOM)
     ; ITEM
         ldx.b mapgenAvailableTiles+1
-        ; ._UpdateDoors (DOOR_CLOSED | DOOR_TYPE_TREASURE | DOOR_METHOD_KEY)
-        ._UpdateDoors (DOOR_OPEN | DOOR_TYPE_TREASURE | DOOR_METHOD_FINISH_ROOM)
+        lda.w currentFloorIndex
+        beq @first_floor
+            ._UpdateDoors (DOOR_CLOSED | DOOR_TYPE_TREASURE | DOOR_METHOD_KEY)
+            jmp @not_first_floor
+        @first_floor:
+            ._UpdateDoors (DOOR_OPEN | DOOR_TYPE_TREASURE | DOOR_METHOD_FINISH_ROOM)
+        @not_first_floor:
     ; SHOP
         ldx.b mapgenAvailableTiles+2
         ._UpdateDoors (DOOR_CLOSED | DOOR_TYPE_SHOP | DOOR_METHOD_KEY)

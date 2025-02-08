@@ -117,11 +117,12 @@
 .ENUMID P_REL16
 .ENUMID P_SRC_DEST
 
-; Generic Instruction invokation
+; Generic Instruction invocation
+; Note that many instruction,method pairs are invalid.
 ; Parameters:
 ;   inst   - the instruction
 ;   method - address mode
-;   arg    - address
+;   arg    - address/value
 .MACRO .g_instruction ARGS inst method arg
     .IF method == P_IMM
         \1 #arg

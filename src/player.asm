@@ -485,7 +485,7 @@ PlayerInit:
     .ENDR
     stz.w playerData.invuln_timer
     stz.w playerData.money
-    lda #$10
+    lda #$01
     sta.w playerData.keys
     lda #$01
     sta.w playerData.bombs
@@ -1097,10 +1097,10 @@ PlayerUpdate:
     sty TempLimitRight ; right
     lda.w player_posy
     cmp #PLAYER_DOOR_BOUND_TOP
-    bmi @player_aligned_door_v
+    bcc @player_aligned_door_v
     cmp #PLAYER_DOOR_BOUND_BOTTOM
     beq +
-        bpl @player_aligned_door_v
+        bcs @player_aligned_door_v
     +:
     sep #$20
     lda [mapDoorWest]
@@ -1122,10 +1122,10 @@ PlayerUpdate:
     sty TempLimitBottom ; bottom
     lda.w player_posx
     cmp #PLAYER_DOOR_BOUND_LEFT
-    bmi @player_aligned_door_h
+    bcc @player_aligned_door_h
     cmp #PLAYER_DOOR_BOUND_RIGHT
     beq +
-        bpl @player_aligned_door_h
+        bcs @player_aligned_door_h
     +:
     sep #$20
     lda [mapDoorNorth]

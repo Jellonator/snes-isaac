@@ -1,7 +1,6 @@
 ; DOOR TYPE INFO
-; Note: even = can't enter, odd = can enter
-; this way, checking if a door can be entered is as easy as `BIT #1`
-; Opening a door should be ORA 1, closing should be AND ~1
+; Top bit of door mask determines if it is open. This is so that checking if a
+; door is open is as easy as `lda door`, `bmi addr`
 .DEFINE DOOR_MASK_IS_CLOSED $80
 .DEFINE DOOR_MASK_OPEN_METHOD $70
 .DEFINE DOOR_MASK_STATUS $F0

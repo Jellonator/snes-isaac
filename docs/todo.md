@@ -35,6 +35,7 @@ Essentials:
     * [X] Room should spawn an item after completing
     * [X] Room should spawn entrance to next floor after completing
 - [ ] Update RNG on next floor
+- [ ] Set reward RNG to be based on room
 - [X] Bombs
 - [X] Hide map rooms until revealed
 - [X] Darken unexplored map rooms

@@ -1074,86 +1074,102 @@ PlayerUpdate:
     .AMIN P_IMM $00
 @endx:
     sta.w player_velocx
+; Determine collision bounds
+.DEFINE PLAYER_ROOM_BOUND_LEFT (ROOM_LEFT - 4)*256
+.DEFINE PLAYER_ROOM_BOUND_RIGHT (ROOM_RIGHT - 12 - 1)*256
+.DEFINE PLAYER_ROOM_BOUND_TOP (ROOM_TOP - 4)*256
+.DEFINE PLAYER_ROOM_BOUND_BOTTOM (ROOM_BOTTOM - 12 - 1)*256
+.DEFINE PLAYER_DOOR_BOUND_LEFT (ROOM_CENTER_X - 8 - ROOM_DOOR_RADIUS)*256
+.DEFINE PLAYER_DOOR_BOUND_RIGHT (ROOM_CENTER_X - 8 + ROOM_DOOR_RADIUS - 1)*256
+.DEFINE PLAYER_DOOR_BOUND_TOP (ROOM_CENTER_Y - 8 - ROOM_DOOR_RADIUS)*256
+.DEFINE PLAYER_DOOR_BOUND_BOTTOM (ROOM_CENTER_Y - 8 + ROOM_DOOR_RADIUS - 1)*256
+.DEFINE PLAYER_DOOR_ENTRY_LIMIT (16*256)
 
 .DEFINE TempLimitLeft $00
 .DEFINE TempLimitRight $02
 .DEFINE TempLimitTop $04
 .DEFINE TempLimitBottom $06
-    ldx #(ROOM_LEFT - 4)*256
-    ldy #(ROOM_RIGHT - 12)*256 - 1
-    stx $00 ; left
-    sty $02 ; right
+    ldx #PLAYER_ROOM_BOUND_LEFT
+    ldy #PLAYER_ROOM_BOUND_RIGHT
+    stx TempLimitLeft ; left
+    sty TempLimitRight ; right
     lda.w player_posy
-    cmp #(ROOM_CENTER_Y - 8 - ROOM_DOOR_RADIUS)*256
-    bmi ++
-    cmp #(ROOM_CENTER_Y - 8 + ROOM_DOOR_RADIUS)*256
-    bpl ++
-    ldx #(ROOM_LEFT - 4 - 16)*256
-    ldy #(ROOM_RIGHT - 12 + 16)*256
+    cmp #PLAYER_DOOR_BOUND_TOP
+    bmi @player_aligned_door_v
+    cmp #PLAYER_DOOR_BOUND_BOTTOM
+    beq +
+        bpl @player_aligned_door_v
+    +:
     sep #$20
     lda [mapDoorWest]
     bpl +
-        stx $00 ; left
+        ldx #PLAYER_ROOM_BOUND_LEFT - PLAYER_DOOR_ENTRY_LIMIT
+        stx TempLimitLeft ; left
     +:
     lda [mapDoorEast]
     bpl +
-        sty $02 ; right
+        ldy #PLAYER_ROOM_BOUND_RIGHT + PLAYER_DOOR_ENTRY_LIMIT
+        sty TempLimitRight ; right
     +:
     rep #$20
-++:
+@player_aligned_door_v:
 
-    ldx #(ROOM_TOP - 4)*256
-    ldy #(ROOM_BOTTOM - 12)*256
-    stx $04 ; top
-    sty $06 ; bottom
+    ldx #PLAYER_ROOM_BOUND_TOP
+    ldy #PLAYER_ROOM_BOUND_BOTTOM
+    stx TempLimitTop ; top
+    sty TempLimitBottom ; bottom
     lda.w player_posx
-    cmp #(ROOM_CENTER_X - 8 - ROOM_DOOR_RADIUS)*256
-    bmi ++
-    cmp #(ROOM_CENTER_X - 8 + ROOM_DOOR_RADIUS)*256
-    bpl ++
-    ldx #(ROOM_TOP - 4 - 16)*256
-    ldy #(ROOM_BOTTOM - 12 + 16)*256
+    cmp #PLAYER_DOOR_BOUND_LEFT
+    bmi @player_aligned_door_h
+    cmp #PLAYER_DOOR_BOUND_RIGHT
+    beq +
+        bpl @player_aligned_door_h
+    +:
     sep #$20
     lda [mapDoorNorth]
     bpl +
-        stx $04 ; top
+        ldx #PLAYER_ROOM_BOUND_TOP - PLAYER_DOOR_ENTRY_LIMIT
+        stx TempLimitTop ; top
     +:
     lda [mapDoorSouth]
     bpl +
-        sty $06 ; bottom
+        ldy #PLAYER_ROOM_BOUND_BOTTOM + PLAYER_DOOR_ENTRY_LIMIT
+        sty TempLimitBottom ; bottom
     +:
     rep #$20
-++:
+@player_aligned_door_h:
 
     lda.w player_posx
-    cmp #(ROOM_LEFT - 4)*256
-    bcc +
-    cmp #(ROOM_RIGHT - 12 + 1)*256
-    bcs +
-    bra ++
-+:
-    ldx #(ROOM_CENTER_Y - 8 - ROOM_DOOR_RADIUS)*256
-    ldy #(ROOM_CENTER_Y - 8 + ROOM_DOOR_RADIUS - 1)*256
-    stx $04 ; top
-    sty $06 ; bottom
-++:
+    cmp #PLAYER_ROOM_BOUND_LEFT
+    bmi @player_inside_door_h
+    cmp #PLAYER_ROOM_BOUND_RIGHT
+    beq @player_outside_door_h
+    bcs @player_inside_door_h
+    bra @player_outside_door_h
+@player_inside_door_h:
+    ldx #PLAYER_DOOR_BOUND_TOP
+    ldy #PLAYER_DOOR_BOUND_BOTTOM
+    stx TempLimitTop ; top
+    sty TempLimitBottom ; bottom
+@player_outside_door_h:
 
     lda.w player_posy
-    cmp #(ROOM_TOP - 4)*256
-    bcc +
-    cmp #(ROOM_BOTTOM - 12 + 1)*256
-    bcs +
-    bra ++
-+:
-    ldx #(ROOM_CENTER_X - 8 - ROOM_DOOR_RADIUS)*256
-    ldy #(ROOM_CENTER_X - 8 + ROOM_DOOR_RADIUS - 1)*256
-    stx $00 ; left
-    sty $02 ; right
-++:
-
-    ; move
+    cmp #PLAYER_ROOM_BOUND_TOP
+    bmi player_inside_door_v
+    cmp #PLAYER_ROOM_BOUND_BOTTOM
+    beq player_outside_door_v
+    bcs player_inside_door_v
+    bra player_outside_door_v
+player_inside_door_v:
+    ldx #PLAYER_DOOR_BOUND_LEFT
+    ldy #PLAYER_DOOR_BOUND_RIGHT
+    stx TempLimitLeft ; left
+    sty TempLimitRight ; right
+player_outside_door_v:
+; move
     jsr PlayerMoveHorizontal
     jsr PlayerMoveVertical
+; handle animation
     jsr _update_player_animation
 ; setup partition
     sep #$30
@@ -1495,15 +1511,15 @@ PlayerMoveHorizontal:
     clc
     adc.w player_posx
     ; EXPANSION OF: .AMAXU P_DIR, $00
-        .g_instruction cmp, P_DIR, $00
+        .g_instruction cmp, P_DIR, TempLimitLeft
         bcs +
-            .g_instruction lda, P_DIR, $00
+            .g_instruction lda, P_DIR, TempLimitLeft
             stz.w player_velocx
         +:
     ; EXPANSION OF: .AMINU P_DIR, $02
-        .g_instruction cmp, P_DIR, $02
+        .g_instruction cmp, P_DIR, TempLimitRight
         bcc +
-            .g_instruction lda, P_DIR, $02
+            .g_instruction lda, P_DIR, TempLimitRight
             stz.w player_velocx
         +:
     sta.w player_posx
@@ -1614,15 +1630,15 @@ PlayerMoveVertical:
     clc
     adc.w player_posy
     ; EXPANSION OF: .AMAXU P_DIR, $04
-        .g_instruction cmp, P_DIR, $04
+        .g_instruction cmp, P_DIR, TempLimitTop
         bcs +
-            .g_instruction lda, P_DIR, $04
+            .g_instruction lda, P_DIR, TempLimitTop
             stz.w player_velocy
         +:
     ; EXPANSION OF: .AMINU P_DIR, $06
-        .g_instruction cmp, P_DIR, $06
+        .g_instruction cmp, P_DIR, TempLimitBottom
         bcc +
-            .g_instruction lda, P_DIR, $06
+            .g_instruction lda, P_DIR, TempLimitBottom
             stz.w player_velocy
         +:
     sta.w player_posy
@@ -2191,7 +2207,6 @@ player_update_pathfinding_data:
         tay
         lda (currentRoomTileTypeTableAddress),Y
         bmi @skiptile ; Skip if this tile is solid (can not be entered)
- 
         .REPT 4 INDEX i
             .IF i == 0
                 .DEFINE i_dir PATH_DIR_RIGHT

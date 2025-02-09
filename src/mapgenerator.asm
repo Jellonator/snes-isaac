@@ -97,7 +97,7 @@ _CmpRoomsByAvailableEndpointTiles:
     lda.w $0000,X
     jsr _CountAdjacentFilledRoomsA
     lda.b $03
-    sta.b $10
+    sta.b TempValue
     lda $02,S
     tax
     lda.w $0000,X
@@ -105,7 +105,7 @@ _CmpRoomsByAvailableEndpointTiles:
     ply
     plx
     lda.b $03
-    cmp.b $10
+    cmp.b TempValue
     rtl
 
 .SortHeap_Build "SortRoomsByEndpointCount", _CmpRoomsByAvailableEndpointTiles, 8

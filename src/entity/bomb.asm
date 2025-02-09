@@ -118,9 +118,13 @@ true_entity_bomb_tick:
         ; open doors
         .REPT 4 INDEX i
             lda [MAP_DOOR_MEM_LOC(i)]
+            cmp #DOOR_METHOD_FINISH_ROOM | DOOR_CLOSED | DOOR_TYPE_NORMAL
+            beq @try_door_{i}
             and #DOOR_MASK_STATUS
             cmp #DOOR_METHOD_BOMB | DOOR_CLOSED
-            bne @skip_door_{i}
+            beq @try_door_{i}
+            jmp @skip_door_{i}
+        @try_door_{i}:
             .IF i == 0 ; NORTH
                 lda.w entity_posy+1,Y
                 cmp #ROOM_TOP - 8 + DOOR_OPEN_RADIUS

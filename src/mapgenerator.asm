@@ -7,8 +7,10 @@
 .ENUM $0060
     start_pos INSTANCEOF maptilepos_t
     mapgenNumAvailableTiles db
+    mapgenNumUsedTiles db
     mapgenNumAvailableEndpointTiles db
     mapgenAvailableTiles INSTANCEOF maptilepos_t MAX_MAP_SLOTS
+    mapgenUsedTiles INSTANCEOF maptilepos_t MAX_MAP_SLOTS
     currentRoomPoolBase dl
 .ENDE
 
@@ -83,6 +85,30 @@
         sta.w loword(mapDoorVertical),X
     +:
 .ENDM
+
+_CmpRoomsByAvailableEndpointTiles:
+    .INDEX 16
+    .ACCU 16
+    sep #$30
+    phx
+    phy
+    lda $01,S
+    tax
+    lda.w $0000,X
+    jsr _CountAdjacentFilledRoomsA
+    lda.b $03
+    sta.b $10
+    lda $02,S
+    tax
+    lda.w $0000,X
+    jsr _CountAdjacentFilledRoomsA
+    ply
+    plx
+    lda.b $03
+    cmp.b $10
+    rtl
+
+.SortHeap_Build "SortRoomsByEndpointCount", _CmpRoomsByAvailableEndpointTiles, 8
 
 ; i = 0, j = len(tiles)-1
 ; while (i <= j) {
@@ -347,16 +373,84 @@ _CalculateNewEndpointTiles:
     inc.b mapgenNumAvailableEndpointTiles
     rts
 
-_MoveActiveRoomsIntoAvailableTiles:
-    stz.b mapgenNumAvailableEndpointTiles
+_MoveActiveRoomsIntoUsedTiles:
+    ; stz.b mapgenNumAvailableEndpointTiles
     ldx.w numUsedMapSlots
-    stx.b mapgenNumAvailableTiles
+    stx.b mapgenNumUsedTiles
 @loop_setup_tiles:
     lda.w loword(roomSlotMapPos-1),X
-    sta.b mapgenAvailableTiles-1,X
+    sta.b mapgenUsedTiles-1,X
     dex
     bne @loop_setup_tiles
     rts
+
+_FindValidSecretRoomLocations:
+    sep #$30
+    lda #0
+    sta.b mapgenNumUsedTiles
+    lda.b mapgenNumAvailableTiles
+    sta.b $00
+@loop:
+    ; --i
+    ldx.b $00
+    beq @end
+    dex
+    stx.b $00
+    ; check left
+    lda.b mapgenAvailableTiles,X
+    .BranchIfTileOnLeftBorderA +
+        tay
+        dey
+        lda.w mapTileTypeTable,Y
+        cmp #ROOMTYPE_BOSS
+        beq @loop
+        cmp #ROOMTYPE_SECRET
+        beq @loop
+    +:
+    ; check right
+    lda.b mapgenAvailableTiles,X
+    .BranchIfTileOnRightBorderA +
+        tay
+        iny
+        lda.w mapTileTypeTable,Y
+        cmp #ROOMTYPE_BOSS
+        beq @loop
+        cmp #ROOMTYPE_SECRET
+        beq @loop
+    +:
+    ; check top
+    lda.b mapgenAvailableTiles,X
+    .BranchIfTileOnTopBorderA +
+        sec
+        sbc #16
+        tay
+        lda.w mapTileTypeTable,Y
+        cmp #ROOMTYPE_BOSS
+        beq @loop
+        cmp #ROOMTYPE_SECRET
+        beq @loop
+    +:
+    ; check bottom
+    lda.b mapgenAvailableTiles,X
+    .BranchIfTileOnBottomBorderA +
+        clc
+        adc #16
+        tay
+        lda.w mapTileTypeTable,Y
+        cmp #ROOMTYPE_BOSS
+        beq @loop
+        cmp #ROOMTYPE_SECRET
+        beq @loop
+    +:
+    ; put
+    ldy.b mapgenNumUsedTiles
+    inc.b mapgenNumUsedTiles
+    lda.b mapgenAvailableTiles,X
+    sta.w mapgenUsedTiles,Y
+    bra @loop
+@end
+    rts
+
 
 ; Removes the room at mapgenAvailableTiles[X]
 ; Consumes Y and A
@@ -767,28 +861,63 @@ BeginMapGeneration:
     bne @loop_add_tiles ; } while (--Y != 0);
 ; setup special rooms
     ; Determine endpoint tiles
-    jsr _MoveActiveRoomsIntoAvailableTiles
-    jsr _CalculateAvailableEndpointTiles
+    jsr _MoveActiveRoomsIntoUsedTiles
+    rep #$30
+    ldx #mapgenUsedTiles
+    lda.w mapgenNumUsedTiles
+    and #$00FF
+    jsl SortRoomsByEndpointCount
     sep #$30 ; 8b AXY
     ; for now, just set them up depending on index in available endpoint tiles
     ; BOSS
-        ldx mapgenAvailableTiles+0
+        ldx mapgenUsedTiles+0
+        stx.b $10
         ldy.w loword(mapTileSlotTable),X
         lda #ROOMTYPE_BOSS
         sta.w loword(mapTileTypeTable),X
         sta.w loword(roomSlotRoomType),Y
     ; ITEM
-        ldx mapgenAvailableTiles+1
+        ldx mapgenUsedTiles+1
+        stx.b $11
         ldy.w loword(mapTileSlotTable),X
         lda #ROOMTYPE_ITEM
         sta.w loword(mapTileTypeTable),X
         sta.w loword(roomSlotRoomType),Y
     ; SHOP
-        ldx mapgenAvailableTiles+2
+        ldx mapgenUsedTiles+2
+        stx.b $12
         ldy.w loword(mapTileSlotTable),X
         lda #ROOMTYPE_SHOP
         sta.w loword(mapTileTypeTable),X
         sta.w loword(roomSlotRoomType),Y
+    ; SUPER SECRET
+        ldx mapgenUsedTiles+3
+        stx.b $13
+        ldy.w loword(mapTileSlotTable),X
+        lda #ROOMTYPE_SECRET
+        sta.w loword(mapTileTypeTable),X
+        sta.w loword(roomSlotRoomType),Y
+; add secret room
+    jsr _FindValidSecretRoomLocations
+    rep #$30
+    ldx #mapgenUsedTiles
+    lda.w mapgenNumUsedTiles
+    and #$00FF
+    jsl SortRoomsByEndpointCount
+    sep #$30 ; 8b AXY
+    ; insert
+    lda.b mapgenNumUsedTiles
+    dec A
+    tax
+    lda.b mapgenUsedTiles,X
+    sta.b $14
+    ; setup
+    ldx.b $14
+    lda #ROOMTYPE_SECRET
+    pha
+    jsr _InitializeRoomX
+    sep #$30
+    pla
 ; Setup rooms
     ldy.w numUsedMapSlots
 @loop_setup_tiles:
@@ -799,10 +928,10 @@ BeginMapGeneration:
     bne @loop_setup_tiles
 ; setup special door rooms
     ; BOSS
-        ldx.b mapgenAvailableTiles+0
+        ldx.b $10
         ._UpdateDoors (DOOR_OPEN | DOOR_TYPE_BOSS | DOOR_METHOD_FINISH_ROOM)
     ; ITEM
-        ldx.b mapgenAvailableTiles+1
+        ldx.b $11
         lda.w currentFloorIndex
         beq @first_floor
             ._UpdateDoors (DOOR_CLOSED | DOOR_TYPE_TREASURE | DOOR_METHOD_KEY)
@@ -811,8 +940,14 @@ BeginMapGeneration:
             ._UpdateDoors (DOOR_OPEN | DOOR_TYPE_TREASURE | DOOR_METHOD_FINISH_ROOM)
         @not_first_floor:
     ; SHOP
-        ldx.b mapgenAvailableTiles+2
+        ldx.b $12
         ._UpdateDoors (DOOR_CLOSED | DOOR_TYPE_SHOP | DOOR_METHOD_KEY)
+    ; SECRET
+        ldx.b $14
+        ._UpdateDoors (DOOR_CLOSED | DOOR_TYPE_SECRET | DOOR_METHOD_BOMB)
+    ; SUPER SECRET
+        ldx.b $13
+        ._UpdateDoors (DOOR_CLOSED | DOOR_TYPE_SECRET | DOOR_METHOD_BOMB)
 ; end
     lda #$FF
     sta.w numTilesToUpdate

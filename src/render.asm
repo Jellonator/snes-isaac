@@ -96,14 +96,14 @@ UpdateEntireMinimap:
 UpdateMinimapLine:
     .ACCU 16
     .INDEX 8
-    .REPT MAP_MAX_WIDTH
+    .REPT MAP_MAX_WIDTH INDEX i
         lda.w mapTileTypeTable,Y
         and #$00FF
         asl
         tax
         lda.l MapTiles,X
         sta.b $00
-        ; cpy loadedRoomIndex
+        beq @empty_tile_{i}
         lda.w mapTileFlagsTable,Y
         bit #MAPTILE_COMPLETED
         beq +
@@ -125,9 +125,8 @@ UpdateMinimapLine:
             and.b $00
             sta.b $00
         +:
-        ; bne +
-        ; ORA #$0020
-        ; +:
+    @empty_tile_{i}:
+        lda.b $00
         sta VMDATA
         iny
     .ENDR

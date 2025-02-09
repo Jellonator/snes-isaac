@@ -392,12 +392,12 @@ Player.update_money_display:
     lsr
     lsr
     clc
-    adc #$3C70
+    adc #deft($70,5) | T_HIGHP
     sta.l vqueueMiniOps.1.data,X
     lda.w playerData.money
     and #$000F
     clc
-    adc #$3C70
+    adc #deft($70,5) | T_HIGHP
     sta.l vqueueMiniOps.2.data,X
     rtl
 
@@ -423,12 +423,12 @@ Player.update_bomb_display:
     lsr
     lsr
     clc
-    adc #$3C70
+    adc #deft($70,5) | T_HIGHP
     sta.l vqueueMiniOps.1.data,X
     lda.w playerData.bombs
     and #$000F
     clc
-    adc #$3C70
+    adc #deft($70,5) | T_HIGHP
     sta.l vqueueMiniOps.2.data,X
     rtl
 
@@ -454,12 +454,12 @@ Player.update_key_display:
     lsr
     lsr
     clc
-    adc #$3C70
+    adc #deft($70,5) | T_HIGHP
     sta.l vqueueMiniOps.1.data,X
     lda.w playerData.keys
     and #$000F
     clc
-    adc #$3C70
+    adc #deft($70,5) | T_HIGHP
     sta.l vqueueMiniOps.2.data,X
     rtl
 

@@ -12,10 +12,6 @@
         "src": "assets/palettes/basement2.hex"
     },
     {
-        "name": "ui_dark",
-        "src": "assets/palettes/ui_dark.hex"
-    },
-    {
         "name": "ui_gold",
         "src": "assets/palettes/ui_gold.hex"
     },

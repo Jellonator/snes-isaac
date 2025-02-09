@@ -36,8 +36,8 @@ DefaultUiData:
     .dw 0
     .dw deft($12,6) | T_HIGHP | T_FLIPH
     .dw deft($01,6) | T_HIGHP
-    .dw deft($70,7) | T_HIGHP
-    .dw deft($70,7) | T_HIGHP
+    .dw deft($70,5) | T_HIGHP
+    .dw deft($70,5) | T_HIGHP
     .REPT 24
         .dw 0
     .ENDR
@@ -46,9 +46,9 @@ DefaultUiData:
     .dw 0
     .dw 0
     .dw deft($12,6) | T_HIGHP | T_FLIPH
-    .dw deft($11,7) | T_HIGHP
-    .dw deft($70,7) | T_HIGHP
-    .dw deft($70,7) | T_HIGHP
+    .dw deft($11,5) | T_HIGHP
+    .dw deft($70,5) | T_HIGHP
+    .dw deft($70,5) | T_HIGHP
     .REPT 24
         .dw 0
     .ENDR
@@ -58,8 +58,8 @@ DefaultUiData:
     .dw deft($03,6) | T_HIGHP | T_FLIPV
     .dw deft($02,6) | T_HIGHP | T_FLIPH | T_FLIPV
     .dw deft($10,5) | T_HIGHP
-    .dw deft($70,7) | T_HIGHP
-    .dw deft($70,7) | T_HIGHP
+    .dw deft($70,5) | T_HIGHP
+    .dw deft($70,5) | T_HIGHP
     .REPT 24
         .dw 0
     .ENDR

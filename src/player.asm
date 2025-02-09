@@ -487,7 +487,7 @@ PlayerInit:
     stz.w playerData.money
     lda #$01
     sta.w playerData.keys
-    lda #$01
+    lda #$99
     sta.w playerData.bombs
     jsl Player.update_bomb_display
     jsl Player.update_key_display
@@ -961,7 +961,12 @@ PlayerUpdate:
         sta.w entity_posy,Y
         lda #PLAYER_BOMB_PLACE_TIMER
         sta.w playerData.bomb_wait_timer
-        dec.w playerData.bombs
+        sep #$08
+        lda.w playerData.bombs
+        sec
+        sbc #1
+        sta.w playerData.bombs
+        rep #$08
         jsl Player.update_bomb_display
         jmp @end_place_bomb
     @cant_place_bomb:
@@ -1233,7 +1238,15 @@ player_outside_door_v:
         lda [MAP_DOOR_MEM_LOC(i)]
         ora #DOOR_OPEN
         sta [MAP_DOOR_MEM_LOC(i)]
-        jsl updateAllDoorsInRoom
+        .IF i == 0 ; NORTH
+            jsl UpdateDoorTileNorth
+        .ELIF i == 1 ; EAST
+            jsl UpdateDoorTileEast
+        .ELIF i == 2 ; SOUTH
+            jsl UpdateDoorTileSouth
+        .ELIF i == 3 ; WEST
+            jsl UpdateDoorTileWest
+        .ENDIF
         rep #$30
         ; open door
         @skip_door_{i}:

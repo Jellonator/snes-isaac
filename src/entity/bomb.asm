@@ -13,6 +13,8 @@
 
 .DEFINE EXPLOSION_DAMAGE 100
 
+.DEFINE DOOR_OPEN_RADIUS 24
+
 _bomb_tile_do_nothing:
     .INDEX 16
     .ACCU 16
@@ -113,6 +115,65 @@ true_entity_bomb_tick:
         clc
         adc #EXPLOSION_BOTTOM
         sta.b BOTTOM
+        ; open doors
+        .REPT 4 INDEX i
+            lda [MAP_DOOR_MEM_LOC(i)]
+            and #DOOR_MASK_STATUS
+            cmp #DOOR_METHOD_BOMB | DOOR_CLOSED
+            bne @skip_door_{i}
+            .IF i == 0 ; NORTH
+                lda.w entity_posy+1,Y
+                cmp #ROOM_TOP - 8 + DOOR_OPEN_RADIUS
+                bgru @skip_door_{i}
+            .ELIF i == 1 ; EAST
+                lda.w entity_posx+1,Y
+                cmp #ROOM_RIGHT - 8 - DOOR_OPEN_RADIUS
+                blsu @skip_door_{i}
+            .ELIF i == 2 ; SOUTH
+                lda.w entity_posy+1,Y
+                cmp #ROOM_BOTTOM - 8 - DOOR_OPEN_RADIUS
+                blsu @skip_door_{i}
+            .ELIF i == 3 ; WEST
+                lda.w entity_posx+1,Y
+                cmp #ROOM_LEFT - 8 + DOOR_OPEN_RADIUS
+                bgru @skip_door_{i}
+            .ENDIF
+            .IF i == 0 || i == 2 ; VERTICAL
+                lda.w entity_posx+1,Y
+                cmp #ROOM_CENTER_X - 8 - DOOR_OPEN_RADIUS
+                bleu @skip_door_{i}
+                cmp #ROOM_CENTER_X - 8 + DOOR_OPEN_RADIUS
+                bgru @skip_door_{i}
+            .ELIF i == 1 || i == 3 ; HORIZONTAL
+                lda.w entity_posy+1,Y
+                cmp #ROOM_CENTER_Y - 8 - DOOR_OPEN_RADIUS
+                bleu @skip_door_{i}
+                cmp #ROOM_CENTER_Y - 8 + DOOR_OPEN_RADIUS
+                bgru @skip_door_{i}
+            .ENDIF
+            ; open door
+            lda [MAP_DOOR_MEM_LOC(i)]
+            ora #DOOR_OPEN
+            sta [MAP_DOOR_MEM_LOC(i)]
+            ; update tile
+            phy
+            phb
+            .ChangeDataBank $00
+            .IF i == 0 ; NORTH
+                jsl UpdateDoorTileNorth
+            .ELIF i == 1 ; EAST
+                jsl UpdateDoorTileEast
+            .ELIF i == 2 ; SOUTH
+                jsl UpdateDoorTileSouth
+            .ELIF i == 3 ; WEST
+                jsl UpdateDoorTileWest
+            .ENDIF
+            plb
+            rep #$10
+            sep #$20
+            ply
+            @skip_door_{i}:
+        .ENDR
         ; get tile
         lda.w entity_posy+1,Y
         sec

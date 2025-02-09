@@ -55,6 +55,7 @@ UpdateRest:
     jsl LoadRoomSlotIntoLevel
     sep #$30 ; 8 bit AXY
     pla
+    jsl PlayerEnterFloor
 @skip_regenerate_map:
     rts
 

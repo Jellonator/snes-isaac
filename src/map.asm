@@ -243,10 +243,10 @@ LoadRoomSlotIntoLevel:
     sep #$20
     ; check doors
     php
-    jsr _UpdateDoorTileNorth
-    jsr _UpdateDoorTileSouth
-    jsr _UpdateDoorTileEast
-    jsr _UpdateDoorTileWest
+    jsl UpdateDoorTileNorth
+    jsl UpdateDoorTileSouth
+    jsl UpdateDoorTileEast
+    jsl UpdateDoorTileWest
     plp
     jsl Room_Init
     rtl
@@ -296,7 +296,7 @@ HandleTileChanged:
     plb
     rtl
 
-_UpdateDoorTileNorth:
+UpdateDoorTileNorth:
     rep #$30
     ; Init vqueue
     lda.w vqueueNumMiniOps
@@ -339,9 +339,9 @@ _UpdateDoorTileNorth:
     lda.w DoorTileBaseTable_TOP+2,Y
     sta.l vqueueMiniOps.4.data,X
     ; Return
-    rts
+    rtl
 
-_UpdateDoorTileSouth:
+UpdateDoorTileSouth:
     rep #$30
     ; Init vqueue
     lda.w vqueueNumMiniOps
@@ -388,9 +388,9 @@ _UpdateDoorTileSouth:
     ora #$8000
     sta.l vqueueMiniOps.2.data,X
     ; Return
-    rts
+    rtl
 
-_UpdateDoorTileWest:
+UpdateDoorTileWest:
     rep #$30
     ; Init vqueue
     lda.w vqueueNumMiniOps
@@ -433,9 +433,9 @@ _UpdateDoorTileWest:
     lda.w DoorTileBaseTable_LEFT+2,Y
     sta.l vqueueMiniOps.4.data,X
     ; Return
-    rts
+    rtl
 
-_UpdateDoorTileEast:
+UpdateDoorTileEast:
     rep #$30
     ; Init vqueue
     lda.w vqueueNumMiniOps
@@ -482,13 +482,13 @@ _UpdateDoorTileEast:
     eor #$4000
     sta.l vqueueMiniOps.3.data,X
     ; Return
-    rts
+    rtl
 
 updateAllDoorsInRoom:
-    jsr _UpdateDoorTileNorth
-    jsr _UpdateDoorTileSouth
-    jsr _UpdateDoorTileEast
-    jsr _UpdateDoorTileWest
+    jsl UpdateDoorTileNorth
+    jsl UpdateDoorTileSouth
+    jsl UpdateDoorTileEast
+    jsl UpdateDoorTileWest
     rtl
 
 .ENDS

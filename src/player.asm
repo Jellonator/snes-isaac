@@ -487,7 +487,7 @@ PlayerInit:
     stz.w playerData.money
     lda #$01
     sta.w playerData.keys
-    lda #$99
+    lda #$01
     sta.w playerData.bombs
     jsl Player.update_bomb_display
     jsl Player.update_key_display
@@ -1826,6 +1826,15 @@ PlayerMoveDown:
     rts
 
 .MACRO .PlayerDiscoverRoomHelper ARGS is_current
+    .IF is_current == 0
+        lda.w mapTileTypeTable,X
+        cmp #ROOMTYPE_SECRET
+        bne @@@@@\@not_secret
+            lda.w mapTileFlagsTable,X
+            bit #MAPTILE_DISCOVERED
+            beq @@@@@\@undiscovered_secret
+        @@@@@\@not_secret:
+    .ENDIF
     lda.w mapTileFlagsTable,X
     .IF is_current == 1
         ora #MAPTILE_HAS_PLAYER | MAPTILE_DISCOVERED
@@ -1839,6 +1848,7 @@ PlayerMoveDown:
     jsl UpdateMinimapSlot
     plx
     sep #$30
+@@@@@\@undiscovered_secret:
 .ENDM
 
 PlayerDiscoverNearbyRooms:

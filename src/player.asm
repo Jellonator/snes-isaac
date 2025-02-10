@@ -2195,16 +2195,30 @@ player_initialize_pathfinding_data:
 
 _player_clear_pathfinding_data:
     rep #$30
-    phb
-    ; loop
-    .REPT 8 INDEX i
-        ldx #loword(InitialPathfindingData) + 16 * 4 + 2 + (16 * i)
-        ldy #loword(pathfind_player_data) + 16 * 4 + 2 + (16 * i)
-        lda #11
-        mvn bankbyte(InitialPathfindingData), bankbyte(pathfind_player_data)
-    .ENDR
-    ; end
-    plb
+    phd
+    pea $4300
+    pld
+    rep #$20 ; 16 bit A
+    lda #128
+    sta.b <DMA0_SIZE
+    lda #loword(EmptyData)
+    sta.b <DMA0_SRCL
+    lda #loword(16*4 + pathfind_player_data)
+    sta.l WMADDL
+    sep #$20 ; 8 bit A
+    lda #bankbyte(EmptyData)
+    sta.b <DMA0_SRCH
+    lda #bankbyte(16*4 + pathfind_player_data)
+    sta.l WMADDH
+    ; Absolute address, increment, 1 byte at a time
+    lda #%00000000
+    sta.b <DMA0_CTL
+    ; Write to WRAM
+    lda #$80
+    sta.b <DMA0_DEST
+    lda #$01
+    sta.l MDMAEN
+    pld
     rts
 
 player_update_pathfinding_data:

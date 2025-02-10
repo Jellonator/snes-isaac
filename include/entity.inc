@@ -153,7 +153,7 @@
         ldy.w spatial_partition.{i+1},X
         bne +++++
         sta.w spatial_partition.{i+1},X
-        bra @@@@@\.\@
+        jmp @@@@@\.\@
         +++++:
     .ENDR
     @@@@@\.\@:

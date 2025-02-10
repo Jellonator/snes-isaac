@@ -23,6 +23,15 @@
 
 - [ ] Active Items
 
+## ENEMIES
+
+- [X] Zombie
+    * [ ] Animated body
+    * [ ] Random movement when headless
+- Pathfinding
+    * [ ] Diagonal Movement
+    * [ ] Target player when within player tile
+
 ## BOSSES
 
 - Bosses

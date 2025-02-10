@@ -222,6 +222,22 @@ InitialPathfindingData:
     .db $04 ; up
 .ENDR
 
+HitboxWidthToPartitionSize:
+    .REPT 256 INDEX i
+        .IF i == 0
+            .db 1
+        .ELIF i == 1
+            .db 1
+        .ELSE
+            .db ceil((i + 16) / 16)
+        .ENDIF
+    .ENDR
+
+Div16:
+    .REPT 256 INDEX i
+        .db floor(i / 16)
+    .ENDR
+
 .ENDS
 
 .bank $20

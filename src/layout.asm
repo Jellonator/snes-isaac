@@ -79,6 +79,7 @@
     currentFloorPointer dw
     floorFlags dw
 ; Commonly used entity data
+    entityExecutionOrder ds ENTITY_TOTAL_MAX
     entity_data_begin ds 0
     private_base_entity_combined_type_variant dsw ENTITY_TOTAL_MAX
     private_base_entity_combined_state_timer dsw ENTITY_TOTAL_MAX
@@ -143,7 +144,6 @@
     entity_array_data ds (ENTITY_TOTAL_MAX + 1) * ENTITY_DATA_ARRAY_SIZE
 ; extra entity data
     numEntities dw
-    entityExecutionOrder ds 256
 .ENDS
 
 ; Should contain data that is either large or not often used

@@ -910,34 +910,6 @@ PlayerUpdate:
     +:
 ; check stats
     jsl Item.check_and_recalculate
-; remove from partition
-    sep #$30
-    lda.w player_box_y1
-    and #$F0
-    sta.b $00
-    lda.w player_box_x1
-    lsr
-    lsr
-    lsr
-    lsr
-    ora.b $00
-    sta.b $00
-    .REPT 2 INDEX iy
-        tax
-        .REPT 2 INDEX ix
-            .IF ix > 0
-                inx
-            .ENDIF
-            lda #ENTITY_INDEX_PLAYER
-            .EraseHitboxLite
-        .ENDR
-        .IF iy < 1
-            lda.b $00
-            clc
-            adc #16
-            sta.b $00
-        .ENDIF
-    .ENDR
 ; bombs
     ; check bomb timer
     sep #$20
@@ -1255,36 +1227,8 @@ player_outside_door_v:
 @skip_open_doors:
 ; handle animation
     jsr _update_player_animation
-; setup partition
-    sep #$30
-    ; add to partition
-    lda.w player_box_y1
-    and #$F0
-    sta.b $00
-    lda.w player_box_x1
-    lsr
-    lsr
-    lsr
-    lsr
-    ora.b $00
-    sta.b $00
-    .REPT 2 INDEX iy
-        tax
-        lda #ENTITY_INDEX_PLAYER
-        .REPT 2 INDEX ix
-            .IF ix > 0
-                inx
-            .ENDIF
-            .InsertHitboxLite
-        .ENDR
-        .IF iy < 1
-            lda.b $00
-            clc
-            adc #16
-            sta.b $00
-        .ENDIF
-    .ENDR
     ; set box pos
+    sep #$30
     lda.w player_box_x1
     clc
     adc #16

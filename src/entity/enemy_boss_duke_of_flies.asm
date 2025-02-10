@@ -300,13 +300,10 @@ entity_boss_duke_of_flies_init:
 entity_boss_duke_of_flies_tick:
     sty.b _tmp_entityid
     sep #$30 ; 8B AXY
-    ; remove from partition
-    .EntityRemoveHitbox (BOSS_WIDTH+15)/16,(BOSS_HEIGHT+15)/16
     ; main tick
     jsl entity_duke_of_flies_main_tick
     ; add to partition
     sep #$30
-    .EntityAddHitbox (BOSS_WIDTH+15)/16,(BOSS_HEIGHT+15)/16
     lda.w entity_box_x1,Y
     clc
     adc #BOSS_WIDTH

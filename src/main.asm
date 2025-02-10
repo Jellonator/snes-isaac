@@ -26,6 +26,9 @@ UpdateLoop:
     sta DMA0_DEST
     lda #$01
     sta MDMAEN
+    ; run all update hooks
+    jsl entity_clear_hitboxes
+    jsl entity_refresh_hitboxes
     jsr PlayerUpdate
     jsl player_update_pathfinding_data
     jsl entity_tick_all

@@ -85,7 +85,7 @@ entity_create:
     lda.l numEntities
     tax
     tya
-    sta.l entityExecutionOrder,X
+    sta.w entityExecutionOrder,X
     txa
     inc A
     sta.l numEntities
@@ -434,7 +434,7 @@ EntityInfoInitialize:
     lda #1
     sta.l numEntities
     lda #ENTITY_INDEX_PLAYER
-    sta.l entityExecutionOrder
+    sta.w entityExecutionOrder
     ; clear entity spawn context
     lda #ENTITY_SPAWN_CONTEXT_STANDARD
     sta.b entitySpawnContext
@@ -713,5 +713,87 @@ EntityPutSplatter:
     .ENDR
     rep #$30
     rtl
+
+entity_clear_hitboxes:
+    phd
+    pea $4300
+    pld
+    .ClearWRam_ZP spatial_partition, 256*SPATIAL_LAYER_COUNT
+    pld
+    rtl
+
+entity_refresh_hitboxes:
+    ; clear data
+    .DEFINE ENTITY_INDEX $00
+    .DEFINE ENTITY_ID $0C
+    .DEFINE WIDTH $02
+    .DEFINE HEIGHT $04
+    .DEFINE INDEX $06
+    .DEFINE WIDTH_STORE $08
+    .DEFINE INC_Y $0A
+    ; put hitboxes
+    sep #$30
+    lda.l numEntities
+    sta.b ENTITY_INDEX
+    beql @end
+    @loop:
+        ldx.b ENTITY_INDEX
+        ldy.w entityExecutionOrder-1,X
+        lda.w entity_mask,Y
+        beq @skip_entity
+        sty.b ENTITY_ID
+        ; WIDTH
+        lda.w entity_box_x2,Y
+        sec
+        sbc.w entity_box_x1,Y
+        tax
+        lda.w HitboxWidthToPartitionSize,X
+        sta.b WIDTH_STORE
+        ; INC_Y
+        lda #16
+        sbc.b WIDTH_STORE ; we assume carry flag is still set
+        sta.b INC_Y
+        ; HEIGHT
+        lda.w entity_box_y2,Y
+        sbc.w entity_box_y1,Y ; we assume carry flag is still set
+        tax
+        lda.w HitboxWidthToPartitionSize,X
+        sta.b HEIGHT
+        ; INDEX
+        ldx.w entity_box_x1,Y
+        lda.w Div16,X
+        sta.b INDEX
+        lda.w entity_box_y1,Y
+        and #$F0
+        ora.b INDEX
+        tax
+        ; PUT
+        @loop_y:
+            lda.b WIDTH_STORE
+            sta.b WIDTH
+            @loop_x:
+                lda.b ENTITY_ID
+                .InsertHitboxLite
+                inx
+                dec.b WIDTH
+                bne @loop_x
+            txa
+            clc
+            adc.b INC_Y
+            tax
+            dec.b HEIGHT
+            bne @loop_y
+    @skip_entity:
+        dec.b ENTITY_INDEX
+        bne @loop
+@end:
+    rtl
+    .UNDEFINE ENTITY_INDEX
+    .UNDEFINE ENTITY_ID
+    .UNDEFINE WIDTH
+    .UNDEFINE HEIGHT
+    .UNDEFINE INDEX
+    .UNDEFINE WIDTH_STORE
+    .UNDEFINE INC_Y
 
 .ENDS

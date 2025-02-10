@@ -105,24 +105,24 @@
 .MACRO .ClearWRam ARGS ADDRL, NBYTES
     rep #$20 ; 16 bit A
     lda #NBYTES
-    sta DMA0_SIZE
+    sta.w DMA0_SIZE
     lda #loword(EmptyData)
-    sta DMA0_SRCL
+    sta.w DMA0_SRCL
     lda #loword(ADDRL)
-    sta WMADDL
+    sta.w WMADDL
     sep #$20 ; 8 bit A
     lda #bankbyte(EmptyData)
-    sta DMA0_SRCH
+    sta.w DMA0_SRCH
     lda #bankbyte(ADDRL)
-    sta WMADDH
+    sta.w WMADDH
     ; Absolute address, no increment, 1 byte at a time
     lda #%00001000
-    sta DMA0_CTL
+    sta.w DMA0_CTL
     ; Write to WRAM
     lda #$80
-    sta DMA0_DEST
+    sta.w DMA0_DEST
     lda #$01
-    sta MDMAEN
+    sta.w MDMAEN
 .ENDM
 
 ; Clear a section of WRAM

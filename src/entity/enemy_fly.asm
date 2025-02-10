@@ -45,10 +45,8 @@ entity_basic_fly_init:
 entity_basic_fly_tick:
     .ACCU 16
     .INDEX 16
-; Remove col
-    sep #$30 ; 8B AXY
-    .EntityRemoveHitbox 2, 2
 ; check signal
+    sep #$30 ; 8B AXY
     lda #ENTITY_SIGNAL_KILL
     and.w entity_signal,Y
     beq +
@@ -190,8 +188,6 @@ entity_basic_fly_tick:
     sta.w objectData.1.pos_y,X
     lda #%00100001
     sta.w objectData.1.flags,X
-    ; add to partition
-    .EntityAddHitbox 2, 2
     ; set some flags
     lda #ENTITY_MASKSET_ENEMY
     sta.w entity_mask,Y

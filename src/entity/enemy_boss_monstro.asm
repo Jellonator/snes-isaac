@@ -65,9 +65,6 @@ entity_boss_monstro_tick:
     .ACCU 16
     .INDEX 16
     sty.b $08
-; Remove col
-    sep #$30 ; 8B AXY
-    .EntityRemoveHitbox (MONSTRO_WIDTH+15)/16,(MONSTRO_HEIGHT+15)/16
 ; check signal
     lda #ENTITY_SIGNAL_KILL
     and.w entity_signal,Y
@@ -146,7 +143,6 @@ entity_boss_monstro_tick:
     
 ; add to partition
     sep #$30
-    .EntityAddHitbox (MONSTRO_WIDTH+15)/16,(MONSTRO_HEIGHT+15)/16
     lda.w entity_box_x1,Y
     clc
     adc #MONSTRO_WIDTH

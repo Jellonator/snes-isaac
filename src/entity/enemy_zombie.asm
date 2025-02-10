@@ -55,7 +55,6 @@ entity_zombie_tick:
     .INDEX 16
 ; Remove col
     sep #$30 ; 8B AXY
-    .EntityRemoveHitbox 2, 2
 ; check signal
     lda #ENTITY_SIGNAL_KILL
     and.w entity_signal,Y
@@ -191,7 +190,6 @@ entity_zombie_tick:
     +
     ; add to partition
     sep #$30
-    .EntityAddHitbox 2, 2
     lda.w entity_box_x1,Y
     clc
     adc #16

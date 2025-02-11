@@ -37,5 +37,11 @@
         "rooms": [
             "shop_rooms/basic.tmx"
         ]
+    },
+    {
+        "id": "secret_room",
+        "rooms": [
+            "secret_rooms/basic.tmx"
+        ]
     }
 ]

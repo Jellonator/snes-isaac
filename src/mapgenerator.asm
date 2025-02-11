@@ -582,6 +582,8 @@ _SetupRoomX:
     beq @room_item
     cmp #ROOMTYPE_SHOP
     beq @room_shop
+    cmp #ROOMTYPE_SECRET
+    beq @room_secret
     bra @room_empty ; uh oh; something has gone wrong probably. Just make it empty
     @room_normal:
         ; normal room type
@@ -617,6 +619,15 @@ _SetupRoomX:
         sta.b currentRoomPoolBase+2
         rep #$30 ; 16b AXY
         lda #loword(RoomPoolDefinitions@shop)
+        sta.b currentRoomPoolBase
+        bra @end
+    @room_secret:
+        ; item room type
+        sep #$30
+        lda #bankbyte(RoomPoolDefinitions@secret_room)
+        sta.b currentRoomPoolBase+2
+        rep #$30 ; 16b AXY
+        lda #loword(RoomPoolDefinitions@secret_room)
         sta.b currentRoomPoolBase
         bra @end
     @room_empty:

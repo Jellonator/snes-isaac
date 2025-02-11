@@ -58,6 +58,8 @@ true_entity_shopkeeper_tick:
     lda #0
     sta.w entity_signal,Y
     lda.w entity_box_y1,Y
+    clc
+    adc #16
     sta.w loword(entity_ysort),Y
     rtl
 

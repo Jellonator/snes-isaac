@@ -26,6 +26,7 @@ _room_spawn_entities:
     phy ; >2
     phx ; >2
     lda $C20000 + objectdef_t.objectType,X
+    and #$00FF
     ; .MultiplyStatic 2
     tax
     sep #$20
@@ -222,7 +223,7 @@ _Room_Spawn_Reward:
     and #$00FF
     asl
     tax
-    lda.l PickupSpawnTable,X
+    lda.l PickupTable_RoomReward,X
     beq @no_spawn
     php
     jsl entity_create

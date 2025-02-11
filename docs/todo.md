@@ -6,11 +6,11 @@
     * Shops
         * [ ] Purchasable pickups
         * [ ] Purchasable items
-        * [ ] Shopkeeper
+        * [X] Shopkeeper
         * [ ] Restock machine
     * Secret rooms
         * [X] Dedicated bombable wall textures
-        * [ ] Room pool
+        * [X] Room pool
     * [ ] Sacrifice rooms
     * [ ] Cursed rooms
     * [ ] Arcade rooms

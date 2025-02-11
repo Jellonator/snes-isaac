@@ -221,8 +221,8 @@ true_entity_bomb_tick:
                             sec
                             sbc #EXPLOSION_DAMAGE
                             sta.w entity_health,Y
-                            php
                             sep #$20
+                            php
                             lda.w entity_signal,Y
                             plp
                             ora #ENTITY_SIGNAL_DAMAGE

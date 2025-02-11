@@ -44,7 +44,7 @@ entity_boss_monstro_init:
             ; get slot
             jsl spriteman_get_raw_slot
             txa
-            sta.w entity_char_custom.{iy * 4 + ix + 1},Y
+            sta.w loword(entity_char_custom.{iy * 4 + ix + 1}),Y
             ; write to slot
             pea bankbyte(spritedata.boss_monstro) * $0101 ; >2
             pea loword(spritedata.boss_monstro) + (64 * ix + 128 * 4 * iy) ; >2
@@ -124,7 +124,7 @@ entity_boss_monstro_tick:
     xba
     .REPT 3 INDEX iy
         .REPT 4 INDEX ix
-            ldx.w entity_char_custom.{iy * 4 + ix + 1},Y
+            ldx.w loword(entity_char_custom.{iy * 4 + ix + 1}),Y
             lda.l SpriteSlotIndexTable,X
             ldx.b $02
             sta.w objectData.{iy * 4 + ix + 1}.tileid,X
@@ -150,7 +150,7 @@ entity_boss_monstro_tick:
     lda.w entity_box_y1,Y
     clc
     adc #MONSTRO_CENTER_Y
-    sta.w entity_ysort,Y
+    sta.w loword(entity_ysort),Y
     adc #MONSTRO_HEIGHT - MONSTRO_CENTER_Y
     sta.w entity_box_y2,Y
 ; set some flags
@@ -210,7 +210,7 @@ entity_boss_monstro_free:
     .REPT 12 INDEX i
         phy
         php
-        ldx.w entity_char_custom.{i+1},Y
+        ldx.w loword(entity_char_custom.{i+1}),Y
         jsl spriteman_free_raw_slot
         plp
         ply

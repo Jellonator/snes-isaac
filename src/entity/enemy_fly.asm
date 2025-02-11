@@ -3,8 +3,8 @@
 .BANK ROMBANK_ENTITYCODE SLOT "ROM"
 .SECTION "Entity Enemy Fly" FREE
 
-.DEFINE _fly_fgxptr.1 entity_char_custom.1
-.DEFINE _fly_fgxptr.2 entity_char_custom.2
+.DEFINE _fly_fgxptr.1 loword(entity_char_custom.1)
+.DEFINE _fly_fgxptr.2 loword(entity_char_custom.2)
 
 .DEFINE BASE_HEALTH 12
 
@@ -160,7 +160,7 @@ entity_basic_fly_tick:
     xba
     clc
     adc #8
-    sta.w entity_ysort,Y
+    sta.w loword(entity_ysort),Y
     adc #7
     sta.w entity_box_y2,Y
 ; load & set gfx

@@ -1236,7 +1236,7 @@ player_outside_door_v:
     lda.w player_box_y1
     clc
     adc #8
-    sta.w entity_ysort + ENTITY_INDEX_PLAYER
+    sta.l entity_ysort + ENTITY_INDEX_PLAYER
     adc #8
     sta.w player_box_y2
     ; set flags/mask
@@ -1415,16 +1415,16 @@ PlayerShootTear:
     sta.w projectile_lifetime,X
     ; size
     lda.w playerData.tearflags
-    sta.w projectile_flags,X
+    sta.l projectile_flags,X
     sep #$20
     lda #3
-    sta.w projectile_size,X
+    sta.l projectile_size,X
     ; type
     lda #PROJECTILE_TYPE_PLAYER_BASIC
     sta.w projectile_type,X
     rep #$20
     lda #$0800
-    sta.w projectile_height,X
+    sta.l projectile_height,X
     ; dmg
     lda.w playerData.stat_damage
     sta.w projectile_damage,X
@@ -2198,40 +2198,43 @@ _player_clear_pathfinding_data:
     phd
     pea $4300
     pld
-    rep #$20 ; 16 bit A
-    lda #128
+    lda #128-4
     sta.b <DMA0_SIZE
-    lda #loword(EmptyData)
+    lda #loword(16 * 4 + InitialPathfindingData + 2)
     sta.b <DMA0_SRCL
-    lda #loword(16*4 + pathfind_player_data)
-    sta.l WMADDL
+    lda #loword(16 * 4 + pathfind_player_data + 2)
+    sta.w WMADDL
     sep #$20 ; 8 bit A
-    lda #bankbyte(EmptyData)
-    sta.b <DMA0_SRCH
-    lda #bankbyte(16*4 + pathfind_player_data)
-    sta.l WMADDH
+    lda #0
+    sta.b <DMA0_SRCH ; InitialPathfindingData is in  bank 0
+    sta.w WMADDH ; only bottom bit matters, so just store 0
     ; Absolute address, increment, 1 byte at a time
-    lda #%00000000
     sta.b <DMA0_CTL
     ; Write to WRAM
     lda #$80
     sta.b <DMA0_DEST
     lda #$01
-    sta.l MDMAEN
+    sta.w MDMAEN
     pld
     rts
 
 player_update_pathfinding_data:
     jsr _player_clear_pathfinding_data
-    .DEFINE tmp $00
-    .DEFINE q_start $02
-    .DEFINE q_end $04
-    .DEFINE q_count $06
+    .DEFINE tmp $10
+    .DEFINE q_start $12
+    .DEFINE q_end $14
+    .DEFINE q_count $16
+    .DEFINE tile $18
 ; setup
     phb
     .ChangeDataBank $7E
     rep #$30
-    ldx #loword(tempData) | $FF
+    phd
+    pea pathfind_player_data - $10
+    pld
+    lda.l currentRoomTileTypeTableAddress
+    sta.b tile
+    ldx #loword(tempData_7E | $FF)
     stx.b q_start
     stx.b q_end
     stz.b q_count
@@ -2249,55 +2252,53 @@ player_update_pathfinding_data:
     dec.b q_end
     tax
     lda #PATH_DIR_NONE
-    sta.w loword(pathfind_player_data),X
+    sta.b $10,X
     inc.b q_count
-    ; loop
+; loop
     @loop:
         lda.b (q_start)
         tax
         lda.l GameTileToRoomTileIndexTable,X
         tay
-        lda (currentRoomTileTypeTableAddress),Y
+        lda (tile),Y
         bmi @skiptile ; Skip if this tile is solid (can not be entered)
         .REPT 4 INDEX i
             .IF i == 0
+                .DEFINE i_offs -1
                 .DEFINE i_dir PATH_DIR_RIGHT
-                dex
             .ELIF i == 1
+                .DEFINE i_offs 1
                 .DEFINE i_dir PATH_DIR_LEFT
-                inx
-                inx
             .ELIF i == 2
+                .DEFINE i_offs 16
                 .DEFINE i_dir PATH_DIR_UP
-                txa
-                clc
-                adc #$0F
-                tax
             .ELIF i == 3
+                .DEFINE i_offs -16
                 .DEFINE i_dir PATH_DIR_DOWN
-                txa
-                clc
-                adc #$E0
-                tax
             .ENDIF
-            ; tax
-            lda.w loword(pathfind_player_data),X
+            lda.b $10+i_offs,X
             bne + ; If found tile is non-zero, skip it
-            lda #i_dir
-            sta.w loword(pathfind_player_data),X
-            txa
-            sta.b (q_end)
-            dec.b q_end
-            inc.b q_count
-
+                ; A is already 0
+                .IF i_dir == 1
+                    inc A
+                .ELIF i_dir > 1
+                    lda #i_dir
+                .ENDIF
+                sta.b $10+i_offs,X
+                lda.l OffsetTable+i_offs,X
+                sta.b (q_end)
+                dec.b q_end
+                inc.b q_count
             +:
             .UNDEFINE i_dir
+            .UNDEFINE i_offs
         .ENDR
     @skiptile:
         dec.b q_start
         dec.b q_count
         bne @loop
-    ; end
+; end
+    pld
     plb
     rtl
 

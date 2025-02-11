@@ -1,8 +1,8 @@
 .include "base.inc"
 
-.DEFINE _item_gfxptr_pedastal entity_char_custom.1
-.DEFINE _item_gfxptr_item entity_char_custom.2
-.DEFINE _item_palette entity_char_custom.3
+.DEFINE _item_gfxptr_pedastal loword(entity_char_custom.1)
+.DEFINE _item_gfxptr_item loword(entity_char_custom.2)
+.DEFINE _item_palette loword(entity_char_custom.3)
 
 .DEFINE STATE_BASE 0
 .DEFINE STATE_PICKUP 1
@@ -159,7 +159,7 @@ true_item_pedastal_tick_base:
     sbc #12
     sta.w objectData.1.pos_y,X
     adc #20
-    sta.w entity_ysort,Y
+    sta.w loword(entity_ysort),Y
     ; flags
     lda #%00100001
     sta.w objectData.2.flags,X

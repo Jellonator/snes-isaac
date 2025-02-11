@@ -3,8 +3,8 @@
 .BANK ROMBANK_ENTITYCODE SLOT "ROM"
 .SECTION "Entity Enemy Zombie" FREE
 
-.DEFINE _zombie_gfxptr.1 entity_char_custom.1
-.DEFINE _zombie_gfxptr.2 entity_char_custom.2
+.DEFINE _zombie_gfxptr.1 loword(entity_char_custom.1)
+.DEFINE _zombie_gfxptr.2 loword(entity_char_custom.2)
 
 .DEFINE BASE_HEALTH_MAIN 20
 .DEFINE BASE_HEALTH_BODY 12
@@ -197,7 +197,7 @@ entity_zombie_tick:
     lda.w entity_box_y1,Y
     clc
     adc #8
-    sta.w entity_ysort,Y
+    sta.w loword(entity_ysort),Y
     adc #8
     sta.w entity_box_y2,Y
     ; set some flags

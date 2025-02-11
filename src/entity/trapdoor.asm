@@ -19,7 +19,7 @@ true_entity_trapdoor_tick:
     ; Y position
     lda.w entity_posy + 1,Y
     sta.w objectData.1.pos_y,X
-    sta.w entity_ysort,Y
+    sta.w loword(entity_ysort),Y
     rep #$30
     .SetCurrentObjectS_Inc
     ply

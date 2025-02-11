@@ -93,20 +93,14 @@
     ; velocity
     private_base_entity_velocx dsw ENTITY_TOTAL_MAX
     private_base_entity_velocy dsw ENTITY_TOTAL_MAX
-    ; Extraneous entity data
-    private_entity_custom INSTANCEOF entitycustomdata_t 4
-    private_entity_ysort_order ds ENTITY_TOTAL_MAX
-    ; Extraneous character data
-    private_entity_char_custom INSTANCEOF entitycharactercustomdata_t 16
-    private_entity_char_statfx INSTANCEOF entitycharacterstatuseffectdata_t 2
 ; Common entity data
     currentRoomEnemyCount dw
     currentRoomDoSpawnReward db
     ; spatial collision data (for entities)
     spatial_partition INSTANCEOF spatialpartitionlayer_t SPATIAL_LAYER_COUNT
-    ; pathfinding data
-    pathfind_player_data ds 256
     entity_data_end ds 01
+    ; pathfinding data
+    _pathfind_player_data_reserve ds 256
 .ENDS
 
 ; Should contain data that is either large or not often used.
@@ -135,6 +129,20 @@
     spriteTableValue INSTANCEOF spritetab_t SPRITE_TABLE_TOTAL_SIZE
     spriteQueueTabNext ds SPRITE_QUEUE_SIZE+1
     spiteTableAvailableSlots dw
+; extra entity data
+; a lot of entity data can just be used here, since entity tick, init, and free
+; are executed in bank $7E. If not in bank $7E, you must access with $long,X
+    numEntities dw
+    ; Y-sort of entities
+    ; I'll figure out something to combine with later.
+    ; YSORT is just one byte
+    private_entity_ysort_order dsw ENTITY_TOTAL_MAX
+    ; Custom data per entity
+    private_entity_custom INSTANCEOF entitycustomdata_t 4
+    ; Custom data per character
+    private_entity_char_custom INSTANCEOF entitycharactercustomdata_t 16
+    ; status effects of entities
+    private_entity_char_statfx INSTANCEOF entitycharacterstatuseffectdata_t 2
     ; contiguous data storage for various purposes
     ; index as (index * ENTITY_DATA_ARRAY_SIZE)
     ; in tick functions, Y is (index*2), so simply:
@@ -142,8 +150,8 @@
     ; .MultiplyStatic (ENTITY_DATA_ARRAY_SIZE/2)
     ; tay
     entity_array_data ds (ENTITY_TOTAL_MAX + 1) * ENTITY_DATA_ARRAY_SIZE
-; extra entity data
-    numEntities dw
+; reserved data
+    _extraneous_data_buffer2 ds 256
 .ENDS
 
 ; Should contain data that is either large or not often used

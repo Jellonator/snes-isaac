@@ -28,10 +28,10 @@ projectile_entity_init:
     ; sta.w entity_signal,Y; implicit by 16b store
     sta.w entity_state,Y
     ; sta.w entity_timer,Y; implicit by 16b store
-    sta.w projectile_flags,Y
-    sta.w projectile_velocz,Y
+    sta.w loword(projectile_flags),Y
+    sta.w loword(projectile_velocz),Y
     lda #$0800
-    sta.w projectile_height
+    sta.w loword(projectile_height)
     rts
 
 projectile_entity_tick:
@@ -63,7 +63,7 @@ _big_projectile_update_sprite:
     sta.w objectData.1.pos_x,Y
     lda.w entity_posy+1,X
     ; sec
-    sbc.w projectile_height+1,X
+    sbc.w loword(projectile_height)+1,X
     sbc #4
     sta.w objectData.1.pos_y,Y
     lda #%00100000
@@ -114,7 +114,7 @@ _projectile_update_sprite:
     rep #$10
     tyx
     ldy.w objectIndex
-    lda.w projectile_size,X
+    lda.w loword(projectile_size),X
     cmp #6
     bcc +
         jmp _big_projectile_update_sprite
@@ -126,7 +126,7 @@ _projectile_update_sprite:
     sta.w objectData.1.pos_x,Y
     lda.w entity_posy+1,X
     sec
-    sbc.w projectile_height+1,X
+    sbc.w loword(projectile_height)+1,X
     sta.w objectData.1.pos_y,Y
     lda #%00100000
     sta.w objectData.1.flags,Y
@@ -236,7 +236,7 @@ _projectile_delete:
     bcs +
         sep #$20
         lda #size
-        sta.w projectile_size,X
+        sta.w loword(projectile_size),X
         rtl
     +:
     .ACCU 16
@@ -256,7 +256,7 @@ Tear.set_size_from_damage:
     ._tear_size_damage_macro 8, 45
     sep #$20
     lda #9
-    sta.w projectile_size,X
+    sta.l loword(projectile_size),X
     rtl
 
 projectile_tick__:
@@ -267,10 +267,10 @@ projectile_tick__:
 ; Handle lifetime (drop when life ends)
     lda.w projectile_lifetime,Y
     bne @noFall
-        lda.w projectile_height,Y
+        lda.w loword(projectile_height),Y
         sec
         sbc #256
-        sta.w projectile_height,Y
+        sta.w loword(projectile_height),Y
         bpl @lifeEnd
         jmp _projectile_delete
     @noFall:
@@ -317,7 +317,7 @@ projectile_tick__:
     tay
     ; intermission: skip collision checking if too damn high up
     ldx.b PROJECTILE_TMP_IDX
-    lda.w projectile_height+1,X
+    lda.w loword(projectile_height)+1,X
     cmp #25
     bcc +
         jmp @skipCollisionHandler
@@ -384,7 +384,7 @@ projectile_tick__:
         cmp.b $00
         bcc @hit_and_kill
         beq @hit_and_kill
-        lda.w projectile_flags,X
+        lda.w loword(projectile_flags),X
         and #PROJECTILE_FLAG_POLYPHEMUS
         beq @hit_and_kill
         ; reduce damage
@@ -407,7 +407,7 @@ projectile_tick__:
     lda.w entity_box_y1,Y
     clc
     adc #4
-    sta.w entity_ysort,Y
+    sta.w loword(entity_ysort),Y
     adc #4
     sta.w entity_box_y2,Y
     jsr _projectile_update_sprite

@@ -6,8 +6,8 @@
 .DEFINE BOSS_TILE_X_OFFS -8
 .DEFINE BOSS_TILE_Y_OFFS -16
 
-.DEFINE duke_target_velocx entity_char_custom.10
-.DEFINE duke_target_velocy entity_char_custom.11
+.DEFINE duke_target_velocx loword(entity_char_custom.10)
+.DEFINE duke_target_velocy loword(entity_char_custom.11)
 
 .DEFINE TARGET_VELOC $060
 .DEFINE ACCEL_VELOC $0002
@@ -216,7 +216,7 @@ _duke_endtick:
     xba
     .REPT 3 INDEX iy
         .REPT 3 INDEX ix
-            ldx.w entity_char_custom.{iy * 3 + ix + 1},Y
+            ldx.w loword(entity_char_custom.{iy * 3 + ix + 1}),Y
             lda.l SpriteSlotIndexTable,X
             ldx.b $02
             sta.w objectData.{iy * 3 + ix + 1}.tileid,X
@@ -270,13 +270,16 @@ entity_boss_duke_of_flies_init:
     sta.w entity_state,Y
     lda #60
     sta.w entity_timer,Y
-    phy
+    sty.b $00
     .REPT 3 INDEX iy
         .REPT 3 INDEX ix
             ; get slot
+            sep #$30
             jsl spriteman_get_raw_slot
+            rep #$30
             txa
-            sta.w entity_char_custom.{iy * 3 + ix + 1},Y
+            ldy.b $00
+            sta.w loword(entity_char_custom.{iy * 3 + ix + 1}),Y
             ; write to slot
             pea bankbyte(spritedata.boss_duke_of_flies) * $0101 ; >2
             pea loword(spritedata.boss_duke_of_flies) + (64 * ix + 128 * 3 * iy) ; >2
@@ -286,11 +289,9 @@ entity_boss_duke_of_flies_init:
             pla ; <2
             pla ; <2
             pla ; <2
-            lda $01,S
-            tay
         .ENDR
     .ENDR
-    ply
+    ldy.b $00
     rep #$30
     lda #TARGET_VELOC
     sta.w duke_target_velocx,Y
@@ -311,7 +312,7 @@ entity_boss_duke_of_flies_tick:
     lda.w entity_box_y1,Y
     clc
     adc #BOSS_CENTER_Y
-    sta.w entity_ysort,Y
+    sta.w loword(entity_ysort),Y
     adc #BOSS_HEIGHT - BOSS_CENTER_Y
     sta.w entity_box_y2,Y
     rts
@@ -324,7 +325,7 @@ entity_boss_duke_of_flies_free:
     .REPT 9 INDEX i
         phy
         php
-        ldx.w entity_char_custom.{i+1},Y
+        ldx.w loword(entity_char_custom.{i+1}),Y
         jsl spriteman_free_raw_slot
         plp
         ply

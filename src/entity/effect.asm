@@ -3,12 +3,12 @@
 .BANK $02 SLOT "ROM"
 .SECTION "Entity Effect" SUPERFREE
 
-.define effect_header_ptr entity_custom.1
-.define effect_frame_ptr entity_custom.2
-.define array_ptr entity_custom.3
-.define effect_tile_ptr entity_custom.4
-.define effect_palette_ptr entity_velocx
-.define effect_palette_value entity_velocy
+.define effect_header_ptr loword(entity_custom.1)
+.define effect_frame_ptr loword(entity_custom.2)
+.define array_ptr loword(entity_custom.3)
+.define effect_tile_ptr loword(entity_custom.4)
+.define effect_palette_ptr loword(entity_velocx)
+.define effect_palette_value loword(entity_velocy)
 
 .STRUCT entityeffect_header_t SIZE 4
     ; number of tiles to allocate for this effect
@@ -190,7 +190,7 @@ true_entity_effect_init:
     ; some other setup
     sep #$20
     lda.w entity_posy+1,Y
-    sta.w entity_ysort,Y
+    sta.w loword(entity_ysort),Y
     ; end
     rtl
 

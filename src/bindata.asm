@@ -238,6 +238,17 @@ Div16:
         .db floor(i / 16)
     .ENDR
 
+    .REPT 256 INDEX i
+        .db i
+    .ENDR
+OffsetTable:
+    .REPT 256 INDEX i
+        .db i
+    .ENDR
+    .REPT 256 INDEX i
+        .db i
+    .ENDR
+
 .ENDS
 
 .bank $20

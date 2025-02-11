@@ -994,7 +994,7 @@ _PushRandomRoomFromPool:
         cmp.b TempDoorMask
         bne @skip
         lda.b TempValue
-        sta.w loword(tempData),X
+        sta.w loword(tempData_7E),X
         inx
     @skip:
         dec.b TempValue
@@ -1009,11 +1009,11 @@ _PushRandomRoomFromPool:
     rep #$20 ; 16b A
     lda.l DIVU_REMAINDER ; index into tempData
     tax
-    stz.w loword(tempData)+1,X ; Need to make next byte 0 so that it doesn't get added to 16b result
-    lda.w loword(tempData),X
+    stz.w loword(tempData_7E)+1,X ; Need to make next byte 0 so that it doesn't get added to 16b result
+    lda.w loword(tempData_7E),X
     asl
     clc
-    adc.w loword(tempData),X
+    adc.w loword(tempData_7E),X
     tay ; Y now contains index into pool's roomList
     sep #$20 ; 8b A
     iny

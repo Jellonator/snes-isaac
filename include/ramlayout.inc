@@ -1,11 +1,11 @@
 .FUNCTION MAP_DOOR_MEM_LOC(i) (mapDoorNorth + (i * 3))
 
 .REPT 4 INDEX i
-    .define entity_custom.{i+1} (private_entity_custom.{i+1}-2)
+    .define entity_custom.{i+1} ($7E0000 | (private_entity_custom.{i+1}-2))
 .ENDR
 
 .REPT 16 INDEX i
-    .define entity_char_custom.{i+1} (private_entity_char_custom.{i+1}-2)
+    .define entity_char_custom.{i+1} ($7E0000 | (private_entity_char_custom.{i+1}-2))
 .ENDR
 
 .define entity_type (private_base_entity_combined_type_variant - 2)
@@ -23,7 +23,7 @@
 .define entity_box_y2 (private_base_entity_combined_box_x2y2 - 1)
 .define entity_mask (private_base_entity_combined_mask_signal - 2)
 .define entity_signal (private_base_entity_combined_mask_signal - 1)
-.define entity_ysort (private_entity_ysort_order - 2)
+.define entity_ysort ($7E0000 | (private_entity_ysort_order - 2))
 
 .define player_posx (ENTITY_INDEX_PLAYER + entity_posx)
 .define player_posy (ENTITY_INDEX_PLAYER + entity_posy)
@@ -39,14 +39,19 @@
 .define player_damageflag (ENTITY_INDEX_PLAYER + entity_health)
 
 ; projectile data
-.define projectile_size (private_entity_custom.1 - 2)
+.define projectile_size entity_custom.1
 .define projectile_type entity_variant ; repurposed variant
 .define projectile_lifetime entity_health ; repurposed health
-.define projectile_flags (private_entity_custom.2 - 2)
-.define projectile_height (private_entity_custom.3 - 2)
-.define projectile_velocz (private_entity_custom.4 - 2)
+.define projectile_flags entity_custom.2
+.define projectile_height entity_custom.3
+.define projectile_velocz entity_custom.4
 .define projectile_damage (private_base_entity_combined_state_timer - 2)
 
-.DEFINE tempData $7EFF00
+; pathfinding data
+; we offset by $10 to prevent extra cycles from page wraps in pathfinding code
+.DEFINE pathfind_player_data $001C10
+
+; data buffers
+.DEFINE tempData_7E $7EFF00
 
 .DEFINE currentRoomInfoAddress currentRoomTileTypeTableAddress

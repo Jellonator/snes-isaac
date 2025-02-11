@@ -361,7 +361,7 @@ SortEntityExecutionOrder:
     ; v = entity_y2[e]
     tax
     ; xba
-    lda.w entity_ysort,X
+    lda.w loword(entity_ysort),X
     sta.b $02
     ; j = i - 1;
     sty.b $00
@@ -375,7 +375,7 @@ SortEntityExecutionOrder:
         lda.w entityExecutionOrder,X
         tax
         ; A = entity_y2[X]
-        lda.w entity_ysort,X
+        lda.w loword(entity_ysort),X
         cmp.b $02
         bcc @endinnerloop
         beq @endinnerloop
@@ -674,7 +674,7 @@ EntityPutBigShadow:
 EntityPutSplatter:
     rep #$10
     sep #$20
-    lda.w entity_ysort,Y
+    lda.w loword(entity_ysort),Y
     sta.b $06
     lda #GROUND_PALETTE_RED
     sta.b $04

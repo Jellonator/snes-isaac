@@ -412,15 +412,15 @@
 .MACRO .DefinePathSpeedTable ARGS tblName, speed, is_wide
     {tblName}_X:
         .IF is_wide == 1
-            .dw 0, 0, speed, -speed, 0, 0
+            .dw 0, 0, speed, -speed, 0, -speed/SQRT2, speed/SQRT2, -speed/SQRT2, speed/SQRT2, 0
         .ELSE
-            .db 0, 0, speed, -speed, 0, 0
+            .db 0, 0, speed, -speed, 0, -speed/SQRT2, speed/SQRT2, -speed/SQRT2, speed/SQRT2, 0
         .ENDIF
     {tblName}_Y:
         .IF is_wide == 1
-            .dw 0, speed, 0, 0, -speed, 0
+            .dw 0, speed, 0, 0, -speed, -speed/SQRT2, -speed/SQRT2, speed/SQRT2, speed/SQRT2, 0
         .ELSE
-            .db 0, speed, 0, 0, -speed, 0
+            .db 0, speed, 0, 0, -speed, -speed/SQRT2, -speed/SQRT2, speed/SQRT2, speed/SQRT2, 0
         .ENDIF
 
 .ENDM

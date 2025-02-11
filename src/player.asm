@@ -2220,40 +2220,56 @@ _player_clear_pathfinding_data:
 
 player_update_pathfinding_data:
     jsr _player_clear_pathfinding_data
-    .DEFINE tmp $10
-    .DEFINE q_start $12
-    .DEFINE q_end $14
-    .DEFINE q_count $16
-    .DEFINE tile $18
-; setup
+    .DEFINE tile $20
+    .DEFINE tile_left $22
+    .DEFINE tile_right $24
+    .DEFINE tile_up $26
+    .DEFINE tile_down $28
+    .DEFINE q_start $2A
+    .DEFINE q_end $2C
+    .DEFINE q_count $2E
+; set bank and direct page
     phb
     .ChangeDataBank $7E
     rep #$30
     phd
-    pea pathfind_player_data - $10
+    pea pathfind_player_data - $20
     pld
+; setup tile addresses
     lda.l currentRoomTileTypeTableAddress
     sta.b tile
+    dec A
+    sta.b tile_left
+    inc A
+    inc A
+    sta.b tile_right
+    clc
+    adc #12-1
+    sta.b tile_down
+    sec
+    sbc #24
+    sta.b tile_up
+; setup queue
     ldx #loword(tempData_7E | $FF)
     stx.b q_start
     stx.b q_end
-    stz.b q_count
     sep #$30
 ; begin
     lda.w player_posx+1
     adc #8
     .DivideStatic 16
-    sta.b tmp
+    sta.b q_count
     lda.w player_posy+1
     adc #8
     and #$F0
-    ora.b tmp
+    ora.b q_count
     sta.b (q_end)
     dec.b q_end
     tax
     lda #PATH_DIR_NONE
-    sta.b $10,X
-    inc.b q_count
+    sta.b $20,X
+    lda #1
+    sta.b q_count
 ; loop
     @loop:
         lda.b (q_start)
@@ -2261,8 +2277,8 @@ player_update_pathfinding_data:
         lda.l GameTileToRoomTileIndexTable,X
         tay
         lda (tile),Y
-        bmi @skiptile ; Skip if this tile is solid (can not be entered)
-        .REPT 4 INDEX i
+        bmil @skiptile ; Skip if this tile is solid (can not be entered)
+        .REPT 8 INDEX i
             .IF i == 0
                 .DEFINE i_offs -1
                 .DEFINE i_dir PATH_DIR_RIGHT
@@ -2275,16 +2291,46 @@ player_update_pathfinding_data:
             .ELIF i == 3
                 .DEFINE i_offs -16
                 .DEFINE i_dir PATH_DIR_DOWN
+            .ELIF i == 4
+                .DEFINE i_offs -16-1
+                .DEFINE i_dir PATH_DIR_DOWNRIGHT
+            .ELIF i == 5
+                .DEFINE i_offs -16+1
+                .DEFINE i_dir PATH_DIR_DOWNLEFT
+            .ELIF i == 6
+                .DEFINE i_offs 16-1
+                .DEFINE i_dir PATH_DIR_UPRIGHT
+            .ELIF i == 7
+                .DEFINE i_offs 16+1
+                .DEFINE i_dir PATH_DIR_UPLEFT
             .ENDIF
-            lda.b $10+i_offs,X
+            lda.b $20+i_offs,X
             bne + ; If found tile is non-zero, skip it
+            ; if diagonal tile, then check adjacent tiles for clearance
+            .IF i == 4
+                lda (tile_up),Y
+                ora (tile_left),Y
+                bmi +
+            .ELIF i == 5
+                lda (tile_up),Y
+                ora (tile_right),Y
+                bmi +
+            .ELIF i == 6
+                lda (tile_down),Y
+                ora (tile_left),Y
+                bmi +
+            .ELIF i == 7
+                lda (tile_down),Y
+                ora (tile_right),Y
+                bmi +
+            .ENDIF
                 ; A is already 0
                 .IF i_dir == 1
                     inc A
                 .ELIF i_dir > 1
                     lda #i_dir
                 .ENDIF
-                sta.b $10+i_offs,X
+                sta.b $20+i_offs,X
                 lda.l OffsetTable+i_offs,X
                 sta.b (q_end)
                 dec.b q_end
@@ -2296,7 +2342,7 @@ player_update_pathfinding_data:
     @skiptile:
         dec.b q_start
         dec.b q_count
-        bne @loop
+        bnel @loop
 ; end
     pld
     plb

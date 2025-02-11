@@ -236,7 +236,7 @@ _projectile_delete:
     bcs +
         sep #$20
         lda #size
-        sta.w loword(projectile_size),X
+        sta.l projectile_size,X
         rtl
     +:
     .ACCU 16
@@ -256,7 +256,7 @@ Tear.set_size_from_damage:
     ._tear_size_damage_macro 8, 45
     sep #$20
     lda #9
-    sta.l loword(projectile_size),X
+    sta.l projectile_size,X
     rtl
 
 projectile_tick__:

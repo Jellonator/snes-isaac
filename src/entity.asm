@@ -270,6 +270,13 @@ _player_tick:
     entity_effect_free,\
     ENTITY_SPAWNGROUP_ONCE
 
+._DefineEntity ENTITY_TYPE_SHOPKEEPER,\
+    entity_shopkeeper_init,\
+    entity_shopkeeper_tick,\
+    entity_shopkeeper_free,\
+    ENTITY_SPAWNGROUP_ONCE,\
+    ENTITY_TYPE_FLAG_SERIALIZE
+
 ._DefineEntity ENTITY_TYPE_ENEMY_ATTACK_FLY,\
     entity_basic_fly_init,\
     entity_basic_fly_tick,\

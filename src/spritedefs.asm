@@ -29,4 +29,6 @@ SpriteDefs:
 
 .DefineSprite "sprite.item_pedastal", spritedata.item_pedastal, 1, 1
 
+.DefineSprite "sprite.shopkeepers", spritedata.shopkeepers, 1, 8
+
 .ENDS

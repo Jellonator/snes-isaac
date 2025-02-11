@@ -43,8 +43,6 @@ _room_spawn_entities:
         lda #0
         sta.w entity_posx,Y
         sta.w entity_posy,Y
-        sta.w entity_velocx,Y
-        sta.w entity_velocy,Y
         ; set X,Y
         sep #$20 ; 8B A
         lda $C20000 + objectdef_t.x,X ; X coord

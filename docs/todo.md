@@ -9,7 +9,8 @@
         * [ ] Shopkeeper
         * [ ] Restock machine
     * Secret rooms
-        * [ ] Dedicated bombable wall textures
+        * [X] Dedicated bombable wall textures
+        * [ ] Room pool
     * [ ] Sacrifice rooms
     * [ ] Cursed rooms
     * [ ] Arcade rooms

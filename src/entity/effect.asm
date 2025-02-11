@@ -243,7 +243,7 @@ true_entity_effect_tick:
     lda.w entity_posy,Y
     sta.b POSY
     lda.w effect_palette_ptr,Y
-    and #$07
+    and #$0F
     sta.b PALETTE
     lda #0
     ; draw

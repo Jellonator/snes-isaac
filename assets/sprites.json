@@ -114,5 +114,11 @@
         "depth": 16,
         "size": [4, 6],
         "crop": [32, 0, 32, 384]
+    },
+    {
+        "name": "shopkeepers",
+        "src": "assets/sprites/shopkeepers.raw",
+        "depth": 16,
+        "size": [2, 2]
     }
 ]

@@ -19,6 +19,7 @@ SOURCES  := bindata.asm\
 			entity/enemy_boss_monstro.asm\
 			entity/item_pedastal.asm\
 			entity/pickup.asm\
+			entity/shopkeeper.asm\
 			entity/trapdoor.asm\
 			init.asm\
 			floor.asm\

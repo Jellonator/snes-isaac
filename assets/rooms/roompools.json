@@ -31,5 +31,11 @@
         "rooms": [
             "empty.tmx"
         ]
+    },
+    {
+        "id": "shop",
+        "rooms": [
+            "shop_rooms/basic.tmx"
+        ]
     }
 ]

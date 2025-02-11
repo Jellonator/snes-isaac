@@ -54,5 +54,9 @@
     {
         "name": "red",
         "src": "assets/palettes/red.hex"
+    },
+    {
+        "name": "shopkeeper",
+        "src": "assets/palettes/shopkeeper.hex"
     }
 ]

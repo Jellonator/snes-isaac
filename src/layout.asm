@@ -136,7 +136,7 @@
     ; Y-sort of entities
     ; I'll figure out something to combine with later.
     ; YSORT is just one byte
-    private_entity_ysort_order dsw ENTITY_TOTAL_MAX
+    private_base_entity_combined_ysort_flash dsw ENTITY_TOTAL_MAX
     ; Custom data per entity
     private_entity_custom INSTANCEOF entitycustomdata_t 4
     ; Custom data per character

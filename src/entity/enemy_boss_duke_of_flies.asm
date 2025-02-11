@@ -205,6 +205,16 @@ _duke_endtick:
     .ENDR
     ; Flags
     lda #%00100001
+    xba
+    lda.w loword(entity_damageflash),Y
+    beq +
+        dec A
+        sta.w loword(entity_damageflash),Y
+        xba
+        lda #%00101111
+        xba
+    +:
+    xba
     .REPT 3 INDEX iy
         .REPT 3 INDEX ix
             sta.w objectData.{iy * 3 + ix + 1}.flags,X

@@ -221,16 +221,20 @@ true_entity_bomb_tick:
                             sec
                             sbc #EXPLOSION_DAMAGE
                             sta.w entity_health,Y
-                            bcs @skip_kill_{ix}_{iy}_{i}
-                                sep #$20
-                                lda.w entity_signal,Y
-                                ora #ENTITY_SIGNAL_KILL
-                                sta.w entity_signal,Y
-                                lda.w entity_mask,Y
-                                and #$FF ~ ENTITY_MASK_BOMBABLE
-                                sta.w entity_mask,Y
-                            @skip_kill_{ix}_{iy}_{i}:
+                            php
                             sep #$20
+                            lda.w entity_signal,Y
+                            plp
+                            ora #ENTITY_SIGNAL_DAMAGE
+                            bcs @skip_kill_{ix}_{iy}_{i}
+                                ora #ENTITY_SIGNAL_KILL
+                            @skip_kill_{ix}_{iy}_{i}:
+                            sta.w entity_signal,Y
+                            lda.w entity_mask,Y
+                            and #$FF ~ ENTITY_MASK_BOMBABLE
+                            sta.w entity_mask,Y
+                            lda #ENTITY_FLASH_TIME
+                            sta.w loword(entity_damageflash),Y
                     @skip_ent_{ix}_{iy}_{i}:
                 .ENDR
                 @no_ent_{ix}_{iy}:

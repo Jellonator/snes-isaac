@@ -187,6 +187,16 @@ entity_basic_fly_tick:
     sbc #8
     sta.w objectData.1.pos_y,X
     lda #%00100001
+    xba
+    lda.w loword(entity_damageflash),Y
+    beq +
+        dec A
+        sta.w loword(entity_damageflash),Y
+        xba
+        lda #%00101111
+        xba
+    +:
+    xba
     sta.w objectData.1.flags,X
     ; set some flags
     lda #ENTITY_MASKSET_ENEMY

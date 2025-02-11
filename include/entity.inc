@@ -72,6 +72,8 @@
 
 ; Signaled when an entity is killed (or otherwise needs to handle its own removal)
 .DEFINE ENTITY_SIGNAL_KILL $01
+; Signaled when an entity is damaged
+.DEFINE ENTITY_SIGNAL_DAMAGE $02
 
 ; ENTITY PICKUP VARIANTS
 .ENUMID 1
@@ -143,6 +145,9 @@
 
 ; Returns entity+variant value, for use with entity_create
 .FUNCTION entityvariant(e, v) (e | (v * $0100))
+
+; Other standard entity definitions
+.DEFINE ENTITY_FLASH_TIME 4
 
 ; COLLISION
 

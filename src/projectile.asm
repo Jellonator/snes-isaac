@@ -371,14 +371,20 @@ projectile_tick__:
         sec
         sbc.w projectile_damage,X
         sta.w entity_health,Y
+        ; signal damaged
+        sep #$20
+        php
+        lda.w entity_signal,Y
+        ora #ENTITY_SIGNAL_DAMAGE
+        ; signal killed if health < 0
+        plp
         bcs +
-            ; kill target
-            sep #$20
-            lda.w entity_signal,Y
             ora #ENTITY_SIGNAL_KILL
-            sta.w entity_signal,Y
-            rep #$30
         +:
+        sta.w entity_signal,Y
+        lda #ENTITY_FLASH_TIME
+        sta.w loword(entity_damageflash),Y
+        rep #$30
         ; if damage < targethp or !(flags&POLYPHEMUS): kill
         lda.w projectile_damage,X
         cmp.b $00

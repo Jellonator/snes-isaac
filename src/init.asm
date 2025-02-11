@@ -180,6 +180,12 @@ Start2:
     rep #$20 ; 16 bit A
     PLA
     PLA
+    PEA $F000 + bankbyte(palettes.red.w)
+    PEA palettes.red.w
+    jsl CopyPalette
+    rep #$20 ; 16 bit A
+    PLA
+    PLA
     ; copy UI to VRAM
     pea BG1_CHARACTER_BASE_ADDR
     pea 16*4

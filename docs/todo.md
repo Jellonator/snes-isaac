@@ -29,7 +29,7 @@
     * [ ] Animated body
     * [ ] Random movement when headless
 - Pathfinding
-    * [ ] Diagonal Movement
+    * [X] Diagonal Movement
     * [ ] Target player when within player tile
 
 ## BOSSES

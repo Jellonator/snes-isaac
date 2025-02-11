@@ -113,6 +113,16 @@ entity_boss_monstro_tick:
     .ENDR
     ; Flags
     lda #%00100001
+    xba
+    lda.w loword(entity_damageflash),Y
+    beq +
+        dec A
+        sta.w loword(entity_damageflash),Y
+        xba
+        lda #%00101111
+        xba
+    +:
+    xba
     .REPT 3 INDEX iy
         .REPT 4 INDEX ix
             sta.w objectData.{iy * 4 + ix + 1}.flags,X

@@ -146,6 +146,16 @@ entity_zombie_tick:
     rep #$30
     lda #0
     sep #$20
+
+    ldx #%00100001
+    lda.w loword(entity_damageflash),Y
+    beq +
+        dec A
+        sta.w loword(entity_damageflash),Y
+        ldx #%00101111
+    +:
+    stx.b $02
+
     ldx.w _zombie_gfxptr.1,Y
     lda.w loword(spriteTableValue + spritetab_t.spritemem),X
     tax
@@ -171,7 +181,7 @@ entity_zombie_tick:
         sec
         sbc #10
         sta.w objectData.1.pos_y,X
-        lda #%00100001
+        lda.b $02
         sta.w objectData.1.flags,X
         sta.w objectData.2.flags,X
         lda.b $00
@@ -185,7 +195,7 @@ entity_zombie_tick:
         sta.w objectData.1.pos_x,X
         lda.w entity_posy + 1,Y
         sta.w objectData.1.pos_y,X
-        lda #%00100001
+        lda.b $02
         sta.w objectData.1.flags,X
     +
     ; add to partition

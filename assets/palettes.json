@@ -50,5 +50,9 @@
     {
         "name": "effect_explosion",
         "src": "assets/palettes/effect_explosion.hex"
+    },
+    {
+        "name": "red",
+        "src": "assets/palettes/red.hex"
     }
 ]

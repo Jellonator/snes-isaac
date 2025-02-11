@@ -68,6 +68,7 @@ entity_create:
     lda #0
     sta.w entity_mask,Y
     sta.w entity_signal,Y
+    sta.w loword(entity_damageflash),Y
     xba
     pla
     sta.w entity_variant,Y

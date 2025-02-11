@@ -559,7 +559,7 @@ EmptyRoomTiles:
     .IF i == 0
         .dw deft($100, 2)
     .ELIF i == 7
-        .dw deft($100, 2) | T_FLIPV
+        .dw deft($104, 2) | T_FLIPV
     .ELSE
         .dw deft($06, 2)
     .ENDIF
@@ -567,7 +567,7 @@ EmptyRoomTiles:
         .dw 0
     .ENDR
     .IF i == 0
-        .dw deft($104, 2) | T_FLIPH
+        .dw deft($100, 2) | T_FLIPH
     .ELIF i == 7
         .dw deft($104, 2) | T_FLIPH | T_FLIPV
     .ELSE
@@ -600,30 +600,40 @@ EmptyRoomTiles:
 ; 4B per item
 ; (doortype & F0) >> 4
 DoorTileBaseTable_TOP:
-    .dw deft($26, 2), deft($26, 2) ; 0 wall
-    .dw deft($88, 2), deft($8A, 2) ; 1 key
-    .dw deft($26, 2), deft($26, 2) ; 2 wall
-    .dw deft($26, 2), deft($26, 2) ; 3 wall
-    .dw deft($68, 2), deft($6A, 2) ; 4 room finish
-    .dw deft($26, 2), deft($26, 2) ; 5 wall
-    .dw deft($26, 2), deft($26, 2) ; 6 wall
-    .dw deft($26, 2), deft($26, 2) ; 7 wall
-    .REPT 8
-        .dw deft($48, 2), deft($4A, 2) ; 8 open
-    .ENDR
+    .dw deft($26, 2), deft($26, 2) ; 0 NEVER - wall
+    .dw deft($88, 2), deft($8A, 2) ; 1 KEY
+    .dw deft($26, 2), deft($26, 2) ; 2 BOMB - wall (secret room)
+    .dw deft($26, 2), deft($26, 2) ; 3 COIN - wall (unimplemented)
+    .dw deft($68, 2), deft($6A, 2) ; 4 ROOM FINISH - closed door
+    .dw deft($26, 2), deft($26, 2) ; 5 UNUSED - wall
+    .dw deft($26, 2), deft($26, 2) ; 6 UNUSED - wall
+    .dw deft($26, 2), deft($26, 2) ; 7 UNUSED - wall
+    .dw deft($48, 2), deft($4A, 2) ; 8 NEVER (OPEN) - open door
+    .dw deft($48, 2), deft($4A, 2) ; 9 KEY (OPEN) - open door
+    .dw deft($A8, 2), deft($AA, 2) ; A BOMB (OPEN) - exploded wall
+    .dw deft($48, 2), deft($4A, 2) ; B COIN (OPEN) - open door
+    .dw deft($48, 2), deft($4A, 2) ; C ROOM FINISH (OPEN) - open door
+    .dw deft($48, 2), deft($4A, 2) ; D UNUSED (OPEN) - open door
+    .dw deft($48, 2), deft($4A, 2) ; E UNUSED (OPEN) - open door
+    .dw deft($48, 2), deft($4A, 2) ; F UNUSED (OPEN) - open door
 
 DoorTileBaseTable_LEFT:
-    .dw deft($06, 2), deft($06, 2) ; 0 wall
-    .dw deft($CC, 2), deft($EC, 2) ; 1 key
-    .dw deft($06, 2), deft($06, 2) ; 2 wall
-    .dw deft($06, 2), deft($06, 2) ; 3 wall
-    .dw deft($CA, 2), deft($EA, 2) ; 4 room finish
-    .dw deft($06, 2), deft($06, 2) ; 5 wall
-    .dw deft($06, 2), deft($06, 2) ; 6 wall
-    .dw deft($06, 2), deft($06, 2) ; 7 wall
-    .REPT 8
-        .dw deft($C8, 2), deft($E8, 2) ; open
-    .ENDR
+    .dw deft($06, 2), deft($06, 2) ; 0 NEVER - wall
+    .dw deft($CC, 2), deft($EC, 2) ; 1 KEY
+    .dw deft($06, 2), deft($06, 2) ; 2 BOMB - wall (secret room)
+    .dw deft($06, 2), deft($06, 2) ; 3 COIN - wall (unimplemented)
+    .dw deft($CA, 2), deft($EA, 2) ; 4 ROOM FINISH - closed door
+    .dw deft($06, 2), deft($06, 2) ; 5 UNUSED - wall
+    .dw deft($06, 2), deft($06, 2) ; 6 UNUSED - wall
+    .dw deft($06, 2), deft($06, 2) ; 7 UNUSED - wall
+    .dw deft($C8, 2), deft($E8, 2) ; 8 NEVER (OPEN) - open door
+    .dw deft($C8, 2), deft($E8, 2) ; 9 KEY (OPEN) - open door
+    .dw deft($CE, 2), deft($EE, 2) ; A BOMB (OPEN) - exploded wall
+    .dw deft($C8, 2), deft($E8, 2) ; B COIN (OPEN) - open door
+    .dw deft($C8, 2), deft($E8, 2) ; C ROOM FINISH (OPEN) - open door
+    .dw deft($C8, 2), deft($E8, 2) ; D UNUSED (OPEN) - open door
+    .dw deft($C8, 2), deft($E8, 2) ; E UNUSED (OPEN) - open door
+    .dw deft($C8, 2), deft($E8, 2) ; F UNUSED (OPEN) - open door
 
 ; INDEX BY type
 ; 4B per item

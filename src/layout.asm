@@ -39,6 +39,7 @@
     joy1held dw
 ; flags
     is_game_update_running dw
+    tickCounter dw
 ; RNG state
     ; seed used for entire game
     gameSeed INSTANCEOF rng_t

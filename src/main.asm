@@ -6,6 +6,7 @@
 UpdateLoop:
     rep #$30 ; 16 bit AXY
     inc.w is_game_update_running
+    inc.w tickCounter
     ; Actual update code
     ; First, clear sprite data (will eventually make this better)
     stz.w objectIndex
@@ -30,8 +31,16 @@ UpdateLoop:
     jsl entity_clear_hitboxes
     jsl entity_refresh_hitboxes
     jsr PlayerUpdate
-    jsl Pathing.UpdatePlayer
-    jsl Pathing.UpdateEnemy
+    ; run one of the slow update functions, depending on current tick
+    rep #$30
+    lda.w tickCounter
+    and #$01
+    beq @do_path_enemy
+        jsl Pathing.UpdatePlayer
+        jmp @end
+    @do_path_enemy:
+        jsl Pathing.UpdateEnemy
+    @end:
     jsl entity_tick_all
     jsl Room_Tick
     jsl Floor_Tick

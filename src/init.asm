@@ -340,6 +340,8 @@ tile_data_loop:
     stz BG3VOFS
     stz BG3VOFS
     rep #$30
+    lda #0
+    sta.l tickCounter
     ; init rng
     jsl RngGameInitialize
     ; init vqueue

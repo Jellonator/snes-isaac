@@ -1,6 +1,7 @@
 .include "base.inc"
 
 .define pickup_price entity_state
+.define has_put_text entity_custom.1
 
 .BANK $02 SLOT "ROM"
 .SECTION "Entity Pickup" SUPERFREE
@@ -227,6 +228,67 @@ true_entity_pickup_tick:
         jsr (_variant_handlers,X)
     @not_enough_money:
     @no_player_col:
+    ; maybe put text
+    sep #$30
+    lda.w pickup_price,Y
+    beq @no_put_price_text
+    lda.w loword(has_put_text),Y
+    bne @no_put_price_text
+        inc A
+        sta.w loword(has_put_text),Y
+        ; get address
+        rep #$30
+        lda.w entity_box_x1,Y
+        and #$00FF
+        lsr
+        lsr
+        lsr
+        sta.b $00
+        lda.w entity_box_y1,Y
+        and #$00F8
+        clc
+        adc #16
+        asl
+        asl
+        clc
+        adc.b $00
+        clc
+        adc #BG1_TILE_BASE_ADDR
+        sta.b $00
+        ; get ops
+        lda.w vqueueNumMiniOps
+        asl
+        asl
+        tax
+        inc.w vqueueNumMiniOps
+        inc.w vqueueNumMiniOps
+        inc.w vqueueNumMiniOps
+        ; set vram address
+        lda.b $00
+        dec A
+        sta.l vqueueMiniOps.1.vramAddr,X
+        inc A
+        sta.l vqueueMiniOps.2.vramAddr,X
+        inc A
+        sta.l vqueueMiniOps.3.vramAddr,X
+        ; set data
+        lda.w pickup_price,Y
+        and #$00F0
+        beq +
+            lsr
+            lsr
+            lsr
+            lsr
+            ora #deft($70,5) | T_HIGHP
+        +:
+        sta.l vqueueMiniOps.1.data,X
+        lda.w pickup_price,Y
+        and #$000F
+        ora #deft($70,5) | T_HIGHP
+        sta.l vqueueMiniOps.2.data,X
+        lda #deft($7A,5) | T_HIGHP
+        sta.l vqueueMiniOps.3.data,X
+@no_put_price_text:
     rtl
 
 PickupRandomizerTables:
@@ -295,6 +357,7 @@ entity_pickup_init:
     sep #$20
     lda #0
     sta.w pickup_price,Y
+    sta.w loword(has_put_text),Y
     sta.b $04
     lda.w entity_variant,Y
     cmp #ENTITY_PICKUP_RANDOM_SHOP
@@ -338,6 +401,51 @@ entity_pickup_init:
 entity_pickup_free:
     .ACCU 16
     .INDEX 16
+    ; maybe erase text
+    sep #$30
+    lda.w loword(has_put_text),Y
+    beq @no_erase_price_text
+        ; get address
+        rep #$30
+        lda.w entity_box_x1,Y
+        and #$00FF
+        lsr
+        lsr
+        lsr
+        sta.b $00
+        lda.w entity_box_y1,Y
+        and #$00F8
+        clc
+        adc #16
+        asl
+        asl
+        clc
+        adc.b $00
+        clc
+        adc #BG1_TILE_BASE_ADDR
+        sta.b $00
+        ; get ops
+        lda.w vqueueNumMiniOps
+        asl
+        asl
+        tax
+        inc.w vqueueNumMiniOps
+        inc.w vqueueNumMiniOps
+        inc.w vqueueNumMiniOps
+        ; set vram address
+        lda.b $00
+        dec A
+        sta.l vqueueMiniOps.1.vramAddr,X
+        inc A
+        sta.l vqueueMiniOps.2.vramAddr,X
+        inc A
+        sta.l vqueueMiniOps.3.vramAddr,X
+        ; set data
+        lda #0
+        sta.l vqueueMiniOps.1.data,X
+        sta.l vqueueMiniOps.2.data,X
+        sta.l vqueueMiniOps.3.data,X
+@no_erase_price_text:
     rts
 
 entity_pickup_tick:

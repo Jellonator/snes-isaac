@@ -4,7 +4,7 @@
 
 - Room types
     * Shops
-        * [ ] Purchasable pickups
+        * [X] Purchasable pickups
         * [ ] Purchasable items
         * [X] Shopkeeper
         * [ ] Restock machine
@@ -16,7 +16,7 @@
     * [ ] Arcade rooms
     * [ ] Challenge rooms
 - [ ] Update RNG on next floor
-- [ ] Set reward RNG to be based on room
+- [X] Set reward RNG to be based on room
 - [ ] Change up map generation depending on floor type (e.g. room layouts specific to floors)
     * [ ] Certain special rooms (i.e. boss rooms) change pools depending on floor
 

@@ -8,9 +8,17 @@
 true_entity_shopkeeper_tick:
     .ACCU 16
     .INDEX 16
-; draw
     lda #0
-    sep #$20
+    ; check signal
+    sep #$30 ; 8B AXY
+    lda #ENTITY_SIGNAL_KILL
+    and.w entity_signal,Y
+    beq +
+        jsl entity_free
+        rtl
+    +:
+; draw
+    rep #$10
     .REPT 4 INDEX i
         ldx.w loword(entity_custom.{i+1}),Y
         lda.w loword(spriteTableValue + spritetab_t.spritemem),X

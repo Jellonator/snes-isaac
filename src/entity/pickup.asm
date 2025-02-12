@@ -1,5 +1,7 @@
 .include "base.inc"
 
+.define pickup_price entity_state
+
 .BANK $02 SLOT "ROM"
 .SECTION "Entity Pickup" SUPERFREE
 
@@ -17,6 +19,22 @@ _variant_sprite_tileflag:
 _handle_null:
     rts
 
+_subtract_money:
+    phy
+    php
+    sep #$28
+    lda.w pickup_price,Y
+    beq @skip
+    lda.w playerData.money
+    sec
+    sbc.w pickup_price,Y
+    sta.w playerData.money
+    jsl Player.update_money_display
+@skip:
+    plp
+    ply
+    rts
+
 _handle_penny:
     rep #$30 ; 16b A
     phy
@@ -25,6 +43,8 @@ _handle_penny:
     lda.w playerData.money
     clc
     adc #$01
+    sec
+    sbc.w pickup_price,Y
     sta.w playerData.money
     rep #$08 ; disable decimal
     jsl Player.update_money_display
@@ -42,6 +62,8 @@ _handle_nickle:
     lda.w playerData.money
     clc
     adc #$05
+    sec
+    sbc.w pickup_price,Y
     sta.w playerData.money
     rep #$08 ; disable decimal
     jsl Player.update_money_display
@@ -59,6 +81,8 @@ _handle_dime:
     lda.w playerData.money
     clc
     adc #$10
+    sec
+    sbc.w pickup_price,Y
     sta.w playerData.money
     rep #$08 ; disable decimal
     jsl Player.update_money_display
@@ -81,6 +105,7 @@ _handle_bomb:
     jsl Player.update_bomb_display
     plp
     ply
+    jsr _subtract_money
     ; KILL
     jsl entity_free
     rts
@@ -98,6 +123,7 @@ _handle_key:
     jsl Player.update_key_display
     plp
     ply
+    jsr _subtract_money
     ; KILL
     jsl entity_free
     rts
@@ -114,6 +140,7 @@ _handle_heart:
         ; healed some amount, remove heart
         plp
         ply
+        jsr _subtract_money
         jsl entity_free
         rts
     +:
@@ -133,6 +160,7 @@ _handle_soul_heart:
         ; healed some amount, remove heart
         plp
         ply
+        jsr _subtract_money
         jsl entity_free
         rts
     +:
@@ -151,8 +179,19 @@ _variant_handlers:
     .dw _handle_heart      ; 7 - heart
     .dw _handle_soul_heart ; 8 - soul heart
 
+; Note: prices are in DECIMAL MODE
+PickupVariantPrices:
+    .db $01 ; 0 - null
+    .db $01 ; 1 - penny
+    .db $05 ; 2 - nickle
+    .db $10 ; 3 - dime
+    .db $05 ; 4 - bomb
+    .db $05 ; 5 - key
+    .db $05 ; 6 - battery
+    .db $03 ; 7 - heart
+    .db $05 ; 8 - soul heart
+
 true_entity_pickup_tick:
-    ; rtl
     rep #$30
     phy
     ; tile ID
@@ -176,6 +215,9 @@ true_entity_pickup_tick:
     ply
     ; collision detection
     .EntityEasySetBox 16 16
+    lda.w playerData.money
+    cmp.w pickup_price,Y
+    bcc @not_enough_money
     .EntityEasyCheckPlayerCollision_Center @no_player_col, 8, 10
         rep #$30
         lda.w entity_variant,Y
@@ -183,6 +225,7 @@ true_entity_pickup_tick:
         asl
         tax
         jsr (_variant_handlers,X)
+    @not_enough_money:
     @no_player_col:
     rtl
 
@@ -250,6 +293,14 @@ entity_pickup_init:
     .ACCU 16
     .INDEX 16
     sep #$20
+    lda #0
+    sta.w pickup_price,Y
+    sta.b $04
+    lda.w entity_variant,Y
+    cmp #ENTITY_PICKUP_RANDOM_SHOP
+    bne +
+        inc.b $04
+    +:
     lda.w entity_variant,Y
     bpl @no_randomize
         ; get table
@@ -273,6 +324,15 @@ entity_pickup_init:
         xba
         sta.w entity_variant,Y
 @no_randomize:
+    lda #0
+    xba
+    lda.b $04
+    beq @no_set_price
+        lda.w entity_variant,Y
+        tax
+        lda.l PickupVariantPrices,X
+        sta.w pickup_price,Y
+@no_set_price:
     rts
 
 entity_pickup_free:

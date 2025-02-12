@@ -109,6 +109,13 @@
         "mask": "interlace"
     },
     {
+        "name": "costume_spoon_bender",
+        "src": "assets/sprites/costume/spoon_bender.raw",
+        "depth": 16,
+        "size": 2,
+        "mask": "interlace"
+    },
+    {
         "name": "bomb_explosion",
         "src": "assets/sprites/explosion.raw",
         "depth": 16,

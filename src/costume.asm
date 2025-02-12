@@ -38,12 +38,21 @@ Costume.player_recalculate:
         .put_sprite spritedata.costume_polyphemus, 8, 0, 0
         .put_sprite spritedata.costume_polyphemus, 8, 0, 8
     +:
+    ; WIRE COAT HANGER
     lda.l playerData.playerItemStackNumber + ITEMID_WIRE_COAT_HANGER
     beq +
         .put_sprite spritedata.costume_wire_coat_hanger, 4, 0, 0
         .put_sprite spritedata.costume_wire_coat_hanger, 4, 0, 4
         .put_sprite spritedata.costume_wire_coat_hanger, 4, 0, 8
         .put_sprite spritedata.costume_wire_coat_hanger, 4, 0, 12
+    +:
+    ; SPOON BENDER
+    lda.l playerData.playerItemStackNumber + ITEMID_SPOON_BENDER
+    beq +
+        .put_sprite spritedata.costume_spoon_bender, 4, 0, 0
+        .put_sprite spritedata.costume_spoon_bender, 4, 0, 4
+        .put_sprite spritedata.costume_spoon_bender, 4, 0, 8
+        .put_sprite spritedata.costume_spoon_bender, 4, 0, 12
     +:
     ; end
     plb

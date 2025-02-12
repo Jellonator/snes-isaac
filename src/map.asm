@@ -65,6 +65,11 @@ InitializeRoomSlot:
     .REPT ENTITY_STORE_COUNT INDEX i
         sta.l roomSlotTiles.1.entityStoreTable.{i+1}.type,X
     .ENDR
+    ; set room rng
+    jsl StageRand_Update32
+    sta.l roomSlotTiles.1.rng,X
+    tya
+    sta.l roomSlotTiles.1.rng+2,X
     rtl
 
 .MACRO .CopyGroundAddr ARGS addr
@@ -136,6 +141,12 @@ LoadRoomSlotIntoLevel:
     clc
     adc #roominfo_t.tileVariantTable - roominfo_t.tileTypeTable
     sta.b currentRoomTileVariantTableAddress
+    clc
+    adc #roominfo_t.rng - roominfo_t.tileVariantTable
+    sta.b currentRoomRngAddress_Low
+    inc A
+    inc A
+    sta.b currentRoomRngAddress_High
 ; load tiles
     ; Copy default data to vqueueBinData
     .CopyROMToVQueueBin EmptyRoomTiles, 16*16*2

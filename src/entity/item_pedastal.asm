@@ -30,7 +30,7 @@ _item_pedastal_get_variant_from_pool:
     pha
     phy
     php
-    jsl RngGeneratorUpdate16
+    jsl RoomRand_Update16
     sta.l DIVU_DIVIDEND
     plp
     ply

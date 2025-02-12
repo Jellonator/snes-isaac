@@ -356,6 +356,8 @@ tile_data_loop:
     lda #bankbyte(mapTileSlotTable)
     sta.b currentRoomTileTypeTableAddress+2
     sta.b currentRoomTileVariantTableAddress+2
+    sta.b currentRoomRngAddress_Low+2
+    sta.b currentRoomRngAddress_High+2
     sta.b mapDoorNorth+2
     sta.b mapDoorEast+2
     sta.b mapDoorSouth+2

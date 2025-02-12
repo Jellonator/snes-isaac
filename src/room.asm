@@ -219,7 +219,7 @@ _Room_Close_Doors:
 
 _Room_Spawn_Reward:
     rep #$30
-    jsl RngGeneratorUpdate8
+    jsl RoomRand_Update8
     and #$00FF
     asl
     tax

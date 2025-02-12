@@ -4,7 +4,7 @@
 .SECTION "MapGeneratorCode" FREE
 
 ; zeropage values
-.ENUM $0060
+.ENUM $0070
     start_pos INSTANCEOF maptilepos_t
     mapgenNumAvailableTiles db
     mapgenNumUsedTiles db
@@ -795,13 +795,13 @@ BeginMapGeneration:
 @retry:
     jsr _ClearMap
     ; First, choose starting tile
-    jsl RngGeneratorUpdate4
+    jsl StageRand_Update4
     sep #$30 ; 8 bit AXY
     and #$03
     clc
     adc #6 ; X: [6-9]
     ; sta.b start_pos
-    ; jsl RngGeneratorUpdate4
+    ; jsl StageRand_Update4
     ; sep #$30 ; 8 bit AXY
     ; and #$01
     ; clc
@@ -845,7 +845,7 @@ BeginMapGeneration:
             jsr _CalculateAvailableStartingRoomEndpointTiles
     @skip_adjacent_to_start:
         ; First, get random tile
-        jsl RngGeneratorUpdate8
+        jsl StageRand_Update8
         .ACCU 16 ; Rng changes A to 16
             ; .ChangeDataBank $00
             sta.l DIVU_DIVIDEND
@@ -979,7 +979,7 @@ BeginMapGeneration:
 _PushRandomRoomFromPool:
     rep #$30 ; 16b AXY
 ; Get RNG value
-    jsl RngGeneratorUpdate8
+    jsl StageRand_Update8
     sta.l DIVU_DIVIDEND
 ; Put pointer in Y
 ; For efficiency, Y starts at size*3

@@ -16,6 +16,9 @@
     currentRoomTileTypeTableAddress dl
     ; quick-read table for the current room's tile variants
     currentRoomTileVariantTableAddress dl
+    ; quick access to current room's RNG
+    currentRoomRngAddress_Low dl
+    currentRoomRngAddress_High dl
     ; ... used for a variety of purposes I guess. Just treat them as temp vars
     currentConsideredTileX dw
     currentConsideredTileY dw

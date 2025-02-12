@@ -56,6 +56,7 @@
     tileVariantTable INSTANCEOF byte_t ROOM_TILE_COUNT + 2
     roomDefinition dw
     entityStoreTable INSTANCEOF entitystore_t ENTITY_STORE_COUNT
+    rng INSTANCEOF rng_t
 .ENDST
 
 ; ROOMGEN OBJECT DEFINITION

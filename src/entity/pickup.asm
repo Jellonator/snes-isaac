@@ -311,7 +311,7 @@ entity_pickup_init:
         lda.l PickupRandomizerTables,X
         sta.b $00
         ; get RNG
-        jsl RngGeneratorUpdate8
+        jsl RoomRand_Update8
         .ACCU 16
         and #$00FF
         ; get variant

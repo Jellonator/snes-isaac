@@ -3,24 +3,69 @@
 .BANK $01 SLOT "ROM"
 .SECTION "Pathing" FREE
 
-Pathing.InitializePlayer:
+Pathing.Initialize:
+; clear player
     rep #$30
-    phb
-    lda #255
-    ldx #loword(InitialPathfindingData)
-    ldy #loword(pathfind_player_data)
-    mvn bankbyte(InitialPathfindingData), bankbyte(pathfind_player_data)
-    plb
-    rtl
-
-Pathing.InitializeEnemy:
+    phd
+    pea $4300
+    pld
+    lda #256
+    sta.b <DMA0_SIZE
+    lda #loword(InitialPathfindingData)
+    sta.b <DMA0_SRCL
+    lda #loword(pathfind_player_data)
+    sta.w WMADDL
+    sep #$20 ; 8 bit A
+    lda #0
+    sta.b <DMA0_SRCH ; InitialPathfindingData is in bank 0
+    sta.w WMADDH ; only bottom bit matters, so just store 0
+    ; Absolute address, increment, 1 byte at a time
+    sta.b <DMA0_CTL
+    ; Write to WRAM
+    lda #$80
+    sta.b <DMA0_DEST
+    lda #$01
+    sta.w MDMAEN
+; clear enemy
     rep #$30
-    phb
-    lda #255
-    ldx #loword(InitialPathfindingData)
-    ldy #loword(pathfind_enemy_data)
-    mvn bankbyte(InitialPathfindingData), bankbyte(pathfind_enemy_data)
-    plb
+    lda #256
+    sta.b <DMA0_SIZE
+    lda #loword(InitialPathfindingData)
+    sta.b <DMA0_SRCL
+    lda #loword(pathfind_enemy_data)
+    sta.w WMADDL
+    sep #$20 ; 8 bit A
+    lda #0
+    sta.b <DMA0_SRCH ; InitialPathfindingData is in bank 0
+    sta.w WMADDH ; only bottom bit matters, so just store 0
+    ; Absolute address, increment, 1 byte at a time
+    sta.b <DMA0_CTL
+    ; Write to WRAM
+    lda #$80
+    sta.b <DMA0_DEST
+    lda #$01
+    sta.w MDMAEN
+; clear nearest enemy ID
+    rep #$30
+    lda #256
+    sta.b <DMA0_SIZE
+    lda #loword(EmptyData)
+    sta.b <DMA0_SRCL
+    lda #loword(pathfind_nearest_enemy_id)
+    sta.w WMADDL
+    sep #$20 ; 8 bit A
+    lda #0
+    sta.b <DMA0_SRCH ; EmptyData is in bank 0
+    sta.w WMADDH ; only bottom bit matters, so just store 0
+    ; Absolute address, no increment, 1 byte at a time
+    lda #%00001000
+    sta.b <DMA0_CTL
+    ; Write to WRAM
+    lda #$80
+    sta.b <DMA0_DEST
+    lda #$01
+    sta.w MDMAEN
+    pld
     rtl
 
 _clear_player:
@@ -36,7 +81,7 @@ _clear_player:
     sta.w WMADDL
     sep #$20 ; 8 bit A
     lda #0
-    sta.b <DMA0_SRCH ; InitialPathfindingData is in  bank 0
+    sta.b <DMA0_SRCH ; InitialPathfindingData is in bank 0
     sta.w WMADDH ; only bottom bit matters, so just store 0
     ; Absolute address, increment, 1 byte at a time
     sta.b <DMA0_CTL
@@ -61,9 +106,35 @@ _clear_enemy:
     sta.w WMADDL
     sep #$20 ; 8 bit A
     lda #0
-    sta.b <DMA0_SRCH ; InitialPathfindingData is in  bank 0
+    sta.b <DMA0_SRCH ; InitialPathfindingData is in bank 0
     sta.w WMADDH ; only bottom bit matters, so just store 0
     ; Absolute address, increment, 1 byte at a time
+    sta.b <DMA0_CTL
+    ; Write to WRAM
+    lda #$80
+    sta.b <DMA0_DEST
+    lda #$01
+    sta.w MDMAEN
+    pld
+    rts
+
+_clear_enemy_nearest:
+    rep #$30
+    phd
+    pea $4300
+    pld
+    lda #128-4
+    sta.b <DMA0_SIZE
+    lda #loword(EmptyData)
+    sta.b <DMA0_SRCL
+    lda #loword(16 * 4 + pathfind_nearest_enemy_id + 2)
+    sta.w WMADDL
+    sep #$20 ; 8 bit A
+    lda #0
+    sta.b <DMA0_SRCH ; EmptyData is in bank 0
+    sta.w WMADDH ; only bottom bit matters, so just store 0
+    ; Absolute address, no increment, 1 byte at a time
+    lda #%00001000
     sta.b <DMA0_CTL
     ; Write to WRAM
     lda #$80
@@ -281,5 +352,102 @@ Pathing.UpdateEnemy:
         rtl
     +:
     jmp _pathfind_main
+
+; Set nearest entity ID for every tile in `pathfind_nearest_enemy_id`
+; For now, this is just Manhattan distance, so don't expect accuracy
+Pathing.UpdateEnemyNearest:
+    jsr _clear_enemy_nearest
+; set bank and direct page
+    phb
+    .ChangeDataBank $7E
+    rep #$30
+    phd
+    pea pathfind_nearest_enemy_id - $20
+    pld
+; setup queue
+    ldx #loword(tempData_7E | $FF)
+    stx.b q_start
+    stx.b q_end
+    sep #$30
+    lda #0
+    sta.b q_count
+; set entity positions
+    lda.w numEntities
+    beq @end_entities
+    sta.b tile ; use `tile` as entity index
+@loop_entities:
+        ldx.b tile
+        ldy.w entityExecutionOrder-1,X
+        lda.w entity_mask,Y
+        and #ENTITY_MASK_TEAR
+        beq @skip_entity
+        ; get index
+        lda.w entity_box_x1,Y
+        clc
+        adc.w entity_box_x2,Y
+        ror
+        .DivideStatic 16
+        sta.b tile_left
+        lda.w entity_box_y1,Y
+        clc
+        adc.w entity_box_y2,Y
+        ror
+        and #$F0
+        ora.b tile_left
+        ; put in queue
+        sta.b (q_end)
+        tax
+        tya
+        sta.b $20,X
+        inc.b q_count
+        dec.b q_end
+    @skip_entity:
+        dec.b tile
+        bne @loop_entities
+@end_entities:
+    ; check entity count
+    sep #$30
+    lda.b q_count
+    bne +
+        pld
+        plb
+        rtl
+    +:
+    ; main
+    @loop:
+        lda.b (q_start)
+        tax
+        lda.l InitialPathfindingData,X
+        bne @skiptile ; skip tile if outside of room
+        ; conveniently, InitialPathFindingData has null values for valid tile locations
+        .REPT 4 INDEX i
+            .IF i == 0
+                .DEFINE i_offs -1
+            .ELIF i == 1
+                .DEFINE i_offs 1
+            .ELIF i == 2
+                .DEFINE i_offs 16
+            .ELIF i == 3
+                .DEFINE i_offs -16
+            .ENDIF
+            lda.b $20+i_offs,X
+            bne + ; If found tile is non-zero, skip it
+                lda.b $20,X
+                sta.b $20+i_offs,X
+                lda.l OffsetTable+i_offs,X
+                sta.b (q_end)
+                dec.b q_end
+                inc.b q_count
+            +:
+            .UNDEFINE i_offs
+        .ENDR
+    @skiptile:
+        dec.b q_start
+        dec.b q_count
+        bnel @loop
+; end
+    pld
+    plb
+    rtl
 
 .ENDS

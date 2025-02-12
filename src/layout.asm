@@ -104,6 +104,7 @@
     spatial_partition INSTANCEOF spatialpartitionlayer_t SPATIAL_LAYER_COUNT
     entity_data_end ds 01
     ; pathfinding data
+    _pathfind_nearest_enemy_id_reserve ds 256
     _pathfind_player_data_reserve ds 256
     _pathfind_enemy_data_reserve ds 256
 .ENDS

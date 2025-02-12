@@ -34,12 +34,22 @@ UpdateLoop:
     ; run one of the slow update functions, depending on current tick
     rep #$30
     lda.w tickCounter
-    and #$01
+    and #$03
+    cmp #0
+    beq @do_path_player
+    cmp #1
     beq @do_path_enemy
+    cmp #2
+    beq @do_path_enemy_nearest
+    jmp @end
+    @do_path_player:
         jsl Pathing.UpdatePlayer
         jmp @end
     @do_path_enemy:
         jsl Pathing.UpdateEnemy
+        jmp @end
+    @do_path_enemy_nearest:
+        jsl Pathing.UpdateEnemyNearest
     @end:
     jsl entity_tick_all
     jsl Room_Tick

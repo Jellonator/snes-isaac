@@ -50,6 +50,7 @@
 
 ; pathfinding data
 ; we offset by $10 to prevent extra cycles from page wraps in pathfinding code
+.DEFINE pathfind_nearest_enemy_id $001A20
 .DEFINE pathfind_player_data $001B20
 .DEFINE pathfind_enemy_data $001C20
 

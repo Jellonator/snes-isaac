@@ -259,6 +259,8 @@ Tear.set_size_from_damage:
     sta.l projectile_size,X
     rtl
 
+.DefinePathSpeedTable "_projectile_homing_accel", 8, 1
+
 projectile_tick__:
     .INDEX 16
     .ACCU 16
@@ -277,6 +279,39 @@ projectile_tick__:
     dec A
     sta.w projectile_lifetime,Y
     @lifeEnd:
+; Homing
+    lda.w loword(projectile_flags),Y
+    bit #PROJECTILE_FLAG_HOMING
+    beq @no_homing
+        lda #0
+        sep #$30
+        lda.w entity_box_x1,Y
+        clc
+        adc #4
+        lsr
+        lsr
+        lsr
+        lsr
+        sta.b $00
+        lda.w entity_box_y1,Y
+        clc
+        adc #4
+        and #$F0
+        ora.b $00
+        tax
+        lda.w pathfind_enemy_data,X
+        rep #$30
+        asl
+        tax
+        lda.w entity_velocx,Y
+        clc
+        adc.l _projectile_homing_accel_X,X
+        sta.w entity_velocx,Y
+        lda.w entity_velocy,Y
+        clc
+        adc.l _projectile_homing_accel_Y,X
+        sta.w entity_velocy,Y
+@no_homing:
 ; Apply speed to position
     ; X
     lda.w entity_posx,Y

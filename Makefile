@@ -30,6 +30,7 @@ SOURCES  := bindata.asm\
 			mapgenerator.asm\
 			palettes.asm\
 			player.asm\
+			pathing.asm\
 			playeritem.asm\
 			projectile.asm\
 			render.asm\
@@ -49,7 +50,7 @@ Test.smc: Test.link $(OBJECTS)
 	$(ALINK) $(ALDFLAGS) Test.link $(BINDIR)/$(BINFILE)
 
 Test.link:
-	echo -e -n "[objects]$(OBJECTS:%.obj=\n%.obj)" > Test.link
+	printf "[objects]$(OBJECTS:%.obj=\n%.obj)" > Test.link
 
 # include/roompools.inc: $(PALETTES) $(SPRITES) assets/rooms/roompools.json
 # 	echo MAKING ROOMPOOL INC

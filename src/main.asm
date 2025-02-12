@@ -30,7 +30,8 @@ UpdateLoop:
     jsl entity_clear_hitboxes
     jsl entity_refresh_hitboxes
     jsr PlayerUpdate
-    jsl player_update_pathfinding_data
+    jsl Pathing.UpdatePlayer
+    jsl Pathing.UpdateEnemy
     jsl entity_tick_all
     jsl Room_Tick
     jsl Floor_Tick

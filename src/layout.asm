@@ -104,6 +104,7 @@
     entity_data_end ds 01
     ; pathfinding data
     _pathfind_player_data_reserve ds 256
+    _pathfind_enemy_data_reserve ds 256
 .ENDS
 
 ; Should contain data that is either large or not often used.

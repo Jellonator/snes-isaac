@@ -375,7 +375,7 @@ tile_data_loop:
     ; clear entity table
     jsl EntityInfoInitialize
     ; clear pathfinding data
-    jsl player_initialize_pathfinding_data
+    jsl Pathing.InitializePlayer
     ; clear ground data
     jsl GroundOpClear
     ; init player

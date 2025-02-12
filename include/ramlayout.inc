@@ -50,7 +50,8 @@
 
 ; pathfinding data
 ; we offset by $10 to prevent extra cycles from page wraps in pathfinding code
-.DEFINE pathfind_player_data $001C20
+.DEFINE pathfind_player_data $001B20
+.DEFINE pathfind_enemy_data $001C20
 
 ; data buffers
 .DEFINE tempData_7E $7EFF00

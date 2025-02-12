@@ -125,6 +125,10 @@ Item.check_and_recalculate:
     beq +
         ora #PROJECTILE_FLAG_POLYPHEMUS
     +:
+    ldx.w playerData.playerItemStackNumber + ITEMID_SPOON_BENDER
+    beq +
+        ora #PROJECTILE_FLAG_HOMING
+    +:
     sta.w playerData.tearflags
     jml Costume.player_recalculate
     ; rtl
@@ -238,6 +242,7 @@ Item.pool.item_room:
     .db ITEMID_SAD_ONION
     .db ITEMID_CHOCOLATE_MILK
     .db ITEMID_POLYPHEMUS
+    .db ITEMID_SPOON_BENDER
     @end:
 
 Item.pool.boss:

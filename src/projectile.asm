@@ -259,8 +259,6 @@ Tear.set_size_from_damage:
     sta.l projectile_size,X
     rtl
 
-.DefinePathSpeedTable "_projectile_homing_accel", 8, 1
-
 projectile_tick__:
     .INDEX 16
     .ACCU 16
@@ -279,39 +277,6 @@ projectile_tick__:
     dec A
     sta.w projectile_lifetime,Y
     @lifeEnd:
-; Homing
-    lda.w loword(projectile_flags),Y
-    bit #PROJECTILE_FLAG_HOMING
-    beq @no_homing
-        lda #0
-        sep #$30
-        lda.w entity_box_x1,Y
-        clc
-        adc #4
-        lsr
-        lsr
-        lsr
-        lsr
-        sta.b $00
-        lda.w entity_box_y1,Y
-        clc
-        adc #4
-        and #$F0
-        ora.b $00
-        tax
-        lda.w pathfind_enemy_data,X
-        rep #$30
-        asl
-        tax
-        lda.w entity_velocx,Y
-        clc
-        adc.l _projectile_homing_accel_X,X
-        sta.w entity_velocx,Y
-        lda.w entity_velocy,Y
-        clc
-        adc.l _projectile_homing_accel_Y,X
-        sta.w entity_velocy,Y
-@no_homing:
 ; Apply speed to position
     ; X
     lda.w entity_posx,Y
@@ -340,10 +305,91 @@ projectile_tick__:
     clc
     adc #$04
     sta.b PROJECTILE_TMP_POSY
-; Check tile
     and #$F0
     ora.b PROJECTILE_TMP_VAL
-    tax
+    sta.b PROJECTILE_TMP_VAL
+; Homing
+    lda.w loword(projectile_flags),Y
+    bit #PROJECTILE_FLAG_HOMING
+    beql @no_homing
+        ; get nearest entity
+        sep #$30
+        lda #0
+        xba
+        ldx.b PROJECTILE_TMP_VAL
+        lda.w pathfind_nearest_enemy_id,X
+        beql @no_homing
+        ; get direction to entity
+        tax
+        lda.w entity_box_x1,X
+        clc
+        adc.w entity_box_x2,X
+        ror
+        sec
+        sbc.b PROJECTILE_TMP_POSX
+        ror
+        eor #$80
+        bmi +
+            adc #15
+        +:
+        and #$F0
+        sta.b $00
+        lda.w entity_box_y1,X
+        clc
+        adc.w entity_box_y2,X
+        ror
+        sec
+        sbc.b PROJECTILE_TMP_POSY
+        ror
+        eor #$80
+        bmi +
+            adc #15
+        +:
+        lsr
+        lsr
+        lsr
+        lsr
+        ora.b $00
+        tax
+        ; check distance
+        lda.l VecLenTableB,X
+        cmp #2
+        bcsl @no_homing
+        ; slow velocity
+        rep #$30
+        lda.w entity_velocx,Y
+        .NEG_A16
+        .ShiftRight_SIGN 5, 1
+        clc
+        adc.w entity_velocx,Y
+        sta.w entity_velocx,Y
+        lda.w entity_velocy,Y
+        .NEG_A16
+        .ShiftRight_SIGN 5, 1
+        clc
+        adc.w entity_velocy,Y
+        sta.w entity_velocy,Y
+        lda #0
+        sep #$30
+        ; add velocity
+        lda.l VecNormTableB_X,X
+        .Convert8To16_SIGNED 0, 1
+        .ShiftRight_SIGN 3, 1
+        clc
+        adc.w entity_velocx,Y
+        sta.w entity_velocx,Y
+        lda #0
+        sep #$30
+        lda.l VecNormTableB_Y,X
+        .Convert8To16_SIGNED 0, 1
+        .ShiftRight_SIGN 3, 1
+        clc
+        adc.w entity_velocy,Y
+        sta.w entity_velocy,Y
+@no_homing:
+    sep #$30
+; Check tile
+    ldx.b PROJECTILE_TMP_VAL
     lda.l GameTileToRoomTileIndexTable,X
     cmp #97
     bcc +

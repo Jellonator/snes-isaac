@@ -120,7 +120,7 @@ Item.check_and_recalculate:
     asl
     sta.w playerData.stat_speed
 ; tear flags
-    lda #PROJECTILE_FLAG_HOMING
+    lda #0
     ldx.w playerData.playerItemStackNumber + ITEMID_POLYPHEMUS
     beq +
         ora #PROJECTILE_FLAG_POLYPHEMUS

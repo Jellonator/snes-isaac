@@ -57,25 +57,21 @@ entity_basic_fly_tick:
     +:
 ; move
     ; TO PLAYER
-    lda.w entity_posx+1,Y
-    lsr
-    sta.b $02
-    lda.w player_posx+1
-    lsr
+    lda.w player_box_x1
     sec
-    sbc.b $02
+    sbc.w entity_box_x1,Y
+    ror
+    eor #$80
     bmi +
         adc #15
     +:
     and #$F0
     sta.b $02
-    lda.w entity_posy+1,Y
-    lsr
-    sta.b $03
-    lda.w player_posy+1
-    lsr
+    lda.w player_box_y1
     sec
-    sbc.b $03
+    sbc.w entity_box_y1,Y
+    ror
+    eor #$80
     bmi +
         adc #15
     +:

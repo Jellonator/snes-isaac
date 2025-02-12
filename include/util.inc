@@ -390,6 +390,27 @@
     .ENDR
 .ENDM
 
+; Convert signed 8B to 16B
+; Assuming that we are currently in 8B mode
+; set 'do_cmp' if A was not just loaded into the accumulator
+; set 'b_is_zero' if top half of A is known to be 0
+.MACRO .Convert8To16_SIGNED ARGS do_cmp, b_is_zero
+    .IF do_cmp
+        cmp #0
+    .ENDIF
+    rep #$20
+    bpl @@@@@\.\@pos
+        ora #$FF00
+        .IF !b_is_zero
+            jmp @@@@@\.\@end
+        .ENDIF
+    @@@@@\.\@pos:
+    .IF !b_is_zero
+        and #$00FF
+    .ENDIF
+    @@@@@\.\@end:
+.ENDM
+
 ; UTILITY
 
 ; Change data bank to value

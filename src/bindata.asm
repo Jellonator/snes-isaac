@@ -170,6 +170,31 @@ VecNormTableB_Y:
         .ENDR
     .ENDR
 
+; vector length
+; INDEX: xxxxyyyy (x,y: signed value b/t -8 and 7)
+; output is between 0 and 12
+VecLenTableB:
+    .REPT 8 INDEX ix
+        .REPT 8 INDEX iy
+            .IF (ix == 0) && (iy == 0)
+                .db 0
+            .ELSE
+                .db sqrt((ix * ix) + (iy * iy))
+            .ENDIF
+        .ENDR
+        .REPT 8 INDEX iy
+            .db sqrt((ix * ix) + ((iy-8) * (iy-8)))
+        .ENDR
+    .ENDR
+    .REPT 8 INDEX ix
+        .REPT 8 INDEX iy
+            .db sqrt(((ix - 8) * (ix - 8)) + (iy * iy))
+        .ENDR
+        .REPT 8 INDEX iy
+            .db sqrt(((ix - 8) * (ix - 8)) + ((iy-8) * (iy-8)))
+        .ENDR
+    .ENDR
+
 GameTileToRoomTileIndexTable:
     .REPT 16*3
         .db 97

@@ -123,11 +123,11 @@ _clear_enemy_nearest:
     phd
     pea $4300
     pld
-    lda #128-4
+    lda #256
     sta.b <DMA0_SIZE
     lda #loword(EmptyData)
     sta.b <DMA0_SRCL
-    lda #loword(16 * 4 + pathfind_nearest_enemy_id + 2)
+    lda #loword(pathfind_nearest_enemy_id)
     sta.w WMADDL
     sep #$20 ; 8 bit A
     lda #0

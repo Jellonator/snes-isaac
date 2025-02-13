@@ -262,6 +262,15 @@ _handle_soul_heart:
     rts
 
 _handle_consumable:
+    jsr _subtract_money
+    sep #$30
+    phy
+    php
+    lda.w consumable_type,Y
+    jsl Consumable.pickup
+    plp
+    ply
+    jsl entity_free
     rts
 
 true_entity_pickup_tick:
@@ -435,12 +444,13 @@ true_entity_pickup_init:
         .ACCU 16
         sta.l DIVU_DIVIDEND
         sep #$30
-        lda #CONSUMABLE_COUNT
+        lda #CONSUMABLE_COUNT-1
         sta.l DIVU_DIVISOR
         .REPT 8
             nop
         .ENDR
         lda.l DIVU_REMAINDER
+        inc A
         sta.w consumable_type,Y
 @dont_set_consumable_type:
     rep #$30

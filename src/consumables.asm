@@ -220,4 +220,28 @@ Consumable.consumables:
 _empty_use:
     rtl
 
+Consumable.pickup:
+    sep #$30
+    pha
+    ; drop current consumable, if applicable
+    lda.w playerData.current_consumable
+    beq @skip_drop
+        rep #$30
+        lda #entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_CONSUMABLE)
+        jsl entity_create
+        sep #$30
+        lda.w playerData.current_consumable
+        sta.w entity_timer,Y
+        rep #$30
+        lda.w player_posx
+        sta.w entity_posx,Y
+        lda.w player_posy
+        sta.w entity_posy,Y
+@skip_drop:
+    ; set current consumable
+    sep #$30
+    pla
+    sta.w playerData.current_consumable
+    rtl
+
 .ENDS

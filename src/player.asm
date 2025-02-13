@@ -490,6 +490,7 @@ PlayerInit:
     sta.w playerData.keys
     lda #$01
     sta.w playerData.bombs
+    stz.w playerData.current_consumable
     jsl Player.update_bomb_display
     jsl Player.update_key_display
     jsl Player.update_money_display

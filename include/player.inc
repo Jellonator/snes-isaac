@@ -62,6 +62,7 @@
     money dw
     keys dw
     bombs dw
+    current_consumable db
 ; health
     ; extra slot allows small optimizations
     healthSlots INSTANCEOF byte_t HEALTHSLOT_COUNT + 1

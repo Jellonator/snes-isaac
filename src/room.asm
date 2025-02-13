@@ -98,7 +98,7 @@ _room_spawn_entities:
         lda.l $7E0000 + roominfo_t.entityStoreTable + entitystore_t.posy-1,X
         sta.w entity_posy,Y
         lda.l $7E0000 + roominfo_t.entityStoreTable + entitystore_t.state,X
-        sta.w entity_state,Y
+        sta.w entity_state,Y ; entity_state and entity_timer are combined
         inc.b $30
         jmp @loop_deserialize
 @end_deserialize:
@@ -349,7 +349,7 @@ _Room_Serialize_Entities:
             sta.w roominfo_t.entityStoreTable + entitystore_t.posx-1,X
             lda.w entity_type,Y
             sta.w roominfo_t.entityStoreTable + entitystore_t.type,X
-            lda.w entity_state,Y
+            lda.w entity_state,Y  ; entity_state and entity_timer are combined
             sta.w roominfo_t.entityStoreTable + entitystore_t.state,X
             inc.b $00
         +:

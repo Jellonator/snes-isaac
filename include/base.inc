@@ -15,3 +15,4 @@
 .include "ramlayout.inc"
 .include "chaintable.inc"
 .include "sort.inc"
+.include "consumables.inc"

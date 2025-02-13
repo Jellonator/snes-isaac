@@ -3,9 +3,9 @@
 ; steal state and timer, since they are serialized
 .define pickup_price entity_state
 .define consumable_type entity_timer
-.define has_put_text entity_custom.1
-.define pickup_prevention_timer entity_custom.2
-.define anim_timer entity.custom.3
+.define has_put_text loword(entity_custom.1)
+.define pickup_prevention_timer loword(entity_custom.2)
+.define anim_timer loword(entity_custom.3)
 
 .BANK $02 SLOT "ROM"
 .SECTION "Entity Pickup" SUPERFREE
@@ -33,6 +33,11 @@ _variant_handlers:
     .dw _handle_heart      ; 7 - heart
     .dw _handle_soul_heart ; 8 - soul heart
     .dw _handle_consumable ; 9 - consumable
+
+.DEFINE SPAWN_ANIM_FRAMES 14
+
+_spawn_anim_y:
+    .db -4, -4, -4, -4, -3, -3, -3, -2, -1, 0, -1, -2, -1, 0
 
 ; Note: prices are in DECIMAL MODE
 PickupVariantPrices:
@@ -262,6 +267,15 @@ _handle_consumable:
 true_entity_pickup_tick:
     rep #$30
     phy
+    ldx.w anim_timer,Y
+    cpx #SPAWN_ANIM_FRAMES-1
+    bcs +
+        inx
+        txa
+        sta.w anim_timer,Y
+    +:
+    lda.l _spawn_anim_y,X
+    sta.b $00
     ; tile ID
     lda.w entity_variant,Y
     and #$00FF
@@ -276,6 +290,8 @@ true_entity_pickup_tick:
     sta.w objectData.1.pos_x,X
     ; Y position
     lda.w entity_posy + 1,Y
+    clc
+    adc.b $00
     sta.w objectData.1.pos_y,X
     sta.w loword(entity_ysort),Y
     rep #$30
@@ -285,24 +301,29 @@ true_entity_pickup_tick:
     .EntityEasySetBox 16 16
     lda.w playerData.money
     cmp.w pickup_price,Y
-    bcc @not_enough_money
-    .EntityEasyCheckPlayerCollision_Center @no_player_col, 8, 10
+    bcc @skip_pickup
+    lda.w pickup_prevention_timer,Y
+    beq +
+        dec a
+        sta.w pickup_prevention_timer,Y
+        jmp @skip_pickup
+    +:
+    .EntityEasyCheckPlayerCollision_Center @skip_pickup, 8, 10
         rep #$30
         lda.w entity_variant,Y
         and #$00FF
         asl
         tax
         jsr (_variant_handlers,X)
-    @not_enough_money:
-    @no_player_col:
+    @skip_pickup:
     ; maybe put text
     sep #$30
     lda.w pickup_price,Y
     beq @no_put_price_text
-    lda.w loword(has_put_text),Y
+    lda.w has_put_text,Y
     bne @no_put_price_text
         inc A
-        sta.w loword(has_put_text),Y
+        sta.w has_put_text,Y
         ; get address
         rep #$30
         lda.w entity_box_x1,Y
@@ -364,7 +385,7 @@ true_entity_pickup_init:
     sep #$20
     lda #0
     sta.w pickup_price,Y
-    sta.w loword(has_put_text),Y
+    sta.w has_put_text,Y
     sta.b $04
     lda.w entity_variant,Y
     cmp #ENTITY_PICKUP_RANDOM_SHOP
@@ -422,6 +443,16 @@ true_entity_pickup_init:
         lda.l DIVU_REMAINDER
         sta.w consumable_type,Y
 @dont_set_consumable_type:
+    rep #$30
+    lda #30
+    sta.w pickup_prevention_timer,Y
+    lda #SPAWN_ANIM_FRAMES-1
+    ldx.b entitySpawnContext
+    cpx #ENTITY_SPAWN_CONTEXT_STANDARD
+    bne +
+        lda #0
+    +:
+    sta.w anim_timer,Y
     rtl
 
 true_entity_pickup_free:
@@ -429,7 +460,7 @@ true_entity_pickup_free:
     .INDEX 16
     ; maybe erase text
     sep #$30
-    lda.w loword(has_put_text),Y
+    lda.w has_put_text,Y
     beq @no_erase_price_text
         ; get address
         rep #$30

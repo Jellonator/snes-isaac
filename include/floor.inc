@@ -33,8 +33,8 @@
 ; ROOMGEN FLOOR DEFINITION
 ; defines a 'floor'
 .STRUCT floordefinition_t
+    name ds 32
     chapter db
-    number db
     size db
     roomgen dw
 .ENDST

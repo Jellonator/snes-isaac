@@ -135,6 +135,9 @@
     spriteTableValue INSTANCEOF spritetab_t SPRITE_TABLE_TOTAL_SIZE
     spriteQueueTabNext ds SPRITE_QUEUE_SIZE+1
     spiteTableAvailableSlots dw
+; other display data
+    textDisplayTimer dw
+    textLines dw
 ; extra entity data
 ; a lot of entity data can just be used here, since entity tick, init, and free
 ; are executed in bank $7E. If not in bank $7E, you must access with $long,X

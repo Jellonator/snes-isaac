@@ -47,9 +47,27 @@ _proc_vqueue_cgram:
     sta.l MDMAEN
     jmp ProcessVQueue@process_vqueue_loop_continue
 
+_proc_vqueue_vram_clear:
+    .ACCU 16
+    .INDEX 16
+    lda #(%00001001 + ($0100 * $18))
+    sta.l DMA0_CTL
+    lda.w vqueueOps.1.vramAddr,Y
+    sta.l VMADDR
+    lda #loword(EmptyData)
+    sta.l DMA0_SRCL
+    lda.w #bankbyte(EmptyData)
+    sta.l DMA0_SRCH
+    lda.w vqueueOps.1.numBytes,Y
+    sta.l DMA0_SIZE
+    lda #$0001
+    sta.l MDMAEN
+    jmp ProcessVQueue@process_vqueue_loop_continue
+
 _proc_modes:
     .dw _proc_vqueue_vram
     .dw _proc_vqueue_cgram
+    .dw _proc_vqueue_vram_clear
 
 ProcessVQueue:
     phb

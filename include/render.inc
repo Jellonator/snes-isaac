@@ -36,9 +36,10 @@
 
 ; Vqueue - copy to VRAM
 .DEFINE VQUEUE_MODE_VRAM 0
-
 ; Vqueue - copy to CGRAM
 .DEFINE VQUEUE_MODE_CGRAM 2
+; Vqueue - clear mem
+.DEFINE VQUEUE_MODE_VRAM_CLEAR 4
 
 ; VQUEUE OPERATION
 ; Defines structure for VQueue operation

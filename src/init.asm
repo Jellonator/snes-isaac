@@ -346,6 +346,8 @@ tile_data_loop:
     jsl RngGameInitialize
     ; init vqueue
     jsl ClearVQueue
+    ; init overlay
+    jsl Overlay.init
     ; init hashtables
     phb
     .ChangeDataBank bankbyte(spriteTableKey)

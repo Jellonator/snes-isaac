@@ -56,6 +56,7 @@ UpdateLoop:
     jsl Floor_Tick
     jsr UpdateRest
     jsl GroundProcessOps
+    jsl Overlay.update
     ; Finally, check if room should be changed
     jsr PlayerCheckEnterRoom
     ; End update code

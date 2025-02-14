@@ -6,184 +6,184 @@
 .FUNCTION tarot_sprite(i) spritedata.tarot_cards_big + spriteoffs(4, 16, i)
 
 .DSTRUCT Consumable.definitions.null INSTANCEOF consumable_t VALUES
-    name: .db "null", 0
-    tagline: .db "May you find a real consumable", 0
+    name: .ASCSTR "null", 0
+    tagline: .ASCSTR "May you find a real consumable", 0
     sprite_ptr: .dl tarot_sprite(22)
     sprite_palette: .dw 0
     on_use: .dl _empty_use
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_fool INSTANCEOF consumable_t VALUES
-    name: .db "The Fool", 0
-    tagline: .db "TODO", 0
+    name: .ASCSTR "The Fool", 0
+    tagline: .ASCSTR "TODO", 0
     sprite_ptr: .dl tarot_sprite(0)
     sprite_palette: .dw loword(palettes.tarot_cards1)
     on_use: .dl _empty_use
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_magician INSTANCEOF consumable_t VALUES
-    name: .db "The Magician", 0
-    tagline: .db "TODO", 0
+    name: .ASCSTR "The Magician", 0
+    tagline: .ASCSTR "TODO", 0
     sprite_ptr: .dl tarot_sprite(1)
-    sprite_palette: .dw loword(palettes.tarot_cards1)
+    sprite_palette: .dw loword(palettes.tarot_cards_magician)
     on_use: .dl _empty_use
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_high_priestess INSTANCEOF consumable_t VALUES
-    name: .db "The High priestess", 0
-    tagline: .db "TODO", 0
+    name: .ASCSTR "The High priestess", 0
+    tagline: .ASCSTR "TODO", 0
     sprite_ptr: .dl tarot_sprite(2)
     sprite_palette: .dw loword(palettes.tarot_cards_high_priestess)
     on_use: .dl _empty_use
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_empress INSTANCEOF consumable_t VALUES
-    name: .db "The Empress", 0
-    tagline: .db "TODO", 0
+    name: .ASCSTR "The Empress", 0
+    tagline: .ASCSTR "TODO", 0
     sprite_ptr: .dl tarot_sprite(3)
     sprite_palette: .dw loword(palettes.tarot_cards_empress)
     on_use: .dl _empty_use
 .ENDST
 
-.DSTRUCT Consumable.definitions.tarot_emporer INSTANCEOF consumable_t VALUES
-    name: .db "The Emporer", 0
-    tagline: .db "TODO", 0
+.DSTRUCT Consumable.definitions.tarot_emperer INSTANCEOF consumable_t VALUES
+    name: .ASCSTR "The Emperer", 0
+    tagline: .ASCSTR "TODO", 0
     sprite_ptr: .dl tarot_sprite(4)
-    sprite_palette: .dw loword(palettes.tarot_cards_emporer)
+    sprite_palette: .dw loword(palettes.tarot_cards_emperer)
     on_use: .dl _empty_use
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_hierophant INSTANCEOF consumable_t VALUES
-    name: .db "The Hierophant", 0
-    tagline: .db "TODO", 0
+    name: .ASCSTR "The Hierophant", 0
+    tagline: .ASCSTR "TODO", 0
     sprite_ptr: .dl tarot_sprite(5)
     sprite_palette: .dw loword(palettes.tarot_cards1)
     on_use: .dl _empty_use
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_lovers INSTANCEOF consumable_t VALUES
-    name: .db "The Lovers", 0
-    tagline: .db "TODO", 0
+    name: .ASCSTR "The Lovers", 0
+    tagline: .ASCSTR "TODO", 0
     sprite_ptr: .dl tarot_sprite(6)
     sprite_palette: .dw loword(palettes.tarot_cards_lovers)
     on_use: .dl _empty_use
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_chariot INSTANCEOF consumable_t VALUES
-    name: .db "The Chariot", 0
-    tagline: .db "TODO", 0
+    name: .ASCSTR "The Chariot", 0
+    tagline: .ASCSTR "TODO", 0
     sprite_ptr: .dl tarot_sprite(7)
     sprite_palette: .dw loword(palettes.tarot_cards1)
     on_use: .dl _empty_use
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_strength INSTANCEOF consumable_t VALUES
-    name: .db "Strength", 0
-    tagline: .db "TODO", 0
+    name: .ASCSTR "Strength", 0
+    tagline: .ASCSTR "TODO", 0
     sprite_ptr: .dl tarot_sprite(8)
     sprite_palette: .dw loword(palettes.tarot_cards1)
     on_use: .dl _empty_use
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_hermit INSTANCEOF consumable_t VALUES
-    name: .db "The Hermit", 0
-    tagline: .db "TODO", 0
+    name: .ASCSTR "The Hermit", 0
+    tagline: .ASCSTR "TODO", 0
     sprite_ptr: .dl tarot_sprite(9)
     sprite_palette: .dw loword(palettes.tarot_cards1)
     on_use: .dl _empty_use
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_wheel_of_fortune INSTANCEOF consumable_t VALUES
-    name: .db "Wheel of Fortune", 0
-    tagline: .db "TODO", 0
+    name: .ASCSTR "Wheel of Fortune", 0
+    tagline: .ASCSTR "TODO", 0
     sprite_ptr: .dl tarot_sprite(10)
     sprite_palette: .dw loword(palettes.tarot_cards_wheel_of_fortune)
     on_use: .dl _empty_use
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_justice INSTANCEOF consumable_t VALUES
-    name: .db "Justice", 0
-    tagline: .db "TODO", 0
+    name: .ASCSTR "Justice", 0
+    tagline: .ASCSTR "TODO", 0
     sprite_ptr: .dl tarot_sprite(11)
     sprite_palette: .dw loword(palettes.tarot_cards1)
     on_use: .dl _empty_use
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_hanged_man INSTANCEOF consumable_t VALUES
-    name: .db "The Hanged Man", 0
-    tagline: .db "TODO", 0
+    name: .ASCSTR "The Hanged Man", 0
+    tagline: .ASCSTR "TODO", 0
     sprite_ptr: .dl tarot_sprite(12)
     sprite_palette: .dw loword(palettes.tarot_cards1)
     on_use: .dl _empty_use
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_death INSTANCEOF consumable_t VALUES
-    name: .db "Death", 0
-    tagline: .db "TODO", 0
+    name: .ASCSTR "Death", 0
+    tagline: .ASCSTR "TODO", 0
     sprite_ptr: .dl tarot_sprite(13)
     sprite_palette: .dw loword(palettes.tarot_cards1)
     on_use: .dl _empty_use
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_temperance INSTANCEOF consumable_t VALUES
-    name: .db "Temperance", 0
-    tagline: .db "TODO", 0
+    name: .ASCSTR "Temperance", 0
+    tagline: .ASCSTR "TODO", 0
     sprite_ptr: .dl tarot_sprite(14)
     sprite_palette: .dw loword(palettes.tarot_cards1)
     on_use: .dl _empty_use
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_devil INSTANCEOF consumable_t VALUES
-    name: .db "The Devil", 0
-    tagline: .db "TODO", 0
+    name: .ASCSTR "The Devil", 0
+    tagline: .ASCSTR "TODO", 0
     sprite_ptr: .dl tarot_sprite(15)
     sprite_palette: .dw loword(palettes.tarot_cards1)
     on_use: .dl _empty_use
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_tower INSTANCEOF consumable_t VALUES
-    name: .db "The Tower", 0
-    tagline: .db "TODO", 0
+    name: .ASCSTR "The Tower", 0
+    tagline: .ASCSTR "TODO", 0
     sprite_ptr: .dl tarot_sprite(16)
     sprite_palette: .dw loword(palettes.tarot_cards1)
     on_use: .dl _empty_use
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_star INSTANCEOF consumable_t VALUES
-    name: .db "The Star", 0
-    tagline: .db "TODO", 0
+    name: .ASCSTR "The Star", 0
+    tagline: .ASCSTR "TODO", 0
     sprite_ptr: .dl tarot_sprite(17)
     sprite_palette: .dw loword(palettes.tarot_cards_star)
     on_use: .dl _empty_use
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_moon INSTANCEOF consumable_t VALUES
-    name: .db "The Moon", 0
-    tagline: .db "TODO", 0
+    name: .ASCSTR "The Moon", 0
+    tagline: .ASCSTR "TODO", 0
     sprite_ptr: .dl tarot_sprite(18)
     sprite_palette: .dw loword(palettes.tarot_cards1)
     on_use: .dl _empty_use
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_sun INSTANCEOF consumable_t VALUES
-    name: .db "The Sun", 0
-    tagline: .db "TODO", 0
+    name: .ASCSTR "The Sun", 0
+    tagline: .ASCSTR "TODO", 0
     sprite_ptr: .dl tarot_sprite(19)
     sprite_palette: .dw loword(palettes.tarot_cards1)
     on_use: .dl _empty_use
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_judgement INSTANCEOF consumable_t VALUES
-    name: .db "Judgement", 0
-    tagline: .db "TODO", 0
+    name: .ASCSTR "Judgement", 0
+    tagline: .ASCSTR "TODO", 0
     sprite_ptr: .dl tarot_sprite(20)
     sprite_palette: .dw loword(palettes.tarot_cards1)
     on_use: .dl _empty_use
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_world INSTANCEOF consumable_t VALUES
-    name: .db "The World", 0
-    tagline: .db "TODO", 0
+    name: .ASCSTR "The World", 0
+    tagline: .ASCSTR "TODO", 0
     sprite_ptr: .dl tarot_sprite(21)
     sprite_palette: .dw loword(palettes.tarot_cards1)
     on_use: .dl _empty_use
@@ -195,7 +195,7 @@ Consumable.consumables:
     .dw Consumable.definitions.tarot_magician
     .dw Consumable.definitions.tarot_high_priestess
     .dw Consumable.definitions.tarot_empress
-    .dw Consumable.definitions.tarot_emporer
+    .dw Consumable.definitions.tarot_emperer
     .dw Consumable.definitions.tarot_hierophant
     .dw Consumable.definitions.tarot_lovers
     .dw Consumable.definitions.tarot_chariot
@@ -285,6 +285,7 @@ Consumable.update_display:
     ; upload palette
     rep #$30
     plx
+    phx
     pea $7000 | bankbyte(palettes.palette0.w)
     lda.l bankaddr(Consumable.consumables) | consumable_t.sprite_palette,X
     pha
@@ -292,6 +293,27 @@ Consumable.update_display:
     rep #$30
     pla
     pla
+    ; put text line
+    lda.w playerData.current_consumable
+    and #$00FF
+    beq @no_put_text
+        phb
+        .ChangeDataBank bankbyte(Consumable.consumables)
+        lda $02,S
+        clc
+        adc #consumable_t.name
+        tax
+        jsl Overlay.putline
+        rep #$30
+        lda $02,S
+        clc
+        adc #consumable_t.tagline
+        tax
+        jsl Overlay.putline
+        plb
+@no_put_text:
+    rep #$30
+    plx
     rtl
 
 .ENDS

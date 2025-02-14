@@ -4,16 +4,21 @@
 .DEFINE SQRT2 sqrt(2.0)
 
 .ASCIITABLE
-    MAP '0' TO '9' = $00
-    MAP 'A' TO 'Z' = $0A
-    MAP '.' = $24
-    MAP ',' = $25
-    MAP '!' = $26
-    MAP '?' = $27
-    MAP "'" = $28
-    MAP '"' = $29
-    MAP ':' = $2A
-    MAP ' ' = $2B
+    MAP '0' TO '9' = $40
+    MAP 'A' TO 'Z' = $4A
+    MAP 'a' TO 'z' = $4A
+    MAP '.' = $64
+    MAP ',' = $65
+    MAP '!' = $66
+    MAP '?' = $67
+    MAP "'" = $68
+    MAP '"' = $69
+    MAP ':' = $6A
+    MAP ' ' = $6B
+    MAP $80 = $6D
+    MAP $81 = $6E
+    MAP $82 = $6F
+    MAP $00 = $00
 .ENDA
 
 ; JOY BUTTONS

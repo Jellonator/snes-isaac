@@ -19,6 +19,19 @@ _Floor_Begin:
     sep #$30 ; 8 bit AXY
     pla
     jsl PlayerEnterFloor
+    ; put overlay
+    rep #$30
+    lda.l currentFloorIndex
+    asl
+    tax
+    lda.l FloorDefinitions,X
+    clc
+    adc #floordefinition_t.name
+    tax
+    phb
+    .ChangeDataBank bankbyte(FloorDefinitions)
+    jsl Overlay.putline
+    plb
     rts
 
 ; Initialize floor data on game load
@@ -168,7 +181,7 @@ _Floor_Update_Graphics:
 
 ; Basement
 .DSTRUCT ChapterDefinition_Basement INSTANCEOF chapterdefinition_t VALUES
-    name: .db "The Basement\0"
+    name: .ASCSTR "The Basement\0"
     palettes:
         .dl palettes.basement_ground1
         .dl 0
@@ -181,7 +194,7 @@ _Floor_Update_Graphics:
 
 ; Caves
 .DSTRUCT ChapterDefinition_Caves INSTANCEOF chapterdefinition_t VALUES
-    name: .db "The Caves\0"
+    name: .ASCSTR "The Caves\0"
     palettes:
         .dl palettes.stage_caves_ground
         .dl 0
@@ -198,32 +211,32 @@ ChapterDefinitions:
 
 ; Basement I
 .DSTRUCT FloorDefinition_Basement1 INSTANCEOF floordefinition_t VALUES
+    name: .ASCSTR "The Basement \x80\0"
     chapter: .db 0
-    number: .db 1
     size: .db 7
     roomgen: .dw ROOMGEN_DEFAULT
 .ENDST
 
 ; Basement II
 .DSTRUCT FloorDefinition_Basement2 INSTANCEOF floordefinition_t VALUES
+    name: .ASCSTR "The Basement \x80\x80\0"
     chapter: .db 0
-    number: .db 2
     size: .db 8
     roomgen: .dw ROOMGEN_DEFAULT
 .ENDST
 
 ; Caves I
 .DSTRUCT FloorDefinition_Caves1 INSTANCEOF floordefinition_t VALUES
+    name: .ASCSTR "The Caves \x80\0"
     chapter: .db 1
-    number: .db 1
     size: .db 9
     roomgen: .dw ROOMGEN_DEFAULT
 .ENDST
 
 ; Caves II
 .DSTRUCT FloorDefinition_Caves2 INSTANCEOF floordefinition_t VALUES
+    name: .ASCSTR "The Caves \x80\x80\0"
     chapter: .db 1
-    number: .db 2
     size: .db 10
     roomgen: .dw ROOMGEN_DEFAULT
 .ENDST

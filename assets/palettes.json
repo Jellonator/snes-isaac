@@ -64,6 +64,10 @@
         "src": "assets/palettes/tarot_cards1.hex"
     },
     {
+        "name": "tarot_cards_magician",
+        "src": "assets/palettes/tarot_cards_magician.hex"
+    },
+    {
         "name": "tarot_cards_high_priestess",
         "src": "assets/palettes/tarot_cards_high_priestess.hex"
     },
@@ -72,8 +76,8 @@
         "src": "assets/palettes/tarot_cards_empress.hex"
     },
     {
-        "name": "tarot_cards_emporer",
-        "src": "assets/palettes/tarot_cards_emporer.hex"
+        "name": "tarot_cards_emperer",
+        "src": "assets/palettes/tarot_cards_emperer.hex"
     },
     {
         "name": "tarot_cards_lovers",

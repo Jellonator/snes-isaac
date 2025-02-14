@@ -29,6 +29,7 @@ SOURCES  := bindata.asm\
 			main.asm\
 			map.asm\
 			mapgenerator.asm\
+			overlay.asm\
 			palettes.asm\
 			player.asm\
 			pathing.asm\

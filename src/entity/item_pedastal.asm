@@ -184,6 +184,33 @@ true_item_pedastal_tick_base:
         sep #$30
         lda #30
         jsl Player.set_body_frame
+        ; display pickup text
+        rep #$30
+        lda $02,S
+        tay
+        lda entity_variant,Y
+        and #$00FF
+        asl
+        tax
+        lda.l Item.items,X
+        pha
+        phb
+        .ChangeDataBank bankbyte(Item.items)
+        lda $02,S
+        clc
+        adc #itemdef_t.name
+        tax
+        jsl Overlay.putline
+        rep #$30
+        lda $02,S
+        clc
+        adc #itemdef_t.tagline
+        tax
+        jsl Overlay.putline
+        rep #$30
+        plb
+        plx
+        ; end
         plp
         ply
 @no_player_col:

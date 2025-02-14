@@ -426,6 +426,8 @@
 
 .FUNCTION spriteoffs(bit_depth, num_tiles, frame) (num_tiles * bit_depth * frame * 8)
 
+.FUNCTION spritesize(bit_depth, num_tiles) (num_tiles * bit_depth * 8)
+
 .FUNCTION bankaddr(addr) (bankbyte(addr) * $10000)
 
 ; Pathing

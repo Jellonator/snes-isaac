@@ -8,7 +8,7 @@
 .DSTRUCT Consumable.definitions.null INSTANCEOF consumable_t VALUES
     name: .db "null", 0
     tagline: .db "May you find a real consumable", 0
-    sprite_ptr: .dl 0
+    sprite_ptr: .dl tarot_sprite(22)
     sprite_palette: .dw 0
     on_use: .dl _empty_use
 .ENDST
@@ -33,7 +33,7 @@
     name: .db "The High priestess", 0
     tagline: .db "TODO", 0
     sprite_ptr: .dl tarot_sprite(2)
-    sprite_palette: .dw loword(palettes.tarot_cards1)
+    sprite_palette: .dw loword(palettes.tarot_cards_high_priestess)
     on_use: .dl _empty_use
 .ENDST
 
@@ -41,7 +41,7 @@
     name: .db "The Empress", 0
     tagline: .db "TODO", 0
     sprite_ptr: .dl tarot_sprite(3)
-    sprite_palette: .dw loword(palettes.tarot_cards1)
+    sprite_palette: .dw loword(palettes.tarot_cards_empress)
     on_use: .dl _empty_use
 .ENDST
 
@@ -49,7 +49,7 @@
     name: .db "The Emporer", 0
     tagline: .db "TODO", 0
     sprite_ptr: .dl tarot_sprite(4)
-    sprite_palette: .dw loword(palettes.tarot_cards1)
+    sprite_palette: .dw loword(palettes.tarot_cards_emporer)
     on_use: .dl _empty_use
 .ENDST
 
@@ -65,7 +65,7 @@
     name: .db "The Lovers", 0
     tagline: .db "TODO", 0
     sprite_ptr: .dl tarot_sprite(6)
-    sprite_palette: .dw loword(palettes.tarot_cards1)
+    sprite_palette: .dw loword(palettes.tarot_cards_lovers)
     on_use: .dl _empty_use
 .ENDST
 
@@ -88,7 +88,7 @@
 .DSTRUCT Consumable.definitions.tarot_hermit INSTANCEOF consumable_t VALUES
     name: .db "The Hermit", 0
     tagline: .db "TODO", 0
-    sprite_ptr: .dl tarot_sprite(0)
+    sprite_ptr: .dl tarot_sprite(9)
     sprite_palette: .dw loword(palettes.tarot_cards1)
     on_use: .dl _empty_use
 .ENDST
@@ -97,7 +97,7 @@
     name: .db "Wheel of Fortune", 0
     tagline: .db "TODO", 0
     sprite_ptr: .dl tarot_sprite(10)
-    sprite_palette: .dw loword(palettes.tarot_cards1)
+    sprite_palette: .dw loword(palettes.tarot_cards_wheel_of_fortune)
     on_use: .dl _empty_use
 .ENDST
 
@@ -153,7 +153,7 @@
     name: .db "The Star", 0
     tagline: .db "TODO", 0
     sprite_ptr: .dl tarot_sprite(17)
-    sprite_palette: .dw loword(palettes.tarot_cards1)
+    sprite_palette: .dw loword(palettes.tarot_cards_star)
     on_use: .dl _empty_use
 .ENDST
 
@@ -220,6 +220,8 @@ Consumable.consumables:
 _empty_use:
     rtl
 
+; Set current consumable to 'A'
+; May spawn a pickup if the player currently has a card in their inventory
 Consumable.pickup:
     sep #$30
     pha
@@ -242,6 +244,54 @@ Consumable.pickup:
     sep #$30
     pla
     sta.w playerData.current_consumable
+Consumable.update_display:
+    ; Get pointer to consumable
+    rep #$30
+    and #$00FF
+    asl
+    tax
+    lda.l Consumable.consumables,X
+    tax
+    ; upload sprite
+    phx
+    pea BG1_CHARACTER_BASE_ADDR + $0C00
+    pea 4
+    sep #$20
+    lda.l bankaddr(Consumable.consumables) | consumable_t.sprite_ptr+2,X
+    pha
+    rep #$20
+    lda.l bankaddr(Consumable.consumables) | consumable_t.sprite_ptr,X
+    pha
+    .REPT 4 INDEX i
+        jsl CopySpriteVQueue
+        .IF i < 3
+            rep #$20
+            lda $01,S
+            clc
+            adc #spritesize(4, 4)
+            sta $01,S
+            lda $06,S
+            clc
+            adc #$0100
+            sta $06,S
+        .ENDIF
+    .ENDR
+    rep #$20
+    pla
+    pla
+    pla
+    sep #$20
+    pla
+    ; upload palette
+    rep #$30
+    plx
+    pea $7000 | bankbyte(palettes.palette0.w)
+    lda.l bankaddr(Consumable.consumables) | consumable_t.sprite_palette,X
+    pha
+    jsl CopyPaletteVQueue
+    rep #$30
+    pla
+    pla
     rtl
 
 .ENDS

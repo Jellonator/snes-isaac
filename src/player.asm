@@ -494,6 +494,7 @@ PlayerInit:
     jsl Player.update_bomb_display
     jsl Player.update_key_display
     jsl Player.update_money_display
+    jsl Consumable.update_display
     sep #$30
     lda #HEALTH_REDHEART_FULL
     sta.w playerData.healthSlots.1

@@ -67,7 +67,7 @@ UpdateLoop:
 UpdateRest:
     rep #$30 ; 16 bit AXY
     lda.w joy1press
-    BIT #JOY_SELECT
+    BIT #JOY_START
     beq @skip_regenerate_map
     jsl BeginMapGeneration
     sep #$30 ; 8 bit AXY
@@ -80,6 +80,20 @@ UpdateRest:
     pla
     jsl PlayerEnterFloor
 @skip_regenerate_map:
+    rep #$30
+    lda.w joy1press
+    bit #JOY_SELECT
+    beq @skip_inc_consumable
+        sep #$20
+        lda.w playerData.current_consumable
+        stz.w playerData.current_consumable
+        inc A
+        cmp #CONSUMABLE_COUNT
+        bcc +
+            lda #0
+        +:
+        jsl Consumable.pickup
+@skip_inc_consumable:
     rts
 
 ReadInput:

@@ -197,7 +197,6 @@ UpdateMinimapSlot:
 ;   palette index  [db] $07
 ;   source bank    [db] $06
 ;   source address [dw] $04
-; MUST call with jsl
 CopyPalette:
     rep #$20 ; 16 bit A
     lda $04,s
@@ -216,6 +215,30 @@ CopyPalette:
     sta $420B ; Begin transfer
     rtl
 
+; Copy palette to CGRAM via VQUEUE
+; PUSH order:
+;   palette index  [db] $07
+;   source bank    [db] $06
+;   source address [dw] $04
+CopyPaletteVQueue:
+    rep #$30 ; 16 bit A
+    .VQueueOpToA
+    tax
+    inc.w vqueueNumOps
+    rep #$20 ; 16 bit A
+    lda $04,s
+    sta.l vqueueOps.1.aAddr,X; source address
+    lda #32.w
+    sta.l vqueueOps.1.numBytes,X ; 32 bytes for palette
+    sep #$20 ; 8 bit A
+    lda $06,s
+    sta.l vqueueOps.1.aAddr+2,X ; source bank
+    lda $07,s
+    sta.l vqueueOps.1.vramAddr,X ; destination palette
+    lda #VQUEUE_MODE_CGRAM
+    sta.l vqueueOps.1.mode,X
+    rtl
+
 ; Copy sprite data to VRAM
 ; Use this method if the sprite occupies an entire row in width,
 ; or it is only 1 tile in height.
@@ -224,7 +247,6 @@ CopyPalette:
 ;   num tiles      [dw] $07
 ;   source bank    [db] $06
 ;   source address [dw] $04
-; MUST call with jsl
 CopySprite:
     rep #$20 ; 16 bit A
     lda $07,s
@@ -249,6 +271,40 @@ CopySprite:
     sta $4301 ; Write to VRAM
     lda #$01
     sta $420B ; begin transfer
+    rtl
+
+; Copy sprite data to VRAM via VQueue
+; Use this method if the sprite occupies an entire row in width,
+; or it is only 1 tile in height.
+; push order:
+;   vram address   [dw] $09
+;   num tiles      [dw] $07
+;   source bank    [db] $06
+;   source address [dw] $04
+CopySpriteVQueue:
+    phb
+    rep #$30 ; 16 bit A
+    .VQueueOpToA
+    tay
+    inc.w vqueueNumOps
+    lda 1+$07,S
+    asl ; multiply by 32 bytes per tile
+    asl
+    asl
+    asl
+    asl
+    .ChangeDataBank $7F
+    sta.w loword(vqueueOps.1.numBytes),Y ; number of bytes
+    lda 1+$04,S
+    sta.w loword(vqueueOps.1.aAddr),Y ; source address
+    lda 1+$09,S
+    sta.w loword(vqueueOps.1.vramAddr),Y ; VRAM address
+    sep #$20 ; 8 bit A
+    lda 1+$06,S
+    sta.w loword(vqueueOps.1.aAddr+2),Y ; source bank
+    lda #VQUEUE_MODE_VRAM
+    sta.w loword(vqueueOps.1.mode),Y
+    plb
     rtl
 
 ; Copy partial sprite data to VRAM.

@@ -45,11 +45,11 @@
     on_use: .dl _empty_use
 .ENDST
 
-.DSTRUCT Consumable.definitions.tarot_emperer INSTANCEOF consumable_t VALUES
-    name: .ASCSTR "The Emperer", 0
+.DSTRUCT Consumable.definitions.tarot_emperor INSTANCEOF consumable_t VALUES
+    name: .ASCSTR "The Emperor", 0
     tagline: .ASCSTR "TODO", 0
     sprite_ptr: .dl tarot_sprite(4)
-    sprite_palette: .dw loword(palettes.tarot_cards_emperer)
+    sprite_palette: .dw loword(palettes.tarot_cards_emperor)
     on_use: .dl _empty_use
 .ENDST
 
@@ -195,7 +195,7 @@ Consumable.consumables:
     .dw Consumable.definitions.tarot_magician
     .dw Consumable.definitions.tarot_high_priestess
     .dw Consumable.definitions.tarot_empress
-    .dw Consumable.definitions.tarot_emperer
+    .dw Consumable.definitions.tarot_emperor
     .dw Consumable.definitions.tarot_hierophant
     .dw Consumable.definitions.tarot_lovers
     .dw Consumable.definitions.tarot_chariot

@@ -25,6 +25,7 @@
 .define entity_signal (private_base_entity_combined_mask_signal - 1)
 .define entity_ysort ($7E0000 | (private_base_entity_combined_ysort_flash - 2))
 .define entity_damageflash ($7E0000 | (private_base_entity_combined_ysort_flash - 1))
+.define entity_flags ($7E0000 | (private_base_entity_flags - 2))
 
 .define player_posx (ENTITY_INDEX_PLAYER + entity_posx)
 .define player_posy (ENTITY_INDEX_PLAYER + entity_posy)

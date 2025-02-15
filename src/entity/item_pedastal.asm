@@ -225,6 +225,10 @@ true_item_pedastal_tick_base:
         ; end
         plp
         ply
+        rep #$20
+        lda.w loword(entity_flags),Y
+        ora #ENTITY_FLAGS_DONT_SERIALIZE
+        sta.w loword(entity_flags),Y
 @no_player_col:
     ; increment object index
     rep #$30

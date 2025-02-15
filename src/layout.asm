@@ -152,6 +152,8 @@
     private_entity_char_custom INSTANCEOF entitycharactercustomdata_t 16
     ; status effects of entities
     private_entity_char_statfx INSTANCEOF entitycharacterstatuseffectdata_t 2
+    ; entity flags
+    private_base_entity_flags dsw ENTITY_TOTAL_MAX
     ; contiguous data storage for various purposes
     ; index as (index * ENTITY_DATA_ARRAY_SIZE)
     ; in tick functions, Y is (index*2), so simply:

@@ -157,6 +157,10 @@
 ; Other standard entity definitions
 .DEFINE ENTITY_FLASH_TIME 4
 
+; ENTITY FLAGS
+; Indicates that entity should not be serialized
+.DEFINE ENTITY_FLAGS_DONT_SERIALIZE $01
+
 ; COLLISION
 
 ; Try to insert A into spatial partition at X

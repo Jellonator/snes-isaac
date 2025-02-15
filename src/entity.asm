@@ -69,6 +69,7 @@ entity_create_and_init:
     sta.w entity_mask,Y
     sta.w entity_signal,Y
     sta.w loword(entity_damageflash),Y
+    sta.w loword(entity_flags),Y
     xba
     pla
     sta.w entity_variant,Y
@@ -128,6 +129,7 @@ entity_create:
     sta.w entity_mask,Y
     sta.w entity_signal,Y
     sta.w loword(entity_damageflash),Y
+    sta.w loword(entity_flags),Y
     xba
     pla
     sta.w entity_variant,Y

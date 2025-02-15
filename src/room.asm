@@ -330,13 +330,13 @@ _Room_Serialize_Entities:
         tay
         lda.w entity_type,Y
         and #$00FF
-        ; .MultiplyStatic 8
         tax
-        ; php
-        ; jsr (EntityDefinitions + entitytypeinfo_t.tick_func,X)
         lda.l EntityDef_Flags,X
         and #ENTITY_TYPE_FLAG_SERIALIZE
         beq +
+        lda.w loword(entity_flags),Y ; skip serialization if entity forbids it
+        and #ENTITY_FLAGS_DONT_SERIALIZE
+        bne +
             lda.b $00
             ; skip serialization if full
             cmp #24

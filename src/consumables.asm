@@ -218,7 +218,7 @@ Consumable.consumables:
     .ENDR
 
 _empty_use:
-    rtl
+    rts
 
 ; Set current consumable to 'A'
 ; May spawn a pickup if the player currently has a card in their inventory
@@ -314,6 +314,30 @@ Consumable.update_display:
 @no_put_text:
     rep #$30
     plx
+    rtl
+
+Consumable.use:
+    ; run
+    rep #$30
+    lda.w playerData.current_consumable
+    and #$00FF
+    beq @skip
+    asl
+    tax
+    lda.l Consumable.consumables,X
+    tax
+    lda.l bankaddr(Consumable.consumables) | consumable_t.on_use,X
+    sta.w $0000
+    pea @next-1
+    jmp ($0000)
+@next:
+    ; set consumable to 0
+    sep #$20
+    lda #0
+    sta.w playerData.current_consumable
+    ; update display
+    jml Consumable.update_display
+@skip:
     rtl
 
 .ENDS

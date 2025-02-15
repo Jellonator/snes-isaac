@@ -84,17 +84,9 @@ UpdateRest:
     rep #$30
     lda.w joy1press
     bit #JOY_SELECT
-    beq @skip_inc_consumable
-        sep #$20
-        lda.w playerData.current_consumable
-        stz.w playerData.current_consumable
-        inc A
-        cmp #CONSUMABLE_COUNT
-        bcc +
-            lda #0
-        +:
-        jsl Consumable.pickup
-@skip_inc_consumable:
+    beq @skip_use_consumable
+        jsl Consumable.use
+@skip_use_consumable:
     rts
 
 ReadInput:

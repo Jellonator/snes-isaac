@@ -18,7 +18,7 @@
     tagline: .ASCSTR "TODO", 0
     sprite_ptr: .dl tarot_sprite(0)
     sprite_palette: .dw loword(palettes.tarot_cards1)
-    on_use: .dl _empty_use
+    on_use: .dl _tarot_fool
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_magician INSTANCEOF consumable_t VALUES
@@ -50,7 +50,7 @@
     tagline: .ASCSTR "TODO", 0
     sprite_ptr: .dl tarot_sprite(4)
     sprite_palette: .dw loword(palettes.tarot_cards_emperor)
-    on_use: .dl _empty_use
+    on_use: .dl _tarot_emperor
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_hierophant INSTANCEOF consumable_t VALUES
@@ -90,7 +90,7 @@
     tagline: .ASCSTR "TODO", 0
     sprite_ptr: .dl tarot_sprite(9)
     sprite_palette: .dw loword(palettes.tarot_cards1)
-    on_use: .dl _empty_use
+    on_use: .dl _tarot_hermit
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_wheel_of_fortune INSTANCEOF consumable_t VALUES
@@ -154,7 +154,7 @@
     tagline: .ASCSTR "TODO", 0
     sprite_ptr: .dl tarot_sprite(17)
     sprite_palette: .dw loword(palettes.tarot_cards_star)
-    on_use: .dl _empty_use
+    on_use: .dl _tarot_star
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_moon INSTANCEOF consumable_t VALUES
@@ -162,7 +162,7 @@
     tagline: .ASCSTR "TODO", 0
     sprite_ptr: .dl tarot_sprite(18)
     sprite_palette: .dw loword(palettes.tarot_cards1)
-    on_use: .dl _empty_use
+    on_use: .dl _tarot_moon
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_sun INSTANCEOF consumable_t VALUES
@@ -218,6 +218,99 @@ Consumable.consumables:
     .ENDR
 
 _empty_use:
+    rts
+
+; Teleport to room at location A
+TeleportToRoom:
+    .INDEX 8
+    .ACCU 8
+    pha
+    ; unload current room
+    jsl Room_Unload
+    jsl PlayerMinimapExitCurrentRoom
+    sep #$30
+    pla
+    sta.b loadedRoomIndex
+    tax
+    lda.l mapTileSlotTable,X
+    pha
+    jsl LoadRoomSlotIntoLevel
+    sep #$30
+    pla
+    jsl PlayerDiscoverNearbyRooms
+    ; Find safe spot for player
+    lda.b (mapDoorSouth)
+    beq +
+        rep #$20
+        lda #PLAYER_START_SOUTH_Y
+        sta.w player_posy
+        lda #PLAYER_START_SOUTH_X
+        sta.w player_posx
+        rtl
+    +:
+    lda.b (mapDoorNorth)
+    beq +
+        lda #PLAYER_START_NORTH_Y
+        sta.w player_posy
+        lda #PLAYER_START_NORTH_X
+        sta.w player_posx
+        rep #$20
+        rtl
+    +:
+    lda.b (mapDoorEast)
+    beq +
+        lda #PLAYER_START_EAST_X
+        sta.w player_posx
+        lda #PLAYER_START_EAST_Y
+        sta.w player_posy
+        rep #$20
+        rtl
+    +:
+    lda.b (mapDoorWest)
+    beq +
+        lda #PLAYER_START_WEST_X
+        sta.w player_posx
+        lda #PLAYER_START_WEST_Y
+        sta.w player_posy
+        rep #$20
+        rtl
+    +:
+    ; failsafe: spawn at south
+    rep #$20
+    lda #PLAYER_START_SOUTH_Y
+    sta.w player_posy
+    lda #PLAYER_START_SOUTH_X
+    sta.w player_posx
+    rtl
+
+_tarot_fool:
+    sep #$30
+    lda.l roomslot_start
+    jsl TeleportToRoom
+    rts
+
+_tarot_star:
+    sep #$30
+    lda.l roomslot_star
+    jsl TeleportToRoom
+    rts
+
+_tarot_moon:
+    sep #$30
+    lda.l roomslot_secret1
+    jsl TeleportToRoom
+    rts
+
+_tarot_hermit:
+    sep #$30
+    lda.l roomslot_shop
+    jsl TeleportToRoom
+    rts
+
+_tarot_emperor:
+    sep #$30
+    lda.l roomslot_boss
+    jsl TeleportToRoom
     rts
 
 ; Set current consumable to 'A'

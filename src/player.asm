@@ -531,7 +531,7 @@ PlayerEnterFloor:
     lda #((64 + 4 * 16 - 8) * 256)
     sta.w player_posy
     stz.w playerData.invuln_timer
-    jsr PlayerDiscoverNearbyRooms
+    jsl PlayerDiscoverNearbyRooms
     stz.w playerData.walk_frame
     stz.w playerData.bomb_wait_timer
     sep #$30
@@ -1799,6 +1799,20 @@ PlayerMoveDown:
 @@@@@\@undiscovered_secret:
 .ENDM
 
+PlayerMinimapExitCurrentRoom:
+    sep #$30
+    ldx.b loadedRoomIndex
+    lda.w mapTileFlagsTable,X
+    and #$FF ~ MAPTILE_HAS_PLAYER
+    ora #MAPTILE_DISCOVERED
+    sta.w mapTileFlagsTable,X
+    rep #$30
+    phx
+    jsl UpdateMinimapSlot
+    plx
+    sep #$30
+    rtl
+
 PlayerDiscoverNearbyRooms:
     sep #$30
     ldx.b loadedRoomIndex
@@ -1833,7 +1847,7 @@ PlayerDiscoverNearbyRooms:
         tax
         .PlayerDiscoverRoomHelper 0
     +:
-    rts
+    rtl
 
 PlayerCheckEnterRoom:
     rep #$30 ; 16b AXY
@@ -1851,9 +1865,9 @@ PlayerCheckEnterRoom:
     rts
 @left:
     .ACCU 16
-    lda #(ROOM_RIGHT - PLAYER_HITBOX_RIGHT)*256
+    lda #PLAYER_START_EAST_X
     sta.w player_posx
-    lda #(ROOM_CENTER_Y - 8)*256
+    lda #PLAYER_START_EAST_Y
     sta.w player_posy
     lda #BG2_TILE_ADDR_OFFS_X
     eor.w gameRoomBG2Offset
@@ -1866,9 +1880,9 @@ PlayerCheckEnterRoom:
     jmp WaitScrollLeft
 @right:
     .ACCU 16
-    lda #(ROOM_LEFT - PLAYER_HITBOX_LEFT)*256
+    lda #PLAYER_START_WEST_X
     sta.w player_posx
-    lda #(ROOM_CENTER_Y - 8)*256
+    lda #PLAYER_START_WEST_Y
     sta.w player_posy
     lda #BG2_TILE_ADDR_OFFS_X
     eor.w gameRoomBG2Offset
@@ -1881,9 +1895,9 @@ PlayerCheckEnterRoom:
     jmp WaitScrollRight
 @up:
     .ACCU 16
-    lda #(ROOM_BOTTOM - 12)*256
+    lda #PLAYER_START_SOUTH_Y
     sta.w player_posy
-    lda #(ROOM_CENTER_X - 8)*256
+    lda #PLAYER_START_SOUTH_X
     sta.w player_posx
     lda #BG2_TILE_ADDR_OFFS_Y
     eor.w gameRoomBG2Offset
@@ -1898,9 +1912,9 @@ PlayerCheckEnterRoom:
     jmp WaitScrollUp
 @down:
     .ACCU 16
-    lda #(ROOM_TOP - 4)*256
+    lda #PLAYER_START_NORTH_Y
     sta.w player_posy
-    lda #(ROOM_CENTER_X - 8)*256
+    lda #PLAYER_START_NORTH_X
     sta.w player_posx
     lda #BG2_TILE_ADDR_OFFS_Y
     eor.w gameRoomBG2Offset
@@ -1927,7 +1941,7 @@ PlayerCheckEnterRoom:
     rep #$30 ; 16 bit AXY
 ; Update map using vqueue
 ; Note: TempTemp2 contains old tile index
-    jsr PlayerDiscoverNearbyRooms
+    jsl PlayerDiscoverNearbyRooms
     stz.w player_velocx
     stz.w player_velocy
     rts

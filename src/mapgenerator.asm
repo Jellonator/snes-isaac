@@ -815,6 +815,7 @@ BeginMapGeneration:
     lda #(8 + 2*16)
     sta.b start_pos
     sta.w loadedRoomIndex
+    stx.w roomslot_start
     tax
     lda #ROOMTYPE_START
     pha
@@ -893,6 +894,7 @@ BeginMapGeneration:
     ; for now, just set them up depending on index in available endpoint tiles
     ; BOSS
         ldx mapgenUsedTiles+0
+        stx.w roomslot_boss
         stx.b $10
         ldy.w loword(mapTileSlotTable),X
         lda #ROOMTYPE_BOSS
@@ -900,6 +902,7 @@ BeginMapGeneration:
         sta.w loword(roomSlotRoomType),Y
     ; ITEM
         ldx mapgenUsedTiles+1
+        stx.w roomslot_star
         stx.b $11
         ldy.w loword(mapTileSlotTable),X
         lda #ROOMTYPE_ITEM
@@ -907,6 +910,7 @@ BeginMapGeneration:
         sta.w loword(roomSlotRoomType),Y
     ; SHOP
         ldx mapgenUsedTiles+2
+        stx.w roomslot_shop
         stx.b $12
         ldy.w loword(mapTileSlotTable),X
         lda #ROOMTYPE_SHOP
@@ -914,6 +918,7 @@ BeginMapGeneration:
         sta.w loword(roomSlotRoomType),Y
     ; SUPER SECRET
         ldx mapgenUsedTiles+3
+        stx.w roomslot_secret2
         stx.b $13
         ldy.w loword(mapTileSlotTable),X
         lda #ROOMTYPE_SECRET
@@ -933,6 +938,7 @@ BeginMapGeneration:
     tax
     lda.b mapgenUsedTiles,X
     sta.b $14
+    sta.w roomslot_secret1
     ; setup
     ldx.b $14
     lda #ROOMTYPE_SECRET
@@ -1061,6 +1067,12 @@ _ClearMap:
     stz.w numTilesToUpdate
     stz.w mapgenNumAvailableTiles
     stz.w mapgenNumAvailableEndpointTiles
+    stz.w roomslot_star
+    stz.w roomslot_boss
+    stz.w roomslot_start
+    stz.w roomslot_shop
+    stz.w roomslot_secret1
+    stz.w roomslot_secret2
     .ClearWRam_ZP mapTileTypeTable, MAP_MAX_SIZE
     .ClearWRam_ZP mapTileFlagsTable, MAP_MAX_SIZE
     .ClearWRam_ZP mapTileSlotTable, MAP_MAX_SIZE

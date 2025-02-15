@@ -132,6 +132,9 @@ UpdateMinimapLine:
     .ENDR
     rts
 
+; Update minimap slot
+; Args:
+;    slot dw $04,S
 UpdateMinimapSlot:
     rep #$30
 ; set VRAM address

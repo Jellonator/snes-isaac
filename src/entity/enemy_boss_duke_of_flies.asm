@@ -94,11 +94,16 @@ _duke_releaseflies:
     jmp _duke_endtick
 
 _duke_death:
+    rep #$30
+    phy
     jsl entity_free
+    rep #$30
+    ply
     rts
 
 _duke_endtick:
 ; check signal
+    sep #$30
     lda #ENTITY_SIGNAL_KILL
     and.w entity_signal,Y
     beq @not_kill

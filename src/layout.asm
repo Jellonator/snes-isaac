@@ -159,6 +159,13 @@
     ; .MultiplyStatic (ENTITY_DATA_ARRAY_SIZE/2)
     ; tay
     entity_array_data ds (ENTITY_TOTAL_MAX + 1) * ENTITY_DATA_ARRAY_SIZE
+; room locations
+    roomslot_star db
+    roomslot_boss db
+    roomslot_start db
+    roomslot_shop db
+    roomslot_secret1 db
+    roomslot_secret2 db
 ; reserved data
     _extraneous_data_buffer2 ds 256
 .ENDS

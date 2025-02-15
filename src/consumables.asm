@@ -239,7 +239,7 @@ TeleportToRoom:
     pla
     jsl PlayerDiscoverNearbyRooms
     ; Find safe spot for player
-    lda.b (mapDoorSouth)
+    lda.b [mapDoorSouth]
     beq +
         rep #$20
         lda #PLAYER_START_SOUTH_Y
@@ -248,31 +248,31 @@ TeleportToRoom:
         sta.w player_posx
         rtl
     +:
-    lda.b (mapDoorNorth)
+    lda.b [mapDoorNorth]
     beq +
+        rep #$20
         lda #PLAYER_START_NORTH_Y
         sta.w player_posy
         lda #PLAYER_START_NORTH_X
         sta.w player_posx
-        rep #$20
         rtl
     +:
-    lda.b (mapDoorEast)
+    lda.b [mapDoorEast]
     beq +
+        rep #$20
         lda #PLAYER_START_EAST_X
         sta.w player_posx
         lda #PLAYER_START_EAST_Y
         sta.w player_posy
-        rep #$20
         rtl
     +:
-    lda.b (mapDoorWest)
+    lda.b [mapDoorWest]
     beq +
+        rep #$20
         lda #PLAYER_START_WEST_X
         sta.w player_posx
         lda #PLAYER_START_WEST_Y
         sta.w player_posy
-        rep #$20
         rtl
     +:
     ; failsafe: spawn at south

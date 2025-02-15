@@ -252,8 +252,94 @@ LoadRoomSlotIntoLevel:
     sbc #MAP_MAX_WIDTH
     sta.b mapDoorNorth
     sep #$20
-    ; check doors
     php
+    ; safety-check: if this is a secret room and all doors are closed, open all bomb doors
+    ldx.b loadedRoomIndex
+    lda.w mapTileTypeTable,X
+    cmp #ROOMTYPE_SECRET
+    bne @dont_open_secret
+    lda [mapDoorEast]
+    bmi @dont_open_secret
+    lda [mapDoorWest]
+    bmi @dont_open_secret
+    lda [mapDoorSouth]
+    bmi @dont_open_secret
+    lda [mapDoorNorth]
+    bmi @dont_open_secret
+        lda [mapDoorEast]
+        and #DOOR_MASK_OPEN_METHOD
+        cmp #DOOR_METHOD_BOMB
+        bne +
+            lda [mapDoorEast]
+            ora #DOOR_OPEN
+            sta [mapDoorEast]
+    +:
+        lda [mapDoorWest]
+        and #DOOR_MASK_OPEN_METHOD
+        cmp #DOOR_METHOD_BOMB
+        bne +
+            lda [mapDoorWest]
+            ora #DOOR_OPEN
+            sta [mapDoorWest]
+    +:
+        lda [mapDoorSouth]
+        and #DOOR_MASK_OPEN_METHOD
+        cmp #DOOR_METHOD_BOMB
+        bne +
+            lda [mapDoorSouth]
+            ora #DOOR_OPEN
+            sta [mapDoorSouth]
+    +:
+        lda [mapDoorNorth]
+        and #DOOR_MASK_OPEN_METHOD
+        cmp #DOOR_METHOD_BOMB
+        bne +
+            lda [mapDoorNorth]
+            ora #DOOR_OPEN
+            sta [mapDoorNorth]
+    +:
+@dont_open_secret:
+    ; safety-check: if this is a special room, open all locks
+    ldx.b loadedRoomIndex
+    lda.w mapTileTypeTable,X
+    cmp #ROOMTYPE_NORMAL
+    beq @dont_open_locks
+    cmp #ROOMTYPE_START
+    beq @dont_open_locks
+        lda [mapDoorEast]
+        and #DOOR_MASK_OPEN_METHOD
+        cmp #DOOR_METHOD_KEY
+        bne +
+            lda [mapDoorEast]
+            ora #DOOR_OPEN
+            sta [mapDoorEast]
+    +:
+        lda [mapDoorWest]
+        and #DOOR_MASK_OPEN_METHOD
+        cmp #DOOR_METHOD_KEY
+        bne +
+            lda [mapDoorWest]
+            ora #DOOR_OPEN
+            sta [mapDoorWest]
+    +:
+        lda [mapDoorSouth]
+        and #DOOR_MASK_OPEN_METHOD
+        cmp #DOOR_METHOD_KEY
+        bne +
+            lda [mapDoorSouth]
+            ora #DOOR_OPEN
+            sta [mapDoorSouth]
+    +:
+        lda [mapDoorNorth]
+        and #DOOR_MASK_OPEN_METHOD
+        cmp #DOOR_METHOD_KEY
+        bne +
+            lda [mapDoorNorth]
+            ora #DOOR_OPEN
+            sta [mapDoorNorth]
+    +:
+@dont_open_locks:
+    ; check doors
     jsl UpdateDoorTileNorth
     jsl UpdateDoorTileSouth
     jsl UpdateDoorTileEast

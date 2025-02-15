@@ -5,7 +5,7 @@
 - Room types
     * Shops
         * [X] Purchasable pickups
-        * [ ] Purchasable items
+        * [X] Purchasable items
         * [X] Shopkeeper
         * [ ] Restock machine
     * Secret rooms

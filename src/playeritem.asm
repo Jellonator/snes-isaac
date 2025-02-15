@@ -141,6 +141,9 @@ _health_up_pickup:
     rts
 
 _pickup_map:
+    sep #$20
+    lda #$FF
+    sta.l numTilesToUpdate
     rts
 
 .DSTRUCT Item.definitions.null INSTANCEOF itemdef_t VALUES
@@ -243,6 +246,16 @@ _pickup_map:
     tagline: .ASCSTR "Map Revealed", 0
 .ENDST
 
+.DSTRUCT Item.definitions.compass INSTANCEOF itemdef_t VALUES
+    sprite_index: .db 9
+    sprite_palette: .dw palettes.item_compass
+    flags: .db 0
+    on_pickup: .dl _pickup_map
+    shop_price: .db $15
+    name: .ASCSTR "Compass", 0
+    tagline: .ASCSTR "The End is Near", 0
+.ENDST
+
 Item.items:
     .dw Item.definitions.sad_onion
     .dw Item.definitions.spoon_bender
@@ -253,6 +266,7 @@ Item.items:
     .dw Item.definitions.chocolate_milk
     .dw Item.definitions.polyphemus
     .dw Item.definitions.map
+    .dw Item.definitions.compass
     .REPT 256-7
         .dw Item.definitions.null
     .ENDR
@@ -276,6 +290,7 @@ Item.pool.boss:
 
 Item.pool.shop:
     .db ITEMID_MAP
+    .db ITEMID_COMPASS
     @end:
 
 .ENDS

@@ -36,6 +36,10 @@
         "src": "assets/palettes/item_chocolate_milk.hex"
     },
     {
+        "name": "item_compass",
+        "src": "assets/palettes/item_compass.hex"
+    },
+    {
         "name": "stage_caves1",
         "src": "assets/palettes/stage_caves1.hex"
     },

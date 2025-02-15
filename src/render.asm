@@ -81,8 +81,7 @@ VBlank2:
 ; We assume that this will be performed during stage load.
 ; Just set numTilesToUpdate to $FF instead.
 UpdateEntireMinimap:
-    sep #$30 ; 8 bit XY
-    rep #$20 ; 16 bit A
+    rep #$30 ; 16 bit AXY
     lda #$80
     sta $2115
     .REPT MAP_MAX_HEIGHT INDEX i
@@ -95,41 +94,77 @@ UpdateEntireMinimap:
 
 UpdateMinimapLine:
     .ACCU 16
-    .INDEX 8
+    .INDEX 16
     .REPT MAP_MAX_WIDTH INDEX i
-        lda.w mapTileTypeTable,Y
-        and #$00FF
-        asl
-        tax
-        lda.l MapTiles,X
-        sta.b $00
-        beq @empty_tile_{i}
-        lda.w mapTileFlagsTable,Y
-        bit #MAPTILE_COMPLETED
-        beq +
-            lda #$0010
-            ora.b $00
-            sta.b $00
-        +:
-        lda.w mapTileFlagsTable,Y
-        bit #MAPTILE_HAS_PLAYER
-        beq +
-            lda #$0020
-            ora.b $00
-            sta.b $00
-        +:
-        lda.w mapTileFlagsTable,Y
-        bit #MAPTILE_DISCOVERED
-        bne +
-            lda #$0000
-            and.b $00
-            sta.b $00
-        +:
-    @empty_tile_{i}:
-        lda.b $00
+        jsr _get_tile_value
         sta VMDATA
         iny
     .ENDR
+    rts
+
+; Get tile value for tile Y
+_get_tile_value:
+    .INDEX 16
+    .ACCU 16
+    lda.w mapTileTypeTable,Y
+    and #$00FF
+    asl
+    tax
+    lda.l MapTiles,X
+    sta.b $00
+    beq @empty_tile
+; modify value by flags
+    lda.w mapTileFlagsTable,Y
+    bit #MAPTILE_COMPLETED
+    beq +
+        lda #$0010
+        ora.b $00
+        sta.b $00
+    +:
+    lda.w mapTileFlagsTable,Y
+    bit #MAPTILE_HAS_PLAYER
+    beq +
+        lda #$0020
+        ora.b $00
+        sta.b $00
+    +:
+    ; hide undiscovered rooms
+    lda.w mapTileFlagsTable,Y
+    bit #MAPTILE_DISCOVERED
+    bne @tile_discovered
+        ; always hide secret rooms
+        lda.w mapTileTypeTable,Y
+        and #$00FF
+        cmp #ROOMTYPE_SECRET
+        beq @no_map_no_compass
+            lda.w playerData.playerItemStackNumber + ITEMID_MAP
+            and #$00FF
+            beq @no_map
+                ; has map
+                lda.w playerData.playerItemStackNumber + ITEMID_COMPASS
+                and #$00FF
+                bne @tile_discovered ; has map has compass - discover all rooms
+                    ; has map no compass - all undiscovered rooms appear as normal rooms
+                    lda #deft($08, 6) | T_HIGHP
+                    sta.b $00
+                    jmp @tile_discovered
+            @no_map:
+                ; no map
+                lda.w playerData.playerItemStackNumber + ITEMID_COMPASS
+                and #$00FF
+                beq @no_map_no_compass ; no map no compass - don't discover any rooms
+                    ; no map has compass - discover non-normal rooms
+                    lda.w mapTileTypeTable,Y
+                    cmp #ROOMTYPE_NORMAL+1
+                    bcs @tile_discovered
+        @no_map_no_compass:
+        lda #$0000
+        and.b $00
+        sta.b $00
+    @tile_discovered:
+@empty_tile:
+; set value
+    lda.b $00
     rts
 
 ; Update minimap slot
@@ -159,38 +194,7 @@ UpdateMinimapSlot:
     lda $04+2,S
     and #$00FF
     tay
-    lda.w mapTileTypeTable,Y
-    and #$00FF
-    asl
-    tax
-    lda.l MapTiles,X
-    sta.b $00
-    beq @empty_tile
-; modify value by flags
-    lda.w mapTileFlagsTable,Y
-    bit #MAPTILE_COMPLETED
-    beq +
-        lda #$0010
-        ora.b $00
-        sta.b $00
-    +:
-    lda.w mapTileFlagsTable,Y
-    bit #MAPTILE_HAS_PLAYER
-    beq +
-        lda #$0020
-        ora.b $00
-        sta.b $00
-    +:
-    lda.w mapTileFlagsTable,Y
-    bit #MAPTILE_DISCOVERED
-    bne +
-        lda #$0000
-        and.b $00
-        sta.b $00
-    +:
-@empty_tile:
-; set value
-    lda.b $00
+    jsr _get_tile_value
     plx
     sta.l vqueueMiniOps.1.data,X
     rtl

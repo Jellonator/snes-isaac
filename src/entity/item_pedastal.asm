@@ -9,6 +9,8 @@
 .DEFINE _item_price entity_timer
 ; hijack velocx for has-uploaded-text flag
 .DEFINE _has_put_text entity_velocx
+; hijack velocy for state
+.DEFINE _item_state entity_velocy
 
 .DEFINE STATE_BASE 0
 .DEFINE STATE_PICKUP 1
@@ -86,31 +88,18 @@ true_item_pedastal_init:
     sta.w _has_put_text,Y
     lda.b entitySpawnContext
     cmp #ENTITY_SPAWN_CONTEXT_DESERIALIZE
-    beq @deserialized
+    beq @skip_get_pool
         ; get item from pool if not deserializing
         phy
         php
         jsr _item_pedastal_get_variant_from_pool
         plp
         ply
-        jmp @end
-        ; init state if not deserializing
-        lda #0
-        sep #$20
-        lda #STATE_BASE
-        sta.w entity_state,Y
-        rep #$30
-@deserialized:
-        sep #$30
-        ; if deserializing from PICKUP state, set to empty instead
-        lda.w entity_state,Y
-        cmp #STATE_PICKUP
-        bne +
-            lda #STATE_EMPTY
-            sta.w entity_state,Y
-        +:
-        rep #$30
-@end:
+@skip_get_pool:
+    sep #$20
+    lda #STATE_BASE
+    sta.w _item_state,Y
+    rep #$30
     lda #0
     ; load sprite for item
     lda.w entity_variant,Y
@@ -340,7 +329,7 @@ true_item_pedastal_tick_base:
     @has_player_col:
         sep #$20
         lda #STATE_PICKUP
-        sta.w entity_state,Y
+        sta.w _item_state,Y
         lda #60
         sta.w _item_anim_timer,Y
         lda #60
@@ -415,7 +404,7 @@ true_item_pedastal_tick_pickup:
         plp
         ply
         lda #STATE_EMPTY
-        sta.w entity_state,Y
+        sta.w _item_state,Y
     +:
     ; tile ID 1
     rep #$30
@@ -484,7 +473,7 @@ true_item_pedastal_free:
     sty.b $10
     ; fallback to give item if in held state
     sep #$20
-    lda.w entity_state,Y
+    lda.w _item_state,Y
     cmp #STATE_PICKUP
     bne +
         phy
@@ -586,7 +575,7 @@ item_pedastal_tick:
     phk
     pha
     sep #$20
-    lda.w entity_state,Y
+    lda.w _item_state,Y
     cmp #STATE_PICKUP
     bne +
         jml true_item_pedastal_tick_pickup

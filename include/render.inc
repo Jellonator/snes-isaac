@@ -155,13 +155,9 @@
 
 ; Set the S flag in the high table of the current objectIndex
 .MACRO .SetCurrentObjectS
-    lda.w objectIndex
-    lsr
-    lsr
-    lsr
-    lsr
-    tay
     ldx.w objectIndex
+    lda.l SpriteIndexToExtMaskS+2,X
+    tay
     lda.l SpriteIndexToExtMaskS,X
     ora.w objectDataExt,Y
     sta.w objectDataExt,Y
@@ -180,13 +176,9 @@
 
 ; Set the X flag in the high table of the current objectIndex
 .MACRO .SetCurrentObjectX
-    lda.w objectIndex
-    lsr
-    lsr
-    lsr
-    lsr
-    tay
     ldx.w objectIndex
+    lda.l SpriteIndexToExtMaskX+2,X
+    tay
     lda.l SpriteIndexToExtMaskX,X
     ora.w objectDataExt,Y
     sta.w objectDataExt,Y
@@ -206,13 +198,9 @@
 
 ; Set the X and S flags in the high table of the current objectIndex
 .MACRO .SetCurrentObjectXS
-    lda.w objectIndex
-    lsr
-    lsr
-    lsr
-    lsr
-    tay
     ldx.w objectIndex
+    lda.l SpriteIndexToExtMaskXS+2,X
+    tay
     lda.l SpriteIndexToExtMaskXS,X
     ora.w objectDataExt,Y
     sta.w objectDataExt,Y

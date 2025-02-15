@@ -148,6 +148,7 @@ _pickup_map:
     sprite_palette: .dw 0
     flags: .db 0
     on_pickup: .dl _empty_pickup
+    shop_price: .db $15
     name: .ASCSTR "null", 0
     tagline: .ASCSTR "Wait, What?", 0
 .ENDST
@@ -157,6 +158,7 @@ _pickup_map:
     sprite_palette: .dw palettes.item_sad_onion
     flags: .db 0
     on_pickup: .dl _empty_pickup
+    shop_price: .db $15
     name: .ASCSTR "Sad Onion", 0
     tagline: .ASCSTR "Tears Up", 0
 .ENDST
@@ -166,6 +168,7 @@ _pickup_map:
     sprite_palette: .dw palettes.palette0
     flags: .db 0
     on_pickup: .dl _empty_pickup
+    shop_price: .db $15
     name: .ASCSTR "Spoon Bender", 0
     tagline: .ASCSTR "Homing Shots", 0
 .ENDST
@@ -175,6 +178,7 @@ _pickup_map:
     sprite_palette: .dw palettes.item_growth_hormones
     flags: .db 0
     on_pickup: .dl _empty_pickup
+    shop_price: .db $15
     name: .ASCSTR "Growth Hormones", 0
     tagline: .ASCSTR "Damage and Speed Up", 0
 .ENDST
@@ -184,6 +188,7 @@ _pickup_map:
     sprite_palette: .dw palettes.palette0
     flags: .db 0
     on_pickup: .dl _empty_pickup
+    shop_price: .db $15
     name: .ASCSTR "Brother Bobby", 0
     tagline: .ASCSTR "Best Friend", 0
 .ENDST
@@ -193,6 +198,7 @@ _pickup_map:
     sprite_palette: .dw palettes.palette0
     flags: .db 0
     on_pickup: .dl _empty_pickup
+    shop_price: .db $15
     name: .ASCSTR "Wire Coat Hanger", 0
     tagline: .ASCSTR "Tears Up", 0
 .ENDST
@@ -202,6 +208,7 @@ _pickup_map:
     sprite_palette: .dw palettes.palette0
     flags: .db 0
     on_pickup: .dl _health_up_pickup
+    shop_price: .db $15
     name: .ASCSTR "Dinner", 0
     tagline: .ASCSTR "Health Up", 0
 .ENDST
@@ -211,6 +218,7 @@ _pickup_map:
     sprite_palette: .dw palettes.item_chocolate_milk
     flags: .db 0
     on_pickup: .dl _empty_pickup
+    shop_price: .db $15
     name: .ASCSTR "Chocolate Milk", 0
     tagline: .ASCSTR "Charge Tears", 0
 .ENDST
@@ -220,6 +228,7 @@ _pickup_map:
     sprite_palette: .dw palettes.palette0
     flags: .db 0
     on_pickup: .dl _empty_pickup
+    shop_price: .db $15
     name: .ASCSTR "Polyphemus", 0
     tagline: .ASCSTR "Mega Tears", 0
 .ENDST
@@ -229,6 +238,7 @@ _pickup_map:
     sprite_palette: .dw palettes.palette0
     flags: .db 0
     on_pickup: .dl _pickup_map
+    shop_price: .db $15
     name: .ASCSTR "Treasure Map", 0
     tagline: .ASCSTR "Map Revealed", 0
 .ENDST

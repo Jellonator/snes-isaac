@@ -20,6 +20,7 @@
     sprite_palette dw
     flags db
     on_pickup dl
+    shop_price db
     name ds 32
     tagline ds 32
 .ENDST

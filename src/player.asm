@@ -484,7 +484,7 @@ PlayerInit:
         stz.w playerData.healthSlots + (i * 2)
     .ENDR
     stz.w playerData.invuln_timer
-    lda #$10
+    lda #$20
     sta.w playerData.money
     lda #$01
     sta.w playerData.keys

@@ -98,6 +98,7 @@
 .DEFINE ENTITY_ITEMPEDASTAL_POOL_ITEMROOM 0
 .DEFINE ENTITY_ITEMPEDASTAL_POOL_BOSS 1
 .DEFINE ENTITY_ITEMPEDASTAL_POOL_SHOP 2
+.DEFINE ENTITY_ITEMPEDASTAL_PRICED $80
 
 ; ENTITY EFFECT VARIANTS
 .DEFINE ENTITY_EFFECT_NULL 0
@@ -280,6 +281,31 @@
 ; Check for collision of entity Y with player, based on box boundaries
 ; If colliding, jump to 'addr'
 .MACRO .EntityEasyCheckPlayerCollision_Box ARGS addr
+    sep #$20
+
+    lda.w entity_box_x1,Y
+    cmp.w player_box_x2
+    bpl +++++
+
+    lda.w entity_box_x2,Y
+    cmp.w player_box_x1
+    bmi +++++
+
+    lda.w entity_box_y1,Y
+    cmp.w player_box_y2
+    bpl +++++
+
+    lda.w entity_box_y2,Y
+    cmp.w player_box_y1
+    bmi +++++
+
+    jmp addr
++++++:
+.ENDM
+
+; Check for collision of entity Y with player, based on box boundaries
+; If NOT colliding, jump to 'addr'
+.MACRO .EntityEasyCheckNoPlayerCollision_Box ARGS addr
     sep #$20
 
     lda.w entity_box_x1,Y

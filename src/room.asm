@@ -371,8 +371,10 @@ _Room_Serialize_Entities:
     cmp #24
     beq @end2
     asl
+    sta.b $32
     asl
-    asl
+    clc
+    adc.b $32
     clc
     adc.b currentRoomInfoAddress
     tax

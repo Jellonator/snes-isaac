@@ -503,9 +503,9 @@ PlayerInit:
     jsl _PlayerRenderAllHearts
     jsl Item.reset_items
     jsl Player.reset_stats
+    sep #$30
     stz.w playerData.walk_frame
     stz.w playerData.bomb_wait_timer
-    sep #$30
     stz.w playerData.anim_wait_timer
     stz.w playerData.head_offset_y
     lda #FACINGDIR_DOWN
@@ -532,9 +532,9 @@ PlayerEnterFloor:
     sta.w player_posy
     stz.w playerData.invuln_timer
     jsl PlayerDiscoverNearbyRooms
+    sep #$30
     stz.w playerData.walk_frame
     stz.w playerData.bomb_wait_timer
-    sep #$30
     stz.w playerData.anim_wait_timer
     stz.w playerData.head_offset_y
     lda #FACINGDIR_DOWN
@@ -935,8 +935,10 @@ PlayerUpdate:
         sta.w entity_posx,Y
         lda.w player_posy
         sta.w entity_posy,Y
+        sep #$20
         lda #PLAYER_BOMB_PLACE_TIMER
         sta.w playerData.bomb_wait_timer
+        rep #$20
         sep #$08
         lda.w playerData.bombs
         sec

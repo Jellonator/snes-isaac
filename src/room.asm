@@ -54,8 +54,10 @@ _room_spawn_entities:
         clc
         adc #ROOM_TOP
         sta.w entity_posy+1,Y
-        rep #$20 ; 16B A
+        rep #$30
         phx ; >2
+        jsl entity_init
+        rep #$30
     @no_spawn:
     plx ; <2
     ply ; <2
@@ -99,6 +101,11 @@ _room_spawn_entities:
         sta.w entity_posy,Y
         lda.l $7E0000 + roominfo_t.entityStoreTable + entitystore_t.state,X
         sta.w entity_state,Y ; entity_state and entity_timer are combined
+        phx
+        php
+        jsl entity_init
+        plp
+        plx
         inc.b $30
         jmp @loop_deserialize
 @end_deserialize:
@@ -226,7 +233,7 @@ _Room_Spawn_Reward:
     lda.l PickupTable_RoomReward,X
     beq @no_spawn
     php
-    jsl entity_create
+    jsl entity_create_and_init
     plp
     lda #120 * $0100
     sta.w entity_posx,Y
@@ -238,7 +245,7 @@ _Room_Spawn_Boss_Reward:
     rep #$30
     lda #ENTITY_TYPE_ITEM_PEDASTAL | ($0100 * ENTITY_ITEMPEDASTAL_POOL_BOSS)
     php
-    jsl entity_create
+    jsl entity_create_and_init
     plp
     lda #120 * $0100
     sta.w entity_posx,Y
@@ -250,7 +257,7 @@ _Room_Spawn_Trapdoor:
     rep #$30
     lda #ENTITY_TYPE_TRAPDOOR
     php
-    jsl entity_create
+    jsl entity_create_and_init
     plp
     lda #120 * $0100
     sta.w entity_posx,Y

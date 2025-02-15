@@ -296,7 +296,7 @@ true_entity_bomb_tick:
         lda.w entity_posy,Y
         pha
         lda #entityvariant(ENTITY_TYPE_EFFECT, ENTITY_EFFECT_EXPLOSION)
-        jsl entity_create
+        jsl entity_create_and_init
         rep #$30
         pla
         clc

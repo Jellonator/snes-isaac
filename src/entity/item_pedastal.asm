@@ -51,22 +51,34 @@ _item_pedastal_get_variant_from_pool:
 true_item_pedastal_init:
     .ACCU 16
     .INDEX 16
-    ; get item from pool if not deserializing
     lda.b entitySpawnContext
     cmp #ENTITY_SPAWN_CONTEXT_DESERIALIZE
-    beq +
+    beq @deserialized
+        ; get item from pool if not deserializing
         phy
         php
         jsr _item_pedastal_get_variant_from_pool
         plp
         ply
-    +:
-    ; init state
+        jmp @end
+        ; init state if not deserializing
+        lda #0
+        sep #$20
+        lda #STATE_BASE
+        sta.w entity_state,Y
+        rep #$30
+@deserialized:
+        sep #$30
+        ; if deserializing from PICKUP state, set to empty instead
+        lda.w entity_state,Y
+        cmp #STATE_PICKUP
+        bne +
+            lda #STATE_EMPTY
+            sta.w entity_state,Y
+        +:
+        rep #$30
+@end:
     lda #0
-    sep #$20
-    lda #STATE_BASE
-    sta.w entity_state,Y
-    rep #$20
     ; load sprite for item
     lda.w entity_variant,Y
     and #$00FF
@@ -318,7 +330,7 @@ item_pedastal_free:
     bne +
         phy
         php
-        lda entity_variant,Y
+        lda.w entity_variant,Y
         jsl Item.add
         plp
         ply

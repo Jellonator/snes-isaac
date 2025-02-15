@@ -67,7 +67,7 @@ _duke_spawn_fly:
         phy
         php
         lda #ENTITY_TYPE_ENEMY_ATTACK_FLY
-        jsl entity_create
+        jsl entity_create_and_init
         tyx
         plp
         ply

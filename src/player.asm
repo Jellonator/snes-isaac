@@ -929,7 +929,7 @@ PlayerUpdate:
         beq @end_place_bomb
         ; create bomb at position
         lda #entityvariant(ENTITY_TYPE_BOMB, 0)
-        jsl entity_create
+        jsl entity_create_and_init
         rep #$30
         lda.w player_posx
         sta.w entity_posx,Y
@@ -1404,7 +1404,7 @@ PlayerShootTear:
     lda #0
     xba
     lda #ENTITY_TYPE_PROJECTILE
-    jsl entity_create
+    jsl entity_create_and_init
     rep #$30 ; 16 bit AXY
     sty.b TempTearIdx
     tyx

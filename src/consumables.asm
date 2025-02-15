@@ -323,7 +323,7 @@ Consumable.pickup:
     beq @skip_drop
         rep #$30
         lda #entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_CONSUMABLE)
-        jsl entity_create
+        jsl entity_create_and_init
         sep #$30
         lda.w playerData.current_consumable
         sta.w entity_timer,Y

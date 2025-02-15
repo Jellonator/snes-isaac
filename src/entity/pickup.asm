@@ -388,7 +388,7 @@ true_entity_pickup_tick:
 @no_put_price_text:
     rtl
 
-true_entity_pickup_init:
+true_entity_pickup_init_spawn:
     .ACCU 16
     .INDEX 16
     sep #$20
@@ -433,10 +433,7 @@ true_entity_pickup_init:
         lda.l PickupVariantPrices,X
         sta.w pickup_price,Y
 @no_set_price:
-    ; choose consumable type, unless deserializing
-    lda.b entitySpawnContext
-    cmp #ENTITY_SPAWN_CONTEXT_DESERIALIZE
-    beq @dont_set_consumable_type
+    ; choose consumable type if this is a consumable
     lda.w entity_variant,Y
     cmp #ENTITY_PICKUP_VARIANT_CONSUMABLE
     bne @dont_set_consumable_type
@@ -453,6 +450,29 @@ true_entity_pickup_init:
         inc A
         sta.w consumable_type,Y
 @dont_set_consumable_type:
+    rep #$30
+    lda #30
+    sta.w pickup_prevention_timer,Y
+    lda #SPAWN_ANIM_FRAMES-1
+    ldx.b entitySpawnContext
+    cpx #ENTITY_SPAWN_CONTEXT_STANDARD
+    bne +
+        lda #0
+    +:
+    sta.w anim_timer,Y
+    rtl
+
+true_entity_pickup_init:
+    .ACCU 16
+    .INDEX 16
+    lda.b entitySpawnContext
+    cmp #ENTITY_SPAWN_CONTEXT_DESERIALIZE
+    beq @deserialized
+        jsl true_entity_pickup_init_spawn
+@deserialized:
+    sep #$20
+    lda #0
+    sta.w has_put_text,Y
     rep #$30
     lda #30
     sta.w pickup_prevention_timer,Y

@@ -38,10 +38,10 @@ EraseHitbox:
     .EraseHitboxLite
     rts
 
-; Create an entity of type+variant A
+; Create and initialize an entity of type+variant A
 ; lower byte is type, upper byte is variant
 ; Returns reference as Y
-entity_create:
+entity_create_and_init:
     rep #$10 ; 16B XY
     sep #$20 ; 8B A
     phb
@@ -91,6 +91,78 @@ entity_create:
     inc A
     sta.l numEntities
     ; return
+    plb
+    rtl
+
+; Create an entity of type+variant A
+; lower byte is type, upper byte is variant
+; Returns reference as Y
+; Make sure to call entity_init afterwards; use this function instead of
+; entity_create_and_init if you want to set some variables (e.g. entity_state,
+; entity_timer) before running its init function
+entity_create:
+    rep #$10 ; 16B XY
+    sep #$20 ; 8B A
+    phb
+    .ChangeDataBank $7E
+    ; first: find next free slot
+    pha
+    xba
+    pha
+    ldy #ENTITY_FIRST_CUSTOM_INDEX
+    ; for character entities, start from ENTITY_CHARACTER_MAX instead.
+    cmp #0
+    bpl +
+        ldy #ENTITY_CHARACTER_MAX_INDEX
+    +:
+    lda.w entity_type,Y
+    beq @end
+@loop:
+    dey
+    dey
+    lda.w entity_type,Y
+    bne @loop
+@end:
+    ; init entity
+    lda #0
+    sta.w entity_mask,Y
+    sta.w entity_signal,Y
+    sta.w loword(entity_damageflash),Y
+    xba
+    pla
+    sta.w entity_variant,Y
+    pla
+    sta.w entity_type,Y
+    ; insert into execution order
+    rep #$20 ; 16B A
+    lda.l numEntities
+    tax
+    tya
+    sta.w entityExecutionOrder,X
+    txa
+    inc A
+    sta.l numEntities
+    ; return
+    plb
+    rtl
+
+; Initialize entity in Y
+; call after entity_create
+entity_init:
+    rep #$30
+    phb
+    .ChangeDataBank $7E
+    ; init entity
+    rep #$20 ; 16B A
+    lda.w entity_type,Y
+    and #$00FF
+    .MultiplyStatic 2
+    tax
+    phy
+    php
+    jsr (EntityDef_InitFunc, X)
+    plp
+    ply
     plb
     rtl
 

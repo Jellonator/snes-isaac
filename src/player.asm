@@ -484,11 +484,11 @@ PlayerInit:
         stz.w playerData.healthSlots + (i * 2)
     .ENDR
     stz.w playerData.invuln_timer
-    lda #$20
+    lda #$99
     sta.w playerData.money
-    lda #$01
+    lda #$99
     sta.w playerData.keys
-    lda #$01
+    lda #$99
     sta.w playerData.bombs
     stz.w playerData.current_consumable
     jsl Player.update_bomb_display

@@ -138,6 +138,10 @@ _handle_penny:
     adc #$01
     sec
     sbc.w pickup_price,Y
+    cmp #$99
+    bcc +
+        lda #$99
+    +:
     sta.w playerData.money
     rep #$08 ; disable decimal
     jsl Player.update_money_display
@@ -157,6 +161,10 @@ _handle_nickle:
     adc #$05
     sec
     sbc.w pickup_price,Y
+    cmp #$99
+    bcc +
+        lda #$99
+    +:
     sta.w playerData.money
     rep #$08 ; disable decimal
     jsl Player.update_money_display
@@ -176,6 +184,10 @@ _handle_dime:
     adc #$10
     sec
     sbc.w pickup_price,Y
+    cmp #$99
+    bcc +
+        lda #$99
+    +:
     sta.w playerData.money
     rep #$08 ; disable decimal
     jsl Player.update_money_display
@@ -191,8 +203,11 @@ _handle_bomb:
     php
     sep #$08 ; enable decimal
     lda.w playerData.bombs
+    cmp #$99
+    beq @skip_add_bombs
     clc
     adc #$01
+@skip_add_bombs:
     sta.w playerData.bombs
     rep #$08 ; disable decimal
     jsl Player.update_bomb_display
@@ -209,9 +224,12 @@ _handle_key:
     php
     sep #$08 ; enable decimal
     lda.w playerData.keys
+    cmp #$99
+    beq @skip_add_keys
     clc
     adc #$01
     sta.w playerData.keys
+@skip_add_keys:
     rep #$08 ; disable decimal
     jsl Player.update_key_display
     plp

@@ -18,6 +18,8 @@ _item_pedastal_get_variant_from_pool:
     and #$00FF
     cmp #ENTITY_ITEMPEDASTAL_POOL_BOSS
     beq @pool_boss
+    cmp #ENTITY_ITEMPEDASTAL_POOL_SHOP
+    beq @pool_shop
 @pool_item_room:
     lda #Item.pool.item_room@end - Item.pool.item_room
     ldx #loword(Item.pool.item_room)
@@ -25,6 +27,10 @@ _item_pedastal_get_variant_from_pool:
 @pool_boss:
     lda #Item.pool.boss@end - Item.pool.boss
     ldx #loword(Item.pool.boss)
+    jmp @begin
+@pool_shop:
+    lda #Item.pool.shop@end - Item.pool.shop
+    ldx #loword(Item.pool.shop)
     jmp @begin
 @begin:
     pha

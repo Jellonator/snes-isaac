@@ -140,6 +140,9 @@ _health_up_pickup:
     jsl Player.health_up
     rts
 
+_pickup_map:
+    rts
+
 .DSTRUCT Item.definitions.null INSTANCEOF itemdef_t VALUES
     sprite_index: .db 0
     sprite_palette: .dw 0
@@ -221,6 +224,15 @@ _health_up_pickup:
     tagline: .ASCSTR "Mega Tears", 0
 .ENDST
 
+.DSTRUCT Item.definitions.map INSTANCEOF itemdef_t VALUES
+    sprite_index: .db 8
+    sprite_palette: .dw palettes.palette0
+    flags: .db 0
+    on_pickup: .dl _pickup_map
+    name: .ASCSTR "Treasure Map", 0
+    tagline: .ASCSTR "Map Revealed", 0
+.ENDST
+
 Item.items:
     .dw Item.definitions.sad_onion
     .dw Item.definitions.spoon_bender
@@ -230,6 +242,7 @@ Item.items:
     .dw Item.definitions.dinner
     .dw Item.definitions.chocolate_milk
     .dw Item.definitions.polyphemus
+    .dw Item.definitions.map
     .REPT 256-7
         .dw Item.definitions.null
     .ENDR
@@ -249,6 +262,10 @@ Item.pool.boss:
     .db ITEMID_GROWTH_HORMONES
     .db ITEMID_WIRE_COAT_HANGER
     .db ITEMID_DINNER
+    @end:
+
+Item.pool.shop:
+    .db ITEMID_MAP
     @end:
 
 .ENDS

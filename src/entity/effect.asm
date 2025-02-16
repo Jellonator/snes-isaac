@@ -181,7 +181,7 @@ true_entity_effect_init:
         phy
         php
         tay
-        jsl Palette.find_or_upload
+        jsl Palette.find_or_upload_opaque
         plp
         ply
         txa

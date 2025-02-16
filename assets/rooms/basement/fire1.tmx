@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.11" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="12" height="8" tilewidth="16" tileheight="16" infinite="0" nextlayerid="3" nextobjectid="17">
+ <properties>
+  <property name="down" type="bool" value="true"/>
+  <property name="left" type="bool" value="true"/>
+  <property name="right" type="bool" value="true"/>
+  <property name="up" type="bool" value="true"/>
+ </properties>
+ <tileset firstgid="1" source="../Isaac.tsx"/>
+ <tileset firstgid="65" source="../Objects.tsx"/>
+ <layer id="1" name="Tile Layer 1" width="12" height="8">
+  <data encoding="csv">
+1,1,1,1,1,1,1,1,1,1,1,1,
+1,1,1,1,1,1,1,1,1,1,1,1,
+1,1,25,25,1,1,1,1,25,25,1,1,
+1,1,1,1,1,1,1,1,1,1,1,1,
+1,1,1,1,1,1,1,1,1,1,1,1,
+1,1,25,25,1,1,1,1,25,25,1,1,
+1,1,1,1,1,1,1,1,1,1,1,1,
+1,1,1,1,1,1,1,1,1,1,1,1
+</data>
+ </layer>
+ <objectgroup id="2" name="Object Layer 1">
+  <object id="9" gid="70" x="32" y="48" width="16" height="16"/>
+  <object id="10" gid="70" x="48" y="48" width="16" height="16"/>
+  <object id="11" gid="70" x="128" y="48" width="16" height="16"/>
+  <object id="12" gid="70" x="144" y="48" width="16" height="16"/>
+  <object id="13" gid="70" x="144" y="96" width="16" height="16"/>
+  <object id="14" gid="70" x="128" y="96" width="16" height="16"/>
+  <object id="15" gid="70" x="48" y="96" width="16" height="16"/>
+  <object id="16" gid="70" x="32" y="96" width="16" height="16"/>
+ </objectgroup>
+</map>

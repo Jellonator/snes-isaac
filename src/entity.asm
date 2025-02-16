@@ -351,6 +351,13 @@ _player_tick:
     ENTITY_SPAWNGROUP_ONCE,\
     ENTITY_TYPE_FLAG_SERIALIZE
 
+._DefineEntity ENTITY_TYPE_TILE,\
+    entity_tile_init,\
+    entity_tile_tick,\
+    entity_tile_free,\
+    ENTITY_SPAWNGROUP_ONCE,\
+    ENTITY_TYPE_FLAG_SERIALIZE
+
 ._DefineEntity ENTITY_TYPE_ENEMY_ATTACK_FLY,\
     entity_basic_fly_init,\
     entity_basic_fly_tick,\

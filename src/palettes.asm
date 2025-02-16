@@ -1,3 +1,17 @@
+; Palette handling
+; Palettes are allocated as such:
+;   tile palettes:
+;     0       - ground
+;     1,3     - tiles
+;     5,6,7   - UI
+;     2,4     - unused
+;   sprite palettes:
+;     8       - player (opaque)
+;     9,10,11 - dynamic (opaque)
+;     12      - shadows (transparent)
+;     13,14   - dynamic (transparent)
+;     15      - damage flash (transparent)
+; so, we realistically only have 5 dynamically loaded palettes for all objects in a room.
 .include "base.inc"
 
 .SECTION "PaletteHandling" BANK ROMBANK_BASE SLOT "ROM" ORGA $8000 SEMIFREE
@@ -32,6 +46,24 @@ Palette.alloc_opaque:
     inx
     inx
     ; just return the fourth sprite palette regardless
+    ; lda.w paletteUsageData,X
+    ; beq @end
+    ; inx
+@end:
+    ; palette is not 'claimed' until upload
+    inc.w paletteRefCount,X
+    rtl
+
+; Return first free palette for transparent sprites
+Palette.alloc_transparent:
+    sep #$30
+    ldx #13*2
+    ; check fifth sprite palette, and return if empty
+    lda.w paletteRefCount,X
+    beq @end
+    inx
+    inx
+    ; just return the sixth sprite palette regardless
     ; lda.w paletteUsageData,X
     ; beq @end
     ; inx
@@ -93,7 +125,7 @@ Palette.queue_upload:
 ; Search for a palette that has [Y] uploaded.
 ; if no such palette exists, claims a new palette.
 ; Returns palette in [X]
-Palette.find_or_upload:
+Palette.find_or_upload_opaque:
     rep #$30
     .REPT 4 INDEX i
         cpy.w palettePtr + ((i + 8)*2)
@@ -106,6 +138,31 @@ Palette.find_or_upload:
     ; none found
     phy
     jsl Palette.alloc_opaque
+    rep #$30
+    ply
+    txa
+    phx
+    jsl Palette.queue_upload
+    rep #$30
+    plx
+    rtl
+
+; Search for a palette that has [Y] uploaded.
+; if no such palette exists, claims a new palette.
+; Returns palette in [X]
+Palette.find_or_upload_transparent:
+    rep #$30
+    .REPT 4 INDEX i
+        cpy.w palettePtr + ((i + 8)*2)
+        bne +
+            ldx #(i + 8)*2
+            inc.w paletteRefCount + ((i + 8)*2)
+            rtl
+        +:
+    .ENDR
+    ; none found
+    phy
+    jsl Palette.alloc_transparent
     rep #$30
     ply
     txa

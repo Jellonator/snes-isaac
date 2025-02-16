@@ -91,7 +91,7 @@ true_entity_shopkeeper_init:
     ; load palette
     phy
     ldy #loword(palettes.shopkeeper)
-    jsl Palette.find_or_upload
+    jsl Palette.find_or_upload_opaque
     rep #$30
     ply
     txa

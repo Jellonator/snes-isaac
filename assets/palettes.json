@@ -94,5 +94,9 @@
     {
         "name": "tarot_cards_wheel_of_fortune",
         "src": "assets/palettes/tarot_cards_wheel_of_fortune.hex"
+    },
+    {
+        "name": "tilesprite_fire_normal",
+        "src": "assets/palettes/tilesprite_fire_normal.hex"
     }
 ]

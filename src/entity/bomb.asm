@@ -225,7 +225,7 @@ true_entity_bomb_tick:
                             php
                             lda.w entity_signal,Y
                             plp
-                            ora #ENTITY_SIGNAL_DAMAGE
+                            ora #ENTITY_SIGNAL_DAMAGE | ENTITY_SIGNAL_BOMBED | ENTITY_SIGNAL_DOUBLEDAMAGE
                             bcs @skip_kill_{ix}_{iy}_{i}
                                 ora #ENTITY_SIGNAL_KILL
                             @skip_kill_{ix}_{iy}_{i}:

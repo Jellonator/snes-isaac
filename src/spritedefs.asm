@@ -31,4 +31,6 @@ SpriteDefs:
 
 .DefineSprite "sprite.shopkeepers", spritedata.shopkeepers, 1, 8
 
+.DefineSprite "sprite.tilesprite_fire", spritedata.tilesprite_fire, 1, 8
+
 .ENDS

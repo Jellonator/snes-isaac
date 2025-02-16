@@ -198,7 +198,7 @@ _draw_normal:
     lda #%00100001
     sta.w objectData.2.flags,X
     lda.w _item_palette,Y
-    and #$07
+    and #$0F
     ora #%00100001
     sta.w objectData.1.flags,X
     ; increment object index

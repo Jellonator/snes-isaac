@@ -603,11 +603,11 @@ BlockVariantAddresses:
     .ELIF i == BLOCK_POOP
         .dw BlockPoopVariants
     .ELIF i == BLOCK_LOGS
-        .dw BlockPoopVariants
+        .dw BlockLogVariants
     .ELIF i == BLOCK_SPIKE
-        .dw BlockPoopVariants
+        .dw BlockSpikeVariants
     .ELIF i == BLOCK_METAL
-        .dw BlockPoopVariants
+        .dw BlockMetalVariants
     .ELSE
         .dw BlockEmptyVariants
     .ENDIF

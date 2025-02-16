@@ -14,6 +14,7 @@ tiledIdsToGameIds = {
     0x10: "BLOCK_ROCK",
     0x11: "BLOCK_ROCK_TINTED",
     0x08: "BLOCK_POOP",
+    0x18: "BLOCK_LOGS"
 }
 
 tiledIdsToObjectIds = {
@@ -22,6 +23,7 @@ tiledIdsToObjectIds = {
     0x02: "ENTITY_TYPE_ENEMY_BOSS_MONSTRO",
     0x03: "entityvariant(ENTITY_TYPE_ITEM_PEDASTAL, ENTITY_ITEMPEDASTAL_POOL_ITEMROOM)",
     0x04: "ENTITY_TYPE_SHOPKEEPER",
+    0x05: "entityvariant(ENTITY_TYPE_TILE, ENTITYTILE_VARIANT_FIRE_NORMAL)",
     0x10: "entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_PENNY)",
     0x11: "entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_NICKEL)",
     0x12: "entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_DIME)",
@@ -61,7 +63,7 @@ def getTilesetForGid(map: pytiled_parser.TiledMap, gid: int) -> Tuple[pytiled_pa
     for tileset in map.tilesets.values():
         if gid >= tileset.firstgid and gid < tileset.firstgid + tileset.tile_count:
             return (tileset, gid - tileset.firstgid)
-    raise RuntimeError("Invalid GID {} in map".format(gid))
+    raise RuntimeError("Invalid GID ${:02X} in map".format(gid))
 
 for room in rooms:
     # could probably improve this heehoo
@@ -110,7 +112,7 @@ for room in rooms:
                 if gid in tiledIdsToGameIds:
                     out_inc.write(" {}".format(tiledIdsToGameIds[gid]))
                 else:
-                    print("Warning: unrecognized GID {} in {}".format(gid, room_path))
+                    print("Warning: unrecognized GID ${:02X} in {}".format(gid, room_path))
             out_inc.write("\n")
     out_inc.write("\t.ENDST\n")
     for obj in objects:

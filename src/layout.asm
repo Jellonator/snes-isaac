@@ -63,9 +63,13 @@
     objectDataExt dsb 32 ; 2 bits per object: Xs
     objectIndex dw
     objectIndexShadow dw
-; Palette data
-    palettePtr dsw 16
-    paletteRefCount dsw 16
+; Palette allocation data
+    ; pointer to currently loaded palette
+    palettePtr dsw 32
+    ; number of references to each palette
+    paletteRefCount dsw 32
+    ; number of references to each palette
+    paletteAllocMode dsw 32
 ; VQueue data
     vqueueNumOps dw
     vqueueNumMiniOps dw
@@ -183,7 +187,7 @@
     ; so if we somehow overreach this, we've messed something up bad.
     ; Grabbing vqueue buffer space should be rare anyways.
     ; $2000 - $087C = $1784
-    vqueueBinData INSTANCEOF byte_t 1 ($2000 - (255 * _sizeof_vqueueminiop_t) - (VQUEUE_MAX_SIZE * _sizeof_vqueueop_t))
+    vqueueBinData INSTANCEOF byte_t 1 ($4000 - (255 * _sizeof_vqueueminiop_t) - (VQUEUE_MAX_SIZE * _sizeof_vqueueop_t))
 ; Player sprite buffer
     ; 64 sprites × 4 tiles/sprite × 32 bytes/tile = $2000 bytes
     playerSpriteBuffer ds 64 * 4 * 32

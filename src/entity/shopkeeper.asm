@@ -46,7 +46,7 @@ true_entity_shopkeeper_tick:
     sta.w objectData.3.pos_y,X
     sta.w objectData.4.pos_y,X
     lda.w _palette,Y
-    and #$0F
+    .PaletteIndexToPaletteSpriteA
     ora #%00100001
     sta.w objectData.1.flags,X
     sta.w objectData.2.flags,X
@@ -91,6 +91,7 @@ true_entity_shopkeeper_init:
     ; load palette
     phy
     ldy #loword(palettes.shopkeeper)
+    lda #8
     jsl Palette.find_or_upload_opaque
     rep #$30
     ply

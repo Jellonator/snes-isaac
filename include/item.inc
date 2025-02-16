@@ -18,7 +18,8 @@
 ; ITEM DEFINITION
 .STRUCT itemdef_t
     sprite_index db
-    sprite_palette dw
+    palette_ptr dw
+    palette_depth db
     flags db
     on_pickup dl
     shop_price db

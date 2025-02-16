@@ -1,5 +1,9 @@
 [
     {
+        "name": "default",
+        "src": "assets/palettes/default.hex"
+    },
+    {
         "name": "palette0",
         "src": "assets/palettes/palette0.hex"
     },

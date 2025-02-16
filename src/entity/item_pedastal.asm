@@ -108,6 +108,11 @@ true_item_pedastal_init:
     tax
     lda.l Item.items,X
     tax
+    lda.l $C10000 + itemdef_t.palette_depth,X
+    and #$00FF
+    sta.b $10
+    lda.l $C10000 + itemdef_t.palette_ptr,X
+    sta.b $12
     lda.l $C10000 + itemdef_t.sprite_index,X
     and #$00FF
     clc
@@ -128,23 +133,13 @@ true_item_pedastal_init:
     sta.w _item_gfxptr_pedastal,Y
     ; find palette slot for pedastal
     phy
-    jsl Palette.alloc_opaque
+    lda.b $10
+    ldy.b $12
+    jsl Palette.find_or_upload_opaque
     rep #$30
     ply
     txa
     sta.w _item_palette,Y
-    ; upload palette
-    lda.w entity_variant,Y
-    and #$00FF
-    asl
-    tax
-    lda.l Item.items,X
-    tax
-    lda.l $C10000 + itemdef_t.sprite_palette,X
-    tax
-    lda.w _item_palette,Y
-    txy
-    jsl Palette.queue_upload
     rtl
 
 _draw_normal:
@@ -198,7 +193,7 @@ _draw_normal:
     lda #%00100001
     sta.w objectData.2.flags,X
     lda.w _item_palette,Y
-    and #$0F
+    .PaletteIndexToPaletteSpriteA
     ora #%00100001
     sta.w objectData.1.flags,X
     ; increment object index
@@ -233,7 +228,7 @@ _draw_no_pedastal:
     sta.w loword(entity_ysort),Y
     ; flags
     lda.w _item_palette,Y
-    and #$07
+    .PaletteIndexToPaletteSpriteA
     ora #%00100001
     sta.w objectData.1.flags,X
     ; increment object index
@@ -425,7 +420,7 @@ true_item_pedastal_tick_pickup:
     sbc #28
     sta.w objectData.1.pos_y,X
     lda.w _item_palette,Y
-    and #$07
+    .PaletteIndexToPaletteSpriteA
     ora #%00100001
     sta.w objectData.1.flags,X
     ; increment index
@@ -495,7 +490,7 @@ true_item_pedastal_free:
     lda.w _item_gfxptr_pedastal,Y
     tax
     jsl spriteman_unref
-    lda.w _item_palette
+    ldx.w _item_palette
     jsl Palette.free
     sep #$30
     ldy.b $10

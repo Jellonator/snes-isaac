@@ -291,6 +291,25 @@ OffsetTable:
         .db i
     .ENDR
 
+PaletteDepthRequiredSlots:
+    .REPT 17 INDEX i
+        .IF i <= 4
+            .db 0
+        .ELIF i <= 8
+            .db 1
+        .ELIF i <= 12
+            .db 2
+        .ELSE
+            .db 3
+        .ENDIF
+    .ENDR
+
+PaletteIndexToPaletteSprite
+    .REPT 8 INDEX i
+        .REPT 4
+            .dw (i << 2)
+        .ENDR
+    .ENDR
 .ENDS
 
 .bank $20

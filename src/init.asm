@@ -156,18 +156,6 @@ Start2:
     lda #%00000000 | (SPRITE1_BASE_ADDR >> 13) | ((SPRITE2_BASE_ADDR - SPRITE1_BASE_ADDR - $1000) >> 9)
     sta OBSEL
     ; copy palettes to CGRAM
-    PEA $C000 + bankbyte(palettes.palette0.w)
-    PEA palettes.palette0.w
-    jsl CopyPalette
-    rep #$20 ; 16 bit A
-    PLA
-    PLA
-    PEA $8000 + bankbyte(palettes.palette0.w)
-    PEA palettes.palette0.w
-    jsl CopyPalette
-    rep #$20 ; 16 bit A
-    PLA
-    PLA
     PEA $5000 + bankbyte(palettes.ui_light.w)
     PEA palettes.ui_light.w
     jsl CopyPalette
@@ -180,12 +168,20 @@ Start2:
     rep #$20 ; 16 bit A
     PLA
     PLA
-    PEA $F000 + bankbyte(palettes.red.w)
-    PEA palettes.red.w
-    jsl CopyPalette
-    rep #$20 ; 16 bit A
-    PLA
-    PLA
+    .REPT 8 INDEX i
+        PEA $8000 + (i * $1000) + bankbyte(palettes.palette0.w)
+        .IF i == 0 || i == 4
+            PEA palettes.palette0.w
+        .ELIF i == 7
+            PEA palettes.red.w
+        .ELSE
+            PEA palettes.default.w
+        .ENDIF
+        jsl CopyPalette
+        rep #$20 ; 16 bit A
+        PLA
+        PLA
+    .ENDR
     ; copy UI to VRAM
     pea BG1_CHARACTER_BASE_ADDR
     pea 16*4

@@ -77,6 +77,21 @@
     count db ; number of users
 .ENDST
 
+; PALETTE INFO
+
+; Palette allocation mode
+; bit 1 indicates that [X] is allocated (almost always true)
+; bit 2 indicates that [X+1] is allocated
+; bit 3 indicates that [X+2] is allocated
+.DEFINE PALLETE_ALLOC_NONE 0
+.DEFINE PALLETE_ALLOC_8A  %00000001
+.DEFINE PALLETE_ALLOC_8B  %00000010
+.DEFINE PALLETE_ALLOC_8C  %00000100
+.DEFINE PALLETE_ALLOC_12A %00000011
+.DEFINE PALLETE_ALLOC_12B %00000110
+.DEFINE PALLETE_ALLOC_12C %00000101
+.DEFINE PALLETE_ALLOC_16  %00000111
+
 ; Copy memory from ROM into the next available VQUEUE BIN buffer
 .MACRO .CopyROMToVQueueBin ARGS ROMADDR, NBYTES
     rep #$20 ; 16 bit A
@@ -380,4 +395,8 @@
     sta.w loword(spriteQueueTabNext),X
     ; queue->next = X
     stx.w loword(spriteQueueTabNext)+SPRITE_LIST_EMPTY
+.ENDM
+
+.MACRO .PaletteIndexToPaletteSpriteA
+    .DivideStatic 4
 .ENDM

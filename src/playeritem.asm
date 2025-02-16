@@ -148,7 +148,8 @@ _pickup_map:
 
 .DSTRUCT Item.definitions.null INSTANCEOF itemdef_t VALUES
     sprite_index: .db 0
-    sprite_palette: .dw 0
+    palette_ptr: .dw 0
+    palette_depth: .db 4
     flags: .db 0
     on_pickup: .dl _empty_pickup
     shop_price: .db $15
@@ -158,7 +159,8 @@ _pickup_map:
 
 .DSTRUCT Item.definitions.sad_onion INSTANCEOF itemdef_t VALUES
     sprite_index: .db 0
-    sprite_palette: .dw palettes.item_sad_onion
+    palette_ptr: .dw palettes.item_sad_onion
+    palette_depth: .db 12
     flags: .db 0
     on_pickup: .dl _empty_pickup
     shop_price: .db $15
@@ -168,7 +170,8 @@ _pickup_map:
 
 .DSTRUCT Item.definitions.spoon_bender INSTANCEOF itemdef_t VALUES
     sprite_index: .db 1
-    sprite_palette: .dw palettes.palette0
+    palette_ptr: .dw palettes.palette0
+    palette_depth: .db 16
     flags: .db 0
     on_pickup: .dl _empty_pickup
     shop_price: .db $15
@@ -178,7 +181,8 @@ _pickup_map:
 
 .DSTRUCT Item.definitions.growth_hormones INSTANCEOF itemdef_t VALUES
     sprite_index: .db 2
-    sprite_palette: .dw palettes.item_growth_hormones
+    palette_ptr: .dw palettes.item_growth_hormones
+    palette_depth: .db 8
     flags: .db 0
     on_pickup: .dl _empty_pickup
     shop_price: .db $15
@@ -188,7 +192,8 @@ _pickup_map:
 
 .DSTRUCT Item.definitions.brother_bobby INSTANCEOF itemdef_t VALUES
     sprite_index: .db 3
-    sprite_palette: .dw palettes.palette0
+    palette_ptr: .dw palettes.palette0
+    palette_depth: .db 16
     flags: .db 0
     on_pickup: .dl _empty_pickup
     shop_price: .db $15
@@ -198,7 +203,8 @@ _pickup_map:
 
 .DSTRUCT Item.definitions.wire_coat_hanger INSTANCEOF itemdef_t VALUES
     sprite_index: .db 4
-    sprite_palette: .dw palettes.palette0
+    palette_ptr: .dw palettes.palette0
+    palette_depth: .db 16
     flags: .db 0
     on_pickup: .dl _empty_pickup
     shop_price: .db $15
@@ -208,7 +214,8 @@ _pickup_map:
 
 .DSTRUCT Item.definitions.dinner INSTANCEOF itemdef_t VALUES
     sprite_index: .db 5
-    sprite_palette: .dw palettes.palette0
+    palette_ptr: .dw palettes.palette0
+    palette_depth: .db 16
     flags: .db 0
     on_pickup: .dl _health_up_pickup
     shop_price: .db $15
@@ -218,7 +225,8 @@ _pickup_map:
 
 .DSTRUCT Item.definitions.chocolate_milk INSTANCEOF itemdef_t VALUES
     sprite_index: .db 6
-    sprite_palette: .dw palettes.item_chocolate_milk
+    palette_ptr: .dw palettes.item_chocolate_milk
+    palette_depth: .db 8
     flags: .db 0
     on_pickup: .dl _empty_pickup
     shop_price: .db $15
@@ -228,7 +236,8 @@ _pickup_map:
 
 .DSTRUCT Item.definitions.polyphemus INSTANCEOF itemdef_t VALUES
     sprite_index: .db 7
-    sprite_palette: .dw palettes.palette0
+    palette_ptr: .dw palettes.palette0
+    palette_depth: .db 16
     flags: .db 0
     on_pickup: .dl _empty_pickup
     shop_price: .db $15
@@ -238,7 +247,8 @@ _pickup_map:
 
 .DSTRUCT Item.definitions.map INSTANCEOF itemdef_t VALUES
     sprite_index: .db 8
-    sprite_palette: .dw palettes.palette0
+    palette_ptr: .dw palettes.palette0
+    palette_depth: .db 16
     flags: .db 0
     on_pickup: .dl _pickup_map
     shop_price: .db $15
@@ -248,7 +258,8 @@ _pickup_map:
 
 .DSTRUCT Item.definitions.compass INSTANCEOF itemdef_t VALUES
     sprite_index: .db 9
-    sprite_palette: .dw palettes.item_compass
+    palette_ptr: .dw palettes.item_compass
+    palette_depth: .db 16
     flags: .db 0
     on_pickup: .dl _pickup_map
     shop_price: .db $15

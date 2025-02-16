@@ -30,7 +30,7 @@ true_entity_tile_tick:
     sta.w objectData.1.pos_y,X
     ; flags
     lda.w _entity_paletteptr,Y
-    and #$0F
+    .PaletteIndexToPaletteSpriteA
     ora #%00100001
     sta.b $02
     lda.w loword(entity_damageflash),Y
@@ -149,6 +149,7 @@ entity_tile_init:
     phy
     php
     ldy #loword(palettes.tilesprite_fire_normal)
+    lda #8
     jsl Palette.find_or_upload_transparent
     plp
     ply

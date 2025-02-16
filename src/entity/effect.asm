@@ -10,11 +10,12 @@
 .define effect_palette_ptr loword(entity_velocx)
 .define effect_palette_value loword(entity_velocy)
 
-.STRUCT entityeffect_header_t SIZE 4
+.STRUCT entityeffect_header_t SIZE 5
     ; number of tiles to allocate for this effect
     tile_alloc db
     num_frames db
     palette dw
+    palette_depth db
 .ENDST
 .STRUCT entityeffect_frame_t
     sprite dl
@@ -78,6 +79,7 @@ EntityEffect_Explosion:
     tile_alloc: .db 6
     num_frames: .db 8
     palette: .dw loword(palettes.effect_explosion)
+    palette_depth: .db 16
 .ENDST
 .EffectFrame spritedata.bomb_explosion + spriteoffs(4, 6*4, 0), 2, 3, 4, _EffectExplosion_Tiles
 .EffectFrame spritedata.bomb_explosion + spriteoffs(4, 6*4, 1), 2, 3, 4, _EffectExplosion_Tiles
@@ -113,10 +115,8 @@ true_entity_effect_init:
     tax
     lda.l EntityEffectTypes,X
     sta.w effect_header_ptr,Y
-    inc A
-    inc A
-    inc A
-    inc A
+    clc
+    adc #_sizeof_entityeffect_header_t
     sta.w effect_frame_ptr,Y
     ; check available slots. If not enough, switch to null effect
     ldx.w effect_header_ptr,Y
@@ -181,7 +181,9 @@ true_entity_effect_init:
         phy
         php
         tay
-        jsl Palette.find_or_upload_opaque
+        lda.l bankaddr(EntityEffectTypes) + entityeffect_header_t.palette_depth,X
+        and #$00FF
+        jsl Palette.find_or_upload_transparent
         plp
         ply
         txa
@@ -243,7 +245,7 @@ true_entity_effect_tick:
     lda.w entity_posy,Y
     sta.b POSY
     lda.w effect_palette_ptr,Y
-    and #$0F
+    .PaletteIndexToPaletteSpriteA
     sta.b PALETTE
     lda #0
     ; draw

@@ -398,6 +398,9 @@ true_item_pedastal_tick_base:
         lda.w loword(entity_flags),Y
         ora #ENTITY_FLAGS_DONT_SERIALIZE
         sta.w loword(entity_flags),Y
+        sep #$20
+        lda #0
+        sta.w _item_price,Y
         ; reduce money
         sep #$28
         lda.w _item_price,Y
@@ -599,9 +602,13 @@ _item_pedastal_pickup:
     lda.w _item_infostore,Y
     and #ITEM_INFOSTORE_CHARGE
     sta.w playerData.current_active_charge
+    phy
+    php
+    jsl Item.update_charge_display
+    plp
+    ply
     ; set charge of own item
-    lda.w _item_infostore,Y
-    and #ITEM_INFOSTORE_ACTIVE
+    lda #ITEM_INFOSTORE_ACTIVE
     ora $01,S
     sta.w _item_infostore,Y
     ; set variant of own item

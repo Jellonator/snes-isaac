@@ -440,6 +440,10 @@ _use_deck_of_cards:
     clc
     adc #CONSUMABLEID_TAROT_FIRST
     jsl Consumable.pickup
+    jsl Item.update_charge_display
     rts
+
+Item.update_charge_display:
+    rtl
 
 .ENDS

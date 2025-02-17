@@ -507,7 +507,205 @@ Item.add_charge_battery:
     rtl
 
 Item.update_charge_display:
+    .DEFINE MAX_CHARGE $02
+    .DEFINE USAGE_CHARGE $04
+    .DEFINE PLAYER_CHARGE $06
+    .DEFINE TILE $08
+    .DEFINE SLOTS $0A
+    .DEFINE TILEI_LAST $0C
+    .DEFINE IS_FULL $0E
+    .DEFINE TMP_CHARGE $10
+    .DEFINE TMP_PLAYER_CHARGE $12
+    ; get item info
+    rep #$30
+    lda.w playerData.current_active_item
+    and #$00FF
+    asl
+    tax
+    lda.l Item.items,X
+    tax
+    stx.b $00
+    lda.l bankaddr(Item.items) | itemdef_t.charge_max,X
+    and #$00FF
+    sta.b MAX_CHARGE
+    lda.l bankaddr(Item.items) | itemdef_t.charge_use,X
+    and #$00FF
+    sta.b USAGE_CHARGE
+    ; get and increment miniop address
+    lda.w vqueueNumMiniOps
+    pha
+    clc
+    adc #32
+    sta.w vqueueNumMiniOps
+    pla
+    asl
+    asl
+    tax
+    ; clear and set addresses
+    .REPT 8 INDEX iy
+        .REPT 4 INDEX ix
+            lda #BG1_TILE_BASE_ADDR + ix+2 + (iy+5)*32
+            sta.l vqueueMiniOps.{iy*4 + ix + 1}.vramAddr,X
+            lda #0
+            sta.l vqueueMiniOps.{iy*4 + ix + 1}.data,X
+        .ENDR
+    .ENDR
+    ; get player charge
+    lda.w playerData.current_active_charge
+    and #$00FF
+    sta.b PLAYER_CHARGE
+    ; iterate charges
+    .REPT 4 INDEX ix
+        ; determine charge amounts for this specific battery slot
+        lda.b MAX_CHARGE
+        beql @end_write
+        bmil @end_write
+        lda.b PLAYER_CHARGE
+        .AMINU P_DIR USAGE_CHARGE
+        sta.b TMP_PLAYER_CHARGE
+        lda.b MAX_CHARGE
+        .AMINU P_DIR USAGE_CHARGE
+        sta.b TMP_CHARGE
+        inc A
+        lsr
+        dec A
+        sta.b TILEI_LAST
+        lda.b TMP_PLAYER_CHARGE
+        ldy #0
+        cmp.b USAGE_CHARGE
+        bcc +
+            ldy #1
+        +:
+        sty.b IS_FULL
+        .REPT 8 INDEX iy
+            .IF iy == 0
+                lda #%00000100
+            .ELSE
+                lda #%00000000
+            .ENDIF
+            sta.b TILE
+            ; check if last tile
+            lda.b TILEI_LAST
+            cmp #iy
+            blsul @end_slot_{ix}
+            bne @not_last_slot_{ix}_{iy}
+                lda #%00000010
+                tsb.b TILE
+            @not_last_slot_{ix}_{iy}:
+            ; check FULL flag
+            lda.b IS_FULL
+            beq @not_full_{ix}_{iy}
+                lda #%00011000
+                tsb.b TILE
+                jmp @was_full_{ix}_{iy}
+            @not_full_{ix}_{iy}:
+                ; determine C if not full
+                lda.b TMP_PLAYER_CHARGE
+                .AMINU P_IMM 2
+                asl
+                asl
+                asl
+                tsb.b TILE
+            @was_full_{ix}_{iy}:
+            ; determine M
+            lda.b TMP_CHARGE
+            .AMINU P_IMM 2
+            asl
+            asl
+            asl
+            asl
+            asl
+            tsb.b TILE
+            phx
+            ldx.b TILE
+            lda.l BatteryTileMap,X
+            plx
+            sta.l vqueueMiniOps.{iy*4 + ix + 1}.data,X
+            ; subtract
+            dec.b TMP_PLAYER_CHARGE
+            dec.b TMP_PLAYER_CHARGE
+            bpl +
+                stz.b TMP_PLAYER_CHARGE
+            +:
+            dec.b TMP_CHARGE
+            dec.b TMP_CHARGE
+            bpl +
+                stz.b TMP_CHARGE
+            +:
+        .ENDR
+        @end_slot_{ix}:
+        lda.b MAX_CHARGE
+        sec
+        sbc.b USAGE_CHARGE
+        bpl +
+            lda #0
+        +:
+        sta.b MAX_CHARGE
+        lda.b PLAYER_CHARGE
+        sec
+        sbc.b USAGE_CHARGE
+        bpl +
+            lda #0
+        +:
+        sta.b PLAYER_CHARGE
+    .ENDR
+@end_write:
     rtl
+
+; Battery tile map.
+; Indexed by: 0MMCCFL0
+; MM - max (for this tile) (0, 1, 2)
+; CC - charge (0, 1, 2, FULL)
+; F  - first
+; L  - last
+; invalid tiles are shown as coins for easy debugging
+BatteryTileMap:
+    ; 0 / 0
+    .dw $11, $11, $11, $11
+    ; 1 / 0 (invalid)
+    .dw 1, 1, 1, 1
+    ; 2 / 0 (invalid)
+    .dw 1, 1, 1, 1
+    ; FULL / 0
+    .dw 1, 1, 1, 1
+    ; 0 / 1
+    .dw 1
+    .dw deft($20, 6) ; last
+    .dw 1
+    .dw deft($10, 6) ; mid
+    ; 1 / 1
+    .dw 1
+    .dw deft($23, 6) ; last
+    .dw 1
+    .dw deft($13, 6) ; mid
+    ; 2 / 1 (invalid)
+    .dw 1, 1, 1, 1
+    ; FULL / 1
+    .dw 1
+    .dw deft($23, 6) ; last
+    .dw 1
+    .dw deft($13, 6) ; mid
+    ; 0 / 2
+    .dw deft($24, 6) ; mid
+    .dw deft($34, 6) ; last
+    .dw deft($14, 6) ; first
+    .dw deft($04, 6) ; single
+    ; 1 / 2
+    .dw deft($25, 6) ; mid
+    .dw deft($35, 6) ; last
+    .dw deft($15, 6) ; first
+    .dw deft($05, 6) ; single
+    ; 2 / 2
+    .dw deft($26, 6) ; mid
+    .dw deft($36, 6) ; last
+    .dw deft($16, 6) ; first
+    .dw deft($06, 6) ; single
+    ; FULL / 2
+    .dw deft($27, 6) ; mid
+    .dw deft($37, 6) ; last
+    .dw deft($17, 6) ; first
+    .dw deft($07, 6) ; single
+
 
 _use_deck_of_cards:
     jsl RoomRand_Update8

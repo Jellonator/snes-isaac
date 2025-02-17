@@ -58,7 +58,7 @@ DefaultUiData:
     .dw deft($03,6) | T_HIGHP | T_FLIPV
     .dw deft($03,6) | T_HIGHP | T_FLIPV
     .dw deft($02,6) | T_HIGHP | T_FLIPH | T_FLIPV
-    .dw deft($10,5) | T_HIGHP
+    .dw deft($21,5) | T_HIGHP
     .dw deft($70,5) | T_HIGHP
     .dw deft($70,5) | T_HIGHP
     .REPT 24

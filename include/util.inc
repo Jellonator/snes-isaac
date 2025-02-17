@@ -89,6 +89,44 @@
 .MACRO bges ARGS addr
     bpl addr
 .ENDM
+; BRANCH LESS THAN UNSIGNED LONG
+.MACRO blsul ARGS addr
+    bccl addr
+.ENDM
+; BRANCH LESS THAN SIGNED LONG
+.MACRO blssl ARGS addr
+    bmil addr
+.ENDM
+; BRANCH LESS THAN OR EQUAL UNSIGNED LONG
+.MACRO bleul ARGS addr
+    bccl addr
+    beql addr
+.ENDM
+; BRANCH LESS THAN OR EQUAL SIGNED LONG
+.MACRO blesl ARGS addr
+    bmil addr
+    beql addr
+.ENDM
+; BRANCH GREATER THAN UNSIGNED LONG
+.MACRO bgrul ARGS addr
+    beq +++++
+        bcsl addr
+    +++++:
+.ENDM
+; BRANCH GREATER THAN SIGNED LONG
+.MACRO bgrsl ARGS addr
+    beq +++++
+        bpll addr
+    +++++:
+.ENDM
+; BRANCH GREATER THAN OR EQUAL UNSIGNED LONG
+.MACRO bgeul ARGS addr
+    bcsl addr
+.ENDM
+; BRANCH GREATER THAN OR EQUAL SIGNED LONG
+.MACRO bgesl ARGS addr
+    bpll addr
+.ENDM
 
 ; GENERIC INSTRUCTIONS
 

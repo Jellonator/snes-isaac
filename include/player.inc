@@ -76,6 +76,8 @@
     keys dw
     bombs dw
     current_consumable db
+    current_active_item db
+    current_active_charge db
 ; health
     ; extra slot allows small optimizations
     healthSlots INSTANCEOF byte_t HEALTHSLOT_COUNT + 1

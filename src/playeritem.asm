@@ -40,6 +40,71 @@ Item.add:
     jsr (itemdef_t.on_pickup,X)
     rtl
 
+; Set player's active item to A
+; This function does NOT modify charge.
+; The caller is responsible for:
+;    - setting correct charge
+;    - swapping/creating item pedastals
+Item.set_active:
+    sep #$30
+    cmp.w playerData.current_active_item
+    ; bne +
+    ;     rtl
+    ; +:
+    sta.w playerData.current_active_item
+    ; get pointer to item
+    rep #$30
+    and #$00FF
+    asl
+    tax
+    lda.l Item.items,X
+    tax
+    ; set up copy sprite
+    phx
+    pea BG1_CHARACTER_BASE_ADDR + $0EE0
+    pea 2
+    sep #$20
+    lda #bankbyte(spritedata.items)
+    pha
+    rep #$20
+    lda.l bankaddr(Item.items) | itemdef_t.sprite_index,X
+    and #$00FF
+    .MultiplyStatic 32*4
+    clc
+    adc #loword(spritedata.items)
+    pha
+    .REPT 2 INDEX i
+        jsl CopySpriteVQueue
+        .IF i == 0
+            rep #$20
+            lda $01,S
+            clc
+            adc #spritesize(4, 2)
+            sta $01,S
+            lda $06,S
+            clc
+            adc #$0100
+            sta $06,S
+        .ENDIF
+    .ENDR
+    rep #$20
+    pla
+    pla
+    pla
+    sep #$20
+    pla
+    ; upload palette
+    rep #$30
+    plx
+    pea $4000 | bankbyte(palettes.palette0.w)
+    lda.l bankaddr(Item.items) | itemdef_t.palette_ptr,X
+    pha
+    jsl CopyPaletteVQueue
+    rep #$30
+    pla
+    pla
+    rtl
+
 ; simple multiplication routine somewhat optimized for small multiplicands
 .MACRO .ADDMULTITEM ARGS itemid, addmethod, addamount
     ldx.w playerData.playerItemStackNumber + itemid
@@ -133,7 +198,8 @@ Item.check_and_recalculate:
     jml Costume.player_recalculate
     ; rtl
 
-_empty_pickup:
+_use_empty:
+_pickup_empty:
     rts
 
 _health_up_pickup:
@@ -147,11 +213,12 @@ _pickup_map:
     rts
 
 .DSTRUCT Item.definitions.null INSTANCEOF itemdef_t VALUES
-    sprite_index: .db 0
+    sprite_index: .db $FF
     palette_ptr: .dw 0
     palette_depth: .db 4
     flags: .db 0
-    on_pickup: .dl _empty_pickup
+    on_pickup: .dl _pickup_empty
+    on_use: .dl _use_empty
     shop_price: .db $15
     name: .ASCSTR "null", 0
     tagline: .ASCSTR "Wait, What?", 0
@@ -162,7 +229,8 @@ _pickup_map:
     palette_ptr: .dw palettes.item_sad_onion
     palette_depth: .db 12
     flags: .db 0
-    on_pickup: .dl _empty_pickup
+    on_pickup: .dl _pickup_empty
+    on_use: .dl _use_empty
     shop_price: .db $15
     name: .ASCSTR "Sad Onion", 0
     tagline: .ASCSTR "Tears Up", 0
@@ -173,7 +241,8 @@ _pickup_map:
     palette_ptr: .dw palettes.palette0
     palette_depth: .db 16
     flags: .db 0
-    on_pickup: .dl _empty_pickup
+    on_pickup: .dl _pickup_empty
+    on_use: .dl _use_empty
     shop_price: .db $15
     name: .ASCSTR "Spoon Bender", 0
     tagline: .ASCSTR "Homing Shots", 0
@@ -184,7 +253,8 @@ _pickup_map:
     palette_ptr: .dw palettes.item_growth_hormones
     palette_depth: .db 8
     flags: .db 0
-    on_pickup: .dl _empty_pickup
+    on_pickup: .dl _pickup_empty
+    on_use: .dl _use_empty
     shop_price: .db $15
     name: .ASCSTR "Growth Hormones", 0
     tagline: .ASCSTR "Damage and Speed Up", 0
@@ -195,7 +265,8 @@ _pickup_map:
     palette_ptr: .dw palettes.palette0
     palette_depth: .db 16
     flags: .db 0
-    on_pickup: .dl _empty_pickup
+    on_pickup: .dl _pickup_empty
+    on_use: .dl _use_empty
     shop_price: .db $15
     name: .ASCSTR "Brother Bobby", 0
     tagline: .ASCSTR "Best Friend", 0
@@ -206,7 +277,8 @@ _pickup_map:
     palette_ptr: .dw palettes.palette0
     palette_depth: .db 16
     flags: .db 0
-    on_pickup: .dl _empty_pickup
+    on_pickup: .dl _pickup_empty
+    on_use: .dl _use_empty
     shop_price: .db $15
     name: .ASCSTR "Wire Coat Hanger", 0
     tagline: .ASCSTR "Tears Up", 0
@@ -218,6 +290,7 @@ _pickup_map:
     palette_depth: .db 16
     flags: .db 0
     on_pickup: .dl _health_up_pickup
+    on_use: .dl _use_empty
     shop_price: .db $15
     name: .ASCSTR "Dinner", 0
     tagline: .ASCSTR "Health Up", 0
@@ -228,7 +301,8 @@ _pickup_map:
     palette_ptr: .dw palettes.item_chocolate_milk
     palette_depth: .db 8
     flags: .db 0
-    on_pickup: .dl _empty_pickup
+    on_pickup: .dl _pickup_empty
+    on_use: .dl _use_empty
     shop_price: .db $15
     name: .ASCSTR "Chocolate Milk", 0
     tagline: .ASCSTR "Charge Tears", 0
@@ -239,7 +313,8 @@ _pickup_map:
     palette_ptr: .dw palettes.palette0
     palette_depth: .db 16
     flags: .db 0
-    on_pickup: .dl _empty_pickup
+    on_pickup: .dl _pickup_empty
+    on_use: .dl _use_empty
     shop_price: .db $15
     name: .ASCSTR "Polyphemus", 0
     tagline: .ASCSTR "Mega Tears", 0
@@ -251,6 +326,7 @@ _pickup_map:
     palette_depth: .db 16
     flags: .db 0
     on_pickup: .dl _pickup_map
+    on_use: .dl _use_empty
     shop_price: .db $15
     name: .ASCSTR "Treasure Map", 0
     tagline: .ASCSTR "Map Revealed", 0
@@ -262,12 +338,29 @@ _pickup_map:
     palette_depth: .db 16
     flags: .db 0
     on_pickup: .dl _pickup_map
+    on_use: .dl _use_empty
     shop_price: .db $15
     name: .ASCSTR "Compass", 0
     tagline: .ASCSTR "The End is Near", 0
 .ENDST
 
+.DSTRUCT Item.definitions.deck_of_cards INSTANCEOF itemdef_t VALUES
+    sprite_index: .db 10
+    palette_ptr: .dw palettes.item_deck_of_cards
+    palette_depth: .db 4
+    flags: .db ITEMFLAG_ACTIVE
+    on_pickup: .dl _pickup_empty
+    on_use: .dl _use_empty
+    shop_price: .db $10
+    charge_max: .db 6
+    charge_use: .db 6
+    charge_init: .db 6
+    name: .ASCSTR "Deck of Cards", 0
+    tagline: .ASCSTR "May You Find What You Seek", 0
+.ENDST
+
 Item.items:
+    .dw Item.definitions.null
     .dw Item.definitions.sad_onion
     .dw Item.definitions.spoon_bender
     .dw Item.definitions.growth_hormones
@@ -278,7 +371,8 @@ Item.items:
     .dw Item.definitions.polyphemus
     .dw Item.definitions.map
     .dw Item.definitions.compass
-    .REPT 256-7
+    .dw Item.definitions.deck_of_cards
+    .REPT 256-11
         .dw Item.definitions.null
     .ENDR
 
@@ -291,6 +385,7 @@ Item.pool.item_room:
     .db ITEMID_CHOCOLATE_MILK
     .db ITEMID_POLYPHEMUS
     .db ITEMID_SPOON_BENDER
+    .db ITEMID_DECK_OF_CARDS
     @end:
 
 Item.pool.boss:
@@ -302,6 +397,7 @@ Item.pool.boss:
 Item.pool.shop:
     .db ITEMID_MAP
     .db ITEMID_COMPASS
+    .db ITEMID_DECK_OF_CARDS
     @end:
 
 .ENDS

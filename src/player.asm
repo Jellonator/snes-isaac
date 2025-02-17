@@ -491,6 +491,8 @@ PlayerInit:
     lda #$99
     sta.w playerData.bombs
     stz.w playerData.current_consumable
+    lda #0
+    jsl Item.set_active
     jsl Player.update_bomb_display
     jsl Player.update_key_display
     jsl Player.update_money_display

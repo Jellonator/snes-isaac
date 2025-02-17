@@ -44,6 +44,10 @@
         "src": "assets/palettes/item_compass.hex"
     },
     {
+        "name": "item_deck_of_cards",
+        "src": "assets/palettes/item_deck_of_cards.hex"
+    },
+    {
         "name": "stage_caves1",
         "src": "assets/palettes/stage_caves1.hex"
     },

@@ -11,10 +11,15 @@
 .DEFINE _has_put_text entity_velocx
 ; hijack velocy for state
 .DEFINE _item_state entity_velocy
+; hijack state for iteminfo (since its serialized)
+.DEFINE _item_infostore entity_state
 
 .DEFINE STATE_BASE 0
 .DEFINE STATE_PICKUP 1
 .DEFINE STATE_EMPTY 2
+
+.DEFINE ITEM_INFOSTORE_ACTIVE $80
+.DEFINE ITEM_INFOSTORE_CHARGE $0F
 
 .BANK $02 SLOT "ROM"
 .SECTION "Entity Item Pedastal" SUPERFREE
@@ -58,7 +63,7 @@ _item_pedastal_get_variant_from_pool:
     clc
     adc.l DIVU_REMAINDER
     tax
-    lda.l $010000 * bankbyte(Item.pool.item_room),X
+    lda.l bankaddr(Item.pool.item_room),X
     sep #$20
     sta.w entity_variant,Y
     ; maybe set price
@@ -75,10 +80,32 @@ _item_pedastal_get_variant_from_pool:
         sep #$20
         lda.l bankaddr(Item.items) + itemdef_t.shop_price,X
         sta.w _item_price,Y
-        rts
+        jmp @end_set_price
 @dont_set_price:
     lda #$00
     sta.w _item_price,Y
+@end_set_price:
+    ; set infostore
+    rep #$20
+    lda #$00
+    sta.b $00
+    lda.w entity_variant,Y
+    and #$00FF
+    asl
+    tax
+    lda.l Item.items,X
+    tax
+    sep #$20
+    lda.l bankaddr(Item.items) | itemdef_t.charge_init,X
+    sta.b $00
+    lda.l bankaddr(Item.items) | itemdef_t.flags,X
+    bit #ITEMFLAG_ACTIVE
+    beq +
+        lda #ITEM_INFOSTORE_ACTIVE
+        tsb.b $00
+    +:
+    lda.b $00
+    sta.w _item_infostore,Y
     rts
 
 true_item_pedastal_init:
@@ -392,12 +419,8 @@ true_item_pedastal_tick_pickup:
     sta.w _item_anim_timer,Y
     bne +
         ; pickup; switch to empty and add item to player
-        phy
-        php
-        lda entity_variant,Y
-        jsl Item.add
-        plp
-        ply
+        jsr _item_pedastal_pickup
+        sep #$20
         lda #STATE_EMPTY
         sta.w _item_state,Y
     +:
@@ -471,12 +494,7 @@ true_item_pedastal_free:
     lda.w _item_state,Y
     cmp #STATE_PICKUP
     bne +
-        phy
-        php
-        lda.w entity_variant,Y
-        jsl Item.add
-        plp
-        ply
+        jsr _item_pedastal_pickup
     +:
     ; clear gfx
     rep #$20
@@ -544,6 +562,28 @@ _check_and_erase_text:
         sta.l vqueueMiniOps.2.data,X
         sta.l vqueueMiniOps.3.data,X
 @no_erase_price_text:
+    rts
+
+_item_pedastal_pickup:
+    rep #$10
+    sep #$20
+    lda.w _item_infostore,Y
+    bit #ITEM_INFOSTORE_ACTIVE
+    bne @active
+        phy
+        php
+        lda.w entity_variant,Y
+        jsl Item.add
+        plp
+        ply
+        rts
+@active:
+    phy
+    php
+    lda.w entity_variant,Y
+    jsl Item.set_active
+    plp
+    ply
     rts
 
 .ENDS

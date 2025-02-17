@@ -4,13 +4,11 @@
 .DEFINE _item_gfxptr_item loword(entity_char_custom.2)
 .DEFINE _item_palette loword(entity_char_custom.3)
 .DEFINE _item_anim_timer loword(entity_char_custom.4)
+.DEFINE _has_put_text loword(entity_char_custom.5)
+.DEFINE _item_state loword(entity_char_custom.6)
 
 ; hijack entity_timer for price as it is serialized
 .DEFINE _item_price entity_timer
-; hijack velocx for has-uploaded-text flag
-.DEFINE _has_put_text entity_velocx
-; hijack velocy for state
-.DEFINE _item_state entity_velocy
 ; hijack state for iteminfo (since its serialized)
 .DEFINE _item_infostore entity_state
 
@@ -126,9 +124,11 @@ true_item_pedastal_init:
     sep #$20
     lda #STATE_BASE
     sta.w _item_state,Y
+    jsr _item_pedastal_alloc_gfx
+    rtl
+
+_item_pedastal_alloc_gfx:
     rep #$30
-    lda #0
-    ; load sprite for item
     lda.w entity_variant,Y
     and #$00FF
     asl
@@ -167,7 +167,7 @@ true_item_pedastal_init:
     ply
     txa
     sta.w _item_palette,Y
-    rtl
+    rts
 
 _draw_normal:
     .ACCU 8
@@ -343,6 +343,8 @@ true_item_pedastal_tick_base:
     sep #$20
     ; check player position, and potentially change state
     .EntityEasySetBox 16 12
+    lda.w playerData.anim_wait_timer
+    bnel @no_player_col
     lda.w playerData.money
     cmp.w _item_price,Y
     bccl @no_player_col
@@ -420,9 +422,6 @@ true_item_pedastal_tick_pickup:
     bne +
         ; pickup; switch to empty and add item to player
         jsr _item_pedastal_pickup
-        sep #$20
-        lda #STATE_EMPTY
-        sta.w _item_state,Y
     +:
     ; tile ID 1
     rep #$30
@@ -485,18 +484,7 @@ true_item_pedastal_tick_empty:
 @skip:
     rtl
 
-true_item_pedastal_free:
-    .ACCU 16
-    .INDEX 16
-    sty.b $10
-    ; fallback to give item if in held state
-    sep #$20
-    lda.w _item_state,Y
-    cmp #STATE_PICKUP
-    bne +
-        jsr _item_pedastal_pickup
-    +:
-    ; clear gfx
+_item_pedastal_free_gfx:
     rep #$20
     phy
     php
@@ -510,6 +498,21 @@ true_item_pedastal_free:
     jsl spriteman_unref
     ldx.w _item_palette
     jsl Palette.free
+    rts
+
+true_item_pedastal_free:
+    .ACCU 16
+    .INDEX 16
+    sty.b $10
+    ; fallback to give item if in held state
+    sep #$20
+    lda.w _item_state,Y
+    cmp #STATE_PICKUP
+    bne +
+        jsr _item_pedastal_pickup
+    +:
+    ; clear gfx
+    jsr _item_pedastal_free_gfx
     sep #$30
     ldy.b $10
     jsr _check_and_erase_text
@@ -570,20 +573,57 @@ _item_pedastal_pickup:
     lda.w _item_infostore,Y
     bit #ITEM_INFOSTORE_ACTIVE
     bne @active
+    ; add passive item
         phy
         php
         lda.w entity_variant,Y
         jsl Item.add
         plp
         ply
+        sep #$20
+        lda #STATE_EMPTY
+        sta.w _item_state,Y
         rts
+; set active item
 @active:
+    lda.w playerData.current_active_item
+    pha
+    lda.w playerData.current_active_charge
+    pha
     phy
     php
     lda.w entity_variant,Y
     jsl Item.set_active
     plp
     ply
+    ; set charge of own item
+    lda.w _item_infostore,Y
+    and #ITEM_INFOSTORE_ACTIVE
+    ora $01,S
+    sta.w _item_infostore,Y
+    ; set variant of own item
+    lda $02,S
+    bne @prev_not_null
+        ; if player's previous item was null, just set to empty
+        lda #STATE_EMPTY
+        sta.w _item_state,Y
+        pla
+        pla
+        rts
+@prev_not_null:
+    jsr _item_pedastal_free_gfx
+    sep #$20
+    lda $02,S
+    sta.w entity_variant,Y
+    lda #STATE_BASE
+    sta.w _item_state,Y
+    lda.w loword(entity_flags),Y
+    and #$FF ~ ENTITY_FLAGS_DONT_SERIALIZE
+    sta.w loword(entity_flags),Y
+    jsr _item_pedastal_alloc_gfx
+; end
+    rep #$20
+    pla
     rts
 
 .ENDS

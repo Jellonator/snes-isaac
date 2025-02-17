@@ -4,20 +4,20 @@
 .DEFINE SQRT2 sqrt(2.0)
 
 .ASCIITABLE
-    MAP '0' TO '9' = $40
-    MAP 'A' TO 'Z' = $4A
-    MAP 'a' TO 'z' = $4A
-    MAP '.' = $64
-    MAP ',' = $65
-    MAP '!' = $66
-    MAP '?' = $67
-    MAP "'" = $68
-    MAP '"' = $69
-    MAP ':' = $6A
-    MAP ' ' = $6B
-    MAP $80 = $6D
-    MAP $81 = $6E
-    MAP $82 = $6F
+    MAP '0' TO '9' = $80
+    MAP 'A' TO 'Z' = $8A
+    MAP 'a' TO 'z' = $8A
+    MAP '.' = $A4
+    MAP ',' = $A5
+    MAP '!' = $A6
+    MAP '?' = $A7
+    MAP "'" = $A8
+    MAP '"' = $A9
+    MAP ':' = $AA
+    MAP ' ' = $AB
+    MAP $80 = $AD
+    MAP $81 = $AE
+    MAP $82 = $AF
     MAP $00 = $00
 .ENDA
 

@@ -670,21 +670,21 @@ BatteryTileMap:
     .dw 1, 1, 1, 1
     ; 0 / 1
     .dw 1
-    .dw deft($20, 6) ; last
+    .dw deft($54, 6) ; last
     .dw 1
-    .dw deft($10, 6) ; mid
+    .dw deft($44, 6) ; single
     ; 1 / 1
     .dw 1
-    .dw deft($23, 6) ; last
+    .dw deft($56, 6) ; last
     .dw 1
-    .dw deft($13, 6) ; mid
+    .dw deft($46, 6) ; single
     ; 2 / 1 (invalid)
     .dw 1, 1, 1, 1
     ; FULL / 1
     .dw 1
-    .dw deft($23, 6) ; last
+    .dw deft($57, 6) ; last
     .dw 1
-    .dw deft($13, 6) ; mid
+    .dw deft($47, 6) ; single
     ; 0 / 2
     .dw deft($24, 6) ; mid
     .dw deft($34, 6) ; last

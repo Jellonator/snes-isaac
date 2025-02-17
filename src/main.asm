@@ -91,6 +91,12 @@ UpdateRest:
     beq @skip_use_consumable
         jsl Consumable.use
 @skip_use_consumable:
+    rep #$30
+    lda.w joy1press
+    bit #JOY_R
+    beq @skip_use_item
+        jsl Item.try_use_active
+@skip_use_item:
     rts
 
 ReadInput:

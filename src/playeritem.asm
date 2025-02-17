@@ -217,8 +217,8 @@ _pickup_map:
     palette_ptr: .dw 0
     palette_depth: .db 4
     flags: .db 0
-    on_pickup: .dl _pickup_empty
-    on_use: .dl _use_empty
+    on_pickup: .dw _pickup_empty
+    on_use: .dw _use_empty
     shop_price: .db $15
     name: .ASCSTR "null", 0
     tagline: .ASCSTR "Wait, What?", 0
@@ -229,8 +229,8 @@ _pickup_map:
     palette_ptr: .dw palettes.item_sad_onion
     palette_depth: .db 12
     flags: .db 0
-    on_pickup: .dl _pickup_empty
-    on_use: .dl _use_empty
+    on_pickup: .dw _pickup_empty
+    on_use: .dw _use_empty
     shop_price: .db $15
     name: .ASCSTR "Sad Onion", 0
     tagline: .ASCSTR "Tears Up", 0
@@ -241,8 +241,8 @@ _pickup_map:
     palette_ptr: .dw palettes.palette0
     palette_depth: .db 16
     flags: .db 0
-    on_pickup: .dl _pickup_empty
-    on_use: .dl _use_empty
+    on_pickup: .dw _pickup_empty
+    on_use: .dw _use_empty
     shop_price: .db $15
     name: .ASCSTR "Spoon Bender", 0
     tagline: .ASCSTR "Homing Shots", 0
@@ -253,8 +253,8 @@ _pickup_map:
     palette_ptr: .dw palettes.item_growth_hormones
     palette_depth: .db 8
     flags: .db 0
-    on_pickup: .dl _pickup_empty
-    on_use: .dl _use_empty
+    on_pickup: .dw _pickup_empty
+    on_use: .dw _use_empty
     shop_price: .db $15
     name: .ASCSTR "Growth Hormones", 0
     tagline: .ASCSTR "Damage and Speed Up", 0
@@ -265,8 +265,8 @@ _pickup_map:
     palette_ptr: .dw palettes.palette0
     palette_depth: .db 16
     flags: .db 0
-    on_pickup: .dl _pickup_empty
-    on_use: .dl _use_empty
+    on_pickup: .dw _pickup_empty
+    on_use: .dw _use_empty
     shop_price: .db $15
     name: .ASCSTR "Brother Bobby", 0
     tagline: .ASCSTR "Best Friend", 0
@@ -277,8 +277,8 @@ _pickup_map:
     palette_ptr: .dw palettes.palette0
     palette_depth: .db 16
     flags: .db 0
-    on_pickup: .dl _pickup_empty
-    on_use: .dl _use_empty
+    on_pickup: .dw _pickup_empty
+    on_use: .dw _use_empty
     shop_price: .db $15
     name: .ASCSTR "Wire Coat Hanger", 0
     tagline: .ASCSTR "Tears Up", 0
@@ -289,8 +289,8 @@ _pickup_map:
     palette_ptr: .dw palettes.palette0
     palette_depth: .db 16
     flags: .db 0
-    on_pickup: .dl _health_up_pickup
-    on_use: .dl _use_empty
+    on_pickup: .dw _health_up_pickup
+    on_use: .dw _use_empty
     shop_price: .db $15
     name: .ASCSTR "Dinner", 0
     tagline: .ASCSTR "Health Up", 0
@@ -301,8 +301,8 @@ _pickup_map:
     palette_ptr: .dw palettes.item_chocolate_milk
     palette_depth: .db 8
     flags: .db 0
-    on_pickup: .dl _pickup_empty
-    on_use: .dl _use_empty
+    on_pickup: .dw _pickup_empty
+    on_use: .dw _use_empty
     shop_price: .db $15
     name: .ASCSTR "Chocolate Milk", 0
     tagline: .ASCSTR "Charge Tears", 0
@@ -313,8 +313,8 @@ _pickup_map:
     palette_ptr: .dw palettes.palette0
     palette_depth: .db 16
     flags: .db 0
-    on_pickup: .dl _pickup_empty
-    on_use: .dl _use_empty
+    on_pickup: .dw _pickup_empty
+    on_use: .dw _use_empty
     shop_price: .db $15
     name: .ASCSTR "Polyphemus", 0
     tagline: .ASCSTR "Mega Tears", 0
@@ -325,8 +325,8 @@ _pickup_map:
     palette_ptr: .dw palettes.palette0
     palette_depth: .db 16
     flags: .db 0
-    on_pickup: .dl _pickup_map
-    on_use: .dl _use_empty
+    on_pickup: .dw _pickup_map
+    on_use: .dw _use_empty
     shop_price: .db $15
     name: .ASCSTR "Treasure Map", 0
     tagline: .ASCSTR "Map Revealed", 0
@@ -337,8 +337,8 @@ _pickup_map:
     palette_ptr: .dw palettes.item_compass
     palette_depth: .db 16
     flags: .db 0
-    on_pickup: .dl _pickup_map
-    on_use: .dl _use_empty
+    on_pickup: .dw _pickup_map
+    on_use: .dw _use_empty
     shop_price: .db $15
     name: .ASCSTR "Compass", 0
     tagline: .ASCSTR "The End is Near", 0
@@ -349,8 +349,8 @@ _pickup_map:
     palette_ptr: .dw palettes.item_deck_of_cards
     palette_depth: .db 4
     flags: .db ITEMFLAG_ACTIVE
-    on_pickup: .dl _pickup_empty
-    on_use: .dl _use_empty
+    on_pickup: .dw _pickup_empty
+    on_use: .dw _use_deck_of_cards
     shop_price: .db $10
     charge_max: .db 6
     charge_use: .db 6
@@ -399,5 +399,47 @@ Item.pool.shop:
     .db ITEMID_COMPASS
     .db ITEMID_DECK_OF_CARDS
     @end:
+
+Item.try_use_active:
+    rep #$30
+    lda.w playerData.current_active_item
+    and #$00FF
+    bne @has_item
+        rtl
+@has_item:
+    asl
+    tax
+    lda.l Item.items,X
+    tax
+    stx.b $00
+    sep #$20
+    lda.l bankaddr(Item.items) | itemdef_t.charge_use,X
+    sta.b $02
+    lda.w playerData.current_active_charge
+    cmp.b $02
+    bcs @has_enough_charge
+        rtl
+@has_enough_charge:
+    sec
+    sbc.b $02
+    sta.w playerData.current_active_charge
+    jsr (itemdef_t.on_use,X)
+    rtl
+
+_use_deck_of_cards:
+    jsl RoomRand_Update8
+    .ACCU 16
+    sta.l DIVU_DIVIDEND
+    sep #$30
+    lda #(CONSUMABLEID_TAROT_LAST - CONSUMABLEID_TAROT_FIRST) + 1
+    sta.l DIVU_DIVISOR
+    .REPT 8
+        nop
+    .ENDR
+    lda.l DIVU_REMAINDER
+    clc
+    adc #CONSUMABLEID_TAROT_FIRST
+    jsl Consumable.pickup
+    rts
 
 .ENDS

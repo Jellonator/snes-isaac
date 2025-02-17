@@ -815,7 +815,7 @@ BeginMapGeneration:
     lda #(8 + 2*16)
     sta.b start_pos
     sta.w loadedRoomIndex
-    stx.w roomslot_start
+    sta.w roomslot_start
     tax
     lda #ROOMTYPE_START
     pha

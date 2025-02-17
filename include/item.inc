@@ -23,8 +23,8 @@
     palette_ptr dw
     palette_depth db
     flags db
-    on_pickup dl
-    on_use dl
+    on_pickup dw
+    on_use dw
     shop_price db
     charge_max db
     charge_use db

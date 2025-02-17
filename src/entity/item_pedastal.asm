@@ -596,6 +596,9 @@ _item_pedastal_pickup:
     jsl Item.set_active
     plp
     ply
+    lda.w _item_infostore,Y
+    and #ITEM_INFOSTORE_CHARGE
+    sta.w playerData.current_active_charge
     ; set charge of own item
     lda.w _item_infostore,Y
     and #ITEM_INFOSTORE_ACTIVE

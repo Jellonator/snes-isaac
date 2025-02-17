@@ -72,8 +72,9 @@ Palette.alloc_opaque:
         .ENDIF
     .ENDR
 @skip:
-    ; no palettes available, or 0 colors required: do nothing and return
-    ldx #0
+    ; no palettes available, or 0 colors required: do nothing and return *a* palette
+    ldx #3*8+2
+    inc.w paletteRefCount,X
     rtl
 @found:
     ; we found a palette with available slots, now allocate subpalettes
@@ -141,7 +142,7 @@ Palette.alloc_transparent:
     .ENDR
 @skip:
     ; no palettes available, or 0 colors required: do nothing and return
-    ldx #0
+    ldx #6*8+2
     rtl
 @found:
     ; we found a palette with available slots, now allocate subpalettes

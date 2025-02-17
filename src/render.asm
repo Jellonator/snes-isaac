@@ -19,7 +19,6 @@ VBlank2:
     beq @continuevblank
     pla
     plb
-    ; cli ; enable interrupts
     rti
 @continuevblank:
     pla ; compensate for earlier pha
@@ -30,11 +29,10 @@ VBlank2:
     lda #%10000000
     sta INIDISP
     sep #$30 ; 16 bit AXY
-    lda $4210
-
-    ; reset sprites
+    lda RDNMI
+; upload sprite data
     rep #$20 ; 16 bit A
-    stz $2102
+    stz OAMADDR
     lda #512+32
     sta DMA0_SIZE
     lda.w #objectData
@@ -50,6 +48,7 @@ VBlank2:
     sta DMA0_DEST
     lda #$01
     sta MDMAEN
+; Force-load VRAM sections
     ; check if ground needs reloading
     sep #$20 ; 8 bit A
     lda.l needResetEntireGround
@@ -66,7 +65,9 @@ VBlank2:
         stz.w numTilesToUpdate
         jsr UpdateEntireMinimap
 @skipUpdateAllTiles:
+; Process vqueue
     jsl ProcessVQueue
+; end
     sep #$20 ; 8 bit A
     pla ; compensate for phb earlier
     lda.w roomBrightness

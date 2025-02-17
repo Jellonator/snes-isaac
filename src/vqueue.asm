@@ -74,9 +74,9 @@ ProcessVQueue:
     .ChangeDataBank $7F
     rep #$30 ; 8b A
     lda.l vqueueNumOps
-    and #$00FF
     beq @process_vqueue_end
     sta.b $00
+    ; Assume that most vqueue operations are going to use standard increment.
     lda #$80
     sta.l VMAIN
     ldy #0

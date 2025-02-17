@@ -279,11 +279,17 @@ _Room_Complete:
     sep #$20
     lda.w currentRoomDoSpawnReward
     beq +
+        ; add item charge
+        sep #$20
+        lda #1
+        jsl Item.add_charge_amount
+        ; check for boss room
         sep #$10
         ldx.b loadedRoomIndex
         lda.w mapTileTypeTable,X
         cmp #ROOMTYPE_BOSS
         beq @spawnBossReward
+        ; spawn reward
         jsr _Room_Spawn_Reward
         jmp +
     @spawnBossReward:

@@ -29,7 +29,7 @@ _variant_handlers:
     .dw _handle_dime       ; 3 - dime
     .dw _handle_bomb       ; 4 - bomb
     .dw _handle_key        ; 5 - key
-    .dw _handle_null       ; 6 - TODO: battery
+    .dw _handle_battery    ; 6 - battery
     .dw _handle_heart      ; 7 - heart
     .dw _handle_soul_heart ; 8 - soul heart
     .dw _handle_consumable ; 9 - consumable
@@ -237,6 +237,26 @@ _handle_key:
     jsr _subtract_money
     ; KILL
     jsl entity_free
+    rts
+
+_handle_battery:
+    rep #$30 ; 16b A
+    phy
+    php
+    jsl Item.can_add_charge
+    sep #$20
+    cmp #0
+    beq @skip
+    jsl Item.add_charge_battery
+    plp
+    ply
+    jsr _subtract_money
+    ; KILL
+    jsl entity_free
+    rts
+@skip:
+    plp
+    ply
     rts
 
 _handle_heart:

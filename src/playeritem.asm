@@ -426,6 +426,89 @@ Item.try_use_active:
     jsr (itemdef_t.on_use,X)
     rtl
 
+; Returns A=1 if active item does not have full charge
+Item.can_add_charge:
+    rep #$30
+    lda.w playerData.current_active_item
+    and #$00FF
+    bne @has_item
+        lda #0
+        rtl
+@has_item:
+    asl
+    tax
+    lda.l Item.items,X
+    tax
+    stx.b $00
+    sep #$20
+    lda.l bankaddr(Item.items) | itemdef_t.charge_max,X
+    sta.b $02
+    lda.w playerData.current_active_charge
+    cmp.b $02
+    bcs @has_full_charge
+        lda #1
+        rtl
+@has_full_charge:
+    lda #0
+    rtl
+
+; Add `A` charge to current active item
+Item.add_charge_amount:
+    rep #$30
+    sta.b $04
+    lda.w playerData.current_active_item
+    and #$00FF
+    bne @has_item
+        sep #$20
+        lda #0
+        rtl
+@has_item:
+    asl
+    tax
+    lda.l Item.items,X
+    tax
+    stx.b $00
+    sep #$20
+    lda.l bankaddr(Item.items) | itemdef_t.charge_max,X
+    sta.b $02
+    lda.w playerData.current_active_charge
+    clc
+    adc.b $04
+    .AMINU P_DIR $02
+    sta.w playerData.current_active_charge
+    jsl Item.update_charge_display
+    rtl
+
+; Add single `charge_use` charge to current active item
+Item.add_charge_battery:
+    rep #$30
+    lda.w playerData.current_active_item
+    and #$00FF
+    bne @has_item
+        lda #0
+        rtl
+@has_item:
+    asl
+    tax
+    lda.l Item.items,X
+    tax
+    stx.b $00
+    sep #$20
+    lda.l bankaddr(Item.items) | itemdef_t.charge_max,X
+    sta.b $02
+    lda.l bankaddr(Item.items) | itemdef_t.charge_use,X
+    sta.b $04
+    lda.w playerData.current_active_charge
+    clc
+    adc.b $04
+    .AMINU P_DIR $02
+    sta.w playerData.current_active_charge
+    jsl Item.update_charge_display
+    rtl
+
+Item.update_charge_display:
+    rtl
+
 _use_deck_of_cards:
     jsl RoomRand_Update8
     .ACCU 16
@@ -442,8 +525,5 @@ _use_deck_of_cards:
     jsl Consumable.pickup
     jsl Item.update_charge_display
     rts
-
-Item.update_charge_display:
-    rtl
 
 .ENDS

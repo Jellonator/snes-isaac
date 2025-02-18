@@ -4,6 +4,7 @@
 
 .DEFINE currid 1
 SpriteDefs:
+.db 0, 0, 0, 0
 .MACRO .DefineSprite ARGS spritename, baseaddr, ntiles, nframes
     .DEFINE {spritename} currid
     .EXPORT {spritename}

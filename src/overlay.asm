@@ -96,11 +96,14 @@ Overlay.putline:
     sbc.b STRING_LEN
     sbc.b PREFIX_LEN
     sta.b SUFFIX_LEN
-    ; get bin
-    lda.l vqueueBinOffset+1
-    xba
+    ; get and increment vqueueBinOffset
+    rep #$20
     lda.l vqueueBinOffset
+    sec
+    sbc #64
+    sta.l vqueueBinOffset
     tax
+    sep #$20
     ; put PREFIX
     lda #0
 @loop_prefix:
@@ -168,12 +171,6 @@ Overlay.putline:
     sta.l vqueueOps.1.aAddr+2,X
     lda #VQUEUE_MODE_VRAM
     sta.l vqueueOps.1.mode,X
-    ; increment vqueueBinOffset
-    rep #$20
-    lda.l vqueueBinOffset
-    clc
-    adc #64
-    sta.l vqueueBinOffset
     ; increment line
     lda.l textLines
     inc A

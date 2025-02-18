@@ -208,3 +208,6 @@
     groundOpList_startPx ds MAX_GROUND_OPS
     groundOpList_endPx ds MAX_GROUND_OPS
 .ENDS
+
+.DEFINE vqueueBinData_End $4000
+.EXPORT vqueueBinData_End

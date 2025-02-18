@@ -154,7 +154,7 @@ LoadRoomSlotIntoLevel:
     ; This will also Update the vqueueBinData offset
     rep #$30 ; 16 bit AXY
     lda.w vqueueBinOffset
-    sta $10 ; $10 is copy of bin offset
+    sta.b $10 ; $10 is copy of bin offset
     clc
     adc #16*2*2 + 2*2
     sta $00
@@ -177,11 +177,11 @@ LoadRoomSlotIntoLevel:
     sta.l vqueueOps.1.vramAddr,X
     lda #VQUEUE_MODE_VRAM
     sta.l vqueueOps.1.mode,X ; VRAM mode
-    lda.w vqueueBinOffset
+    lda.w $10
     sta.l vqueueOps.1.aAddr,X
     clc
     adc #16*2
-    sta.w vqueueBinOffset
+    sta.w $10
     lda.w #$7F
     sta.l vqueueOps.1.aAddr+2,X
     lda #16*2

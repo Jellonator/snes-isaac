@@ -6,7 +6,7 @@
 ClearVQueue:
     rep #$20 ; 16b A
     stz.w vqueueNumOps
-    lda #loword(vqueueBinData)
+    lda #loword(vqueueBinData_End)
     sta.w vqueueBinOffset
     stz.w vqueueNumMiniOps
     rtl
@@ -96,7 +96,7 @@ ProcessVQueue:
 @process_vqueue_end:
     plb
     stz.w vqueueNumOps
-    lda.w #loword(vqueueBinData)
+    lda.w #loword(vqueueBinData_End)
     sta.w vqueueBinOffset
 ; Process miniqueue
     lda.w vqueueNumMiniOps

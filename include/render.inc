@@ -100,6 +100,9 @@
     lda #loword(ROMADDR)
     sta DMA0_SRCL
     lda.w vqueueBinOffset
+    sec
+    sbc #NBYTES
+    sta.w vqueueBinOffset
     sta WMADDL
     sep #$20 ; 8 bit A
     lda #bankbyte(ROMADDR)
@@ -349,16 +352,10 @@
 .ENDM
 
 ; Increments vqueue bin pointer by 'amount'
-.MACRO .VQueuePushBinA ARGS amount
+.MACRO .VQueuePushBinA ARGS method, amount
     lda.w vqueueBinOffset
-    adc amount
-    sta.w vqueueBinOffset
-.ENDM
-
-; Increments vqueue bin pointer by 'amount'
-.MACRO .VQueuePushBinI ARGS amount
-    lda.w vqueueBinOffset
-    adc #amount
+    sec
+    .g_instruction sbc, method, amount
     sta.w vqueueBinOffset
 .ENDM
 

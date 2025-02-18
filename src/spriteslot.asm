@@ -98,6 +98,9 @@ SpriteSlotMemTable:
 
 ; Allocate a 16x16 sprite slot
 ; Loads sprite id stored in A
+; Sprite ID format: ppppssss ssssssss
+;    where `s` is the Sprite index into SpriteDefs, and `p` is the palette index
+;    palette index is important for swizzling sprite data before upload
 ; Returns reference in X
 ; Useful for objects which don't need to upload sprites very often
 spriteman_new_sprite_ref:
@@ -155,25 +158,33 @@ spriteman_new_sprite_ref:
     lda #64
     sta.l vqueueOps.1.numBytes,X
     sta.l vqueueOps.2.numBytes,X
-    ; aAddr = SpriteDefs[spriteId].addr
+    ; get Sprite address
     lda.b $02
-    dec A
     asl
     asl
     phx
     tax
-    tay
     lda.l SpriteDefs + entityspriteinfo_t.sprite_addr,X
+    sta.b $04
+    lda.l SpriteDefs + entityspriteinfo_t.sprite_bank,X
+    sta.b $06
+    ; interlude: determine swizzle
+    lda.b $02
+    and #$3000
+    beq @no_swizzle
+        ; swizzle step 1: Copy sprite to vqueueBinData
+
+        ; swizzle step 2: Swizzle
+@no_swizzle:
+    ; aAddr = SpriteDefs[spriteId].addr
     plx
+    lda.b $04
     sta.l vqueueOps.1.aAddr,X
     clc
     adc #64
     sta.l vqueueOps.2.aAddr,X
-    sep #$20 ; 8B A
-    phx
-    tyx
-    lda.l SpriteDefs + entityspriteinfo_t.sprite_bank,X
-    plx
+    sep #$20
+    lda.b $06
     sta.l vqueueOps.1.aAddr+2,X
     sta.l vqueueOps.2.aAddr+2,X
     plb

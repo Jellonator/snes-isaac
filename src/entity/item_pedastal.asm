@@ -494,16 +494,18 @@ true_item_pedastal_tick_empty:
 _item_pedastal_free_gfx:
     rep #$20
     phy
-    php
     lda.w _item_gfxptr_item,Y
     tax
     jsl spriteman_unref
-    plp
+    rep #$30
     ply
     lda.w _item_gfxptr_pedastal,Y
     tax
+    phy
     jsl spriteman_unref
-    ldx.w _item_palette
+    rep #$30
+    ply
+    ldx.w _item_palette,Y
     jsl Palette.free
     rts
 

@@ -78,16 +78,6 @@ true_entity_shopkeeper_init:
     rep #$30
     lda #1
     sta.w entity_health,Y
-    ; load sprite
-    .REPT 4 INDEX i
-        phy
-        lda #sprite.shopkeepers.{i}
-        jsl spriteman_new_sprite_ref
-        rep #$30
-        ply
-        txa
-        sta.w loword(entity_custom.{i+1}),Y
-    .ENDR
     ; load palette
     phy
     ldy #loword(palettes.shopkeeper)
@@ -97,6 +87,19 @@ true_entity_shopkeeper_init:
     ply
     txa
     sta.w _palette,Y
+    .PaletteIndex_X_ToSpriteDef_A
+    sta.b $10
+    ; load sprite
+    .REPT 4 INDEX i
+        phy
+        lda #sprite.shopkeepers.{i}
+        ora.b $10
+        jsl spriteman_new_sprite_ref
+        rep #$30
+        ply
+        txa
+        sta.w loword(entity_custom.{i+1}),Y
+    .ENDR
     rtl
 
 .ENDS
@@ -116,10 +119,9 @@ entity_shopkeeper_free:
     ; free sprite
     .REPT 4 INDEX i
         phy
-        php
         ldx.w loword(entity_custom.{i+1}),Y
         jsl spriteman_unref
-        plp
+        rep #$30
         ply
     .ENDR
     ; free palette

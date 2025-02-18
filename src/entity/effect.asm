@@ -179,12 +179,11 @@ true_entity_effect_init:
     sta.w effect_palette_value,Y
     beq @skip_palette_upload
         phy
-        php
         tay
         lda.l bankaddr(EntityEffectTypes) + entityeffect_header_t.palette_depth,X
         and #$00FF
         jsl Palette.find_or_upload_transparent
-        plp
+        rep #$30
         ply
         txa
         sta.w effect_palette_ptr,Y

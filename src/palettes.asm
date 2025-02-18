@@ -27,6 +27,8 @@ Palette.init_data:
             .ELSE
                 stz.w paletteRefCount + (iy*8 + ix*2)
             .ENDIF
+            stz.w paletteAllocMode + (iy*8 + ix*2)
+            stz.w palettePtr + (iy*8 + ix*2)
         .ENDR
     .ENDR
     ; default palettes

@@ -139,33 +139,34 @@ entity_tile_init:
     sta.w entity_health,Y
     lda #3
     sta.w _entity_hits,Y
-    lda #sprite.tilesprite_fire
+    ; upload palette
     phy
-    jsl spriteman_new_sprite_ref
-    ply
-    txa
-    sta.w _entity_spriteptr,Y
-    rep #$30
-    phy
-    php
     ldy #loword(palettes.tilesprite_fire_normal)
     lda #8
     jsl Palette.find_or_upload_transparent
-    plp
+    rep #$30
     ply
     txa
     sta.w _entity_paletteptr,Y
+    .PaletteIndex_X_ToSpriteDef_A
+    ; upload sprite
+    ora #sprite.tilesprite_fire
+    phy
+    jsl spriteman_new_sprite_ref
+    rep #$30
+    ply
+    txa
+    sta.w _entity_spriteptr,Y
     rts
 
 entity_tile_free:
     .ACCU 16
     .INDEX 16
     phy
-    php
     lda.w _entity_spriteptr,Y
     tax
     jsl spriteman_unref
-    plp
+    rep #$30
     ply
     ldx.w _entity_paletteptr,Y
     jsl Palette.free

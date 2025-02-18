@@ -68,13 +68,17 @@ Palette.alloc_opaque:
                 inc A
             +
             cmp.b $00
-            bcs @found
+            bcsl @found
         .ENDIF
     .ENDR
 @skip:
     ; no palettes available, or 0 colors required: do nothing and return *a* palette
     ldx #3*8+2
     inc.w paletteRefCount,X
+    lda #$01
+    sta.w paletteAllocMode,X
+    lda #$03
+    sta.w paletteAllocMode+1,X
     rtl
 @found:
     ; we found a palette with available slots, now allocate subpalettes
@@ -104,6 +108,19 @@ Palette.alloc_opaque:
 @end:
     lda.b $01
     sta.w paletteAllocMode,X
+    phx
+    txa
+    and #$06
+    tax
+    lda.b $01
+@loop:
+    asl
+    dex
+    dex
+    bne @loop
+    ora #$01
+    plx
+    sta.w paletteAllocMode+1,X
     rtl
 
 ; Return first free palette for transparent sprites
@@ -136,13 +153,17 @@ Palette.alloc_transparent:
                 inc A
             +
             cmp.b $00
-            bcs @found
+            bcsl @found
         .ENDIF
         .UNDEFINE palindex
     .ENDR
 @skip:
     ; no palettes available, or 0 colors required: do nothing and return
     ldx #6*8+2
+    lda #$01
+    sta.w paletteAllocMode,X
+    lda #$03
+    sta.w paletteAllocMode+1,X
     rtl
 @found:
     ; we found a palette with available slots, now allocate subpalettes
@@ -172,6 +193,19 @@ Palette.alloc_transparent:
 @end:
     lda.b $01
     sta.w paletteAllocMode,X
+    phx
+    txa
+    and #$06
+    tax
+    lda.b $01
+@loop:
+    asl
+    dex
+    dex
+    bne @loop
+    ora #$01
+    plx
+    sta.w paletteAllocMode+1,X
     rtl
 
 ; Increment refcount for palette in X

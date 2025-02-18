@@ -17,12 +17,6 @@ entity_basic_fly_init:
     sta.w entity_timer,Y
     lda #BASE_HEALTH
     sta.w entity_health,Y
-    sep #$20
-    lda #0
-    ; sta.w entitycharacterdata_t.status_effects
-    sta.w entity_signal,Y
-    sta.w entity_mask,Y
-    rep #$20
     ; load sprite
     lda #sprite.enemy.attack_fly.0
     phy

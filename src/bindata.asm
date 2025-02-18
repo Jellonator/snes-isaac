@@ -304,12 +304,23 @@ PaletteDepthRequiredSlots:
         .ENDIF
     .ENDR
 
-PaletteIndexToPaletteSprite
+PaletteIndexToPaletteSprite:
     .REPT 8 INDEX i
         .REPT 4
             .dw (i << 2)
         .ENDR
     .ENDR
+
+PaletteAllocNeedSwizzle
+    .db 0 ; PALLETE_ALLOC_NONE 0
+    .db 0 ; PALLETE_ALLOC_8A  %00000001
+    .db 1 ; PALLETE_ALLOC_8B  %00000010
+    .db 0 ; PALLETE_ALLOC_12A %00000011
+    .db 1 ; PALLETE_ALLOC_8C  %00000100
+    .db 1 ; PALLETE_ALLOC_12C %00000101
+    .db 1 ; PALLETE_ALLOC_12B %00000110
+    .db 0 ; PALLETE_ALLOC_16  %00000111
+
 .ENDS
 
 .bank $20

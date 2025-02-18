@@ -284,7 +284,7 @@ _Room_Complete:
         lda #1
         jsl Item.add_charge_amount
         ; check for boss room
-        sep #$10
+        sep #$30
         ldx.b loadedRoomIndex
         lda.w mapTileTypeTable,X
         cmp #ROOMTYPE_BOSS

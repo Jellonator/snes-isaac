@@ -68,7 +68,9 @@
     palettePtr dsw 32
     ; number of references to each palette
     paletteRefCount dsw 32
-    ; number of references to each palette
+    ; Indicates allocation mode for each palette
+    ; [paletteAllocMode] stores bits for used subpalettes, relative to subpalette index
+    ; [paletteAllocMode] stores bits for used subpalettes, relative to palette index
     paletteAllocMode dsw 32
 ; VQueue data
     vqueueNumOps dw

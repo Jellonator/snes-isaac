@@ -21,7 +21,7 @@
 .DEFINE BASE_HP 180
 .DEFINE MAX_FLY_COUNT 8
 
-.DEFINE _tmp_entityid $08
+.DEFINE _tmp_entityid $10
 
 .BANK $02 SLOT "ROM"
 .SECTION "Entity Boss Duke of Flies Extra" SUPERFREE
@@ -285,7 +285,7 @@ entity_boss_duke_of_flies_init:
     sta.w entity_state,Y
     lda #60
     sta.w entity_timer,Y
-    sty.b $00
+    sty.b _tmp_entityid
     .REPT 3 INDEX iy
         .REPT 3 INDEX ix
             ; get slot
@@ -293,7 +293,7 @@ entity_boss_duke_of_flies_init:
             jsl spriteman_get_raw_slot
             rep #$30
             txa
-            ldy.b $00
+            ldy.b _tmp_entityid
             sta.w loword(entity_char_custom.{iy * 3 + ix + 1}),Y
             ; write to slot
             pea bankbyte(spritedata.boss_duke_of_flies) * $0101 ; >2
@@ -306,7 +306,7 @@ entity_boss_duke_of_flies_init:
             pla ; <2
         .ENDR
     .ENDR
-    ldy.b $00
+    ldy.b _tmp_entityid
     rep #$30
     lda #TARGET_VELOC
     sta.w duke_target_velocx,Y

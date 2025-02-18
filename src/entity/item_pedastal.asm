@@ -144,6 +144,19 @@ _item_pedastal_alloc_gfx:
     and #$00FF
     clc
     adc #sprite.item.0
+    sta.b $14
+    ; find palette slot for pedastal
+    phy
+    lda.b $10
+    ldy.b $12
+    jsl Palette.find_or_upload_opaque
+    rep #$30
+    ply
+    txa
+    sta.w _item_palette,Y
+    ; load sprite
+    .PaletteIndex_X_ToSpriteDef_A
+    ora.b $14
     phy
     jsl spriteman_new_sprite_ref
     rep #$30
@@ -158,15 +171,6 @@ _item_pedastal_alloc_gfx:
     ply
     txa
     sta.w _item_gfxptr_pedastal,Y
-    ; find palette slot for pedastal
-    phy
-    lda.b $10
-    ldy.b $12
-    jsl Palette.find_or_upload_opaque
-    rep #$30
-    ply
-    txa
-    sta.w _item_palette,Y
     rts
 
 _draw_normal:

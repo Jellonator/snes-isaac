@@ -93,30 +93,38 @@
 .DEFINE PALLETE_ALLOC_16  %00000111
 
 ; Copy memory from ROM into the next available VQUEUE BIN buffer
-.MACRO .CopyROMToVQueueBin ARGS ROMADDR, NBYTES
+.MACRO .CopyROMToVQueueBin ARGS METHOD, ROMADDR, NBYTES
     rep #$20 ; 16 bit A
     lda #NBYTES
-    sta DMA0_SIZE
-    lda #loword(ROMADDR)
-    sta DMA0_SRCL
+    sta.l DMA0_SIZE
+    .IF METHOD == P_IMM
+        lda #loword(ROMADDR)
+    .ELSE
+        .g_instruction lda METHOD, ROMADDR
+    .ENDIF
+    sta.l DMA0_SRCL
     lda.w vqueueBinOffset
     sec
     sbc #NBYTES
     sta.w vqueueBinOffset
-    sta WMADDL
+    sta.l WMADDL
     sep #$20 ; 8 bit A
-    lda #bankbyte(ROMADDR)
-    sta DMA0_SRCH
+    .IF METHOD == P_IMM
+        lda #bankbyte(ROMADDR)
+    .ELSE
+        .g_instruction lda METHOD, (ROMADDR+2)
+    .ENDIF
+    sta.l DMA0_SRCH
     lda #$7F
-    sta WMADDH
+    sta.l WMADDH
     ; Absolute address, no increment, 1 byte at a time
     lda #%00000000
-    sta DMA0_CTL
+    sta.l DMA0_CTL
     ; Write to WRAM
     lda #$80
-    sta DMA0_DEST
+    sta.l DMA0_DEST
     lda #$01
-    sta MDMAEN
+    sta.l MDMAEN
 .ENDM
 
 ; Clear a section of WRAM
@@ -396,4 +404,14 @@
 
 .MACRO .PaletteIndexToPaletteSpriteA
     .DivideStatic 4
+.ENDM
+
+.MACRO .PaletteIndex_X_ToSpriteDef_A
+    lda.w paletteAllocMode+1,X
+    ror
+    ror
+    ror
+    ror
+    ror
+    and #$E000
 .ENDM

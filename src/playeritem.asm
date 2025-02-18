@@ -347,7 +347,7 @@ _pickup_map:
 .DSTRUCT Item.definitions.deck_of_cards INSTANCEOF itemdef_t VALUES
     sprite_index: .db 10
     palette_ptr: .dw palettes.item_deck_of_cards
-    palette_depth: .db 4
+    palette_depth: .db 8
     flags: .db ITEMFLAG_ACTIVE
     on_pickup: .dw _pickup_empty
     on_use: .dw _use_deck_of_cards

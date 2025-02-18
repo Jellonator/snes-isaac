@@ -149,7 +149,7 @@ LoadRoomSlotIntoLevel:
     sta.b currentRoomRngAddress_High
 ; load tiles
     ; Copy default data to vqueueBinData
-    .CopyROMToVQueueBin EmptyRoomTiles, 16*16*2
+    .CopyROMToVQueueBin P_IMM, EmptyRoomTiles, 16*16*2
     ; Create operations. 12 are required to copy whole map.
     ; This will also Update the vqueueBinData offset
     rep #$30 ; 16 bit AXY

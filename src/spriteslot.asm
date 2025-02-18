@@ -96,11 +96,14 @@ SpriteSlotMemTable:
         .dw ((((i & $7) * 2) + ((i & $38) * 4)) * 16) + SPRITE2_BASE_ADDR
     .ENDR
 
+.DEFINE SPRITEID_PAL $E000
+.DEFINE SPRITEID_SPRITE $1FFF
+
 ; Allocate a 16x16 sprite slot
 ; Loads sprite id stored in A
-; Sprite ID format: ppppssss ssssssss
-;    where `s` is the Sprite index into SpriteDefs, and `p` is the palette index
-;    palette index is important for swizzling sprite data before upload
+; Sprite ID format: pppsssss ssssssss
+;    where `s` is the Sprite index into SpriteDefs, and `p` is the palette format
+;    palette format is important for swizzling sprite data before upload
 ; Returns reference in X
 ; Useful for objects which don't need to upload sprites very often
 spriteman_new_sprite_ref:
@@ -160,6 +163,7 @@ spriteman_new_sprite_ref:
     sta.l vqueueOps.2.numBytes,X
     ; get Sprite address
     lda.b $02
+    and #SPRITEID_SPRITE
     asl
     asl
     phx
@@ -170,11 +174,31 @@ spriteman_new_sprite_ref:
     sta.b $06
     ; interlude: determine swizzle
     lda.b $02
-    and #$3000
+    rol
+    rol
+    rol
+    rol
+    and #$0007
+    sta.b $08
+    tax
+    lda.l PaletteAllocNeedSwizzle,X
+    and #$00FF
     beq @no_swizzle
         ; swizzle step 1: Copy sprite to vqueueBinData
-
+        .CopyROMToVQueueBin P_DIR, $04, 128
         ; swizzle step 2: Swizzle
+        rep #$30
+        ldx.w vqueueBinOffset
+        lda.b $08
+        ldy #4
+        jsl SpritePaletteSwizzle_B7F
+        ; step 3: set new address
+        sep #$20
+        lda #$7F
+        sta.b $06
+        rep #$20
+        lda.w vqueueBinOffset
+        sta.b $04
 @no_swizzle:
     ; aAddr = SpriteDefs[spriteId].addr
     plx
@@ -223,6 +247,89 @@ spriteman_unref:
     lda.w loword(spriteTableKey),X
     jsl table_remove_sprite
     plb
+    rtl
+
+; Swizzle a sprite that is located in bank 7F according to palette
+; Parameters:
+;     X - pointer to sprite
+;     A - swizzle mode (0-7); see PALLETE_ALLOC_
+;     Y - number of tiles
+; Only the third and fourth bitplanes are modified
+SpritePaletteSwizzle_B7F:
+    .INDEX 16
+    .ACCU 16
+    sep #$20
+    cmp #PALLETE_ALLOC_8B
+    beql _Swizzle_B7F_B_AB@entry
+    cmp #PALLETE_ALLOC_12B
+    beql _Swizzle_B7F_B_AB@entry
+    cmp #PALLETE_ALLOC_8C
+    beql _Swizzle_B7F_A_A@entry
+    cmp #PALLETE_ALLOC_12C
+    beql _Swizzle_B7F_AB_B@entry
+    rtl
+
+_Swizzle_B7F_A_A:
+    .INDEX 16
+    .ACCU 8
+@loop:
+    rep #$20
+    txa
+    clc
+    adc #32
+    tax
+    sep #$20
+@entry:
+    .REPT 8 INDEX i
+        lda.l $7F0000+2*i+16,X
+        sta.l $7F0000+2*i+17,X
+    .ENDR
+    dey
+    bne @loop
+    rtl
+
+_Swizzle_B7F_B_AB:
+    .INDEX 16
+    .ACCU 8
+@loop:
+    rep #$20
+    txa
+    clc
+    adc #32
+    tax
+    sep #$20
+@entry:
+    .REPT 8 INDEX i
+        lda.l $7F0000+2*i+17,X
+        xba
+        lda.l $7F0000+2*i+17,X
+        ora.l $7F0000+2*i+16,X
+        sta.l $7F0000+2*i+17,X
+        xba
+        sta.l $7F0000+2*i+16,X
+    .ENDR
+    dey
+    bnel @loop
+    rtl
+
+_Swizzle_B7F_AB_B:
+    .INDEX 16
+    .ACCU 8
+@loop:
+    rep #$20
+    txa
+    clc
+    adc #32
+    tax
+    sep #$20
+@entry:
+    .REPT 8 INDEX i
+        lda.l $7F0000+2*i+17,X
+        ora.l $7F0000+2*i+16,X
+        sta.l $7F0000+2*i+16,X
+    .ENDR
+    dey
+    bne @loop
     rtl
 
 .ENDS

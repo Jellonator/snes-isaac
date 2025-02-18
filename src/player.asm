@@ -313,6 +313,12 @@ _PlayerHandleDamaged:
     lda.w playerData.invuln_timer
     bne +
         jsl _PlayerTakeHealth
+        sep #$20
+        lda.w player_signal
+        bit #ENTITY_SIGNAL_DOUBLEDAMAGE
+        beq ++
+            jsl _PlayerTakeHealth
+        ++:
     +:
     rtl
 
@@ -499,6 +505,7 @@ PlayerInit:
     jsl Player.update_money_display
     jsl Consumable.update_display
     sep #$30
+    stz.w player_signal
     lda #HEALTH_REDHEART_FULL
     sta.w playerData.healthSlots.1
     sta.w playerData.healthSlots.2
@@ -536,6 +543,7 @@ PlayerEnterFloor:
     stz.w playerData.invuln_timer
     jsl PlayerDiscoverNearbyRooms
     sep #$30
+    stz.w player_signal
     stz.w playerData.walk_frame
     stz.w playerData.bomb_wait_timer
     stz.w playerData.anim_wait_timer
@@ -909,6 +917,8 @@ PlayerUpdate:
     bpl +
         jsl _PlayerHandleDamaged
     +:
+    sep #$20
+    stz.w player_signal
     rep #$30
     stz.w player_damageflag
     dec.w playerData.invuln_timer

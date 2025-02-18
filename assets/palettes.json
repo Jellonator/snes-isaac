@@ -48,6 +48,26 @@
         "src": "assets/palettes/item_deck_of_cards.hex"
     },
     {
+        "name": "item_spoon_bender",
+        "src": "assets/palettes/item_spoon_bender.hex"
+    },
+    {
+        "name": "item_map",
+        "src": "assets/palettes/item_map.hex"
+    },
+    {
+        "name": "item_dinner",
+        "src": "assets/palettes/item_dinner.hex"
+    },
+    {
+        "name": "item_polyphemus",
+        "src": "assets/palettes/item_polyphemus.hex"
+    },
+    {
+        "name": "item_brother_bobby",
+        "src": "assets/palettes/item_brother_bobby.hex"
+    },
+    {
         "name": "stage_caves1",
         "src": "assets/palettes/stage_caves1.hex"
     },

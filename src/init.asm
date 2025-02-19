@@ -206,7 +206,7 @@ Start2:
     pla
     ; copy font to VRAM
     pea BG1_CHARACTER_BASE_ADDR + 16*8*8*2
-    pea 16*3
+    pea 16*4
     sep #$20 ; 8 bit A
     lda #bankbyte(spritedata.UI_font)
     pha

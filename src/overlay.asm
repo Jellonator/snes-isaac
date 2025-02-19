@@ -81,6 +81,8 @@ Overlay.putline:
     .DEFINE STRING_LEN $01
     .DEFINE SUFFIX_LEN $02
     .DEFINE STRING_PTR $03
+    .DEFINE BEGIN $05
+    .DEFINE END $06
     rep #$10
     sep #$20
     stx.b STRING_PTR
@@ -91,11 +93,16 @@ Overlay.putline:
     sbc.b STRING_LEN
     lsr
     sta.b PREFIX_LEN
+    sta.b BEGIN
     lda #32
     sec
     sbc.b STRING_LEN
     sbc.b PREFIX_LEN
     sta.b SUFFIX_LEN
+    lda.b BEGIN
+    clc
+    adc.b STRING_LEN
+    sta.b END
     ; get and increment vqueueBinOffset
     rep #$20
     lda.l vqueueBinOffset
@@ -140,6 +147,28 @@ Overlay.putline:
     inx
     jmp @loop_suffix
 @end_suffix:
+; put additional flair
+    rep #$30
+    lda.b BEGIN
+    and #$00FF
+    asl
+    clc
+    adc.l vqueueBinOffset
+    tax
+    lda #deft($BE, 4) | T_HIGHP
+    sta.l $7F0000 - 4,X
+    lda #deft($BF, 4) | T_HIGHP
+    sta.l $7F0000 - 2,X
+    lda.b END
+    and #$00FF
+    asl
+    clc
+    adc.l vqueueBinOffset
+    tax
+    lda #deft($BE, 4) | T_HIGHP | T_FLIPH
+    sta.l $7F0000 + 2,X
+    lda #deft($BF, 4) | T_HIGHP | T_FLIPH
+    sta.l $7F0000,X
 ; write to vqueue
     ; get vqueue ptr
     rep #$30

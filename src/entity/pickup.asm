@@ -132,18 +132,17 @@ _handle_penny:
     rep #$30 ; 16b A
     phy
     php
-    sep #$08 ; enable decimal
+    sep #$28 ; enable decimal
     lda.w playerData.money
-    clc
-    adc #$01
     sec
     sbc.w pickup_price,Y
-    cmp #$99
+    clc
+    adc #$01
     bcc +
         lda #$99
     +:
-    sta.w playerData.money
     rep #$08 ; disable decimal
+    sta.w playerData.money
     jsl Player.update_money_display
     plp
     ply
@@ -155,18 +154,17 @@ _handle_nickle:
     rep #$30 ; 16b A
     phy
     php
-    sep #$08 ; enable decimal
+    sep #$28 ; enable decimal
     lda.w playerData.money
-    clc
-    adc #$05
     sec
     sbc.w pickup_price,Y
-    cmp #$99
+    clc
+    adc #$05
     bcc +
         lda #$99
     +:
-    sta.w playerData.money
     rep #$08 ; disable decimal
+    sta.w playerData.money
     jsl Player.update_money_display
     plp
     ply
@@ -178,18 +176,17 @@ _handle_dime:
     rep #$30 ; 16b A
     phy
     php
-    sep #$08 ; enable decimal
+    sep #$28 ; enable decimal
     lda.w playerData.money
-    clc
-    adc #$10
     sec
     sbc.w pickup_price,Y
-    cmp #$99
+    clc
+    adc #$10
     bcc +
         lda #$99
     +:
-    sta.w playerData.money
     rep #$08 ; disable decimal
+    sta.w playerData.money
     jsl Player.update_money_display
     plp
     ply
@@ -346,6 +343,7 @@ true_entity_pickup_tick:
     ply
     ; collision detection
     .EntityEasySetBox 16 16
+    sep #$20
     lda.w playerData.money
     cmp.w pickup_price,Y
     bcc @skip_pickup

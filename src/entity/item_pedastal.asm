@@ -402,9 +402,6 @@ true_item_pedastal_tick_base:
         lda.w loword(entity_flags),Y
         ora #ENTITY_FLAGS_DONT_SERIALIZE
         sta.w loword(entity_flags),Y
-        sep #$20
-        lda #0
-        sta.w _item_price,Y
         ; reduce money
         sep #$28
         lda.w _item_price,Y
@@ -416,6 +413,10 @@ true_item_pedastal_tick_base:
             jsl Player.update_money_display
         @dont_subtract_money:
         rep #$08
+        ; set price to 0
+        sep #$20
+        lda #0
+        sta.w _item_price,Y
 @no_player_col:
     rtl
 

@@ -412,14 +412,14 @@ true_entity_pickup_tick:
             lsr
             lsr
             lsr
-            ora #deft($70,5) | T_HIGHP
+            ora #deft(TILE_TEXT_UINUMBER_BASE,5) | T_HIGHP
         +:
         sta.l vqueueMiniOps.1.data,X
         lda.w pickup_price,Y
         and #$000F
-        ora #deft($70,5) | T_HIGHP
+        ora #deft(TILE_TEXT_UINUMBER_BASE,5) | T_HIGHP
         sta.l vqueueMiniOps.2.data,X
-        lda #deft($7A,5) | T_HIGHP
+        lda #deft(TILE_TEXT_UINUMBER_BASE+10,5) | T_HIGHP
         sta.l vqueueMiniOps.3.data,X
 @no_put_price_text:
     rtl

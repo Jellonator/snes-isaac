@@ -28,8 +28,9 @@
 .DEFINE CONSUMABLEID_TAROT_LAST CONSUMABLE_TAROT_WORLD
 
 .STRUCT consumable_t
-    name ds 32
-    tagline ds 32
+    ; 28 chars + null
+    name ds 29
+    tagline ds 29
     sprite_ptr dl
     sprite_palette dw
     on_use dl

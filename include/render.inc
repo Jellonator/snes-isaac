@@ -18,7 +18,7 @@
 ; granularity is (C % $1000) words
 .DEFINE SPRITE2_BASE_ADDR $7000
 ; tile addresses; granularity is (X % $0400) words
-.DEFINE BG1_TILE_BASE_ADDR $5800
+.DEFINE BG1_TILE_BASE_ADDR $5400
 .DEFINE BG2_TILE_BASE_ADDR $5C00
 .DEFINE BG3_TILE_BASE_ADDR $0C00
 ; character addresses; granularity is (X % $1000) words

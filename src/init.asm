@@ -192,39 +192,11 @@ Start2:
     pla
     ; copy UI to VRAM
     pea BG1_CHARACTER_BASE_ADDR
-    pea 16*6
+    pea 16*16
     sep #$20 ; 8 bit A
     lda #bankbyte(spritedata.UI)
     pha
     pea spritedata.UI
-    jsl CopySprite
-    sep #$20 ; 8 bit A
-    pla
-    rep #$20 ; 16 bit A
-    pla
-    pla
-    pla
-    ; copy font to VRAM
-    pea BG1_CHARACTER_BASE_ADDR + 16*8*8*2
-    pea 16*4
-    sep #$20 ; 8 bit A
-    lda #bankbyte(spritedata.UI_font)
-    pha
-    pea spritedata.UI_font
-    jsl CopySprite
-    sep #$20 ; 8 bit A
-    pla
-    rep #$20 ; 16 bit A
-    pla
-    pla
-    pla
-    ; copy UI numbers to VRAM
-    pea BG1_CHARACTER_BASE_ADDR + 16*7*8*2
-    pea 16*1
-    sep #$20 ; 8 bit A
-    lda #bankbyte(spritedata.UI_numbers)
-    pha
-    pea spritedata.UI_numbers
     jsl CopySprite
     sep #$20 ; 8 bit A
     pla

@@ -7,7 +7,7 @@
 
 .DSTRUCT Consumable.definitions.null INSTANCEOF consumable_t VALUES
     name: .ASCSTR "null", 0
-    tagline: .ASCSTR "May you find a real consumable", 0
+    tagline: .ASCSTR "May you find a real card", 0
     sprite_ptr: .dl tarot_sprite(22)
     sprite_palette: .dw 0
     on_use: .dl _empty_use
@@ -15,7 +15,7 @@
 
 .DSTRUCT Consumable.definitions.tarot_fool INSTANCEOF consumable_t VALUES
     name: .ASCSTR "The Fool", 0
-    tagline: .ASCSTR "TODO", 0
+    tagline: .ASCSTR "Where journey begins", 0
     sprite_ptr: .dl tarot_sprite(0)
     sprite_palette: .dw loword(palettes.tarot_cards1)
     on_use: .dl _tarot_fool
@@ -23,7 +23,7 @@
 
 .DSTRUCT Consumable.definitions.tarot_magician INSTANCEOF consumable_t VALUES
     name: .ASCSTR "The Magician", 0
-    tagline: .ASCSTR "TODO", 0
+    tagline: .ASCSTR "May you never miss your goal", 0
     sprite_ptr: .dl tarot_sprite(1)
     sprite_palette: .dw loword(palettes.tarot_cards_magician)
     on_use: .dl _empty_use
@@ -31,7 +31,7 @@
 
 .DSTRUCT Consumable.definitions.tarot_high_priestess INSTANCEOF consumable_t VALUES
     name: .ASCSTR "The High priestess", 0
-    tagline: .ASCSTR "TODO", 0
+    tagline: .ASCSTR "Mother is watching you", 0
     sprite_ptr: .dl tarot_sprite(2)
     sprite_palette: .dw loword(palettes.tarot_cards_high_priestess)
     on_use: .dl _empty_use
@@ -39,7 +39,7 @@
 
 .DSTRUCT Consumable.definitions.tarot_empress INSTANCEOF consumable_t VALUES
     name: .ASCSTR "The Empress", 0
-    tagline: .ASCSTR "TODO", 0
+    tagline: .ASCSTR "May your rage bring power", 0
     sprite_ptr: .dl tarot_sprite(3)
     sprite_palette: .dw loword(palettes.tarot_cards_empress)
     on_use: .dl _empty_use
@@ -47,7 +47,7 @@
 
 .DSTRUCT Consumable.definitions.tarot_emperor INSTANCEOF consumable_t VALUES
     name: .ASCSTR "The Emperor", 0
-    tagline: .ASCSTR "TODO", 0
+    tagline: .ASCSTR "Challenge me!", 0
     sprite_ptr: .dl tarot_sprite(4)
     sprite_palette: .dw loword(palettes.tarot_cards_emperor)
     on_use: .dl _tarot_emperor
@@ -55,7 +55,7 @@
 
 .DSTRUCT Consumable.definitions.tarot_hierophant INSTANCEOF consumable_t VALUES
     name: .ASCSTR "The Hierophant", 0
-    tagline: .ASCSTR "TODO", 0
+    tagline: .ASCSTR "Two prayers for the lost", 0
     sprite_ptr: .dl tarot_sprite(5)
     sprite_palette: .dw loword(palettes.tarot_cards1)
     on_use: .dl _empty_use
@@ -63,7 +63,7 @@
 
 .DSTRUCT Consumable.definitions.tarot_lovers INSTANCEOF consumable_t VALUES
     name: .ASCSTR "The Lovers", 0
-    tagline: .ASCSTR "TODO", 0
+    tagline: .ASCSTR "May you prosper", 0
     sprite_ptr: .dl tarot_sprite(6)
     sprite_palette: .dw loword(palettes.tarot_cards_lovers)
     on_use: .dl _empty_use
@@ -71,7 +71,7 @@
 
 .DSTRUCT Consumable.definitions.tarot_chariot INSTANCEOF consumable_t VALUES
     name: .ASCSTR "The Chariot", 0
-    tagline: .ASCSTR "TODO", 0
+    tagline: .ASCSTR "May nothing stand before you", 0
     sprite_ptr: .dl tarot_sprite(7)
     sprite_palette: .dw loword(palettes.tarot_cards1)
     on_use: .dl _empty_use
@@ -79,7 +79,7 @@
 
 .DSTRUCT Consumable.definitions.tarot_strength INSTANCEOF consumable_t VALUES
     name: .ASCSTR "Strength", 0
-    tagline: .ASCSTR "TODO", 0
+    tagline: .ASCSTR "May your power bring rage", 0
     sprite_ptr: .dl tarot_sprite(8)
     sprite_palette: .dw loword(palettes.tarot_cards1)
     on_use: .dl _empty_use
@@ -87,15 +87,15 @@
 
 .DSTRUCT Consumable.definitions.tarot_hermit INSTANCEOF consumable_t VALUES
     name: .ASCSTR "The Hermit", 0
-    tagline: .ASCSTR "TODO", 0
+    tagline: .ASCSTR "May you find solace", 0
     sprite_ptr: .dl tarot_sprite(9)
-    sprite_palette: .dw loword(palettes.tarot_cards1)
+    sprite_palette: .dw loword(palettes.tarot_cards_hermit)
     on_use: .dl _tarot_hermit
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_wheel_of_fortune INSTANCEOF consumable_t VALUES
     name: .ASCSTR "Wheel of Fortune", 0
-    tagline: .ASCSTR "TODO", 0
+    tagline: .ASCSTR "Spin the wheel of destiny", 0
     sprite_ptr: .dl tarot_sprite(10)
     sprite_palette: .dw loword(palettes.tarot_cards_wheel_of_fortune)
     on_use: .dl _empty_use
@@ -103,7 +103,7 @@
 
 .DSTRUCT Consumable.definitions.tarot_justice INSTANCEOF consumable_t VALUES
     name: .ASCSTR "Justice", 0
-    tagline: .ASCSTR "TODO", 0
+    tagline: .ASCSTR "May your future be balanced", 0
     sprite_ptr: .dl tarot_sprite(11)
     sprite_palette: .dw loword(palettes.tarot_cards1)
     on_use: .dl _empty_use
@@ -111,7 +111,7 @@
 
 .DSTRUCT Consumable.definitions.tarot_hanged_man INSTANCEOF consumable_t VALUES
     name: .ASCSTR "The Hanged Man", 0
-    tagline: .ASCSTR "TODO", 0
+    tagline: .ASCSTR "May you find enlightenment", 0
     sprite_ptr: .dl tarot_sprite(12)
     sprite_palette: .dw loword(palettes.tarot_cards1)
     on_use: .dl _empty_use
@@ -119,7 +119,7 @@
 
 .DSTRUCT Consumable.definitions.tarot_death INSTANCEOF consumable_t VALUES
     name: .ASCSTR "Death", 0
-    tagline: .ASCSTR "TODO", 0
+    tagline: .ASCSTR "Lay waste to your opponents", 0
     sprite_ptr: .dl tarot_sprite(13)
     sprite_palette: .dw loword(palettes.tarot_cards1)
     on_use: .dl _empty_use
@@ -127,7 +127,7 @@
 
 .DSTRUCT Consumable.definitions.tarot_temperance INSTANCEOF consumable_t VALUES
     name: .ASCSTR "Temperance", 0
-    tagline: .ASCSTR "TODO", 0
+    tagline: .ASCSTR "May you be pure in heart", 0
     sprite_ptr: .dl tarot_sprite(14)
     sprite_palette: .dw loword(palettes.tarot_cards1)
     on_use: .dl _empty_use
@@ -135,7 +135,7 @@
 
 .DSTRUCT Consumable.definitions.tarot_devil INSTANCEOF consumable_t VALUES
     name: .ASCSTR "The Devil", 0
-    tagline: .ASCSTR "TODO", 0
+    tagline: .ASCSTR "Revel in dark power", 0
     sprite_ptr: .dl tarot_sprite(15)
     sprite_palette: .dw loword(palettes.tarot_cards1)
     on_use: .dl _empty_use
@@ -143,15 +143,15 @@
 
 .DSTRUCT Consumable.definitions.tarot_tower INSTANCEOF consumable_t VALUES
     name: .ASCSTR "The Tower", 0
-    tagline: .ASCSTR "TODO", 0
+    tagline: .ASCSTR "Destruction brings creation", 0
     sprite_ptr: .dl tarot_sprite(16)
     sprite_palette: .dw loword(palettes.tarot_cards1)
     on_use: .dl _empty_use
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_star INSTANCEOF consumable_t VALUES
-    name: .ASCSTR "The Star", 0
-    tagline: .ASCSTR "TODO", 0
+    name: .ASCSTR "The Stars", 0
+    tagline: .ASCSTR "May you find what you desire", 0
     sprite_ptr: .dl tarot_sprite(17)
     sprite_palette: .dw loword(palettes.tarot_cards_star)
     on_use: .dl _tarot_star
@@ -159,7 +159,7 @@
 
 .DSTRUCT Consumable.definitions.tarot_moon INSTANCEOF consumable_t VALUES
     name: .ASCSTR "The Moon", 0
-    tagline: .ASCSTR "TODO", 0
+    tagline: .ASCSTR "May you find what you lost", 0
     sprite_ptr: .dl tarot_sprite(18)
     sprite_palette: .dw loword(palettes.tarot_cards1)
     on_use: .dl _tarot_moon
@@ -167,7 +167,7 @@
 
 .DSTRUCT Consumable.definitions.tarot_sun INSTANCEOF consumable_t VALUES
     name: .ASCSTR "The Sun", 0
-    tagline: .ASCSTR "TODO", 0
+    tagline: .ASCSTR "Bask in the healing light", 0
     sprite_ptr: .dl tarot_sprite(19)
     sprite_palette: .dw loword(palettes.tarot_cards1)
     on_use: .dl _empty_use
@@ -175,7 +175,7 @@
 
 .DSTRUCT Consumable.definitions.tarot_judgement INSTANCEOF consumable_t VALUES
     name: .ASCSTR "Judgement", 0
-    tagline: .ASCSTR "TODO", 0
+    tagline: .ASCSTR "Judge lest ye be judged", 0
     sprite_ptr: .dl tarot_sprite(20)
     sprite_palette: .dw loword(palettes.tarot_cards1)
     on_use: .dl _empty_use
@@ -183,7 +183,7 @@
 
 .DSTRUCT Consumable.definitions.tarot_world INSTANCEOF consumable_t VALUES
     name: .ASCSTR "The World", 0
-    tagline: .ASCSTR "TODO", 0
+    tagline: .ASCSTR "May you find your way", 0
     sprite_ptr: .dl tarot_sprite(21)
     sprite_palette: .dw loword(palettes.tarot_cards1)
     on_use: .dl _empty_use

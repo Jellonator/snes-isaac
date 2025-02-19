@@ -132,6 +132,10 @@
         "src": "assets/palettes/tarot_cards_wheel_of_fortune.hex"
     },
     {
+        "name": "tarot_cards_hermit",
+        "src": "assets/palettes/tarot_cards_hermit.hex"
+    },
+    {
         "name": "tilesprite_fire_normal",
         "src": "assets/palettes/tilesprite_fire_normal.hex"
     }

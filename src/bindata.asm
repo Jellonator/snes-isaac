@@ -35,8 +35,8 @@ DefaultUiData:
     .dw deft($EF,4) | T_HIGHP
     .dw deft($12,6) | T_HIGHP | T_FLIPH
     .dw deft($01,6) | T_HIGHP
-    .dw deft($70,5) | T_HIGHP
-    .dw deft($70,5) | T_HIGHP
+    .dw deft(TILE_TEXT_UINUMBER_BASE + 0,5) | T_HIGHP
+    .dw deft(TILE_TEXT_UINUMBER_BASE + 0,5) | T_HIGHP
     .REPT 24
         .dw 0
     .ENDR
@@ -47,8 +47,8 @@ DefaultUiData:
     .dw deft($FF,4) | T_HIGHP
     .dw deft($12,6) | T_HIGHP | T_FLIPH
     .dw deft($11,5) | T_HIGHP
-    .dw deft($70,5) | T_HIGHP
-    .dw deft($70,5) | T_HIGHP
+    .dw deft(TILE_TEXT_UINUMBER_BASE + 0,5) | T_HIGHP
+    .dw deft(TILE_TEXT_UINUMBER_BASE + 0,5) | T_HIGHP
     .REPT 24
         .dw 0
     .ENDR
@@ -59,8 +59,8 @@ DefaultUiData:
     .dw deft($03,6) | T_HIGHP | T_FLIPV
     .dw deft($02,6) | T_HIGHP | T_FLIPH | T_FLIPV
     .dw deft($21,5) | T_HIGHP
-    .dw deft($70,5) | T_HIGHP
-    .dw deft($70,5) | T_HIGHP
+    .dw deft(TILE_TEXT_UINUMBER_BASE + 0,5) | T_HIGHP
+    .dw deft(TILE_TEXT_UINUMBER_BASE + 0,5) | T_HIGHP
     .REPT 24
         .dw 0
     .ENDR

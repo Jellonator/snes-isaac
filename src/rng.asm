@@ -101,10 +101,11 @@ RoomRand_Update16:
 RngGameInitialize:
     ; TODO: use better method
     rep #$20 ; 16 bit A
-    lda #$0001
+    lda #$DEAD
     sta.w gameSeed.low
-    sta.w gameSeed.high
     sta.w gameSeedStored.low
+    lda #$BEEF
+    sta.w gameSeed.high
     sta.w gameSeedStored.high
     jsr _RngGeneratorInitStage
     rtl

@@ -4,22 +4,25 @@
 .DEFINE SQRT2 sqrt(2.0)
 
 .ASCIITABLE
-    MAP '0' TO '9' = $80
-    MAP 'A' TO 'Z' = $8A
-    MAP 'a' TO 'z' = $8A
-    MAP '.' = $A4
-    MAP ',' = $A5
-    MAP '!' = $A6
-    MAP '?' = $A7
-    MAP "'" = $A8
-    MAP '"' = $A9
-    MAP ':' = $AA
-    MAP ' ' = $AB
-    MAP $80 = $AD
-    MAP $81 = $AE
-    MAP $82 = $AF
+    MAP '0' TO '9' = $60
+    MAP 'A' TO 'Z' = $6A
+    MAP 'a' TO 'z' = $6A
+    MAP '.' = $84
+    MAP ',' = $85
+    MAP '!' = $86
+    MAP '?' = $87
+    MAP "'" = $88
+    MAP '"' = $89
+    MAP ':' = $8A
+    MAP ' ' = $8B
+    MAP $80 = $8D
+    MAP $81 = $8E
+    MAP $82 = $8F
     MAP $00 = $00
 .ENDA
+
+.DEFINE TILE_TEXT_UINUMBER_BASE $90
+.DEFINE TILE_TEXT_FONT_BASE $60
 
 ; JOY BUTTONS
 .DEFINE JOY_A $0080 ; RIGHT

@@ -156,6 +156,7 @@ Start2:
     lda #%00000000 | (SPRITE1_BASE_ADDR >> 13) | ((SPRITE2_BASE_ADDR - SPRITE1_BASE_ADDR - $1000) >> 9)
     sta OBSEL
     ; copy palettes to CGRAM
+    pea 32
     PEA $5000 + bankbyte(palettes.ui_light.w)
     PEA palettes.ui_light.w
     jsl CopyPalette
@@ -164,6 +165,12 @@ Start2:
     PLA
     PEA $6000 + bankbyte(palettes.ui_gold.w)
     PEA palettes.ui_gold.w
+    jsl CopyPalette
+    rep #$20 ; 16 bit A
+    PLA
+    PLA
+    PEA $4000 + bankbyte(palettes.item_inactive.w)
+    PEA palettes.item_inactive.w
     jsl CopyPalette
     rep #$20 ; 16 bit A
     PLA
@@ -182,6 +189,7 @@ Start2:
         PLA
         PLA
     .ENDR
+    pla
     ; copy UI to VRAM
     pea BG1_CHARACTER_BASE_ADDR
     pea 16*6
@@ -322,9 +330,9 @@ tile_data_loop:
     ; Set background color
     sep #$20 ; 8 bit A
     stz CGADDR
-    lda #%0
+    lda #lobyte(CLEAR_COLOR)
     sta CGDATA
-    lda #%0
+    lda #hibyte(CLEAR_COLOR)
     sta CGDATA
     cli ; Enable interrupts and joypad
     lda #$81

@@ -10,7 +10,7 @@ SpriteDefs:
     .EXPORT {spritename}
     .REPT nframes INDEX i
         .DSTRUCT INSTANCEOF entityspriteinfo_t VALUES
-            sprite_addr: .dw loword(baseaddr) + ntiles*i*128 ; 128b per 16x tile
+            sprite_addr: .dw loword(baseaddr) + 128*ntiles*i ; 128b per 16x tile
             sprite_bank: .db bankbyte(baseaddr)
             nframes: .db nframes
         .ENDST
@@ -26,12 +26,12 @@ SpriteDefs:
 
 .DefineSprite "sprite.boss.monstro", spritedata.boss_monstro, 12, 1
 
-.DefineSprite "sprite.item", spritedata.items, 1, 64
+.DefineSprite "sprite.item", spritedata.items, 1, 255
 
 .DefineSprite "sprite.item_pedastal", spritedata.item_pedastal, 1, 1
 
 .DefineSprite "sprite.shopkeepers", spritedata.shopkeepers, 1, 8
 
-.DefineSprite "sprite.tilesprite_fire", spritedata.tilesprite_fire, 1, 8
+.DefineSprite "sprite.tilesprite_fire", spritedata.tilesprite_fire, 1, 4
 
 .ENDS

@@ -60,47 +60,19 @@ Item.set_active:
     lda.l Item.items,X
     tax
     ; set up copy sprite
-    phx
-    pea BG1_CHARACTER_BASE_ADDR + $0EE0
-    pea 2
-    sep #$20
-    lda #bankbyte(spritedata.items)
-    pha
-    rep #$20
-    lda.l bankaddr(Item.items) | itemdef_t.sprite_index,X
-    and #$00FF
-    .MultiplyStatic 32*4
-    clc
-    adc #loword(spritedata.items)
-    pha
-    .REPT 2 INDEX i
-        jsl CopySpriteVQueue
-        .IF i == 0
-            rep #$20
-            lda $01,S
-            clc
-            adc #spritesize(4, 2)
-            sta $01,S
-            lda $06,S
-            clc
-            adc #$0100
-            sta $06,S
-        .ENDIF
-    .ENDR
-    rep #$20
-    pla
-    pla
-    pla
-    sep #$20
-    pla
+    ; Don't copy here; sprite changes depending on active status
+    ; Battery charge handler will upload sprite instead.
     ; upload palette
     rep #$30
-    plx
-    pea $4000 | bankbyte(palettes.palette0.w)
+    pea 24
+    pea $4400 | bankbyte(palettes.palette0.w)
     lda.l bankaddr(Item.items) | itemdef_t.palette_ptr,X
+    clc
+    adc #8
     pha
     jsl CopyPaletteVQueue
     rep #$30
+    pla
     pla
     pla
     rtl
@@ -214,7 +186,7 @@ _pickup_map:
 
 .DSTRUCT Item.definitions.null INSTANCEOF itemdef_t VALUES
     sprite_index: .db $FF
-    palette_ptr: .dw 0
+    palette_ptr: .dw loword(palettes.ui_light)
     palette_depth: .db 4
     flags: .db 0
     on_pickup: .dw _pickup_empty
@@ -507,6 +479,7 @@ Item.add_charge_battery:
     rtl
 
 Item.update_charge_display:
+    .DEFINE ITEMPTR $00
     .DEFINE MAX_CHARGE $02
     .DEFINE USAGE_CHARGE $04
     .DEFINE PLAYER_CHARGE $06
@@ -524,7 +497,7 @@ Item.update_charge_display:
     tax
     lda.l Item.items,X
     tax
-    stx.b $00
+    stx.b ITEMPTR
     lda.l bankaddr(Item.items) | itemdef_t.charge_max,X
     and #$00FF
     sta.b MAX_CHARGE
@@ -650,6 +623,66 @@ Item.update_charge_display:
         sta.b PLAYER_CHARGE
     .ENDR
 @end_write:
+; and now, upload item sprite depending on if we have enough charge
+    rep #$30
+    ldx.b ITEMPTR
+    pea BG1_CHARACTER_BASE_ADDR + $0EE0
+    pea 2
+    stz.b IS_FULL
+    sep #$20
+    lda.w playerData.current_active_charge
+    cmp.b USAGE_CHARGE
+    bcc +
+        inc.b IS_FULL
+    +:
+    lda #$7F
+    pha
+    rep #$20
+    lda.l bankaddr(Item.items) | itemdef_t.sprite_index,X
+    and #$00FF
+    .MultiplyStatic 32*4
+    ldy.b IS_FULL
+    beq @not_charge
+    @has_charge:
+        clc
+        adc #loword(spritedata.items_active)
+        sta.b $02
+        lda #bankbyte(spritedata.items_active)
+        sta.b $04
+        jmp @end_charge
+    @not_charge:
+        clc
+        adc #loword(spritedata.items)
+        sta.b $02
+        lda #bankbyte(spritedata.items)
+        sta.b $04
+    @end_charge:
+    .CopyROMToVQueueBin P_DIR, $02, 128
+    ldx.w vqueueBinOffset
+    phx
+    ldy #4
+    lda #3
+    jsl SpritePaletteOpaqueify_7F
+    .REPT 2 INDEX i
+        jsl CopySpriteVQueue
+        .IF i == 0
+            rep #$20
+            lda $01,S
+            clc
+            adc #spritesize(4, 2)
+            sta $01,S
+            lda $06,S
+            clc
+            adc #$0100
+            sta $06,S
+        .ENDIF
+    .ENDR
+    rep #$20
+    pla
+    pla
+    pla
+    sep #$20
+    pla
     rtl
 
 ; Battery tile map.

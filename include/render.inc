@@ -92,6 +92,10 @@
 .DEFINE PALLETE_ALLOC_12C %00000101
 .DEFINE PALLETE_ALLOC_16  %00000111
 
+; COLOR FUNCTIONS
+.FUNCTION colorf(red, green, blue) ((round(blue * 31) << 10) + (round(green * 31) << 5) + round(blue * 31))
+.DEFINE CLEAR_COLOR colorf(0, 0, 0)
+
 ; Copy memory from ROM into the next available VQUEUE BIN buffer
 .MACRO .CopyROMToVQueueBin ARGS METHOD, ROMADDR, NBYTES
     rep #$20 ; 16 bit A

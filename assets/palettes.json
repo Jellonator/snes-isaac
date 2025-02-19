@@ -28,6 +28,14 @@
         "src": "assets/palettes/basement_ground_1.hex"
     },
     {
+        "name": "item_active",
+        "src": "assets/palettes/item_active.hex"
+    },
+    {
+        "name": "item_inactive",
+        "src": "assets/palettes/item_inactive.hex"
+    },
+    {
         "name": "item_sad_onion",
         "src": "assets/palettes/item_onion.hex"
     },

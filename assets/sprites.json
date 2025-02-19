@@ -89,6 +89,12 @@
         "size": 2
     },
     {
+        "name": "items_active",
+        "src": "assets/sprites/items_active.raw",
+        "depth": 16,
+        "size": 2
+    },
+    {
         "name": "item_pedastal",
         "src": "assets/sprites/item_pedastal.raw",
         "depth": 16,

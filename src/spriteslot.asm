@@ -332,4 +332,86 @@ _Swizzle_B7F_AB_B:
     bne @loop
     rtl
 
+; Make a sprite Opaque
+; Parameters:
+;     X - pointer to sprite
+;     A - color (0-15)
+;     Y - number of tiles
+; Only the third and fourth bitplanes are modified
+SpritePaletteOpaqueify_7F:
+    rep #$10
+    sep #$20
+    stz.b $00
+    stz.b $01
+    stz.b $02
+    stz.b $03
+    bit #$01
+    beq +
+        dec.b $00
+    +:
+    bit #$02
+    beq +
+        dec.b $01
+    +:
+    bit #$04
+    beq +
+        dec.b $02
+    +:
+    bit #$08
+    beq +
+        dec.b $03
+    +:
+@loop_begin:
+    .REPT 8 INDEX i
+        ; get mask
+        lda.l $7F0000+2*i+$00,X
+        ora.l $7F0000+2*i+$01,X
+        ora.l $7F0000+2*i+$10,X
+        ora.l $7F0000+2*i+$11,X
+        sta.b $06
+        eor #$FF
+        sta.b $05
+        ; AND self
+        lda.b $06
+        and.l $7F0000+2*i+$00,X
+        sta.l $7F0000+2*i+$00,X
+        lda.b $06
+        and.l $7F0000+2*i+$01,X
+        sta.l $7F0000+2*i+$01,X
+        lda.b $06
+        and.l $7F0000+2*i+$10,X
+        sta.l $7F0000+2*i+$10,X
+        lda.b $06
+        and.l $7F0000+2*i+$11,X
+        sta.l $7F0000+2*i+$11,X
+        ; OR new color
+        lda.b $05
+        and.b $00
+        ora.l $7F0000+2*i+$00,X
+        sta.l $7F0000+2*i+$00,X
+        lda.b $05
+        and.b $01
+        ora.l $7F0000+2*i+$01,X
+        sta.l $7F0000+2*i+$01,X
+        lda.b $05
+        and.b $02
+        ora.l $7F0000+2*i+$10,X
+        sta.l $7F0000+2*i+$10,X
+        lda.b $05
+        and.b $03
+        ora.l $7F0000+2*i+$11,X
+        sta.l $7F0000+2*i+$11,X
+    .ENDR
+    dey
+    beq @loop_end
+    rep #$20
+    txa
+    clc
+    adc #32
+    tax
+    sep #$20
+    jmp @loop_begin
+@loop_end:
+    rtl
+
 .ENDS

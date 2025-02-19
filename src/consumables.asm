@@ -379,11 +379,13 @@ Consumable.update_display:
     rep #$30
     plx
     phx
+    pea 32
     pea $7000 | bankbyte(palettes.palette0.w)
     lda.l bankaddr(Consumable.consumables) | consumable_t.sprite_palette,X
     pha
     jsl CopyPaletteVQueue
     rep #$30
+    pla
     pla
     pla
     ; put text line

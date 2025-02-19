@@ -500,6 +500,7 @@ PlayerInit:
     stz.w playerData.current_active_charge
     lda #0
     jsl Item.set_active
+    jsl Item.update_charge_display
     jsl Player.update_bomb_display
     jsl Player.update_key_display
     jsl Player.update_money_display

@@ -202,19 +202,20 @@ UpdateMinimapSlot:
 
 ; Copy palette to CGRAM
 ; PUSH order:
+;   bytes          [dw] $08
 ;   palette index  [db] $07
 ;   source bank    [db] $06
 ;   source address [dw] $04
 CopyPalette:
     rep #$20 ; 16 bit A
-    lda $04,s
+    lda $04,S
     sta $4302 ; source address
-    lda #32.w
+    lda $08,S
     sta $4305 ; 32 bytes for palette
     sep #$20 ; 8 bit A
-    lda $06,s
+    lda $06,S
     sta $4304 ; source bank
-    lda $07,s
+    lda $07,S
     sta $2121 ; destination is first sprite palette
     stz $4300 ; write to PPU, absolute address, auto increment, 1 byte at a time
     lda #$22
@@ -225,6 +226,7 @@ CopyPalette:
 
 ; Copy palette to CGRAM via VQUEUE
 ; PUSH order:
+;   bytes          [dw] $08
 ;   palette index  [db] $07
 ;   source bank    [db] $06
 ;   source address [dw] $04
@@ -234,14 +236,14 @@ CopyPaletteVQueue:
     tax
     inc.w vqueueNumOps
     rep #$20 ; 16 bit A
-    lda $04,s
+    lda $04,S
     sta.l vqueueOps.1.aAddr,X; source address
-    lda #32.w
+    lda $08,S
     sta.l vqueueOps.1.numBytes,X ; 32 bytes for palette
     sep #$20 ; 8 bit A
-    lda $06,s
+    lda $06,S
     sta.l vqueueOps.1.aAddr+2,X ; source bank
-    lda $07,s
+    lda $07,S
     sta.l vqueueOps.1.vramAddr,X ; destination palette
     lda #VQUEUE_MODE_CGRAM
     sta.l vqueueOps.1.mode,X

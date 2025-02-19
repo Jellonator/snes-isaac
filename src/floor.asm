@@ -136,6 +136,7 @@ _Floor_Update_Graphics:
     stx.b $00
     ; upload palettes
     .REPT 4 INDEX i
+        pea 32
         lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.palettes + (i*3) + 2,X
         and #$00FF
         ora #$1000 * i
@@ -144,6 +145,7 @@ _Floor_Update_Graphics:
         pha
         jsl CopyPalette
         rep #$30
+        pla
         pla
         pla
         ldx.b $00
@@ -164,12 +166,12 @@ _Floor_Update_Graphics:
     pla
     pla
     pla
-    ; Set background color
+    ; set clear color
     sep #$20 ; 8 bit A
     stz CGADDR
-    lda #%0
+    lda #lobyte(CLEAR_COLOR)
     sta CGDATA
-    lda #%0
+    lda #hibyte(CLEAR_COLOR)
     sta CGDATA
     ; disable f-blank
     sep #$20

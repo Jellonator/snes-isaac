@@ -47,6 +47,7 @@
     gameSeedStored INSTANCEOF rng_t
     ; seed used to generate stage
     stageSeed INSTANCEOF rng_t
+    quickrandIndex dw
 ; map data
     ; set to $FF to update entire map.
     numTilesToUpdate db

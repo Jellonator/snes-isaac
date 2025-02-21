@@ -321,6 +321,10 @@ PaletteAllocNeedSwizzle
     .db 1 ; PALLETE_ALLOC_12B %00000110
     .db 0 ; PALLETE_ALLOC_16  %00000111
 
+RandTable:
+    .SEED $B00B
+    .DBRND (RANDTABLE_SIZE+1) 0 255
+
 .ENDS
 
 .bank $20

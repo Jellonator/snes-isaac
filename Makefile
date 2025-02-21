@@ -28,6 +28,7 @@ SOURCES  := bindata.asm\
 			ground.asm\
 			layout.asm\
 			main.asm\
+			math.asm\
 			map.asm\
 			mapgenerator.asm\
 			overlay.asm\

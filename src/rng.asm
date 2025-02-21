@@ -98,9 +98,24 @@ RoomRand_Update16:
     .UpdateRng_DIR_INDL currentRoomRngAddress_Low, currentRoomRngAddress_High, 16
     rtl
 
+; Get a questionably random 16-bit number.
+; Much, much faster than other random number generating functions. However,
+; these numbers are just spit out in the same order every time from a table.
+; These are better used for instances where this isn't too noticeable and
+; doesn't affect level generation.
+QuickRand16:
+    rep #$30
+    inc.w quickrandIndex
+    lda #RANDTABLE_SIZE
+    trb.w quickrandIndex
+    ldx.w quickrandIndex
+    lda.l RandTable,X
+    rtl
+
 RngGameInitialize:
     ; TODO: use better method
     rep #$20 ; 16 bit A
+    stz.w quickrandIndex
     lda #$DEAD
     sta.w gameSeed.low
     sta.w gameSeedStored.low

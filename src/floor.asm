@@ -1,9 +1,5 @@
 .include "base.inc"
 
-.DEFINE FLOOR_FLAG_NEXT $01
-.DEFINE FLOOR_FLAG_FADEIN $02
-.DEFINE FLOOR_FLAG_FADEIN2 $04
-
 .BANK hirombankid(FLOOR_DEFINITION_BASE) SLOT "ROM"
 .SECTION "Floor Code" FREE
 
@@ -54,7 +50,7 @@ Floor_Next:
     tsb.w floorFlags
     rtl
 
-_Transition_In:
+Floor.Transition_In:
     sep #$30
     wai
     .REPT 16 INDEX  i
@@ -67,9 +63,9 @@ _Transition_In:
     wai
     wai
     .ENDR
-    rts
+    rtl
 
-_Transition_Out:
+Floor.Transition_Out:
     sep #$30
     wai
     .REPT 16 INDEX  i
@@ -82,14 +78,14 @@ _Transition_Out:
     wai
     wai
     .ENDR
-    rts
+    rtl
 
 Floor_Tick:
     rep #$30
     lda #FLOOR_FLAG_FADEIN2
     trb.w floorFlags
     beq @no_fadein2
-        jsr _Transition_Out
+        jsl Floor.Transition_Out
 @no_fadein2:
     rep #$30
     lda #FLOOR_FLAG_FADEIN
@@ -103,7 +99,7 @@ Floor_Tick:
     lda #FLOOR_FLAG_NEXT
     trb.w floorFlags
     beq @no_level_transition
-        jsr _Transition_In
+        jsl Floor.Transition_In
         rep #$30
         lda.w currentFloorIndex
         inc A

@@ -77,6 +77,42 @@ VBlank2:
     cli ; enable interrupts
     rti
 
+ClearSpriteTable:
+    .ACCU 16
+    .INDEX 16
+    stz.w objectIndex
+    lda #512
+    sta.w objectIndexShadow
+    .REPT 32/2 INDEX i
+        stz.w objectDataExt + (i*2)
+    .ENDR
+    sep #$20
+    lda #$F0
+    .REPT 128 INDEX i
+        sta.w objectData.{i+1}.pos_y
+    .ENDR
+    rtl
+
+UploadSpriteTable:
+    rep #$20 ; 16 bit A
+    stz OAMADDR
+    lda #512+32
+    sta DMA0_SIZE
+    lda.w #objectData
+    sta DMA0_SRCL
+    sep #$20 ; 8 bit A
+    lda #0
+    sta DMA0_SRCH
+    ; Absolute address, auto increment, 1 byte at a time
+    lda #%00000000
+    sta DMA0_CTL
+    ; Write to OAM
+    lda #$04
+    sta DMA0_DEST
+    lda #$01
+    sta MDMAEN
+    rtl
+
 ; Update the entire minimap
 ; NOTE: this requires blank to be enabled
 ; We assume that this will be performed during stage load.

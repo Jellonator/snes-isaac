@@ -25,11 +25,13 @@ SOURCES  := bindata.asm\
 			entity/trapdoor.asm\
 			init.asm\
 			floor.asm\
+			game.asm\
 			ground.asm\
 			layout.asm\
 			main.asm\
 			math.asm\
 			map.asm\
+			menu.asm\
 			mapgenerator.asm\
 			overlay.asm\
 			palettes.asm\

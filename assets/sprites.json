@@ -130,5 +130,21 @@
         "src": "assets/sprites/tilesprite_fire.raw",
         "depth": 16,
         "size": [2, 2]
+    },
+    {
+        "name": "menu.mainmenu",
+        "src": "assets/sprites/mainmenu.raw",
+        "depth": 16
+    },
+    {
+        "name": "menu.background",
+        "src": "assets/sprites/menu_bg.raw",
+        "depth": 4
+    },
+    {
+        "name": "menu.logo",
+        "src": "assets/sprites/menu_logo.raw",
+        "depth": 16,
+        "size": [16, 2]
     }
 ]

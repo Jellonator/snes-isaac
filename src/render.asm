@@ -301,22 +301,49 @@ CopySprite:
     asl
     asl
     asl
-    sta $4305 ; number of bytes
+    sta.w DMA0_SIZE ; number of bytes
     lda $04,s
-    sta $4302 ; source address
+    sta.w DMA0_SRCL ; source address
     lda $09,s
-    sta $2116 ; VRAM address
+    sta.w VMADDR ; VRAM address
     sep #$20 ; 8 bit A
     lda $06,s
-    sta $4304 ; source bank
+    sta.w DMA0_SRCH ; source bank
     lda #$80
-    sta $2115 ; VRAM address increment flags
+    sta.w VMAIN ; VRAM address increment flags
     lda #$01
-    sta $4300 ; write to PPU, absolute address, auto increment, 2 bytes at a time
+    sta.w DMA0_CTL ; write to PPU, absolute address, auto increment, 2 bytes at a time
     lda #$18
-    sta $4301 ; Write to VRAM
+    sta.w DMA0_DEST ; Write to VRAM
     lda #$01
-    sta $420B ; begin transfer
+    sta.w MDMAEN ; begin transfer
+    rtl
+
+; Copy data to VRAM
+; push order:
+;   vram address   [dw] $09
+;   num bytes      [dw] $07
+;   source bank    [db] $06
+;   source address [dw] $04
+CopyVMEM:
+    rep #$20 ; 16 bit A
+    lda $07,s
+    sta.w DMA0_SIZE ; number of bytes
+    lda $04,s
+    sta.w DMA0_SRCL ; source address
+    lda $09,s
+    sta.w VMADDR ; VRAM address
+    sep #$20 ; 8 bit A
+    lda $06,s
+    sta.w DMA0_SRCH ; source bank
+    lda #$80
+    sta.w VMAIN ; VRAM address increment flags
+    lda #$01
+    sta.w DMA0_CTL ; write to PPU, absolute address, auto increment, 2 bytes at a time
+    lda #$18
+    sta.w DMA0_DEST ; Write to VRAM
+    lda #$01
+    sta.w MDMAEN ; begin transfer
     rtl
 
 ; Copy sprite data to VRAM via VQueue
@@ -385,7 +412,7 @@ ClearVMem:
     lda #bankbyte(EmptyData)
     sta DMA0_SRCH ; source bank
     lda #$80
-    sta $2115 ; VRAM address increment flags
+    sta VMAIN ; VRAM address increment flags
     lda #%00001001
     sta DMA0_CTL ; write to PPU, absolute address, no increment, 2 bytes at a time
     lda #$18
@@ -397,22 +424,22 @@ ClearVMem:
 InitializeUI:
     rep #$20 ; 16 bit A
     lda #_sizeof_DefaultUiData
-    sta DMA0_SIZE ; number of bytes
+    sta.w DMA0_SIZE ; number of bytes
     lda #loword(DefaultUiData)
-    sta DMA0_SRCL ; source address
+    sta.w DMA0_SRCL ; source address
     lda #BG1_TILE_BASE_ADDR
-    sta $2116 ; VRAM address
+    sta.w VMADDR ; VRAM address
     sep #$20 ; 8 bit A
     lda #bankbyte(DefaultUiData)
-    sta DMA0_SRCH ; source bank
+    sta.w DMA0_SRCH ; source bank
     lda #$80
-    sta $2115 ; VRAM address increment flags
+    sta.w VMAIN ; VRAM address increment flags
     lda #%00000001
-    sta DMA0_CTL ; write to PPU, absolute address, auto increment, 2 bytes at a time
+    sta.w DMA0_CTL ; write to PPU, absolute address, auto increment, 2 bytes at a time
     lda #$18
-    sta DMA0_DEST ; Write to VRAM
+    sta.w DMA0_DEST ; Write to VRAM
     lda #$01
-    sta MDMAEN ; begin transfer
+    sta.w MDMAEN ; begin transfer
     rtl
 
 InitializeBackground:

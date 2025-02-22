@@ -458,6 +458,27 @@
     plb
 .ENDM
 
+; Pop N bytes
+.MACRO .POPN ARGS NUM
+    .IF NUM == 0
+    .ELIF NUM == 1
+        sep #$20
+        pla
+    .ELIF NUM == 2
+        rep #$20
+        pla
+    .ELIF NUM == 4
+        rep #$20
+        pla
+        pla
+    .ELSE
+        rep #$21
+        tsc
+        adc #NUM
+        tcs
+    .ENDIF
+.ENDM
+
 .FUNCTION spriteoffset(spriteId) ((spriteId - 1) * 4)
 
 .FUNCTION hirombankid(addr) (bankbyte(addr) & $3F)

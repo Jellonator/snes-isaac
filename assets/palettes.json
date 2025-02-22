@@ -138,5 +138,17 @@
     {
         "name": "tilesprite_fire_normal",
         "src": "assets/palettes/tilesprite_fire_normal.hex"
+    },
+    {
+        "name": "menu.main",
+        "src": "assets/palettes/menu_main.hex"
+    },
+    {
+        "name": "menu.background",
+        "src": "assets/palettes/menu_background.hex"
+    },
+    {
+        "name": "menu.logo",
+        "src": "assets/palettes/menu_logo.hex"
     }
 ]

@@ -127,7 +127,7 @@ Start:
     jsl ResetRegisters
     lda #$01
     sta MEMSEL
-    jml Game.Begin
+    jml Menu.Begin
 
 .ENDS
 

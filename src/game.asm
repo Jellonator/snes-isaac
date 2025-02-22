@@ -9,23 +9,29 @@ Game.Begin:
     ; Disable rendering temporarily
     sep #$20
     lda #%10000000
-    sta INIDISP
-    ; Set tilemap mode 2
+    sta.w INIDISP
+    ; Disable interrupts
+    lda #1
+    sta.w NMITIMEN
+    sei
+    ; reset all registers
+    jsl ResetRegisters
+    ; Set tilemap mode 1
     lda #%00100001
-    sta BGMODE
+    sta.w BGMODE
     lda #(BG1_TILE_BASE_ADDR >> 8) | %00
-    sta BG1SC
+    sta.w BG1SC
     lda #(BG2_TILE_BASE_ADDR >> 8) | %00
-    sta BG2SC
+    sta.w BG2SC
     lda #(BG3_TILE_BASE_ADDR >> 8) | %00
-    sta BG3SC
+    sta.w BG3SC
     lda #(BG1_CHARACTER_BASE_ADDR >> 12) | (BG2_CHARACTER_BASE_ADDR >> 8)
-    sta BG12NBA
+    sta.w BG12NBA
     lda #(BG3_CHARACTER_BASE_ADDR >> 12)
-    sta BG34NBA
+    sta.w BG34NBA
     ; Set up sprite mode
     lda #%00000000 | (SPRITE1_BASE_ADDR >> 13) | ((SPRITE2_BASE_ADDR - SPRITE1_BASE_ADDR - $1000) >> 9)
-    sta OBSEL
+    sta.w OBSEL
     ; copy palettes to CGRAM
     pea 32
     PEA $5000 + bankbyte(palettes.ui_light.w)
@@ -177,9 +183,6 @@ tile_data_loop:
     sta CGDATA
     lda #hibyte(CLEAR_COLOR)
     sta CGDATA
-    cli ; Enable interrupts and joypad
-    lda #$81
-    sta NMITIMEN
     lda #$E0
     sta BG2VOFS
     lda #$FF
@@ -233,10 +236,15 @@ tile_data_loop:
     jsr PlayerInit
     ; init floor
     jsl Floor_Init
-    ; Upload sprites
+    ; Clear sprites
     rep #$30
     jsl ClearSpriteTable
     jsl UploadSpriteTable
+    ; clear some render flags
+    sep #$30
+    lda #0
+    sta.l needResetEntireGround
+    sta.l numTilesToUpdate
     ; re-enable rendering
     sep #$20
     lda #%00000000
@@ -247,6 +255,10 @@ tile_data_loop:
     rep #$20
     lda #FLOOR_FLAG_FADEIN
     tsb.w floorFlags
+    ; Enable interrupts and joypad
+    cli
+    lda #$81
+    sta NMITIMEN
 ; GAME LOOP
 _Game.Loop:
     ; update counter
@@ -303,15 +315,15 @@ _UpdateRest:
     BIT #JOY_START
     beq @skip_regenerate_map
     jsl BeginMapGeneration
-    sep #$30 ; 8 bit AXY
-    lda #1
-    sta.l needResetEntireGround
-    lda #0
-    pha
-    jsl LoadRoomSlotIntoLevel
-    sep #$30 ; 8 bit AXY
-    pla
-    jsl PlayerEnterFloor
+        sep #$30 ; 8 bit AXY
+        lda #1
+        sta.l needResetEntireGround
+        lda #0
+        pha
+        jsl LoadRoomSlotIntoLevel
+        sep #$30 ; 8 bit AXY
+        pla
+        jsl PlayerEnterFloor
 @skip_regenerate_map:
     rep #$30
     lda.w joy1press

@@ -3,6 +3,10 @@
 .BANK $01 SLOT "ROM"
 .SECTION "MENU" FREE
 
+.DEFINE MENU_BG1_TILE_BASE_ADDR $7000
+.DEFINE MENU_BG2_TILE_BASE_ADDR $6C00
+.DEFINE MENU_BG3_TILE_BASE_ADDR $6800
+
 .ARRAYDEFINE NAME ArrayBackground SIZE 32*32
 .MACRO .PutBGTile ARGS ix, iy, tile
     .ARRAYIN NAME ArrayBackground INDEX (ix   + ( iy    * 32)) VALUE deft(tile+$00, 0)
@@ -24,7 +28,7 @@ _MenuBackgroundData:
     .ENDR
 
 _MenuLayout_PageStart:
-    .REPT 32*2
+    .REPT 16*2
         .dw 0
     .ENDR
     .REPT 4 INDEX iy
@@ -34,13 +38,144 @@ _MenuLayout_PageStart:
         .REPT 8 INDEX ix
             .dw deft($0100 + (iy*2+1)*16*2 + ix*2, 2)
         .ENDR
-        .REPT 16 INDEX ix
-            .dw 0
-        .ENDR
     .ENDR
-    .REPT 32*26
+    .REPT 32*10
         .dw 0
     .ENDR
+
+.DEFINE STATE_START 0
+.DEFINE STATE_MAIN 2
+.DEFINE STATE_CHARSELECT 4
+
+.ENUM $0040
+    menuState dw
+    currentScrollX dw
+    currentScrollY dw
+    targetScrollX dw
+    targetScrollY dw
+    menuBG2Offset dw ; % 000000y0 000x0000
+    menuBG1Offset dw ; % 0000yx00 00000000
+.ENDE
+
+_empty_func:
+    rts
+
+_Menu.StateEnterTable:
+    .dw _empty_func ; start
+    .dw _empty_func ; main
+    .dw _empty_func ; char select
+
+_Menu.StateTickTable:
+    .dw _menu_start_tick ; start
+    .dw _empty_func ; main
+    .dw _empty_func ; char select
+
+_Menu.Tick:
+    rep #$30
+    ldx.b menuState
+    jsr (_Menu.StateTickTable,X)
+    rts
+
+; Set state to A
+_Menu.SetState:
+    rep #$30
+    sta.b menuState
+    tax
+    jsr (_Menu.StateEnterTable,X)
+    rts
+
+_Menu.ScrollLeft:
+    rep #$30
+    lda.b menuBG2Offset
+    eor #BG2_TILE_ADDR_OFFS_X
+    sta.b menuBG2Offset
+    lda.b menuBG1Offset
+    eor #%0000010000000000
+    sta.b menuBG1Offset
+    lda.b targetScrollX
+    sec
+    sbc #256
+    sta.b targetScrollX
+    rts
+
+_Menu.ScrollRight:
+    rep #$30
+    lda.b menuBG2Offset
+    eor #BG2_TILE_ADDR_OFFS_X
+    sta.b menuBG2Offset
+    lda.b menuBG1Offset
+    eor #%0000010000000000
+    sta.b menuBG1Offset
+    lda.b targetScrollX
+    clc
+    adc #256
+    sta.b targetScrollX
+    rts
+
+_Menu.ScrollUp:
+    rep #$30
+    lda.b menuBG2Offset
+    eor #BG2_TILE_ADDR_OFFS_Y
+    sta.b menuBG2Offset
+    lda.b menuBG1Offset
+    eor #%0000100000000000
+    sta.b menuBG1Offset
+    lda.b targetScrollY
+    sec
+    sbc #256
+    sta.b targetScrollY
+    rts
+
+_Menu.ScrollDown:
+    rep #$30
+    lda.b menuBG2Offset
+    eor #BG2_TILE_ADDR_OFFS_Y
+    sta.b menuBG2Offset
+    lda.b menuBG1Offset
+    eor #%0000100000000000
+    sta.b menuBG1Offset
+    lda.b targetScrollY
+    clc
+    adc #256
+    sta.b targetScrollY
+    rts
+
+; Upload tile data to BG2
+; Tile data pointer stored in X
+_Menu.UploadBG2:
+    rep #$30 ; 16 bit A
+    lda #MENU_BG2_TILE_BASE_ADDR
+    clc
+    adc.b menuBG2Offset
+    tay
+    .REPT 16 INDEX i
+        lda #16*2
+        sta.w DMA0_SIZE ; number of bytes
+        stx.w DMA0_SRCL ; source address
+        sty.w VMADDR ; VRAM address
+        sep #$20 ; 8 bit A
+        lda #bankbyte(_MenuBackgroundData)
+        sta.w DMA0_SRCH ; source bank
+        lda #$80
+        sta.w VMAIN ; VRAM address increment flags
+        lda #$01
+        sta.w DMA0_CTL ; write to PPU, absolute address, auto increment, 2 bytes at a time
+        lda #$18
+        sta.w DMA0_DEST ; Write to VRAM
+        lda #$01
+        sta.w MDMAEN ; begin transfer
+        ; inc X
+        rep #$20
+        txa
+        clc
+        adc #16*2
+        tax
+        tya
+        clc
+        adc #16*2
+        tay
+    .ENDR
+    rts
 
 ; Enter menu
 Menu.Begin:
@@ -55,14 +190,17 @@ Menu.Begin:
     sei
     ; reset all registers
     jsl ResetRegisters
+    sep #$20
+    lda #%10000000
+    sta.w INIDISP
     ; Set tilemap mode 1
     lda #%01100001
     sta.w BGMODE
-    lda #(BG1_TILE_BASE_ADDR >> 8) | %00
+    lda #(MENU_BG1_TILE_BASE_ADDR >> 8) | %11
     sta.w BG1SC
-    lda #(BG2_TILE_BASE_ADDR >> 8) | %00
+    lda #(MENU_BG2_TILE_BASE_ADDR >> 8) | %00
     sta.w BG2SC
-    lda #(BG3_TILE_BASE_ADDR >> 8) | %00
+    lda #(MENU_BG3_TILE_BASE_ADDR >> 8) | %00
     sta.w BG3SC
     lda #(BG1_CHARACTER_BASE_ADDR >> 12) | (BG2_CHARACTER_BASE_ADDR >> 8)
     sta.w BG12NBA
@@ -73,20 +211,34 @@ Menu.Begin:
     sta.w OBSEL
     ; show all on main screen
     lda #%00010111
-    sta SCRNDESTM
+    sta.w SCRNDESTM
     ; set scroll
-    stz BG3HOFS
-    stz BG3HOFS
-    stz BG3VOFS
-    stz BG3VOFS
-    stz BG2HOFS
-    stz BG2HOFS
-    stz BG2VOFS
-    stz BG2VOFS
-    stz BG1HOFS
-    stz BG1HOFS
-    stz BG1VOFS
-    stz BG1VOFS
+    stz.w BG3HOFS
+    stz.w BG3HOFS
+    stz.w BG3VOFS
+    stz.w BG3VOFS
+    stz.w BG2HOFS
+    stz.w BG2HOFS
+    stz.w BG2VOFS
+    stz.w BG2VOFS
+    stz.w BG1HOFS
+    stz.w BG1HOFS
+    stz.w BG1VOFS
+    stz.w BG1VOFS
+    ; set menu variables
+    rep #$20
+    stz.b currentScrollX
+    stz.b currentScrollY
+    stz.b targetScrollX
+    stz.b targetScrollY
+    stz.b menuBG2Offset
+    stz.b menuBG1Offset
+    lda #STATE_START
+    sta.b menuState
+    ; clear inputs
+    stz.w joy1raw
+    stz.w joy1press
+    stz.w joy1held
     ; Clear VRAM
     pea 0
     pea $0000
@@ -121,7 +273,7 @@ Menu.Begin:
     jsl CopySprite
     .POPN 7
     ; Upload background tiles
-    pea BG3_TILE_BASE_ADDR
+    pea MENU_BG3_TILE_BASE_ADDR
     pea 32*32*2
     sep #$20
     lda #bankbyte(_MenuBackgroundData)
@@ -130,14 +282,16 @@ Menu.Begin:
     jsl CopyVMEM
     .POPN 7
     ; Upload start layout
-    pea BG2_TILE_BASE_ADDR
-    pea 32*32*2
-    sep #$20
-    lda #bankbyte(_MenuLayout_PageStart)
-    pha
-    pea loword(_MenuLayout_PageStart)
-    jsl CopyVMEM
-    .POPN 7
+    ; pea MENU_BG2_TILE_BASE_ADDR
+    ; pea 32*32*2
+    ; sep #$20
+    ; lda #bankbyte(_MenuLayout_PageStart)
+    ; pha
+    rep #$30
+    ldx #loword(_MenuLayout_PageStart)
+    jsr _Menu.UploadBG2
+    ; jsl CopyVMEM
+    ; .POPN 7
     ; Upload background palette
     pea 2*4
     pea $0000 + bankbyte(palettes.menu.background)
@@ -185,10 +339,120 @@ _Menu.Loop:
     inc.w tickCounter
     ; clear data
     jsl ClearSpriteTable
+    ; update
+    jsr _Menu.Tick
+    jsr _Menu.HandleScroll
     ; End update code
     rep #$30 ; 16 bit AXY
     stz.w is_game_update_running
     wai
     jmp _Menu.Loop
+
+_Menu.HandleScroll:
+    rep #$30
+    ; scroll X
+    lda.b currentScrollX
+    .CMPS_BEGIN P_DIR targetScrollX
+        lda.b currentScrollX
+        clc
+        adc #8
+        .AMIN P_DIR targetScrollX
+        sta.b currentScrollX
+    .CMPS_GREATER
+        lda.b currentScrollX
+        sec
+        sbc #8
+        .AMAX P_DIR targetScrollX
+        sta.b currentScrollX
+    .CMPS_EQUAL
+    .CMPS_END
+    ; scroll Y
+    lda.b currentScrollY
+    .CMPS_BEGIN P_DIR targetScrollY
+        lda.b currentScrollY
+        clc
+        adc #8
+        .AMIN P_DIR targetScrollY
+        sta.b currentScrollY
+    .CMPS_GREATER
+        lda.b currentScrollY
+        sec
+        sbc #8
+        .AMAX P_DIR targetScrollY
+        sta.b currentScrollY
+    .CMPS_EQUAL
+    .CMPS_END
+    ; store
+    sep #$20
+    lda.b currentScrollX
+    sta BG2HOFS
+    lda.b currentScrollX+1
+    sta BG2HOFS
+    lda.b currentScrollX
+    sta BG1HOFS
+    lda.b currentScrollX+1
+    sta BG1HOFS
+    lda.b currentScrollY
+    sta BG2VOFS
+    lda.b currentScrollY+1
+    sta BG2VOFS
+    lda.b currentScrollY
+    sta BG1VOFS
+    lda.b currentScrollY+1
+    sta BG1VOFS
+    ; BG3 has 75% scroll
+    rep #$20
+    lda.b currentScrollX
+    .ShiftRight_SIGN 3, 0
+    sta.b $00
+    lda.b currentScrollX
+    sec
+    sbc.b $00
+    sta.b $00
+    lda.b currentScrollY
+    .ShiftRight_SIGN 3, 0
+    sta.b $02
+    lda.b currentScrollY
+    sec
+    sbc.b $02
+    sta.b $02
+    sep #$20
+    lda.b $00
+    sta BG3HOFS
+    lda.b $01
+    sta BG3HOFS
+    lda.b $02
+    sta BG3VOFS
+    lda.b $03
+    sta BG3VOFS
+    rts
+
+; START SCREEN
+_menu_start_tick:
+    rep #$30
+    lda.w joy1press
+    bit #JOY_UP
+    beq +
+        jsr _Menu.ScrollUp
+        rep #$30
+        lda.w joy1press
+    +:
+    bit #JOY_DOWN
+    beq +
+        jsr _Menu.ScrollDown
+        rep #$30
+        lda.w joy1press
+    +:
+    bit #JOY_LEFT
+    beq +
+        jsr _Menu.ScrollLeft
+        rep #$30
+        lda.w joy1press
+    +:
+    bit #JOY_RIGHT
+    beq +
+        jsr _Menu.ScrollRight
+    +:
+    rts
 
 .ENDS

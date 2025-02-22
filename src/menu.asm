@@ -43,6 +43,19 @@ _MenuLayout_PageStart:
         .dw 0
     .ENDR
 
+_MenuLayout_Main:
+    .REPT 16*2
+        .dw 0
+    .ENDR
+    .dw 0, 0, 0, 0, deft($02,1), deft($08,1), deft($04,1), deft($04,1), deft($04,1), deft($04,1), deft($08,1), deft($06,1), 0, 0, 0, 0
+    .REPT 8
+        .dw 0, 0, 0, 0, deft($22,1), deft($24,1), deft($24,1), deft($24,1), deft($24,1), deft($24,1), deft($24,1), deft($26,1), 0, 0, 0, 0
+    .ENDR
+    .dw 0, 0, 0, 0, deft($42,1), deft($44,1), deft($44,1), deft($44,1), deft($44,1), deft($44,1), deft($44,1), deft($46,1), 0, 0, 0, 0
+    .REPT 16*4
+        .dw 0
+    .ENDR
+
 .DEFINE STATE_START 0
 .DEFINE STATE_MAIN 2
 .DEFINE STATE_CHARSELECT 4
@@ -62,12 +75,12 @@ _empty_func:
 
 _Menu.StateEnterTable:
     .dw _menu_start_init ; start
-    .dw _empty_func ; main
+    .dw _menu_main_init ; main
     .dw _empty_func ; char select
 
 _Menu.StateTickTable:
     .dw _menu_start_tick ; start
-    .dw _empty_func ; main
+    .dw _menu_main_tick ; main
     .dw _empty_func ; char select
 
 _Menu.Tick:
@@ -81,6 +94,11 @@ _Menu.SetState:
     rep #$30
     and #$00FF
     sta.b menuState
+    ; clear BG1
+    jsr _Menu.ClearBG1
+    ; call enter table
+    rep #$30
+    lda.b menuState
     tax
     jsr (_Menu.StateEnterTable,X)
     rts
@@ -179,6 +197,23 @@ _Menu.UploadBG2:
         sta.l vqueueOps.{i+1}.mode,X
         rep #$20
     .ENDR
+    rts
+
+; Clear BG1
+_Menu.ClearBG1:
+    rep #$30
+    .VQueueOpToA
+    tax
+    inc.w vqueueNumOps
+    lda #MENU_BG1_TILE_BASE_ADDR
+    clc
+    adc.b menuBG1Offset
+    sta.l vqueueOps.1.vramAddr,X
+    lda #32*32*2
+    sta.l vqueueOps.1.numBytes,X
+    sep #$20
+    lda #VQUEUE_MODE_VRAM_CLEAR
+    sta.l vqueueOps.1.mode,X
     rts
 
 ; Enter menu
@@ -359,13 +394,13 @@ _Menu.HandleScroll:
     .CMPS_BEGIN P_DIR targetScrollX
         lda.b currentScrollX
         clc
-        adc #8
+        adc #16
         .AMIN P_DIR targetScrollX
         sta.b currentScrollX
     .CMPS_GREATER
         lda.b currentScrollX
         sec
-        sbc #8
+        sbc #16
         .AMAX P_DIR targetScrollX
         sta.b currentScrollX
     .CMPS_EQUAL
@@ -375,13 +410,13 @@ _Menu.HandleScroll:
     .CMPS_BEGIN P_DIR targetScrollY
         lda.b currentScrollY
         clc
-        adc #8
+        adc #16
         .AMIN P_DIR targetScrollY
         sta.b currentScrollY
     .CMPS_GREATER
         lda.b currentScrollY
         sec
-        sbc #8
+        sbc #16
         .AMAX P_DIR targetScrollY
         sta.b currentScrollY
     .CMPS_EQUAL
@@ -440,36 +475,27 @@ _menu_start_init:
 _menu_start_tick:
     rep #$30
     lda.w joy1press
-    bit #JOY_UP
-    beq +
-        jsr _Menu.ScrollUp
-        rep #$30
-        lda #STATE_START
-        jsr _Menu.SetState
-        rep #$30
-        lda.w joy1press
-    +:
-    bit #JOY_DOWN
+    bit #JOY_START
     beq +
         jsr _Menu.ScrollDown
         rep #$30
-        lda #STATE_START
+        lda #STATE_MAIN
         jsr _Menu.SetState
-        rep #$30
-        lda.w joy1press
     +:
-    bit #JOY_LEFT
+    rts
+
+; MAIN SCREEN
+_menu_main_init:
+    ldx #loword(_MenuLayout_Main)
+    jsr _Menu.UploadBG2
+    rts
+
+_menu_main_tick:
+    rep #$30
+    lda.w joy1press
+    bit #JOY_B
     beq +
-        jsr _Menu.ScrollLeft
-        rep #$30
-        lda #STATE_START
-        jsr _Menu.SetState
-        rep #$30
-        lda.w joy1press
-    +:
-    bit #JOY_RIGHT
-    beq +
-        jsr _Menu.ScrollRight
+        jsr _Menu.ScrollUp
         rep #$30
         lda #STATE_START
         jsr _Menu.SetState

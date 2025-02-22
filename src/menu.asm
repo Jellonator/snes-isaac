@@ -61,7 +61,7 @@ _empty_func:
     rts
 
 _Menu.StateEnterTable:
-    .dw _empty_func ; start
+    .dw _menu_start_init ; start
     .dw _empty_func ; main
     .dw _empty_func ; char select
 
@@ -79,6 +79,7 @@ _Menu.Tick:
 ; Set state to A
 _Menu.SetState:
     rep #$30
+    and #$00FF
     sta.b menuState
     tax
     jsr (_Menu.StateEnterTable,X)
@@ -144,36 +145,39 @@ _Menu.ScrollDown:
 ; Tile data pointer stored in X
 _Menu.UploadBG2:
     rep #$30 ; 16 bit A
+    stx.b $00
+    .VQueueOpToA
+    tax
+    lda.w vqueueNumOps
+    clc
+    adc #16
+    sta.w vqueueNumOps
     lda #MENU_BG2_TILE_BASE_ADDR
     clc
     adc.b menuBG2Offset
-    tay
+    sta.b $02
     .REPT 16 INDEX i
+        ; SRC ADDR
+        lda.b $00
+        sta.l vqueueOps.{i+1}.aAddr,X
+        clc
+        adc #16*2
+        sta.b $00
+        ; VRAM ADDR
+        lda.b $02
+        sta.l vqueueOps.{i+1}.vramAddr,X
+        clc
+        adc #16*2
+        sta.b $02
+        ; rest
         lda #16*2
-        sta.w DMA0_SIZE ; number of bytes
-        stx.w DMA0_SRCL ; source address
-        sty.w VMADDR ; VRAM address
-        sep #$20 ; 8 bit A
+        sta.l vqueueOps.{i+1}.numBytes,X
+        sep #$20
         lda #bankbyte(_MenuBackgroundData)
-        sta.w DMA0_SRCH ; source bank
-        lda #$80
-        sta.w VMAIN ; VRAM address increment flags
-        lda #$01
-        sta.w DMA0_CTL ; write to PPU, absolute address, auto increment, 2 bytes at a time
-        lda #$18
-        sta.w DMA0_DEST ; Write to VRAM
-        lda #$01
-        sta.w MDMAEN ; begin transfer
-        ; inc X
+        sta.l vqueueOps.{i+1}.aAddr+2,X
+        lda #VQUEUE_MODE_VRAM
+        sta.l vqueueOps.{i+1}.mode,X
         rep #$20
-        txa
-        clc
-        adc #16*2
-        tax
-        tya
-        clc
-        adc #16*2
-        tay
     .ENDR
     rts
 
@@ -245,6 +249,8 @@ Menu.Begin:
     jsl ClearVMem
     rep #$20
     .POPN 4
+    ; init vqueue
+    jsl ClearVQueue
     ; Upload background
     pea $0000
     pea 16*16/2
@@ -288,8 +294,8 @@ Menu.Begin:
     ; lda #bankbyte(_MenuLayout_PageStart)
     ; pha
     rep #$30
-    ldx #loword(_MenuLayout_PageStart)
-    jsr _Menu.UploadBG2
+    lda #STATE_START
+    jsr _Menu.SetState
     ; jsl CopyVMEM
     ; .POPN 7
     ; Upload background palette
@@ -310,8 +316,6 @@ Menu.Begin:
     pea loword(palettes.menu.logo)
     jsl CopyPalette
     .POPN 6
-    ; init vqueue
-    jsl ClearVQueue
     ; Clear sprites
     rep #$30
     jsl ClearSpriteTable
@@ -428,6 +432,11 @@ _Menu.HandleScroll:
     rts
 
 ; START SCREEN
+_menu_start_init:
+    ldx #loword(_MenuLayout_PageStart)
+    jsr _Menu.UploadBG2
+    rts
+
 _menu_start_tick:
     rep #$30
     lda.w joy1press
@@ -435,11 +444,17 @@ _menu_start_tick:
     beq +
         jsr _Menu.ScrollUp
         rep #$30
+        lda #STATE_START
+        jsr _Menu.SetState
+        rep #$30
         lda.w joy1press
     +:
     bit #JOY_DOWN
     beq +
         jsr _Menu.ScrollDown
+        rep #$30
+        lda #STATE_START
+        jsr _Menu.SetState
         rep #$30
         lda.w joy1press
     +:
@@ -447,11 +462,17 @@ _menu_start_tick:
     beq +
         jsr _Menu.ScrollLeft
         rep #$30
+        lda #STATE_START
+        jsr _Menu.SetState
+        rep #$30
         lda.w joy1press
     +:
     bit #JOY_RIGHT
     beq +
         jsr _Menu.ScrollRight
+        rep #$30
+        lda #STATE_START
+        jsr _Menu.SetState
     +:
     rts
 

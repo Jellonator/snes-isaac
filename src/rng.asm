@@ -112,16 +112,34 @@ QuickRand16:
     lda.l RandTable,X
     rtl
 
-RngGameInitialize:
-    ; TODO: use better method
+; Clear RNG with known values
+RNG.Clear:
     rep #$20 ; 16 bit A
     stz.w quickrandIndex
-    lda #$DEAD
+    lda #$0000
     sta.w gameSeed.low
     sta.w gameSeedStored.low
-    lda #$BEEF
+    lda #$0000
     sta.w gameSeed.high
     sta.w gameSeedStored.high
+    jsr _RngGeneratorInitStage
+    rtl
+
+RNG.InitFromTimer:
+    rep #$20 ; 16 bit A
+    stz.w quickrandIndex
+    ; copy seed
+    lda.l seed_timer_low
+    sta.w gameSeed.low
+    lda.l seed_timer_high
+    sta.w gameSeed.high
+    ; shuffle
+    .UpdateRng_ABS gameSeed, 32
+    lda.w gameSeed.low
+    sta.w gameSeedStored.low
+    lda.w gameSeed.high
+    sta.w gameSeedStored.high
+    ; init stage seed
     jsr _RngGeneratorInitStage
     rtl
 

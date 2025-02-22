@@ -6,7 +6,7 @@
     SLOT 3 $0000 $10000 "ROM" ; ROM slot
     SLOT 4 $2000 $E000 "ExtraMemory" ; Non-mirrored RAM slot
     SLOT 5 $0000 $10000 "FullMemory" ; Full RAM slot
-    SLOT 6 $0000 $8000 "SRAM" ; SRAM slot
+    SLOT 6 $6000 $2000 "SRAM" ; SRAM slot
     SLOT 7 $1E00 $0200 "Stack" ; Stack slot, ensuring at least 512 bytes reserved for stack
 .ENDME
 
@@ -23,13 +23,12 @@
     ID "SNES"
     ; Program title, 21 bytes
     NAME "Super BindingOfIsaac "
-         ;                     ;
-    ; FASTROM + LoROM
+    ; FASTROM + HiROM
     FASTROM
     HIROM
-
-    CARTRIDGETYPE $00 ; $00 = ROM only
-    SRAMSIZE $00      ; No SRAM
+    CARTRIDGETYPE $02 ; ROM + SRAM
+    ROMSIZE $0C       ; 4MB ROM
+    SRAMSIZE $05      ; 32KB SRAM
     COUNTRY $01       ; $01 = U.S.
     LICENSEECODE $00
     VERSION $00

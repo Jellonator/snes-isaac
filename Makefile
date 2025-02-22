@@ -42,6 +42,7 @@ SOURCES  := bindata.asm\
 			render.asm\
 			rng.asm\
 			room.asm\
+			save.asm\
 			spritedefs.asm\
 			spriteslot.asm\
 			vqueue.asm

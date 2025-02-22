@@ -189,7 +189,7 @@ tile_data_loop:
     lda #0
     sta.l tickCounter
     ; init rng
-    jsl RngGameInitialize
+    jsl RNG.InitFromTimer
     ; init vqueue
     jsl ClearVQueue
     ; init overlay

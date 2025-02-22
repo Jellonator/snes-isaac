@@ -460,6 +460,16 @@ _Menu.Loop:
     ; update
     jsr _Menu.Tick
     jsr _Menu.HandleScroll
+    ; increment seed timer
+    rep #$20
+    lda.l seed_timer_low
+    inc A
+    sta.l seed_timer_low
+    bne +
+        lda.l seed_timer_high
+        inc A
+        sta.l seed_timer_high
+    +:
     ; End update code
     rep #$30 ; 16 bit AXY
     stz.w is_game_update_running

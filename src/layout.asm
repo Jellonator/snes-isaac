@@ -214,3 +214,27 @@
 
 .DEFINE vqueueBinData_End $4000
 .EXPORT vqueueBinData_End
+
+; SRAM LAYOUT
+
+.RAMSECTION "SRAM0" BANK $20 SLOT "SRAM" ORGA $6000 FORCE
+    ; 16 byte check value. If not equivalent to a certain value, then save
+    ; files will be cleared on boot.
+    saveCheck ds 16
+    ; seed timers. these are incremented every frame when within the menu.
+    ; These will be copied into the game seed when selecting a new run.
+    seed_timer_low dw
+    seed_timer_high dw
+.ENDS
+
+.RAMSECTION "SRAM1" BANK $21 SLOT "SRAM" ORGA $6000 FORCE
+
+.ENDS
+
+.RAMSECTION "SRAM2" BANK $22 SLOT "SRAM" ORGA $6000 FORCE
+
+.ENDS
+
+.RAMSECTION "SRAM3" BANK $23 SLOT "SRAM" ORGA $6000 FORCE
+
+.ENDS

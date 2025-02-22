@@ -116,6 +116,7 @@ Start:
     ; Disabled interrupts
     sei
     .ClearCPU
+    jsl Save.Init
     jml Menu.Begin
 
 .ENDS

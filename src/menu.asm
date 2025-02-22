@@ -22,6 +22,8 @@
 .PutBGTile  8, 18, $48
 .PutBGTile 20, 22, $4C
 
+.FUNCTION textpos(x, y) (x + (y * 32))
+
 _MenuBackgroundData:
     .REPT 32*32 INDEX i
         .ARRAYDW NAME ArrayBackground INDICES i
@@ -216,22 +218,80 @@ _Menu.ClearBG1:
     sta.l vqueueOps.1.mode,X
     rts
 
+; put text at Y into position X
+_Menu.PutTextBG1:
+    rep #$30
+    ; get tile address
+    txa
+    clc
+    adc.b menuBG1Offset
+    clc
+    adc #MENU_BG1_TILE_BASE_ADDR
+    sta.b $00
+    sty.b $02
+    ; get string length
+    sep #$20
+    tyx
+    phb
+    phk
+    plb
+    jsl String.len
+    plb
+    .ACCU 16
+    sta.b $04
+    asl
+    sta.b $06
+    ; get buffer
+    lda.w vqueueBinOffset
+    sec
+    sbc.b $06
+    sta.w vqueueBinOffset
+    tax
+    ; copy text into buffer
+    phb
+    phk
+    plb
+    ldy.b $02
+    @loop_begin:
+        dec.b $04
+        bmi @loop_end
+        lda.w $0000,Y
+        and #$00FF
+        ora #deft($00, 3)
+        sta.l $7F0000,X
+        inx
+        inx
+        iny
+        jmp @loop_begin
+    @loop_end:
+    plb
+    ; create vqueue entry
+    .VQueueOpToA
+    tax
+    inc.w vqueueNumOps
+    lda.b $06
+    sta.l vqueueOps.1.numBytes,X
+    lda.w vqueueBinOffset
+    sta.l vqueueOps.1.aAddr,X
+    lda.b $00
+    sta.l vqueueOps.1.vramAddr,X
+    sep #$20
+    lda #$7F
+    sta.l vqueueOps.1.aAddr+2,X
+    lda #VQUEUE_MODE_VRAM
+    sta.l vqueueOps.1.mode,X
+    ; end
+    rts
+
 ; Enter menu
 Menu.Begin:
     .ChangeDataBank $00
     ; Disable rendering temporarily
-    sep #$20
-    lda #%10000000
-    sta.w INIDISP
+    .DisableINT
     ; Disable interrupts
-    lda #1
-    sta.w NMITIMEN
-    sei
+    .DisableRENDER
     ; reset all registers
-    jsl ResetRegisters
-    sep #$20
-    lda #%10000000
-    sta.w INIDISP
+    .ClearCPU
     ; Set tilemap mode 1
     lda #%01100001
     sta.w BGMODE
@@ -245,8 +305,8 @@ Menu.Begin:
     sta.w BG12NBA
     lda #(BG3_CHARACTER_BASE_ADDR >> 12)
     sta.w BG34NBA
-    ; Set up sprite mode
-    lda #%00000000 | (SPRITE1_BASE_ADDR >> 13) | ((SPRITE2_BASE_ADDR - SPRITE1_BASE_ADDR - $1000) >> 9)
+    ; Set up sprite mode (page 2 points to UI)
+    lda #0
     sta.w OBSEL
     ; show all on main screen
     lda #%00010111
@@ -313,6 +373,15 @@ Menu.Begin:
     pea loword(spritedata.menu.logo)
     jsl CopySprite
     .POPN 7
+    ; Upload logo
+    pea BG1_CHARACTER_BASE_ADDR
+    pea 16*16
+    sep #$20
+    lda #bankbyte(spritedata.menu.ui)
+    pha
+    pea loword(spritedata.menu.ui)
+    jsl CopySprite
+    .POPN 7
     ; Upload background tiles
     pea MENU_BG3_TILE_BASE_ADDR
     pea 32*32*2
@@ -351,6 +420,17 @@ Menu.Begin:
     pea loword(palettes.menu.logo)
     jsl CopyPalette
     .POPN 6
+    ; Upload UI palette
+    pea 2*16
+    pea $3000 + bankbyte(palettes.menu.ui)
+    pea loword(palettes.menu.ui)
+    jsl CopyPalette
+    .POPN 6
+    pea 2*16
+    pea $8000 + bankbyte(palettes.menu.ui)
+    pea loword(palettes.menu.ui)
+    jsl CopyPalette
+    .POPN 6
     ; Clear sprites
     rep #$30
     jsl ClearSpriteTable
@@ -361,15 +441,14 @@ Menu.Begin:
     sta.l needResetEntireGround
     sta.l numTilesToUpdate
     ; re-enable rendering
-    sep #$20
-    lda #%00001111
-    sta.w roomBrightness
-    sta INIDISP
+    rep #$20
     stz.w is_game_update_running
+    sep #$20
+    lda #$0F
+    sta.w roomBrightness
+    .EnableRENDER
     ; Enable interrupts and joypad
-    cli
-    lda #$81
-    sta.w NMITIMEN
+    .EnableINT
 ; Main loop for menu
 _Menu.Loop:
     ; update counter
@@ -467,9 +546,18 @@ _Menu.HandleScroll:
     rts
 
 ; START SCREEN
+_menu_start_text:
+    .ASC "PRESS START", 0
+
 _menu_start_init:
+    rep #$30
     ldx #loword(_MenuLayout_PageStart)
     jsr _Menu.UploadBG2
+    ; put text
+    rep #$30
+    ldy #loword(_menu_start_text)
+    ldx #textpos(11, 22)
+    jsr _Menu.PutTextBG1
     rts
 
 _menu_start_tick:
@@ -485,9 +573,19 @@ _menu_start_tick:
     rts
 
 ; MAIN SCREEN
+
+_menu_main_newgame:
+    .db $04
+    .ASC "New Run", 0
+
 _menu_main_init:
     ldx #loword(_MenuLayout_Main)
     jsr _Menu.UploadBG2
+    ; put text
+    rep #$30
+    ldy #loword(_menu_main_newgame)
+    ldx #textpos(10, 8)
+    jsr _Menu.PutTextBG1
     rts
 
 _menu_main_tick:
@@ -499,6 +597,13 @@ _menu_main_tick:
         rep #$30
         lda #STATE_START
         jsr _Menu.SetState
+    +:
+    rep #$30
+    lda.w joy1press
+    bit #JOY_START
+    beq +
+        jsl Floor.Transition_In
+        jml Game.Begin
     +:
     rts
 

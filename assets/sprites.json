@@ -146,5 +146,11 @@
         "src": "assets/sprites/menu_logo.raw",
         "depth": 16,
         "size": [16, 2]
+    },
+    {
+        "name": "menu.ui",
+        "src": "assets/sprites/menu_ui.raw",
+        "depth": 16,
+        "size": [16, 2]
     }
 ]

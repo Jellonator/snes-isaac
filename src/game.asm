@@ -7,15 +7,11 @@
 Game.Begin:
     .ChangeDataBank $00
     ; Disable rendering temporarily
-    sep #$20
-    lda #%10000000
-    sta.w INIDISP
+    .DisableINT
     ; Disable interrupts
-    lda #1
-    sta.w NMITIMEN
-    sei
+    .DisableRENDER
     ; reset all registers
-    jsl ResetRegisters
+    .ClearCPU
     ; Set tilemap mode 1
     lda #%00100001
     sta.w BGMODE
@@ -242,23 +238,22 @@ tile_data_loop:
     jsl UploadSpriteTable
     ; clear some render flags
     sep #$30
-    lda #0
+    lda #1
     sta.l needResetEntireGround
     sta.l numTilesToUpdate
     ; re-enable rendering
-    sep #$20
-    lda #%00000000
-    sta.w roomBrightness
-    sta INIDISP
+    rep #$20
     stz.w is_game_update_running
+    sep #$20
+    lda #$00
+    sta.w roomBrightness
+    .EnableRENDER
     ; Set transition flag
     rep #$20
     lda #FLOOR_FLAG_FADEIN
     tsb.w floorFlags
     ; Enable interrupts and joypad
-    cli
-    lda #$81
-    sta NMITIMEN
+    .EnableINT
 ; GAME LOOP
 _Game.Loop:
     ; update counter

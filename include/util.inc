@@ -554,3 +554,47 @@
 .MACRO .ChanceTableEnd
     .UNDEFINE _ChanceTableV
 .ENDM
+
+; Reset all registers and state to know values
+.MACRO .ClearCPU
+    clc
+    xce ; disable emulation mode
+    rep #$38 ; disable binary mode
+    ldx #$1FFF
+    txs ; reset stack pointer
+    pea $0000
+    plb
+    plb ; Set BANK to $0000
+    lda #0
+    tcd
+    jsl ResetRegisters
+    sep #$20
+    lda #$01
+    sta MEMSEL ; set FastROM
+.ENDM
+
+.MACRO .DisableINT
+    sei
+    lda #1
+    sta.w NMITIMEN
+    sei
+.ENDM
+
+.MACRO .EnableINT
+    sep #$20
+    cli
+    lda #$81
+    sta NMITIMEN
+.ENDM
+
+.MACRO .DisableRENDER
+    sep #$20
+    lda #%10000000
+    sta.w INIDISP
+.ENDM
+
+.MACRO .EnableRENDER
+    sep #$20
+    lda.w roomBrightness
+    sta.w INIDISP
+.ENDM

@@ -115,18 +115,7 @@ EmptyHandler:
 Start:
     ; Disabled interrupts
     sei
-    ; Change to native mode
-    clc
-    xce
-    ; Binary mode (decimal mode off), X/Y 16 bit
-    rep #$18
-    ; set stack to $1FFF
-    ldx #$1FFF
-    txs
-    ; Initialize registers
-    jsl ResetRegisters
-    lda #$01
-    sta MEMSEL
+    .ClearCPU
     jml Menu.Begin
 
 .ENDS

@@ -36,6 +36,7 @@ String.len:
     iny
     jmp @loop
 @end:
+    rep #$20
     tya
     rtl
 
@@ -87,6 +88,7 @@ Overlay.putline:
     sep #$20
     stx.b STRING_PTR
     jsl String.len
+    .ACCU 16
     sta.b STRING_LEN
     lda #32
     sec

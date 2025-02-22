@@ -150,5 +150,9 @@
     {
         "name": "menu.logo",
         "src": "assets/palettes/menu_logo.hex"
+    },
+    {
+        "name": "menu.ui",
+        "src": "assets/palettes/menu_ui.hex"
     }
 ]

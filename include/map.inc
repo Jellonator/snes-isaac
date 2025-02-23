@@ -37,7 +37,7 @@
 
 ; MAP SIZE
 .DEFINE MAP_MAX_WIDTH 16
-.DEFINE MAP_MAX_HEIGHT 10
+.DEFINE MAP_MAX_HEIGHT 16
 .DEFINE MAP_MAX_SIZE (MAP_MAX_WIDTH*MAP_MAX_HEIGHT)
 .DEFINE MAX_MAP_SLOTS 64
 .DEFINE MAP_ZPBUF_ADDR (256-MAX_MAP_SLOTS) ; 96/$60
@@ -76,6 +76,6 @@
 ; Branch if tile is on bottom border
 ; Assume tile is in A
 .MACRO .BranchIfTileOnBottomBorderA ARGS label
-    cmp #$90
+    cmp #$F0
     bcs label
 .ENDM

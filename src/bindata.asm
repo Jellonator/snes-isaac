@@ -16,18 +16,18 @@ EmptySpriteData:
     .ENDR
 DefaultUiData:
     ; row 1
-    .REPT 32
-        .dw 0
-    .ENDR
+    .dsw 32, 0
     ; row 2
     .dw 0
     .dw deft($02,6) | T_HIGHP
     .dw deft($03,6) | T_HIGHP
     .dw deft($03,6) | T_HIGHP
     .dw deft($02,6) | T_HIGHP | T_FLIPH
-    .REPT 27
-        .dw 0
-    .ENDR
+    .dsw 19, 0
+    .dw deft($42, 6) | T_HIGHP
+    .dsw 5, deft($43, 6) | T_HIGHP
+    .dw deft($42, 6) | T_FLIPH | T_HIGHP
+    .dw 0
     ; row 3
     .dw 0
     .dw deft($12,6) | T_HIGHP
@@ -37,9 +37,11 @@ DefaultUiData:
     .dw deft($01,6) | T_HIGHP
     .dw deft(TILE_TEXT_UINUMBER_BASE + 0,5) | T_HIGHP
     .dw deft(TILE_TEXT_UINUMBER_BASE + 0,5) | T_HIGHP
-    .REPT 24
-        .dw 0
-    .ENDR
+    .dsw 16, 0
+    .dw deft($52, 6) | T_HIGHP
+    .dsw 5, 0
+    .dw deft($52, 6) | T_FLIPH | T_HIGHP
+    .dw 0
     ; row 4
     .dw 0
     .dw deft($12,6) | T_HIGHP
@@ -49,9 +51,11 @@ DefaultUiData:
     .dw deft($11,5) | T_HIGHP
     .dw deft(TILE_TEXT_UINUMBER_BASE + 0,5) | T_HIGHP
     .dw deft(TILE_TEXT_UINUMBER_BASE + 0,5) | T_HIGHP
-    .REPT 24
-        .dw 0
-    .ENDR
+    .dsw 16, 0
+    .dw deft($52, 6) | T_HIGHP
+    .dsw 5, 0
+    .dw deft($52, 6) | T_FLIPH | T_HIGHP
+    .dw 0
     ; row 5
     .dw 0
     .dw deft($02,6) | T_HIGHP | T_FLIPV
@@ -61,27 +65,41 @@ DefaultUiData:
     .dw deft($21,5) | T_HIGHP
     .dw deft(TILE_TEXT_UINUMBER_BASE + 0,5) | T_HIGHP
     .dw deft(TILE_TEXT_UINUMBER_BASE + 0,5) | T_HIGHP
-    .REPT 24
-        .dw 0
-    .ENDR
+    .dsw 16, 0
+    .dw deft($52, 6) | T_HIGHP
+    .dsw 5, 0
+    .dw deft($52, 6) | T_FLIPH | T_HIGHP
+    .dw 0
+    ; row 6
+    .dsw 24, 0
+    .dw deft($52, 6) | T_HIGHP
+    .dsw 5, 0
+    .dw deft($52, 6) | T_FLIPH | T_HIGHP
+    .dw 0
+    ; row 7
+    .dsw 24, 0
+    .dw deft($52, 6) | T_HIGHP
+    .dsw 5, 0
+    .dw deft($52, 6) | T_FLIPH | T_HIGHP
+    .dw 0
+    ; row 8
+    .dsw 24, 0
+    .dw deft($42, 6) | T_HIGHP | T_FLIPV
+    .dsw 5, deft($43, 6) | T_HIGHP | T_FLIPV
+    .dw deft($42, 6) | T_FLIPH | T_HIGHP | T_FLIPV
+    .dw 0
     ; row 6-22
-    .REPT 32*18
-        .dw 0
-    .ENDR
+    .dsw 32*15, 0
     ; row 23-27
     .REPT 4 INDEX iy
-        .REPT 27
-            .dw 0
-        .ENDR
+        .dsw 27, 0
         .REPT 4 INDEX ix
             .dw deft($C0 + ix + iy*16, 7) | T_HIGHP
         .ENDR
         .dw 0
     .ENDR
     ; row 28-32
-    .REPT 32*5
-        .dw 0
-    .ENDR
+    .dsw 32*5, 0
 
     @end:
 MapTiles:

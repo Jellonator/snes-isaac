@@ -812,7 +812,7 @@ BeginMapGeneration:
     ; asl
     ; clc
     ; adc.b start_pos
-    lda #(8 + 2*16)
+    lda #(8 + 8*16)
     sta.b start_pos
     sta.w loadedRoomIndex
     sta.w roomslot_start

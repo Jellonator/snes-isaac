@@ -120,21 +120,86 @@ UploadSpriteTable:
 UpdateEntireMinimap:
     rep #$30 ; 16 bit AXY
     lda #$80
-    sta $2115
-    .REPT MAP_MAX_HEIGHT INDEX i
-        lda #BG1_TILE_BASE_ADDR + i*32 + 32 - MAP_MAX_WIDTH
-        sta VMADDR
-        ldy #i*MAP_MAX_WIDTH
-        jsr UpdateMinimapLine
+    sta.w VMAIN ; single increment, no mapping
+    .REPT 5 INDEX i
+        lda #BG1_TILE_BASE_ADDR + (i+2)*32 + 25
+        sta.w VMADDR
+        lda.b loadedRoomIndex
+        and #$00FF
+        .IF i == 0
+            cmp #$20
+            bcs +
+                jsr _ClearMinimapLine
+                jmp @skip_{i}
+            +:
+        .ELIF i == 1
+            cmp #$10
+            bcs +
+                jsr _ClearMinimapLine
+                jmp @skip_{i}
+            +:
+        .ELIF i == 3
+            cmp #$E0
+            bcc +
+                jsr _ClearMinimapLine
+                jmp @skip_{i}
+            +:
+        .ELIF i == 4
+            cmp #$F0
+            bcc +
+                jsr _ClearMinimapLine
+                jmp @skip_{i}
+            +:
+        .ENDIF
+        clc
+        adc #(i - 2) * MAP_MAX_WIDTH - 2
+        tay
+        jsr _UpdateMinimapLine
+        @skip_{i}:
     .ENDR
     rts
 
-UpdateMinimapLine:
+_ClearMinimapLine:
     .ACCU 16
     .INDEX 16
-    .REPT MAP_MAX_WIDTH INDEX i
+    lda #deft($53, 6)
+    .REPT 5 INDEX i
+        sta.w VMDATA
+        iny
+    .ENDR
+    rts
+
+_UpdateMinimapLine:
+    .ACCU 16
+    .INDEX 16
+    .REPT 5 INDEX i
+        .IF i != 2
+            lda.b loadedRoomIndex
+            and #$0F
+            .IF i == 0
+                cmp #2
+                bcs +
+            .ELIF i == 1
+                cmp #1
+                bcs +
+            .ELIF i == 3
+                cmp #$0E
+                bcc +
+            .ELIF i == 4
+                cmp #$0F
+                bcc +
+            .ENDIF
+                lda #0
+                jmp @store_{i}
+            +:
+        .ENDIF
         jsr _get_tile_value
-        sta VMDATA
+        cmp #0
+        bne +
+            lda #deft($53, 6)
+        +:
+    @store_{i}:
+        sta.w VMDATA
         iny
     .ENDR
     rts
@@ -192,6 +257,7 @@ _get_tile_value:
                 beq @no_map_no_compass ; no map no compass - don't discover any rooms
                     ; no map has compass - discover non-normal rooms
                     lda.w mapTileTypeTable,Y
+                    and #$00FF
                     cmp #ROOMTYPE_NORMAL+1
                     bcs @tile_discovered
         @no_map_no_compass:
@@ -208,32 +274,10 @@ _get_tile_value:
 ; Args:
 ;    slot dw $04,S
 UpdateMinimapSlot:
-    rep #$30
-; set VRAM address
-    lda.w vqueueNumMiniOps
-    asl
-    asl
-    tax
-    inc.w vqueueNumMiniOps
-    lda $04,S
-    and #$0F
-    sta.l vqueueMiniOps.1.vramAddr,X
-    lda $04,S
-    and #$F0
-    asl
-    clc
-    adc #BG1_TILE_BASE_ADDR + 32 - MAP_MAX_WIDTH
-    clc
-    adc.l vqueueMiniOps.1.vramAddr,X
-    sta.l vqueueMiniOps.1.vramAddr,X
-; determine value
-    phx ; PUSH vqueue address
-    lda $04+2,S
-    and #$00FF
-    tay
-    jsr _get_tile_value
-    plx
-    sta.l vqueueMiniOps.1.data,X
+    ; screw it, just update the whole minimap now
+    sep #$20
+    lda #$FF
+    sta.w numTilesToUpdate
     rtl
 
 ; Copy palette to CGRAM

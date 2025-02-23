@@ -240,6 +240,7 @@ tile_data_loop:
     sep #$30
     lda #1
     sta.l needResetEntireGround
+    lda #$FF
     sta.l numTilesToUpdate
     ; re-enable rendering
     rep #$20

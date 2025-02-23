@@ -15,14 +15,14 @@
     * [ ] Cursed rooms
     * [ ] Arcade rooms
     * [ ] Challenge rooms
-- [ ] Update RNG on next floor
+- [X] Update RNG on next floor
 - [X] Set reward RNG to be based on room
 - [ ] Change up map generation depending on floor type (e.g. room layouts specific to floors)
     * [ ] Certain special rooms (i.e. boss rooms) change pools depending on floor
 
 ## ITEMS
 
-- [ ] Active Items
+- [X] Active Items
 
 ## ENEMIES
 

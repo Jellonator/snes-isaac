@@ -211,7 +211,7 @@ ChapterDefinitions:
 .DSTRUCT FloorDefinition_Basement1 INSTANCEOF floordefinition_t VALUES
     name: .ASCSTR "The Basement \x80\0"
     chapter: .db 0
-    size: .db 7
+    size: .db 9
     roomgen: .dw ROOMGEN_DEFAULT
 .ENDST
 
@@ -219,7 +219,7 @@ ChapterDefinitions:
 .DSTRUCT FloorDefinition_Basement2 INSTANCEOF floordefinition_t VALUES
     name: .ASCSTR "The Basement \x80\x80\0"
     chapter: .db 0
-    size: .db 8
+    size: .db 10
     roomgen: .dw ROOMGEN_DEFAULT
 .ENDST
 
@@ -227,7 +227,7 @@ ChapterDefinitions:
 .DSTRUCT FloorDefinition_Caves1 INSTANCEOF floordefinition_t VALUES
     name: .ASCSTR "The Caves \x80\0"
     chapter: .db 1
-    size: .db 9
+    size: .db 11
     roomgen: .dw ROOMGEN_DEFAULT
 .ENDST
 
@@ -235,7 +235,7 @@ ChapterDefinitions:
 .DSTRUCT FloorDefinition_Caves2 INSTANCEOF floordefinition_t VALUES
     name: .ASCSTR "The Caves \x80\x80\0"
     chapter: .db 1
-    size: .db 10
+    size: .db 12
     roomgen: .dw ROOMGEN_DEFAULT
 .ENDST
 

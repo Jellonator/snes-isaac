@@ -217,6 +217,7 @@
 
 ; SRAM LAYOUT
 
+; Save header
 .RAMSECTION "SRAM0" BANK $20 SLOT "SRAM" ORGA $6000 FORCE
     ; 16 byte check value. If not equivalent to a certain value, then save
     ; files will be cleared on boot.
@@ -227,14 +228,27 @@
     seed_timer_high dw
 .ENDS
 
-.RAMSECTION "SRAM1" BANK $21 SLOT "SRAM" ORGA $6000 FORCE
+.RAMSECTION "SRAM0.save1" BANK $20 SLOT "SRAM" ORGA $6800 FORCE
+    saveslot.1 INSTANCEOF saveslot_t
+.ENDS
 
+.RAMSECTION "SRAM0.save2" BANK $20 SLOT "SRAM" ORGA $7000 FORCE
+    saveslot.2 INSTANCEOF saveslot_t
+.ENDS
+
+.RAMSECTION "SRAM0.save3" BANK $20 SLOT "SRAM" ORGA $7800 FORCE
+    saveslot.3 INSTANCEOF saveslot_t
+.ENDS
+
+; Save states
+.RAMSECTION "SRAM1" BANK $21 SLOT "SRAM" ORGA $6000 FORCE
+    savestate.1 INSTANCEOF savestate_t
 .ENDS
 
 .RAMSECTION "SRAM2" BANK $22 SLOT "SRAM" ORGA $6000 FORCE
-
+    savestate.2 INSTANCEOF savestate_t
 .ENDS
 
 .RAMSECTION "SRAM3" BANK $23 SLOT "SRAM" ORGA $6000 FORCE
-
+    savestate.3 INSTANCEOF savestate_t
 .ENDS

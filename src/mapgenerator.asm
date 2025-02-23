@@ -827,6 +827,8 @@ BeginMapGeneration:
     lda.l currentFloorPointer
     tax
     lda.l FLOOR_DEFINITION_BASE + floordefinition_t.size,X
+    ; SANITY CHECK: limit size
+    .AMAXU P_IMM (MAX_MAP_SLOTS-4)
     dec A
     tay
     sep #$30

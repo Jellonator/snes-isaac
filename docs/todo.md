@@ -49,7 +49,7 @@
 - [ ] Bombs receive velocity from projectiles
 - [ ] Pickups have collision, can push each other
 - [ ] Find empty spots for newly dropped pickups
-- [ ] Make minimap into 7x7 local preview
+- [X] Make minimap into 7x7 local preview
 - [ ] Pause menu
     * [ ] Show full minimap in pause menu
     * [ ] Show item collection in pause menu

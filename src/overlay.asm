@@ -88,7 +88,7 @@ Overlay.putline:
     sep #$20
     stx.b STRING_PTR
     jsl String.len
-    .ACCU 16
+    sep #$20
     sta.b STRING_LEN
     lda #32
     sec
@@ -157,9 +157,9 @@ Overlay.putline:
     clc
     adc.l vqueueBinOffset
     tax
-    lda #deft($BE, 4) | T_HIGHP
+    lda #deft($9E, 4) | T_HIGHP
     sta.l $7F0000 - 4,X
-    lda #deft($BF, 4) | T_HIGHP
+    lda #deft($9F, 4) | T_HIGHP
     sta.l $7F0000 - 2,X
     lda.b END
     and #$00FF
@@ -167,9 +167,9 @@ Overlay.putline:
     clc
     adc.l vqueueBinOffset
     tax
-    lda #deft($BE, 4) | T_HIGHP | T_FLIPH
+    lda #deft($9E, 4) | T_HIGHP | T_FLIPH
     sta.l $7F0000 + 2,X
-    lda #deft($BF, 4) | T_HIGHP | T_FLIPH
+    lda #deft($9F, 4) | T_HIGHP | T_FLIPH
     sta.l $7F0000,X
 ; write to vqueue
     ; get vqueue ptr

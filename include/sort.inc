@@ -76,12 +76,12 @@
             .IF word_size == 8
                 sep #$20
             .ENDIF
-            lda $0000,X
+            lda.w $0000,X
             pha
-            lda $0000,Y
-            sta $0000,X
+            lda.w $0000,Y
+            sta.w $0000,X
             pla
-            sta $0000,Y
+            sta.w $0000,Y
             .IF word_size == 8
                 rep #$20
             .ENDIF
@@ -145,12 +145,12 @@
                 .IF word_size == 8
                     sep #$20
                 .ENDIF
-                lda $0000,X
+                lda.w $0000,X
                 pha
-                lda $0000,Y
-                sta $0000,X
+                lda.w $0000,Y
+                sta.w $0000,X
                 pla
-                sta $0000,Y
+                sta.w $0000,Y
                 .IF word_size == 8
                     rep #$20
                 .ENDIF

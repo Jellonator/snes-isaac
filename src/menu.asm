@@ -442,7 +442,7 @@ Menu.Begin:
     sta.l numTilesToUpdate
     ; re-enable rendering
     rep #$20
-    stz.w is_game_update_running
+    stz.w isGameUpdateRunning
     sep #$20
     lda #$0F
     sta.w roomBrightness
@@ -453,7 +453,7 @@ Menu.Begin:
 _Menu.Loop:
     ; update counter
     rep #$30 ; 16 bit AXY
-    inc.w is_game_update_running
+    inc.w isGameUpdateRunning
     inc.w tickCounter
     ; clear data
     jsl ClearSpriteTable
@@ -472,7 +472,7 @@ _Menu.Loop:
     +:
     ; End update code
     rep #$30 ; 16 bit AXY
-    stz.w is_game_update_running
+    stz.w isGameUpdateRunning
     wai
     jmp _Menu.Loop
 

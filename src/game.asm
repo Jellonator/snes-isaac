@@ -15,7 +15,7 @@ Game.Begin:
     ; Set tilemap mode 1
     lda #%00100001
     sta.w BGMODE
-    lda #(BG1_TILE_BASE_ADDR >> 8) | %10
+    lda #(BG1_TILE_BASE_ADDR >> 8) | %01
     sta.w BG1SC
     lda #(BG2_TILE_BASE_ADDR >> 8) | %00
     sta.w BG2SC
@@ -215,13 +215,14 @@ tile_data_loop:
     rep #$30
     lda #0
     sta.w currentRoomGroundPalette
+    sta.w isGamePaused
     lda #BG2_TILE_BASE_ADDR
     sta.w gameRoomBG2Offset
     stz.w gameRoomScrollX
     lda #-32
     sta.w gameRoomScrollY
     lda #1
-    sta.w is_game_update_running
+    sta.w isGameUpdateRunning
     ; clear entity table
     jsl EntityInfoInitialize
     ; clear pathfinding data
@@ -244,7 +245,7 @@ tile_data_loop:
     sta.l numTilesToUpdate
     ; re-enable rendering
     rep #$20
-    stz.w is_game_update_running
+    stz.w isGameUpdateRunning
     sep #$20
     lda #$00
     sta.w roomBrightness
@@ -259,68 +260,69 @@ tile_data_loop:
 _Game.Loop:
     ; update counter
     rep #$30 ; 16 bit AXY
-    inc.w is_game_update_running
-    inc.w tickCounter
-    ; clear data
-    jsl ClearSpriteTable
-    jsl entity_clear_hitboxes
-    ; run one of the slow update functions, depending on current tick.
-    ; We spread these out over multiple frames to reduce their frame impact.
-    ; Each of these functions may take up to 20% of runtime each, and running
-    ; them all simultaneously would kill performance. The couple frames of lag
-    ; between updates is deemed acceptable.
-    rep #$30
-    lda.w tickCounter
-    and #$03
-    cmp #0
-    beq @do_path_player
-    cmp #1
-    beq @do_path_enemy
-    cmp #2
-    beq @do_path_enemy_nearest
-    jmp @end
-    @do_path_player:
-        jsl Pathing.UpdatePlayer
+    inc.w isGameUpdateRunning
+    sep #$20
+    lda.w isGamePaused
+    bne @skip_paused
+        rep #$20
+        inc.w tickCounter
+        ; clear data
+        jsl ClearSpriteTable
+        jsl entity_clear_hitboxes
+        ; run one of the slow update functions, depending on current tick.
+        ; We spread these out over multiple frames to reduce their frame impact.
+        ; Each of these functions may take up to 20% of runtime each, and running
+        ; them all simultaneously would kill performance. The couple frames of lag
+        ; between updates is deemed acceptable.
+        rep #$30
+        lda.w tickCounter
+        and #$03
+        cmp #0
+        beq @do_path_player
+        cmp #1
+        beq @do_path_enemy
+        cmp #2
+        beq @do_path_enemy_nearest
         jmp @end
-    @do_path_enemy:
-        jsl Pathing.UpdateEnemy
-        jmp @end
-    @do_path_enemy_nearest:
-        jsl Pathing.UpdateEnemyNearest
-    @end:
-    ; run all update hooks
-    jsl entity_refresh_hitboxes
-    jsr PlayerUpdate
-    jsl entity_tick_all
-    jsl Room_Tick
-    jsl Floor_Tick
-    jsr _UpdateRest
+        @do_path_player:
+            jsl Pathing.UpdatePlayer
+            jmp @end
+        @do_path_enemy:
+            jsl Pathing.UpdateEnemy
+            jmp @end
+        @do_path_enemy_nearest:
+            jsl Pathing.UpdateEnemyNearest
+        @end:
+        ; run all update hooks
+        jsl entity_refresh_hitboxes
+        jsr PlayerUpdate
+        jsl entity_tick_all
+        jsl Room_Tick
+        jsl Floor_Tick
+        jsr _UpdateUsables
+        ; Finally, check if room should be changed
+        jsr PlayerCheckEnterRoom
+@skip_paused:
     jsl GroundProcessOps
     jsl Overlay.update
-    ; Finally, check if room should be changed
-    jsr PlayerCheckEnterRoom
+    ; check pause
+    rep #$30
+    lda.w joy1press
+    bit #JOY_START
+    beq @skip_pause
+        sep #$20
+        lda.w isGamePaused
+        eor #$01
+        sta.w isGamePaused
+    @skip_pause:
     ; End update code
     rep #$30 ; 16 bit AXY
-    stz.w is_game_update_running
+    stz.w isGameUpdateRunning
     wai
     jmp _Game.Loop
 
-_UpdateRest:
+_UpdateUsables:
     rep #$30 ; 16 bit AXY
-    lda.w joy1press
-    BIT #JOY_START
-    beq @skip_regenerate_map
-    jsl BeginMapGeneration
-        sep #$30 ; 8 bit AXY
-        lda #1
-        sta.l needResetEntireGround
-        lda #0
-        pha
-        jsl LoadRoomSlotIntoLevel
-        sep #$30 ; 8 bit AXY
-        pla
-        jsl PlayerEnterFloor
-@skip_regenerate_map:
     rep #$30
     lda.w joy1press
     bit #JOY_SELECT

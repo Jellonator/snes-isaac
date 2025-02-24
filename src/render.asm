@@ -15,14 +15,14 @@ VBlank2:
     rep #$30 ; 16 bit AXY
     pha
     .ChangeDataBank $00
-    lda.w is_game_update_running
+    lda.w isGameUpdateRunning
     beq @continuevblank
     pla
     plb
     rti
 @continuevblank:
     pla ; compensate for earlier pha
-    inc.w is_game_update_running
+    inc.w isGameUpdateRunning
     ; Since VBlank only actually executes while the game isn't updating, we
     ; don't have to worry about storing previous state here
     sep #$20 ; 8 bit A
@@ -73,7 +73,7 @@ VBlank2:
     lda.w roomBrightness
     sta INIDISP
     jsr ReadInput
-    stz.w is_game_update_running
+    stz.w isGameUpdateRunning
     cli ; enable interrupts
     rti
 

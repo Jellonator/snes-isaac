@@ -38,9 +38,10 @@
     joy1press dw
     joy1held dw
 ; flags
-    is_game_update_running dw
+    isGameUpdateRunning dw
     tickCounter dw
     currentSaveSlot dw
+    isGamePaused db
 ; RNG state
     ; seed used for entire game
     gameSeed INSTANCEOF rng_t

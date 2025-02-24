@@ -106,7 +106,7 @@ RoomRand_Update16:
 QuickRand16:
     rep #$30
     inc.w quickrandIndex
-    lda #RANDTABLE_SIZE
+    lda #$FFFF ~ (RANDTABLE_SIZE-1)
     trb.w quickrandIndex
     ldx.w quickrandIndex
     lda.l RandTable,X

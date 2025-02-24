@@ -15,7 +15,7 @@ Game.Begin:
     ; Set tilemap mode 1
     lda #%00100001
     sta.w BGMODE
-    lda #(BG1_TILE_BASE_ADDR >> 8) | %00
+    lda #(BG1_TILE_BASE_ADDR >> 8) | %10
     sta.w BG1SC
     lda #(BG2_TILE_BASE_ADDR >> 8) | %00
     sta.w BG2SC

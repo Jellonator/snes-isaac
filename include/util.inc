@@ -575,9 +575,9 @@
 
 .MACRO .DisableINT
     sei
+    sep #$20
     lda #1
     sta.w NMITIMEN
-    sei
 .ENDM
 
 .MACRO .EnableINT

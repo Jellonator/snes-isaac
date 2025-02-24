@@ -5,7 +5,7 @@
 
 ; boring, I know
 _save_key:
-    .db "ISAAC SAVE $0000"
+    .db "ISAAC SAVE $0001"
         ;----------------; 16B
 
 ; Return A==1 if save key does not match
@@ -29,11 +29,14 @@ Save.Init:
     beq +
         jsl _Save.ClearAll
     +:
+    rep #$30
+    lda #0
+    sta.l currentSaveSlot
     rtl
 
 _Save.ClearAll:
     ; init seed timers with random noise from RAM
-    rep #$20
+    rep #$30
     ldx #0
     lda #0
 @loop_seed_low:
@@ -50,12 +53,58 @@ _Save.ClearAll:
     inx
     bne @loop_seed_high
     sta.l seed_timer_high
+    ; clear each save slot
+    rep #$20
+    lda #0
+    jsl Save.EraseSlot
+    rep #$20
+    lda #1
+    jsl Save.EraseSlot
+    rep #$20
+    lda #2
+    jsl Save.EraseSlot
+    ; clear each save state
+    sep #$20
+    lda #0
+    jsl Save.EraseSaveState
+    sep #$20
+    lda #1
+    jsl Save.EraseSaveState
+    sep #$20
+    lda #2
+    jsl Save.EraseSaveState
     ; finally, copy save key:
     sep #$20
     .REPT 16 INDEX i
         lda.l _save_key+i
         sta.l saveCheck+i
     .ENDR
+    rtl
+
+; erase slot A
+Save.EraseSlot:
+    rep #$30
+    and #$00FF
+    .MultiplyStatic $0800
+    tax
+    lda #SAVESLOT_STATE_EMPTY
+    sta.l saveslot.0.state,X
+    rtl
+
+; erase save state A
+Save.EraseSaveState:
+    ; set up bank
+    sep #$20
+    clc
+    adc #$21
+    phb
+    pha
+    plb
+    ; write save state
+    lda #SAVESTATE_STATE_EMPTY
+    sta.w loword(savestate.0.state)
+    ; end
+    plb
     rtl
 
 .ENDS

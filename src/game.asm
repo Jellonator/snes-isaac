@@ -467,7 +467,7 @@ Pause.PageStats:
     ora #deft(0, 6) | T_HIGHP
     sta.l $7F0000 + 2*textpos(15, 8),X
     ; decimal
-    lda #deft($24+TILE_TEXT_FONT_BASE, 6)
+    lda #deft($24+TILE_TEXT_FONT_BASE, 6) | T_HIGHP
     sta.l $7F0000 + 2*textpos(17, 8),X
 ; set damage stat text
     lda.w playerData.stat_damage
@@ -567,7 +567,7 @@ Pause.PageStats:
     ora #deft(0, 6) | T_HIGHP
     sta.l $7F0000 + 2*textpos(15, 12),X
     ; decimal
-    lda #deft($24+TILE_TEXT_FONT_BASE, 6)
+    lda #deft($24+TILE_TEXT_FONT_BASE, 6) | T_HIGHP
     sta.l $7F0000 + 2*textpos(17, 12),X
 ; set tear lifetime text
     lda.l playerData.stat_tear_lifetime
@@ -627,7 +627,7 @@ Pause.PageStats:
     ora #deft(0, 6) | T_HIGHP
     sta.l $7F0000 + 2*textpos(15, 14),X
     ; decimal
-    lda #deft($24+TILE_TEXT_FONT_BASE, 6)
+    lda #deft($24+TILE_TEXT_FONT_BASE, 6) | T_HIGHP
     sta.l $7F0000 + 2*textpos(17, 14),X
 ; set tear speed text
     lda.l playerData.stat_tear_speed
@@ -678,7 +678,7 @@ Pause.PageStats:
     ora #deft(0, 6) | T_HIGHP
     sta.l $7F0000 + 2*textpos(15, 16),X
     ; decimal
-    lda #deft($24+TILE_TEXT_FONT_BASE, 6)
+    lda #deft($24+TILE_TEXT_FONT_BASE, 6) | T_HIGHP
     sta.l $7F0000 + 2*textpos(17, 16),X
     jsr Pause.CopySeed
     rts

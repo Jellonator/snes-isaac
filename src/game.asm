@@ -382,9 +382,26 @@ _UpdateUsables:
 @skip_use_item:
     rts
 
+.DEFINE PAUSE_NUM_PAGES 2
+
+_pause_pages:
+    .dw Pause.PageMap
+    .dw Pause.PageStats
+
 Pause.Begin:
+    sep #$20
+    lda #0
+    sta.w pausePage
+    rep #$30
+    and #$00FF
+    asl
+    tax
+    jsr (_pause_pages,X)
+    rts
+
+Pause.PageStats:
 ; copy tile data into vqueue bin
-    .CopyROMToVQueueBin P_IMM tilemap.pause_main (32*32*2)
+    .CopyROMToVQueueBin P_IMM tilemap.pause_stat (32*32*2)
     rep #$30
     .VQueueOpToA
     tax
@@ -422,7 +439,7 @@ Pause.Begin:
     clc
     adc #TILE_TEXT_FONT_BASE
     ora #deft(0, 6) | T_HIGHP
-    sta.l $7F0000 + 2*textpos(27, 8),X
+    sta.l $7F0000 + 2*textpos(19, 8),X
     ; char 2
     lda.b $00
     and #$00F0
@@ -430,14 +447,14 @@ Pause.Begin:
     clc
     adc #TILE_TEXT_FONT_BASE
     ora #deft(0, 6) | T_HIGHP
-    sta.l $7F0000 + 2*textpos(26, 8),X
+    sta.l $7F0000 + 2*textpos(18, 8),X
     ; char 1
     lda.b $01
     and #$000F
     clc
     adc #TILE_TEXT_FONT_BASE
     ora #deft(0, 6) | T_HIGHP
-    sta.l $7F0000 + 2*textpos(24, 8),X
+    sta.l $7F0000 + 2*textpos(16, 8),X
     ; char 0
     lda.b $01
     and #$00F0
@@ -448,10 +465,10 @@ Pause.Begin:
     clc
     adc #TILE_TEXT_FONT_BASE
     ora #deft(0, 6) | T_HIGHP
-    sta.l $7F0000 + 2*textpos(23, 8),X
+    sta.l $7F0000 + 2*textpos(15, 8),X
     ; decimal
     lda #deft($24+TILE_TEXT_FONT_BASE, 6)
-    sta.l $7F0000 + 2*textpos(25, 8),X
+    sta.l $7F0000 + 2*textpos(17, 8),X
 ; set damage stat text
     lda.w playerData.stat_damage
     jsl ConvertBinaryToDecimalU16
@@ -468,7 +485,7 @@ Pause.Begin:
     clc
     adc #TILE_TEXT_FONT_BASE
     ora #deft(0, 6) | T_HIGHP
-    sta.l $7F0000 + 2*textpos(24, 10),X
+    sta.l $7F0000 + 2*textpos(16, 10),X
     ; char 1
     lda.b $01
     and #$000F
@@ -481,7 +498,7 @@ Pause.Begin:
     clc
     adc #TILE_TEXT_FONT_BASE
     ora #deft(0, 6) | T_HIGHP
-    sta.l $7F0000 + 2*textpos(25, 10),X
+    sta.l $7F0000 + 2*textpos(17, 10),X
     ; char 2
     lda.b $00
     and #$00F0
@@ -495,14 +512,14 @@ Pause.Begin:
     clc
     adc #TILE_TEXT_FONT_BASE
     ora #deft(0, 6) | T_HIGHP
-    sta.l $7F0000 + 2*textpos(26, 10),X
+    sta.l $7F0000 + 2*textpos(18, 10),X
     ; char 3
     lda.b $00
     and #$000F
     clc
     adc #TILE_TEXT_FONT_BASE
     ora #deft(0, 6) | T_HIGHP
-    sta.l $7F0000 + 2*textpos(27, 10),X
+    sta.l $7F0000 + 2*textpos(19, 10),X
 ; set tear rate text
     lda.l playerData.stat_tear_rate
     sta.b $02
@@ -522,7 +539,7 @@ Pause.Begin:
     clc
     adc #TILE_TEXT_FONT_BASE
     ora #deft(0, 6) | T_HIGHP
-    sta.l $7F0000 + 2*textpos(27, 12),X
+    sta.l $7F0000 + 2*textpos(19, 12),X
     ; char 2
     lda.b $00
     and #$00F0
@@ -530,14 +547,14 @@ Pause.Begin:
     clc
     adc #TILE_TEXT_FONT_BASE
     ora #deft(0, 6) | T_HIGHP
-    sta.l $7F0000 + 2*textpos(26, 12),X
+    sta.l $7F0000 + 2*textpos(18, 12),X
     ; char 1
     lda.b $01
     and #$000F
     clc
     adc #TILE_TEXT_FONT_BASE
     ora #deft(0, 6) | T_HIGHP
-    sta.l $7F0000 + 2*textpos(24, 12),X
+    sta.l $7F0000 + 2*textpos(16, 12),X
     ; char 0
     lda.b $01
     and #$00F0
@@ -548,10 +565,10 @@ Pause.Begin:
     clc
     adc #TILE_TEXT_FONT_BASE
     ora #deft(0, 6) | T_HIGHP
-    sta.l $7F0000 + 2*textpos(23, 12),X
+    sta.l $7F0000 + 2*textpos(15, 12),X
     ; decimal
     lda #deft($24+TILE_TEXT_FONT_BASE, 6)
-    sta.l $7F0000 + 2*textpos(25, 12),X
+    sta.l $7F0000 + 2*textpos(17, 12),X
 ; set tear lifetime text
     lda.l playerData.stat_tear_lifetime
     .MultiplyStatic 256/4
@@ -582,7 +599,7 @@ Pause.Begin:
     clc
     adc #TILE_TEXT_FONT_BASE
     ora #deft(0, 6) | T_HIGHP
-    sta.l $7F0000 + 2*textpos(27, 14),X
+    sta.l $7F0000 + 2*textpos(19, 14),X
     ; char 2
     lda.b $00
     and #$00F0
@@ -590,14 +607,14 @@ Pause.Begin:
     clc
     adc #TILE_TEXT_FONT_BASE
     ora #deft(0, 6) | T_HIGHP
-    sta.l $7F0000 + 2*textpos(26, 14),X
+    sta.l $7F0000 + 2*textpos(18, 14),X
     ; char 1
     lda.b $01
     and #$000F
     clc
     adc #TILE_TEXT_FONT_BASE
     ora #deft(0, 6) | T_HIGHP
-    sta.l $7F0000 + 2*textpos(24, 14),X
+    sta.l $7F0000 + 2*textpos(16, 14),X
     ; char 0
     lda.b $01
     and #$00F0
@@ -608,10 +625,10 @@ Pause.Begin:
     clc
     adc #TILE_TEXT_FONT_BASE
     ora #deft(0, 6) | T_HIGHP
-    sta.l $7F0000 + 2*textpos(23, 14),X
+    sta.l $7F0000 + 2*textpos(15, 14),X
     ; decimal
     lda #deft($24+TILE_TEXT_FONT_BASE, 6)
-    sta.l $7F0000 + 2*textpos(25, 14),X
+    sta.l $7F0000 + 2*textpos(17, 14),X
 ; set tear speed text
     lda.l playerData.stat_tear_speed
     ; pixels per frame -> tiles per second: × 60/16 (estimate with multiply by 4)
@@ -633,7 +650,7 @@ Pause.Begin:
     clc
     adc #TILE_TEXT_FONT_BASE
     ora #deft(0, 6) | T_HIGHP
-    sta.l $7F0000 + 2*textpos(27, 16),X
+    sta.l $7F0000 + 2*textpos(19, 16),X
     ; char 2
     lda.b $00
     and #$00F0
@@ -641,14 +658,14 @@ Pause.Begin:
     clc
     adc #TILE_TEXT_FONT_BASE
     ora #deft(0, 6) | T_HIGHP
-    sta.l $7F0000 + 2*textpos(26, 16),X
+    sta.l $7F0000 + 2*textpos(18, 16),X
     ; char 1
     lda.b $01
     and #$000F
     clc
     adc #TILE_TEXT_FONT_BASE
     ora #deft(0, 6) | T_HIGHP
-    sta.l $7F0000 + 2*textpos(24, 16),X
+    sta.l $7F0000 + 2*textpos(16, 16),X
     ; char 0
     lda.b $01
     and #$00F0
@@ -659,11 +676,16 @@ Pause.Begin:
     clc
     adc #TILE_TEXT_FONT_BASE
     ora #deft(0, 6) | T_HIGHP
-    sta.l $7F0000 + 2*textpos(23, 16),X
+    sta.l $7F0000 + 2*textpos(15, 16),X
     ; decimal
     lda #deft($24+TILE_TEXT_FONT_BASE, 6)
-    sta.l $7F0000 + 2*textpos(25, 16),X
+    sta.l $7F0000 + 2*textpos(17, 16),X
+    jsr Pause.CopySeed
+    rts
+
+Pause.CopySeed:
 ; copy seed
+    ldx.w vqueueBinOffset
     .REPT 8 INDEX i
         lda.w gameSeedStored + (i / 2)
         .IF (i # 2) == 0
@@ -677,7 +699,28 @@ Pause.Begin:
         ora #deft(0, 6) | T_HIGHP
         sta.l $7F0000 + 2*textpos(21+i, 23),X
     .ENDR
+    rts
+
+Pause.PageMap:
+; copy tile data into vqueue bin
+    .CopyROMToVQueueBin P_IMM tilemap.pause_map (32*32*2)
+    rep #$30
+    .VQueueOpToA
+    tax
+    inc.w vqueueNumOps
+    lda.w vqueueBinOffset
+    sta.l vqueueOps.1.aAddr,X
+    lda #32*32*2
+    sta.l vqueueOps.1.numBytes,X
+    lda #BG1_TILE_BASE_ADDR + $0400
+    sta.l vqueueOps.1.vramAddr,X
+    sep #$20
+    lda #$7F
+    sta.l vqueueOps.1.aAddr+2,X
+    lda #VQUEUE_MODE_VRAM
+    sta.l vqueueOps.1.mode,X
 ; display map
+    rep #$30
     lda.w vqueueBinOffset
     clc
     adc #2*textpos(4, 8)
@@ -707,12 +750,50 @@ Pause.Begin:
     tax
     dec.b $10
     bne @loop_map_y
+    jsr Pause.CopySeed
     rts
 
 Pause.End:
     rts
 
 Pause.Update:
+    rep #$30
+    stz.b $00
+    lda.w joy1press
+    bit #JOY_L
+    beq +
+        sep #$20
+        inc.b $00
+        lda.w pausePage
+        dec A
+        bpl ++
+            lda #PAUSE_NUM_PAGES-1
+        ++:
+        sta.w pausePage
+        rep #$20
+    +:
+    lda.w joy1press
+    bit #JOY_R
+    beq +
+        sep #$20
+        inc.b $00
+        lda.w pausePage
+        inc A
+        cmp #PAUSE_NUM_PAGES
+        bcc ++
+            lda #0
+        ++:
+        sta.w pausePage
+        rep #$20
+    +:
+    lda.b $00
+    beq +
+        lda.w pausePage
+        and #$00FF
+        asl
+        tax
+        jsr (_pause_pages,X)
+    +:
     rts
 
 Pause.UpdateScroll:

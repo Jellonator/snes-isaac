@@ -449,6 +449,8 @@
     @@@@@\.\@end:
 .ENDM
 
+.FUNCTION bin2dec(x) ((x # 10) | (((x / 10) # 10) << 4) | (((x / 100) # 10) << 8) | (((x / 1000) # 10) << 12))
+
 ; UTILITY
 
 ; Change data bank to value

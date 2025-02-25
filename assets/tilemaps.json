@@ -5,5 +5,19 @@
         "palette": 6,
         "priority": 1,
         "default": 0
+    },
+    {
+        "name": "pause_map",
+        "src": "assets/tilemaps/pause_map.tmx",
+        "palette": 6,
+        "priority": 1,
+        "default": 0
+    },
+    {
+        "name": "pause_stat",
+        "src": "assets/tilemaps/pause_stat.tmx",
+        "palette": 6,
+        "priority": 1,
+        "default": 0
     }
 ]

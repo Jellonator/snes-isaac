@@ -65,11 +65,17 @@
     anim_wait_timer db
     bomb_wait_timer db
 ; stats
+    ; Player Maximum Speed, in pixels per frame (Q8.8)
     stat_speed dw
+    ; Player acceleration, in pixels per frame² (Q8.8)
     stat_accel dw
+    ; Tears per second (Q8.8)
     stat_tear_rate dw
+    ; Tear speed, in pixels per frame (Q8.8)
     stat_tear_speed dw
+    ; Number of frames that tears are alive for
     stat_tear_lifetime dw
+    ; Damage of tears
     stat_damage dw
 ; pickups
     money dw

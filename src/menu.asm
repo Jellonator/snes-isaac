@@ -22,8 +22,6 @@
 .PutBGTile  8, 18, $48
 .PutBGTile 20, 22, $4C
 
-.FUNCTION textpos(x, y) (x + (y * 32))
-
 _MenuBackgroundData:
     .REPT 32*32 INDEX i
         .ARRAYDW NAME ArrayBackground INDICES i

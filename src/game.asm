@@ -383,7 +383,7 @@ _UpdateUsables:
     rts
 
 Pause.Begin:
-    ; copy tile data into vqueue bin
+; copy tile data into vqueue bin
     .CopyROMToVQueueBin P_IMM tilemap.pause_main (32*32*2)
     rep #$30
     .VQueueOpToA
@@ -400,6 +400,283 @@ Pause.Begin:
     sta.l vqueueOps.1.aAddr+2,X
     lda #VQUEUE_MODE_VRAM
     sta.l vqueueOps.1.mode,X
+; set speed stat text
+    rep #$30
+    lda.l playerData.stat_speed
+    ; pixels per frame -> tiles per second: × 60/16 (estimate with multiply by 4)
+    .MultiplyStatic 4
+    sta.b $02
+    sep #$30
+    and #$00FF
+    tax
+    lda.l FractionBinToDec,X
+    sta.b $00
+    lda.b $03
+    jsl ConvertBinaryToDecimalU8
+    sta.b $01
+    rep #$30
+    ldx.w vqueueBinOffset
+    ; char 3
+    lda.b $00
+    and #$000F
+    clc
+    adc #TILE_TEXT_FONT_BASE
+    ora #deft(0, 6) | T_HIGHP
+    sta.l $7F0000 + 2*textpos(27, 8),X
+    ; char 2
+    lda.b $00
+    and #$00F0
+    .DivideStatic 16
+    clc
+    adc #TILE_TEXT_FONT_BASE
+    ora #deft(0, 6) | T_HIGHP
+    sta.l $7F0000 + 2*textpos(26, 8),X
+    ; char 1
+    lda.b $01
+    and #$000F
+    clc
+    adc #TILE_TEXT_FONT_BASE
+    ora #deft(0, 6) | T_HIGHP
+    sta.l $7F0000 + 2*textpos(24, 8),X
+    ; char 0
+    lda.b $01
+    and #$00F0
+    .DivideStatic 16
+    bne +
+        lda #$2B
+    +:
+    clc
+    adc #TILE_TEXT_FONT_BASE
+    ora #deft(0, 6) | T_HIGHP
+    sta.l $7F0000 + 2*textpos(23, 8),X
+    ; decimal
+    lda #deft($24+TILE_TEXT_FONT_BASE, 6)
+    sta.l $7F0000 + 2*textpos(25, 8),X
+; set damage stat text
+    lda.w playerData.stat_damage
+    jsl ConvertBinaryToDecimalU16
+    sta.b $00
+    ldy #0
+    ; char 0
+    lda.b $01
+    and #$00F0
+    .DivideStatic 16
+    bne +
+        ldy #1
+        lda #$2B
+    +:
+    clc
+    adc #TILE_TEXT_FONT_BASE
+    ora #deft(0, 6) | T_HIGHP
+    sta.l $7F0000 + 2*textpos(24, 10),X
+    ; char 1
+    lda.b $01
+    and #$000F
+    bne +
+        cpy #0
+        beq +
+        lda #$2B
+        ldy #1
+    +:
+    clc
+    adc #TILE_TEXT_FONT_BASE
+    ora #deft(0, 6) | T_HIGHP
+    sta.l $7F0000 + 2*textpos(25, 10),X
+    ; char 2
+    lda.b $00
+    and #$00F0
+    .DivideStatic 16
+    bne +
+        cpy #0
+        beq +
+        lda #$2B
+        ldy #1
+    +:
+    clc
+    adc #TILE_TEXT_FONT_BASE
+    ora #deft(0, 6) | T_HIGHP
+    sta.l $7F0000 + 2*textpos(26, 10),X
+    ; char 3
+    lda.b $00
+    and #$000F
+    clc
+    adc #TILE_TEXT_FONT_BASE
+    ora #deft(0, 6) | T_HIGHP
+    sta.l $7F0000 + 2*textpos(27, 10),X
+; set tear rate text
+    lda.l playerData.stat_tear_rate
+    sta.b $02
+    sep #$30
+    and #$00FF
+    tax
+    lda.l FractionBinToDec,X
+    sta.b $00
+    lda.b $03
+    jsl ConvertBinaryToDecimalU8
+    sta.b $01
+    rep #$30
+    ldx.w vqueueBinOffset
+    ; char 3
+    lda.b $00
+    and #$000F
+    clc
+    adc #TILE_TEXT_FONT_BASE
+    ora #deft(0, 6) | T_HIGHP
+    sta.l $7F0000 + 2*textpos(27, 12),X
+    ; char 2
+    lda.b $00
+    and #$00F0
+    .DivideStatic 16
+    clc
+    adc #TILE_TEXT_FONT_BASE
+    ora #deft(0, 6) | T_HIGHP
+    sta.l $7F0000 + 2*textpos(26, 12),X
+    ; char 1
+    lda.b $01
+    and #$000F
+    clc
+    adc #TILE_TEXT_FONT_BASE
+    ora #deft(0, 6) | T_HIGHP
+    sta.l $7F0000 + 2*textpos(24, 12),X
+    ; char 0
+    lda.b $01
+    and #$00F0
+    .DivideStatic 16
+    bne +
+        lda #$2B
+    +:
+    clc
+    adc #TILE_TEXT_FONT_BASE
+    ora #deft(0, 6) | T_HIGHP
+    sta.l $7F0000 + 2*textpos(23, 12),X
+    ; decimal
+    lda #deft($24+TILE_TEXT_FONT_BASE, 6)
+    sta.l $7F0000 + 2*textpos(25, 12),X
+; set tear lifetime text
+    lda.l playerData.stat_tear_lifetime
+    .MultiplyStatic 256/4
+    sta.l DIVU_DIVIDEND
+    sep #$20
+    lda #15
+    sta.l DIVU_DIVISOR
+    rep #$20
+    rep #$20
+    .REPT 5
+        nop
+    .ENDR
+    lda.l DIVU_QUOTIENT
+    sta.b $02
+    sep #$30
+    and #$00FF
+    tax
+    lda.l FractionBinToDec,X
+    sta.b $00
+    lda.b $03
+    jsl ConvertBinaryToDecimalU8
+    sta.b $01
+    rep #$30
+    ldx.w vqueueBinOffset
+    ; char 3
+    lda.b $00
+    and #$000F
+    clc
+    adc #TILE_TEXT_FONT_BASE
+    ora #deft(0, 6) | T_HIGHP
+    sta.l $7F0000 + 2*textpos(27, 14),X
+    ; char 2
+    lda.b $00
+    and #$00F0
+    .DivideStatic 16
+    clc
+    adc #TILE_TEXT_FONT_BASE
+    ora #deft(0, 6) | T_HIGHP
+    sta.l $7F0000 + 2*textpos(26, 14),X
+    ; char 1
+    lda.b $01
+    and #$000F
+    clc
+    adc #TILE_TEXT_FONT_BASE
+    ora #deft(0, 6) | T_HIGHP
+    sta.l $7F0000 + 2*textpos(24, 14),X
+    ; char 0
+    lda.b $01
+    and #$00F0
+    .DivideStatic 16
+    bne +
+        lda #$2B
+    +:
+    clc
+    adc #TILE_TEXT_FONT_BASE
+    ora #deft(0, 6) | T_HIGHP
+    sta.l $7F0000 + 2*textpos(23, 14),X
+    ; decimal
+    lda #deft($24+TILE_TEXT_FONT_BASE, 6)
+    sta.l $7F0000 + 2*textpos(25, 14),X
+; set tear speed text
+    lda.l playerData.stat_tear_speed
+    ; pixels per frame -> tiles per second: × 60/16 (estimate with multiply by 4)
+    .MultiplyStatic 4
+    sta.b $02
+    sep #$30
+    and #$00FF
+    tax
+    lda.l FractionBinToDec,X
+    sta.b $00
+    lda.b $03
+    jsl ConvertBinaryToDecimalU8
+    sta.b $01
+    rep #$30
+    ldx.w vqueueBinOffset
+    ; char 3
+    lda.b $00
+    and #$000F
+    clc
+    adc #TILE_TEXT_FONT_BASE
+    ora #deft(0, 6) | T_HIGHP
+    sta.l $7F0000 + 2*textpos(27, 16),X
+    ; char 2
+    lda.b $00
+    and #$00F0
+    .DivideStatic 16
+    clc
+    adc #TILE_TEXT_FONT_BASE
+    ora #deft(0, 6) | T_HIGHP
+    sta.l $7F0000 + 2*textpos(26, 16),X
+    ; char 1
+    lda.b $01
+    and #$000F
+    clc
+    adc #TILE_TEXT_FONT_BASE
+    ora #deft(0, 6) | T_HIGHP
+    sta.l $7F0000 + 2*textpos(24, 16),X
+    ; char 0
+    lda.b $01
+    and #$00F0
+    .DivideStatic 16
+    bne +
+        lda #$2B
+    +:
+    clc
+    adc #TILE_TEXT_FONT_BASE
+    ora #deft(0, 6) | T_HIGHP
+    sta.l $7F0000 + 2*textpos(23, 16),X
+    ; decimal
+    lda #deft($24+TILE_TEXT_FONT_BASE, 6)
+    sta.l $7F0000 + 2*textpos(25, 16),X
+; copy seed
+    .REPT 8 INDEX i
+        lda.w gameSeedStored + (i / 2)
+        .IF (i # 2) == 0
+            and #$000F
+        .ELSE
+            and #$00F0
+            .DivideStatic 16
+        .ENDIF
+        clc
+        adc #TILE_TEXT_FONT_BASE
+        ora #deft(0, 6) | T_HIGHP
+        sta.l $7F0000 + 2*textpos(21+i, 23),X
+    .ENDR
     rts
 
 Pause.End:

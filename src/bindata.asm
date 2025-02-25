@@ -343,6 +343,11 @@ RandTable:
     .SEED $B00B
     .DBRND (RANDTABLE_SIZE+1) 0 255
 
+FractionBinToDec:
+    .REPT 256 INDEX i
+        .db bin2dec(floor(i / 2.56))
+    .ENDR
+
 .ENDS
 
 .bank $20

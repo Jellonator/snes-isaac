@@ -96,6 +96,9 @@
 .FUNCTION colorf(red, green, blue) ((round(blue * 31) << 10) + (round(green * 31) << 5) + round(blue * 31))
 .DEFINE CLEAR_COLOR colorf(0, 0, 0)
 
+; TILE FUNCTIONS
+.FUNCTION textpos(x, y) (x + (y * 32))
+
 ; Copy memory from ROM into the next available VQUEUE BIN buffer
 .MACRO .CopyROMToVQueueBin ARGS METHOD, ROMADDR, NBYTES
     rep #$20 ; 16 bit A

@@ -41,7 +41,10 @@
     isGameUpdateRunning dw
     tickCounter dw
     currentSaveSlot dw
+; pause menu
     isGamePaused db
+    shouldGamePause db
+    gamePauseTimer db
 ; RNG state
     ; seed used for entire game
     gameSeed INSTANCEOF rng_t
@@ -79,6 +82,7 @@
     vqueueNumOps dw
     vqueueNumMiniOps dw
     vqueueBinOffset dw
+    vqueueNumRegOps dw
 ; Room scroll data
     gameRoomBG2Offset dw ; % 000000y0 000x0000
     gameRoomScrollX dw
@@ -188,6 +192,8 @@
 ; VQueue data
     vqueueOps INSTANCEOF vqueueop_t VQUEUE_MAX_SIZE
     vqueueMiniOps INSTANCEOF vqueueminiop_t 255
+    vqueueRegOps_Addr dsw 64
+    vqueueRegOps_Value dsw 64
     ; at least 4K of potential DMA data. We can only transfer ~5K per frame ($1400),
     ; so if we somehow overreach this, we've messed something up bad.
     ; Grabbing vqueue buffer space should be rare anyways.

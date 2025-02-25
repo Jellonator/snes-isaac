@@ -15,7 +15,7 @@ Game.Begin:
     ; Set tilemap mode 1
     lda #%00100001
     sta.w BGMODE
-    lda #(BG1_TILE_BASE_ADDR >> 8) | %01
+    lda #(BG1_TILE_BASE_ADDR >> 8) | %10
     sta.w BG1SC
     lda #(BG2_TILE_BASE_ADDR >> 8) | %00
     sta.w BG2SC
@@ -212,10 +212,12 @@ tile_data_loop:
     sta.b mapDoorEast+2
     sta.b mapDoorSouth+2
     sta.b mapDoorWest+2
+    stz.w isGamePaused
+    stz.w shouldGamePause
     rep #$30
     lda #0
+    stz.w gamePauseTimer
     sta.w currentRoomGroundPalette
-    sta.w isGamePaused
     lda #BG2_TILE_BASE_ADDR
     sta.w gameRoomBG2Offset
     stz.w gameRoomScrollX
@@ -305,16 +307,59 @@ _Game.Loop:
 @skip_paused:
     jsl GroundProcessOps
     jsl Overlay.update
-    ; check pause
-    rep #$30
-    lda.w joy1press
-    bit #JOY_START
+; PAUSE CODE
+    ; toggle pause
+    sep #$30
+    lda.w gamePauseTimer
+    beq @can_toggle_pause
+    cmp #32
+    beq @can_toggle_pause
+    jmp @skip_pause
+@can_toggle_pause:
+    lda.w joy1press+1
+    bit #hibyte(JOY_START)
     beq @skip_pause
-        sep #$20
-        lda.w isGamePaused
+        lda.w shouldGamePause
         eor #$01
-        sta.w isGamePaused
-    @skip_pause:
+        sta.w shouldGamePause
+        beq +
+            ; begin pause
+            jsr Pause.Begin
+            sep #$30
+            jmp @skip_pause
+        +:
+        jsr Pause.End
+        sep #$30
+@skip_pause:
+    ; update pause timer
+    lda.w shouldGamePause
+    beq @unpause
+        ; pausing
+        lda.w gamePauseTimer
+        cmp #32
+        bcs +
+            inc A
+            sta.w gamePauseTimer
+            jsr Pause.UpdateScroll
+            sep #$30
+        +:
+        jmp @end_pause_timer
+    @unpause:
+        lda.w gamePauseTimer
+        beq +
+            dec A
+            sta.w gamePauseTimer
+            jsr Pause.UpdateScroll
+            sep #$30
+        +:
+@end_pause_timer
+    ; set pause flag
+    stz.w isGamePaused
+    lda.w gamePauseTimer
+    beq +
+        inc.w isGamePaused
+        jsr Pause.Update
+    +:
     ; End update code
     rep #$30 ; 16 bit AXY
     stz.w isGameUpdateRunning
@@ -335,6 +380,37 @@ _UpdateUsables:
     beq @skip_use_item
         jsl Item.try_use_active
 @skip_use_item:
+    rts
+
+Pause.Begin:
+    rts
+
+Pause.End:
+    rts
+
+Pause.Update:
+    rts
+
+Pause.UpdateScroll:
+    rep #$30
+    lda.w gamePauseTimer
+    and #$00FF
+    asl
+    asl
+    asl
+    sta.b $00
+    lda.w vqueueNumRegOps
+    inc.w vqueueNumRegOps
+    inc.w vqueueNumRegOps
+    asl
+    tax
+    lda #BG1VOFS
+    sta.l vqueueRegOps_Addr,X
+    sta.l vqueueRegOps_Addr+2,X
+    lda.b $00
+    sta.l vqueueRegOps_Value,X
+    lda.b $01
+    sta.l vqueueRegOps_Value+2,X
     rts
 
 .ENDS

@@ -9,6 +9,7 @@ ClearVQueue:
     lda #loword(vqueueBinData_End)
     sta.w vqueueBinOffset
     stz.w vqueueNumMiniOps
+    stz.w vqueueNumRegOps
     rtl
 
 _proc_vqueue_vram:
@@ -94,8 +95,27 @@ ProcessVQueue:
     dec.b $00
     bne @process_vqueue_loop
 @process_vqueue_end:
+; Process register queue
+    lda.l vqueueNumRegOps
+    beq @process_reg_end
+    asl
+    sta.b $00
+    sep #$20
+    ldy #0
+@process_reg_loop:
+    ldx.w vqueueRegOps_Addr,Y
+    lda.w vqueueRegOps_Value,Y
+    sta.b $00,X
+    iny
+    iny
+    cpy $00
+    bcc @process_reg_loop
+@process_reg_end:
+; Clear vqueue and reset bank
     plb
+    rep #$30
     stz.w vqueueNumOps
+    stz.w vqueueNumRegOps
     lda.w #loword(vqueueBinData_End)
     sta.w vqueueBinOffset
 ; Process miniqueue

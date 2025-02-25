@@ -1,8 +1,8 @@
 .include "base.inc"
 
 .include "assets.inc"
-
 .include "roompools.inc"
+.include "tilemaps.inc"
 
 .SECTION "ExtraData" BANK ROMBANK_BASE SLOT "ROM" ORGA $8000 SEMIFREE
 EmptyData:

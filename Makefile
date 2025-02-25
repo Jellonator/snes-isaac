@@ -50,6 +50,7 @@ SOURCES  := bindata.asm\
 OBJECTS  := $(SOURCES:%.asm=$(OBJDIR)/%.obj)
 PALETTES := $(wildcard assets/palettes/*.hex)
 SPRITES  := $(wildcard assets/sprites/*.raw)
+TILEMAPS := $(wildcard assets/tilemaps/*.tmx)
 INCLUDES := $(wildcard include/*.inc)
 
 Test.smc: Test.link $(OBJECTS)
@@ -59,12 +60,14 @@ Test.smc: Test.link $(OBJECTS)
 Test.link:
 	printf "[objects]$(OBJECTS:%.obj=\n%.obj)" > Test.link
 
-# include/roompools.inc: $(PALETTES) $(SPRITES) assets/rooms/roompools.json
-# 	echo MAKING ROOMPOOL INC
-# 	$(PY) scripts/roomimport.py
+include/roompools.inc: $(PALETTES) $(SPRITES) assets/rooms/roompools.json
+	$(PY) scripts/roomimport.py
+
+include/tilemaps.inc: $(PALETTES) $(SPRITES) assets/tilemaps.json
+	mkdir -p include/tilemaps/
+	$(PY) scripts/tilemapimport.py
 
 include/assets.inc: $(PALETTES) $(SPRITES) assets/palettes.json assets/sprites.json
-	echo MAKING ASSET INC
 	mkdir -p include/palettes/
 	mkdir -p include/sprites/
 	$(PY) scripts/assetimport.py
@@ -74,7 +77,7 @@ $(OBJDIR)/%.obj: $(SRCDIR)/%.asm $(INCLUDES)
 	mkdir -p $(OBJDIR)/entity
 	$(AC) $(AFLAGS) -o $@ $<
 
-$(OBJDIR)/bindata.obj: $(SRCDIR)/bindata.asm $(INCLUDES) include/assets.inc include/roompools.inc
+$(OBJDIR)/bindata.obj: $(SRCDIR)/bindata.asm $(INCLUDES) include/assets.inc include/roompools.inc include/tilemaps.inc
 	mkdir -p $(OBJDIR)
 	mkdir -p $(OBJDIR)/entity
 	$(AC) $(AFLAGS) -o $@ $<
@@ -85,6 +88,8 @@ clean:
 	rm -rf $(BINDIR)
 	rm -rf include/palettes/
 	rm -rf include/sprites/
+	rm -rf include/tilemaps/
 	rm -f include/assets.inc
 	rm -f include/roompools.inc
+	rm -f include/tilemaps.inc
 	rm -f Test.link

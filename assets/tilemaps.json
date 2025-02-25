@@ -1,0 +1,9 @@
+[
+    {
+        "name": "pause_main",
+        "src": "assets/tilemaps/pause.tmx",
+        "palette": 6,
+        "priority": 1,
+        "default": 0
+    }
+]

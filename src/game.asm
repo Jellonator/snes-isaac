@@ -383,6 +383,23 @@ _UpdateUsables:
     rts
 
 Pause.Begin:
+    ; copy tile data into vqueue bin
+    .CopyROMToVQueueBin P_IMM tilemap.pause_main (32*32*2)
+    rep #$30
+    .VQueueOpToA
+    tax
+    inc.w vqueueNumOps
+    lda.w vqueueBinOffset
+    sta.l vqueueOps.1.aAddr,X
+    lda #32*32*2
+    sta.l vqueueOps.1.numBytes,X
+    lda #BG1_TILE_BASE_ADDR + $0400
+    sta.l vqueueOps.1.vramAddr,X
+    sep #$20
+    lda #$7F
+    sta.l vqueueOps.1.aAddr+2,X
+    lda #VQUEUE_MODE_VRAM
+    sta.l vqueueOps.1.mode,X
     rts
 
 Pause.End:

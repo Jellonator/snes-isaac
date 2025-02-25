@@ -5,9 +5,11 @@ obj/
 include/assets.inc
 include/palettes.bin
 include/roompools.inc
+include/tilemaps.inc
 include/*.bin
 include/sprites/
 include/palettes/
+include/tilemaps/
 *.png~
 *.tiled-session
 scripts/venv

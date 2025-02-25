@@ -193,7 +193,7 @@ _UpdateMinimapLine:
                 jmp @store_{i}
             +:
         .ENDIF
-        jsr _get_tile_value
+        jsl Map.GetTileValue
         cmp #0
         bne +
             lda #deft($53, 6)
@@ -205,7 +205,7 @@ _UpdateMinimapLine:
     rts
 
 ; Get tile value for tile Y
-_get_tile_value:
+Map.GetTileValue:
     .INDEX 16
     .ACCU 16
     lda.w mapTileTypeTable,Y
@@ -268,7 +268,7 @@ _get_tile_value:
 @empty_tile:
 ; set value
     lda.b $00
-    rts
+    rtl
 
 ; Update minimap slot
 ; Args:

@@ -677,6 +677,36 @@ Pause.Begin:
         ora #deft(0, 6) | T_HIGHP
         sta.l $7F0000 + 2*textpos(21+i, 23),X
     .ENDR
+; display map
+    lda.w vqueueBinOffset
+    clc
+    adc #2*textpos(4, 8)
+    tax
+    ldy #0
+    lda #16
+    sta.b $10
+@loop_map_y:
+    lda #16
+    sta.b $12
+    @loop_map_x:
+        phx
+        jsl Map.GetTileValue
+        bne +
+            lda #deft($B1,6) | T_HIGHP
+        +:
+        plx
+        sta.l $7F0000,X
+        inx
+        inx
+        iny
+        dec.b $12
+        bne @loop_map_x
+    txa
+    clc
+    adc #32
+    tax
+    dec.b $10
+    bne @loop_map_y
     rts
 
 Pause.End:

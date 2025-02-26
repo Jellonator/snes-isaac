@@ -41,6 +41,7 @@
     isGameUpdateRunning dw
     tickCounter dw
     currentSaveSlot dw
+    loadFromSaveState db
 ; pause menu
     isGamePaused db
     shouldGamePause db

@@ -641,10 +641,23 @@ _menu_main_actions:
     .dw _menu_main_action_continue
 
 _menu_main_action_newrun:
+    sep #$20
+    stz.w loadFromSaveState
     jsl Floor.Transition_In
     jml Game.Begin
 
 _menu_main_action_continue:
+    sep #$20
+    lda.w currentSaveSlot
+    jsl Save.IsSavestateInUse
+    cmp #1
+    bne @no_continue
+        sep #$20
+        lda #1
+        sta.w loadFromSaveState
+        jsl Floor.Transition_In
+        jml Game.Begin
+@no_continue:
     rts
 
 _menu_main_init:

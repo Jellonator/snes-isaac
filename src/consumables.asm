@@ -340,6 +340,7 @@ Consumable.pickup:
 Consumable.update_display:
     ; Get pointer to consumable
     rep #$30
+    lda.w playerData.current_consumable
     and #$00FF
     asl
     tax
@@ -411,6 +412,63 @@ Consumable.update_display:
     plx
     rtl
 
+Consumable.update_display_no_overlay:
+    ; Get pointer to consumable
+    rep #$30
+    lda.w playerData.current_consumable
+    and #$00FF
+    asl
+    tax
+    lda.l Consumable.consumables,X
+    tax
+    ; upload sprite
+    phx
+    pea BG1_CHARACTER_BASE_ADDR + $0C00
+    pea 4
+    sep #$20
+    lda.l bankaddr(Consumable.consumables) | consumable_t.sprite_ptr+2,X
+    pha
+    rep #$20
+    lda.l bankaddr(Consumable.consumables) | consumable_t.sprite_ptr,X
+    pha
+    .REPT 4 INDEX i
+        jsl CopySpriteVQueue
+        .IF i < 3
+            rep #$20
+            lda $01,S
+            clc
+            adc #spritesize(4, 4)
+            sta $01,S
+            lda $06,S
+            clc
+            adc #$0100
+            sta $06,S
+        .ENDIF
+    .ENDR
+    rep #$20
+    pla
+    pla
+    pla
+    sep #$20
+    pla
+    ; upload palette
+    rep #$30
+    plx
+    phx
+    pea 32
+    pea $7000 | bankbyte(palettes.palette0.w)
+    lda.l bankaddr(Consumable.consumables) | consumable_t.sprite_palette,X
+    pha
+    jsl CopyPaletteVQueue
+    rep #$30
+    pla
+    pla
+    pla
+@no_put_text:
+    rep #$30
+    plx
+    rtl
+
 Consumable.use:
     ; run
     rep #$30
@@ -431,7 +489,7 @@ Consumable.use:
     lda #0
     sta.w playerData.current_consumable
     ; update display
-    jml Consumable.update_display
+    jml Consumable.update_display_no_overlay
 @skip:
     rtl
 

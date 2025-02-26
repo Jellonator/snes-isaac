@@ -53,7 +53,9 @@ Item.set_active:
     ; +:
     sta.w playerData.current_active_item
     ; get pointer to item
+Item.update_active_palette:
     rep #$30
+    lda.w playerData.current_active_item
     and #$00FF
     asl
     tax

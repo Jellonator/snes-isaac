@@ -234,7 +234,29 @@ tile_data_loop:
     ; init player
     jsr PlayerInit
     ; init floor
-    jsl Floor_Init
+    sep #$20
+    lda.w loadFromSaveState
+    beq @normal_load
+    ; load save
+        jsl MapGen.ClearAll
+        sep #$20
+        lda.w currentSaveSlot
+        jsl Save.ReadSaveState
+        sep #$30
+        lda.b currentRoomSlot
+        pha
+        tax
+        lda.l roomSlotMapPos,X
+        sta.b loadedRoomIndex
+        jsl LoadRoomSlotIntoLevel
+        sep #$20
+        pla
+        jsl Floor_Init_PostLoad
+        jmp @end_load
+    @normal_load:
+    ; new game
+        jsl Floor_Init
+    @end_load:
     ; Clear sprites
     rep #$30
     jsl ClearSpriteTable

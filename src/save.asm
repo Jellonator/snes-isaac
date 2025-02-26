@@ -163,6 +163,10 @@ Save.WriteSaveState:
         lda.l playerData.healthSlots+i
         sta.w savestate.0.player_health+i
     .ENDR
+    lda.l player_posx+1
+    sta.w savestate.0.player_posx
+    lda.l player_posy+1
+    sta.w savestate.0.player_posy
     ldx #255
 ; copy player items
 @loop_items:
@@ -170,6 +174,13 @@ Save.WriteSaveState:
     sta.w savestate.0.player_itemcounts,X
     dex
     bpl @loop_items
+; copy current room slot
+    lda.l currentRoomSlot
+    sta.w savestate.0.room_current_slot
+    rep #$20
+    lda.l currentFloorIndex
+    sta.w savestate.0.floor_current_index
+    sep #$20
 ; copy rooms
     lda.l numUsedMapSlots
     sta.w savestate.0.num_rooms
@@ -225,6 +236,20 @@ Save.WriteSaveState:
     sta.w $0000,Y
     sta.w $0002,Y
     sta.w $0004,Y
+; copy roomslots
+    rep #$20
+    lda.l roomslot_star
+    sta.w savestate.0.roomslot_star
+    lda.l roomslot_boss
+    sta.w savestate.0.roomslot_boss
+    lda.l roomslot_start
+    sta.w savestate.0.roomslot_start
+    lda.l roomslot_shop
+    sta.w savestate.0.roomslot_shop
+    lda.l roomslot_secret1
+    sta.w savestate.0.roomslot_secret1
+    lda.l roomslot_secret2
+    sta.w savestate.0.roomslot_secret2
 ; end
     sep #$20
     lda #SAVESTATE_STATE_IN_USE
@@ -324,12 +349,11 @@ Save.WriteRoomEntities:
     ; X,Y,room
     stz.b $00
     lda.l roomSlotTiles.1.entityStoreTable.1.posx,X
-    and #$FC00
-    .ShiftRight 4
+    and #$00FC
+    .ShiftLeft 4
     tsb.b $00
     lda.l roomSlotTiles.1.entityStoreTable.1.posy,X
-    and #$FC00
-    xba
+    and #$00FC
     .ShiftRight 2
     tsb.b $00
     lda.b $14
@@ -356,4 +380,265 @@ Save.WriteRoomEntities:
     inx
     inx
     jmp @loop
+
+; Read data from save state
+Save.ReadSaveState:
+; set up bank
+    sep #$20
+    clc
+    adc #$21
+    phb
+    pha
+    plb
+; copy seed
+    rep #$30
+    lda.w savestate.0.seed_game.low
+    sta.l gameSeed.low
+    lda.w savestate.0.seed_game.high
+    sta.l gameSeed.high
+    lda.w savestate.0.seed_game_stored.low
+    sta.l gameSeedStored.low
+    lda.w savestate.0.seed_game_stored.high
+    sta.l gameSeedStored.high
+    lda.w savestate.0.seed_stage.low
+    sta.l stageSeed.low
+    lda.w savestate.0.seed_stage.high
+    sta.l stageSeed.high
+; copy player data
+    sep #$20
+    lda.w savestate.0.player_money
+    sta.l playerData.money
+    lda.w savestate.0.player_keys
+    sta.l playerData.keys
+    lda.w savestate.0.player_bombs
+    sta.l playerData.bombs
+    lda.w savestate.0.player_consumable
+    sta.l playerData.current_consumable
+    lda.w savestate.0.player_active_item
+    sta.l playerData.current_active_item
+    lda.w savestate.0.player_active_charge
+    sta.l playerData.current_active_charge
+    .REPT HEALTHSLOT_COUNT INDEX i
+        lda.w savestate.0.player_health+i
+        sta.l playerData.healthSlots+i
+    .ENDR
+    lda.w savestate.0.player_posx
+    sta.l player_posx+1
+    lda.w savestate.0.player_posy
+    sta.l player_posy+1
+    lda #0
+    sta.l player_posx
+    sta.l player_posy
+    ldx #255
+; copy player items
+@loop_items:
+    lda.w savestate.0.player_itemcounts,X
+    sta.l playerData.playerItemStackNumber,X
+    dex
+    bpl @loop_items
+; copy current room slot
+    lda.w savestate.0.room_current_slot
+    sta.l currentRoomSlot
+    rep #$30
+    lda.w savestate.0.floor_current_index
+    sta.l currentFloorIndex
+    asl
+    tax
+    lda.l FloorDefinitions,X
+    sta.l currentFloorPointer
+    sep #$20
+; copy rooms
+    lda.w savestate.0.num_rooms
+    sta.l numUsedMapSlots
+    sta.b $10
+    rep #$30
+    stz.b $11
+    lda #0
+    sta.b $12
+    sta.b $14
+    sta.b $00
+@loop_copy_room:
+        ldx.b $12
+        ldy.b $14
+        jsl Save.ReadRoom
+        ; inc
+        rep #$30
+        lda.b $12
+        clc
+        adc #_sizeof_roominfo_t
+        sta.b $12
+        lda.b $14
+        clc
+        adc #_sizeof_savestate_room_t
+        sta.b $14
+        inc.b $00
+        dec.b $10
+        bne @loop_copy_room
+; copy entities
+    ldy #savestate.0.entities
+    ldx #roomSlotTiles.1.entityStoreTable
+    lda #0
+    sta.b $10
+    @loop_copy_entities:
+        lda.w $0000,Y
+        bit #$00FF
+        beq @ent_null
+        ; not null entity, deserialize as normal
+        lda.w $0002,Y
+        and #$F000
+        beq @skip_inc_room
+            xba
+            .ShiftRight 4
+            clc
+            adc.b $10
+            sta.b $10
+            ; figure out new X
+            sep #$20
+            lda #lobyte(_sizeof_roominfo_t)
+            sta.l MULTS_A
+            lda #hibyte(_sizeof_roominfo_t)
+            sta.l MULTS_A
+            lda.b $10
+            sta.l MULTS_B
+            rep #$20
+            lda.l MULTS_RESULT_LOW
+            clc
+            adc #roomSlotTiles.1.entityStoreTable
+            tax
+        @skip_inc_room:
+        ; type+variant
+        lda.w $0000,Y
+        sta.l $7E0000,X
+        ; X
+        lda.w $0002,Y
+        and #$0FC0
+        .ShiftRight 4
+        sta.l $7E0002,X
+        ; Y
+        lda.w $0002,Y
+        and #$003F
+        .ShiftLeft 2
+        sta.l $7E0003,X
+        ; state+timer
+        lda.w $0004,Y
+        sta.l $7E0004,X
+        ; inc
+        inx
+        inx
+        inx
+        inx
+        inx
+        inx
+        iny
+        iny
+        iny
+        iny
+        iny
+        iny
+        jmp @loop_copy_entities
+    @ent_null:
+        ; null entity; don't deserialize, just increment room index
+        lda.w $0002,Y
+        bit #$F000
+        beq @end_copy_entities
+        xba
+        .ShiftRight 4
+        clc
+        adc.b $10
+        sta.b $10
+        ; figure out new X
+        sep #$20
+        lda #lobyte(_sizeof_roominfo_t)
+        sta.l MULTS_A
+        lda #hibyte(_sizeof_roominfo_t)
+        sta.l MULTS_A
+        lda.b $10
+        sta.l MULTS_B
+        rep #$20
+        lda.l MULTS_RESULT_LOW
+        clc
+        adc #roomSlotTiles.1.entityStoreTable
+        tax
+        iny
+        iny
+        iny
+        iny
+        iny
+        iny
+        jmp @loop_copy_entities
+@end_copy_entities:
+; copy roomslots
+    rep #$20
+    lda.w savestate.0.roomslot_star
+    sta.l roomslot_star
+    lda.w savestate.0.roomslot_boss
+    sta.l roomslot_boss
+    lda.w savestate.0.roomslot_start
+    sta.l roomslot_start
+    lda.w savestate.0.roomslot_shop
+    sta.l roomslot_shop
+    lda.w savestate.0.roomslot_secret1
+    sta.l roomslot_secret1
+    lda.w savestate.0.roomslot_secret2
+    sta.l roomslot_secret2
+; end
+    sep #$20
+    lda #SAVESTATE_STATE_EMPTY
+    sta.w savestate.0.state
+    plb
+    rtl
+
+; Copy room data from SRAM in Y to RAM in X
+; $00 should also contain the room's index
+; This deserializes most of a room's data into the save slot.
+; This function does NOT deserialize entities, however.
+Save.ReadRoom:
+    rep #$30
+; room def
+    lda.w savestate.0.rooms.1.definition,Y
+    sta.l roomSlotTiles.1.roomDefinition,X
+; RNG
+    lda.w savestate.0.rooms.1.rng.low,Y
+    sta.l roomSlotTiles.1.rng.low,X
+    lda.w savestate.0.rooms.1.rng.high,Y
+    sta.l roomSlotTiles.1.rng.high,X
+; tiles
+    .REPT (ROOM_TILE_COUNT/2) INDEX i
+        lda.w savestate.0.rooms.1.tiles + i*2,Y
+        sta.l roomSlotTiles.1.tileTypeTable + i*2,X
+    .ENDR
+    lda #0
+    .REPT (ROOM_TILE_COUNT/2) INDEX i
+        sta.l roomSlotTiles.1.tileVariantTable + i*2,X
+    .ENDR
+; clear entities
+    lda #0
+    .REPT ENTITY_STORE_COUNT INDEX i
+        sta.l roomSlotTiles.1.entityStoreTable.{i+1}.type,X
+    .ENDR
+; room type
+    ldx.b $00
+    sep #$20
+    lda.w savestate.0.rooms.1.roomtype,Y
+    sta.l roomSlotRoomType,X
+; room location
+    lda #0
+    xba
+    lda.w savestate.0.rooms.1.maptile_pos,Y
+    sta.l roomSlotMapPos,X
+    tax
+    lda.b $00
+    sta.l mapTileSlotTable,X
+; map values
+    lda.w savestate.0.rooms.1.maptile_type,Y
+    sta.l mapTileTypeTable,X
+    lda.w savestate.0.rooms.1.maptile_flags,Y
+    sta.l mapTileFlagsTable,X
+; door values
+    lda.w savestate.0.rooms.1.door_east,Y
+    sta.l mapDoorHorizontal,X
+    lda.w savestate.0.rooms.1.door_south,Y
+    sta.l mapDoorVertical,X
+    rtl
+
 .ENDS

@@ -793,7 +793,7 @@ BeginMapGeneration:
     ; Map generator primarily operates on RAM, so we change data bank to $7E
     .ChangeDataBank $7E
 @retry:
-    jsr _ClearMap
+    jsl MapGen.ClearAll
     ; First, choose starting tile
     jsl StageRand_Update4
     sep #$30 ; 8 bit AXY
@@ -1060,7 +1060,7 @@ _PushRandomRoomFromPool:
     phx ; >2 push return address
     rts
 
-_ClearMap:
+MapGen.ClearAll:
     phd
     pea $4300
     pld
@@ -1080,6 +1080,6 @@ _ClearMap:
     .ClearWRam_ZP mapTileSlotTable, MAP_MAX_SIZE
     .ClearWRam_ZP private_mapDoorHorizontalEmptyBuf, (MAP_MAX_SIZE*2 + MAP_MAX_WIDTH + MAP_MAX_HEIGHT)
     pld
-    rts
+    rtl
 
 .ENDS

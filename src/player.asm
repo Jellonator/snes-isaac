@@ -504,7 +504,7 @@ PlayerInit:
     jsl Player.update_bomb_display
     jsl Player.update_key_display
     jsl Player.update_money_display
-    jsl Consumable.update_display
+    jsl Consumable.update_display_no_overlay
     sep #$30
     stz.w player_signal
     lda #HEALTH_REDHEART_FULL
@@ -557,6 +557,39 @@ PlayerEnterFloor:
     sep #$30
     lda #2
     jsl Player.set_body_frame@upload_frame
+    rtl
+
+; Init player after loading from SRAM
+PlayerInitPostLoad:
+    rep #$30
+    lda #PLAYER_FLAG_INVALIDATE_ITEM_CACHE
+    sta.w playerData.flags
+    sta.w player_velocx
+    sta.w player_velocy
+    stz.w player_damageflag
+    stz.w playerData.invuln_timer
+    jsl PlayerDiscoverNearbyRooms
+    sep #$30
+    stz.w player_signal
+    stz.w playerData.walk_frame
+    stz.w playerData.bomb_wait_timer
+    stz.w playerData.anim_wait_timer
+    stz.w playerData.head_offset_y
+    lda #FACINGDIR_DOWN
+    sta.w playerData.facingdir_head
+    sta.w playerData.facingdir_body
+    lda #2
+    jsl Player.set_head_frame@upload_frame
+    sep #$30
+    lda #2
+    jsl Player.set_body_frame@upload_frame
+    jsl _PlayerRenderAllHearts
+    jsl Player.update_bomb_display
+    jsl Player.update_key_display
+    jsl Player.update_money_display
+    jsl Consumable.update_display_no_overlay
+    jsl Item.update_charge_display
+    jsl Item.update_active_palette
     rtl
 
 ; Set head frame to A

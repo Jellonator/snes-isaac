@@ -47,6 +47,11 @@
     player_active_item db
     player_active_charge db
     player_itemcounts ds 256
+    player_posx db
+    player_posy db
+    ; active room data
+    room_current_slot db
+    floor_current_index dw
     ; room data
     num_rooms db
     rooms INSTANCEOF savestate_room_t MAX_MAP_SLOTS

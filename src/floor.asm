@@ -44,6 +44,18 @@ Floor_Init:
     jsr _Floor_Update_Graphics
     rtl
 
+; Initialize floor data on game load
+Floor_Init_PostLoad:
+    rep #$30
+    lda #0
+    sta.w floorFlags
+    jsr _Floor_Update_Graphics
+    sep #$30
+    lda #1
+    sta.l needResetEntireGround
+    jsl PlayerInitPostLoad
+    rtl
+
 Floor_Next:
     rep #$30
     lda #FLOOR_FLAG_NEXT

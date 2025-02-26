@@ -237,7 +237,7 @@ Save.WriteSaveState:
     sta.w $0002,Y
     sta.w $0004,Y
 ; copy roomslots
-    rep #$20
+    sep #$20
     lda.l roomslot_star
     sta.w savestate.0.roomslot_star
     lda.l roomslot_boss
@@ -568,7 +568,7 @@ Save.ReadSaveState:
         jmp @loop_copy_entities
 @end_copy_entities:
 ; copy roomslots
-    rep #$20
+    sep #$20
     lda.w savestate.0.roomslot_star
     sta.l roomslot_star
     lda.w savestate.0.roomslot_boss

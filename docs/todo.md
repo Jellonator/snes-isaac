@@ -55,4 +55,4 @@
     * [ ] Show item collection in pause menu
     * [ ] Cheats in pause menu
     * [X] Show stats in pause menu
-    * [ ] Save and quit
+    * [X] Save and quit

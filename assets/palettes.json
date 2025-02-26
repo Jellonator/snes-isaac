@@ -154,5 +154,9 @@
     {
         "name": "menu.ui",
         "src": "assets/palettes/menu_ui.hex"
+    },
+    {
+        "name": "menu.text_gray",
+        "src": "assets/palettes/menu_text_gray.hex"
     }
 ]

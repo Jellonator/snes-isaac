@@ -81,6 +81,21 @@ _Save.ClearAll:
     .ENDR
     rtl
 
+; Get State of given save state
+Save.IsSavestateInUse:
+    ; set up bank
+    sep #$20
+    clc
+    adc #$21
+    phb
+    pha
+    plb
+    ; write save state
+    lda.w loword(savestate.0.state)
+    ; end
+    plb
+    rtl
+
 ; erase slot A
 Save.EraseSlot:
     rep #$30

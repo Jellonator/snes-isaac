@@ -68,6 +68,8 @@ _MenuLayout_Main:
     targetScrollY dw
     menuBG2Offset dw ; % 000000y0 000x0000
     menuBG1Offset dw ; % 0000yx00 00000000
+    palette dw
+    selection dw
 .ENDE
 
 _empty_func:
@@ -255,7 +257,7 @@ _Menu.PutTextBG1:
         bmi @loop_end
         lda.w $0000,Y
         and #$00FF
-        ora #deft($00, 3)
+        ora.b palette
         sta.l $7F0000,X
         inx
         inx
@@ -429,6 +431,12 @@ Menu.Begin:
     pea loword(palettes.menu.ui)
     jsl CopyPalette
     .POPN 6
+    ; Upload gray text palette
+    pea 2*16
+    pea $4000 + bankbyte(palettes.menu.text_gray)
+    pea loword(palettes.menu.text_gray)
+    jsl CopyPalette
+    .POPN 6
     ; Clear sprites
     rep #$30
     jsl ClearSpriteTable
@@ -600,6 +608,8 @@ _menu_start_init:
     rep #$30
     ldy #loword(_menu_start_text)
     ldx #textpos(11, 22)
+    lda #deft($00, 3)
+    sta.b palette
     jsr _Menu.PutTextBG1
     rts
 
@@ -621,17 +631,54 @@ _menu_main_newgame:
     .db $04
     .ASC "New Run", 0
 
+_menu_main_continuegame:
+    .ASC "Continue", 0
+
+.DEFINE MENU_MAIN_SELECT_COUNT 2
+
+_menu_main_actions:
+    .dw _menu_main_action_newrun
+    .dw _menu_main_action_continue
+
+_menu_main_action_newrun:
+    jsl Floor.Transition_In
+    jml Game.Begin
+
+_menu_main_action_continue:
+    rts
+
 _menu_main_init:
     ldx #loword(_MenuLayout_Main)
     jsr _Menu.UploadBG2
-    ; put text
+    ; put text NEW RUN
     rep #$30
     ldy #loword(_menu_main_newgame)
     ldx #textpos(10, 8)
+    lda #deft($00, 3)
+    sta.b palette
     jsr _Menu.PutTextBG1
+    ; put text CONTINUE
+    rep #$30
+    lda #deft($00, 3)
+    sta.b palette
+    jsl Save.IsSavestateInUse
+    .ACCU 8
+    cmp #1
+    beq +
+        rep #$30
+        lda #deft($00, 4)
+        sta.b palette
+    +:
+    rep #$30
+    ldy #loword(_menu_main_continuegame)
+    ldx #textpos(11, 10)
+    jsr _Menu.PutTextBG1
+    rep #$30
+    stz.b selection
     rts
 
 _menu_main_tick:
+    ; exit
     rep #$30
     lda.w joy1press
     bit #JOY_B
@@ -640,13 +687,80 @@ _menu_main_tick:
         rep #$30
         lda #STATE_START
         jsr _Menu.SetState
+        rts
     +:
+    ; change selection
+    rep #$30
+    lda.b selection
+    sta.b $02
+    stz.b $00
+    lda.w joy1press
+    bit #JOY_UP
+    beq +
+        inc.b $00
+        sep #$20
+        lda.b selection
+        dec A
+        bpl ++
+            lda #MENU_MAIN_SELECT_COUNT-1
+        ++:
+        sta.b selection
+        rep #$20
+    +:
+    lda.w joy1press
+    bit #JOY_DOWN
+    beq +
+        inc.b $00
+        sep #$20
+        lda.b selection
+        inc A
+        cmp #MENU_MAIN_SELECT_COUNT
+        bcc ++
+            lda #0
+        ++:
+        sta.b selection
+        rep #$20
+    +:
+    lda.b $00
+    beq @no_change_select
+        ; change indicator
+        lda.w vqueueNumMiniOps
+        inc.w vqueueNumMiniOps
+        inc.w vqueueNumMiniOps
+        asl
+        asl
+        tax
+        lda #deft($00, 3) | T_HIGHP
+        sta.l vqueueMiniOps.1.data,X
+        lda #deft($04, 3) | T_HIGHP
+        sta.l vqueueMiniOps.2.data,X
+        lda.b $02
+        and #$00FF
+        .MultiplyStatic 64
+        clc
+        adc #textpos(10, 8) + MENU_BG1_TILE_BASE_ADDR
+        clc
+        adc.b menuBG1Offset
+        sta.l vqueueMiniOps.1.vramAddr,X
+        lda.w selection
+        and #$00FF
+        .MultiplyStatic 64
+        clc
+        adc #textpos(10, 8) + MENU_BG1_TILE_BASE_ADDR
+        clc
+        adc.b menuBG1Offset
+        sta.l vqueueMiniOps.2.vramAddr,X
+@no_change_select:
+    ; action
     rep #$30
     lda.w joy1press
     bit #JOY_START
     beq +
-        jsl Floor.Transition_In
-        jml Game.Begin
+        lda.b selection
+        and #$00FF
+        asl
+        tax
+        jsr (_menu_main_actions, X)
     +:
     rts
 

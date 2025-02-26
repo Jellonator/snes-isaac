@@ -167,13 +167,20 @@ Save.WriteSaveState:
     sta.w savestate.0.player_posx
     lda.l player_posy+1
     sta.w savestate.0.player_posy
-    ldx #255
-; copy player items
-@loop_items:
-    lda.l playerData.playerItemStackNumber,X
-    sta.w savestate.0.player_itemcounts,X
+; copy player item list
+    lda #0
+    xba
+    lda.l playerData.playerItemCount
+    sta.w savestate.0.player_item_count
+    tax
+    beq @end_loop_items
     dex
-    bpl @loop_items
+@loop_items:
+        lda.l playerData.playerItemList,X
+        sta.w savestate.0.player_item_list,X
+        dex
+        bpl @loop_items
+@end_loop_items:
 ; copy current room slot
     lda.l currentRoomSlot
     sta.w savestate.0.room_current_slot
@@ -429,13 +436,28 @@ Save.ReadSaveState:
     lda #0
     sta.l player_posx
     sta.l player_posy
-    ldx #255
-; copy player items
-@loop_items:
-    lda.w savestate.0.player_itemcounts,X
+; copy player items into list
+    lda #0
+    xba
+    lda.w savestate.0.player_item_count
+    sta.l playerData.playerItemCount
+    tay
+    beq @end_copy_item_list
+    dey
+@loop_copy_item_list:
+    ; copy into list
+    tyx
+    lda.w savestate.0.player_item_list,Y
+    sta.l playerData.playerItemList,X
+    ; increment stack count
+    tax
+    lda.l playerData.playerItemStackNumber,X
+    inc A
     sta.l playerData.playerItemStackNumber,X
-    dex
-    bpl @loop_items
+    ; --y
+    dey
+    bpl @loop_copy_item_list
+@end_copy_item_list:
 ; copy current room slot
     lda.w savestate.0.room_current_slot
     sta.l currentRoomSlot

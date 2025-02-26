@@ -19,7 +19,7 @@ Item.add:
     sep #$30
     ; add to list
     ldx.w playerData.playerItemCount
-    sta.w playerData.playerItemList
+    sta.w playerData.playerItemList,X
     inc.w playerData.playerItemCount
     ; increment stack count
     tax

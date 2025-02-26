@@ -46,7 +46,8 @@
     player_consumable db
     player_active_item db
     player_active_charge db
-    player_itemcounts ds 256
+    player_item_count db
+    player_item_list ds 256
     player_posx db
     player_posy db
     ; active room data

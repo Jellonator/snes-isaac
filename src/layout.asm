@@ -46,6 +46,7 @@
     shouldGamePause db
     gamePauseTimer db
     pausePage db
+    pauseSelect db
 ; RNG state
     ; seed used for entire game
     gameSeed INSTANCEOF rng_t

@@ -304,34 +304,21 @@ _Game.Loop:
         jsr _UpdateUsables
         ; Finally, check if room should be changed
         jsr PlayerCheckEnterRoom
+        ; Maybe Pause
+        sep #$30
+        lda.w joy1press+1
+        bit #hibyte(JOY_START)
+        beq @skip_pause
+            lda #1
+            sta.w shouldGamePause
+            ; begin pause
+            jsr Pause.Begin
+    @skip_pause:
 @skip_paused:
     jsl GroundProcessOps
     jsl Overlay.update
-; PAUSE CODE
-    ; toggle pause
-    sep #$30
-    lda.w gamePauseTimer
-    beq @can_toggle_pause
-    cmp #32
-    beq @can_toggle_pause
-    jmp @skip_pause
-@can_toggle_pause:
-    lda.w joy1press+1
-    bit #hibyte(JOY_START)
-    beq @skip_pause
-        lda.w shouldGamePause
-        eor #$01
-        sta.w shouldGamePause
-        beq +
-            ; begin pause
-            jsr Pause.Begin
-            sep #$30
-            jmp @skip_pause
-        +:
-        jsr Pause.End
-        sep #$30
-@skip_pause:
     ; update pause timer
+    sep #$30
     lda.w shouldGamePause
     beq @unpause
         ; pausing
@@ -358,6 +345,9 @@ _Game.Loop:
     lda.w gamePauseTimer
     beq +
         inc.w isGamePaused
+    +:
+    cmp #32
+    bne +
         jsr Pause.Update
     +:
     ; End update code
@@ -384,19 +374,58 @@ _UpdateUsables:
 
 .DEFINE PAUSE_NUM_PAGES 2
 
+.DEFINE PAUSE_NUM_SELECT 3
+
 _pause_pages:
     .dw Pause.PageMap
     .dw Pause.PageStats
+
+_pause_actions:
+    .dw Pause.ActionUnpause
+    .dw Pause.ActionOptions
+    .dw Pause.ActionExit
+
+Pause.ActionUnpause:
+    sep #$20
+    stz.w shouldGamePause
+    jsr Pause.End
+    rts
+
+Pause.ActionOptions:
+    rts
+
+Pause.ActionExit:
+    jsl Room_Unload
+    sep #$20
+    lda.w currentSaveSlot
+    jsl Save.WriteSaveState
+    jml Menu.Begin
 
 Pause.Begin:
     sep #$20
     lda #0
     sta.w pausePage
+    sta.w pauseSelect
     rep #$30
     and #$00FF
     asl
     tax
     jsr (_pause_pages,X)
+; init indicator
+    ; change indicator
+    lda.w vqueueNumMiniOps
+    inc.w vqueueNumMiniOps
+    asl
+    asl
+    tax
+    lda #deft($AF, 6) | T_HIGHP
+    sta.l vqueueMiniOps.1.data,X
+    lda.w pauseSelect
+    and #$00FF
+    .MultiplyStatic 64
+    clc
+    adc #textpos(21, 8) + BG1_TILE_BASE_ADDR + $0400
+    sta.l vqueueMiniOps.1.vramAddr,X
     rts
 
 Pause.PageStats:
@@ -758,6 +787,7 @@ Pause.End:
 
 Pause.Update:
     rep #$30
+    ; check page change
     stz.b $00
     lda.w joy1press
     bit #JOY_L
@@ -793,7 +823,79 @@ Pause.Update:
         asl
         tax
         jsr (_pause_pages,X)
+        sep #$20
+        lda #1
+        sta.b $00
     +:
+    ; check selection change
+    sep #$20
+    lda.w pauseSelect
+    sta.b $02
+    rep #$20
+    lda.w joy1press
+    bit #JOY_UP
+    beq +
+        sep #$20
+        inc.b $00
+        lda.w pauseSelect
+        dec A
+        bpl ++
+            lda #PAUSE_NUM_SELECT-1
+        ++:
+        sta.w pauseSelect
+        rep #$20
+    +:
+    lda.w joy1press
+    bit #JOY_DOWN
+    beq +
+        sep #$20
+        inc.b $00
+        lda.w pauseSelect
+        inc A
+        cmp #PAUSE_NUM_SELECT
+        bcc ++
+            lda #0
+        ++:
+        sta.w pauseSelect
+        rep #$20
+    +:
+    lda.b $00
+    beq +
+        ; change indicator
+        lda.w vqueueNumMiniOps
+        inc.w vqueueNumMiniOps
+        inc.w vqueueNumMiniOps
+        asl
+        asl
+        tax
+        lda #deft($B1, 6) | T_HIGHP
+        sta.l vqueueMiniOps.1.data,X
+        lda #deft($AF, 6) | T_HIGHP
+        sta.l vqueueMiniOps.2.data,X
+        lda.b $02
+        and #$00FF
+        .MultiplyStatic 64
+        clc
+        adc #textpos(21, 8) + BG1_TILE_BASE_ADDR + $0400
+        sta.l vqueueMiniOps.1.vramAddr,X
+        lda.w pauseSelect
+        and #$00FF
+        .MultiplyStatic 64
+        clc
+        adc #textpos(21, 8) + BG1_TILE_BASE_ADDR + $0400
+        sta.l vqueueMiniOps.2.vramAddr,X
+    +:
+    ; perform action
+    rep #$20
+    lda.w joy1press
+    bit #JOY_A | JOY_START
+    beq @skip_action
+        lda.w pauseSelect
+        and #$00FF
+        asl
+        tax
+        jsr (_pause_actions,X)
+@skip_action:
     rts
 
 Pause.UpdateScroll:

@@ -43,6 +43,9 @@
     player_bombs db
     player_keys db
     player_health ds HEALTHSLOT_COUNT
+    player_consumable db
+    player_active_item db
+    player_active_charge db
     player_itemcounts ds 256
     ; room data
     num_rooms db

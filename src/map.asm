@@ -345,7 +345,9 @@ LoadRoomSlotIntoLevel:
     jsl UpdateDoorTileEast
     jsl UpdateDoorTileWest
     plp
+    ; initialize and update certain variables
     jsl Room_Init
+    jsl Game.UpdateAllPathfinding
     rtl
 
 TileLocationMap:

@@ -3,7 +3,7 @@
 .BANK ROMBANK_ENTITYCODE SLOT "ROM"
 .SECTION "Entity Enemy Cube" FREE
 
-.DEFINE BASE_HEALTH 12
+.DEFINE BASE_HEALTH 64
 
 .DEFINE _gfxptr.1 loword(entity_char_custom.1)
 .DEFINE _gfxptr.2 loword(entity_char_custom.2)
@@ -11,8 +11,16 @@
 .DEFINE _gfxptr.4 loword(entity_char_custom.4)
 
 .DEFINE _current_frame loword(entity_char_custom.5)
+.DEFINE _current_direction loword(entity_char_custom.6)
+.DEFINE _current_rotation loword(entity_char_custom.7)
+.DEFINE _palette loword(entity_char_custom.8)
 
 .DEFINE _tmp_entityid $10
+
+.DEFINE STATE_IDLE 0
+.DEFINE STATE_MOVE_START 2
+.DEFINE STATE_MOVE_MID 4
+.DEFINE STATE_MOVE_END 6
 
 ; set frame to A
 _set_frame:
@@ -25,6 +33,7 @@ _set_frame:
     +:
     sta.w _current_frame,Y
     pea bankbyte(spritedata.enemy.isaac_cube) * $0101
+    .MultiplyStatic 512
     clc
     adc #loword(spritedata.enemy.isaac_cube)
     pha
@@ -73,7 +82,6 @@ entity_enemy_cube_init:
     sta.w _current_frame,Y
     sty.b _tmp_entityid
     ; default info
-    sta.w entity_timer,Y
     lda #BASE_HEALTH
     sta.w entity_health,Y
     ; get sprite slots
@@ -86,12 +94,181 @@ entity_enemy_cube_init:
         lda #0
         sta.w _gfxptr.{i+1}+1,Y
     .ENDR
+    ; load palette
+    rep #$30
+    ldy #loword(palettes.enemy.isaac_cube)
+    lda #10
+    jsl Palette.find_or_upload_opaque
+    rep #$30
+    ldy.b _tmp_entityid
+    txa
+    sta.w _palette,Y
+    ; TODO: put sprite into shared RAM and swizzle it
     ; put initial sprite
     rep #$30
     lda #0
     jsr _set_frame
+    ; put initial values
+    sep #$30
+    lda #16
+    sta.w entity_timer,Y
+    lda #0
+    sta.w entity_state,Y
+    sta.w _current_rotation,Y
     ; end
     rts
+
+_state_idle:
+    .ACCU 8
+    .INDEX 8
+    lda.w entity_timer,Y
+    beq @allow_next_dir
+        dec A
+        sta.w entity_timer,Y
+        rts
+@allow_next_dir:
+    ; determine direction
+    lda.w entity_box_x1,Y
+    .ShiftRight 4
+    sta.b $00
+    lda.w entity_box_y1,Y
+    and #$F0
+    ora.b $00
+    tax
+    lda.w pathfind_player_data,X
+    tax
+    lda.l PathValid,X
+    beq @not_valid
+        ; orthagonalize
+        lda.l PathOrthagonal,X
+        sta.w _current_direction,Y
+        lda #STATE_MOVE_START
+        sta.w entity_state,Y
+        lda #4
+        sta.w entity_timer,Y
+@not_valid:
+    rts
+
+_midframes_by_direction:
+    .db  0 ; PATH_DIR_NULL
+    .db  8 ; PATH_DIR_DOWN
+    .db  4 ; PATH_DIR_RIGHT
+    .db  4 ; PATH_DIR_LEFT
+    .db 12 ; PATH_DIR_UP
+    .db  0 ; PATH_DIR_UPLEFT
+    .db  0 ; PATH_DIR_UPRIGHT
+    .db  0 ; PATH_DIR_DOWNLEFT
+    .db  0 ; PATH_DIR_DOWNRIGHT
+    .db  0 ; PATH_DIR_NONE
+
+_state_move_start:
+    .ACCU 8
+    .INDEX 8
+    lda.w entity_timer,Y
+    dec A
+    sta.w entity_timer,Y
+    bne @continue
+        lda #STATE_MOVE_MID
+        sta.w entity_state,Y
+        lda #8
+        sta.w entity_timer,Y
+        ; handle rotation
+        lda.w _current_direction,Y
+        cmp #PATH_DIR_LEFT
+        beq @left
+        jmp @no_dir
+        @left:
+            lda.w _current_rotation,Y
+            dec A
+            and #$03
+            sta.w _current_rotation,Y
+        @no_dir:
+        ; set frame
+        rep #$30
+        lda.w _current_direction,Y
+        and #$00FF
+        tax
+        lda.l _midframes_by_direction,X
+        clc
+        adc.w _current_rotation,Y
+        and #$00FF
+        jsr _set_frame
+        sep #$30
+@continue:
+    jmp _handle_directional_movement
+
+_state_move_mid:
+    .ACCU 8
+    .INDEX 8
+    lda.w entity_timer,Y
+    dec A
+    sta.w entity_timer,Y
+    bne @continue
+        lda #STATE_MOVE_END
+        sta.w entity_state,Y
+        lda #4
+        sta.w entity_timer,Y
+        ; handle rotation
+        lda.w _current_direction,Y
+        cmp #PATH_DIR_DOWN
+        beq @reset_rot
+        cmp #PATH_DIR_UP
+        beq @reset_rot
+        cmp #PATH_DIR_RIGHT
+        beq @right
+        jmp @keep_rot
+        @reset_rot:
+            lda #0
+            sta.w _current_rotation,Y
+            jmp @keep_rot
+        @right:
+            lda.w _current_rotation,Y
+            inc A
+            and #$03
+            sta.w _current_rotation,Y
+        @keep_rot:
+        ; set frame
+        rep #$30
+        lda.w _current_rotation,Y
+        and #$00FF
+        jsr _set_frame
+        sep #$30
+@continue:
+    jmp _handle_directional_movement
+
+_state_move_end:
+    .ACCU 8
+    .INDEX 8
+    lda.w entity_timer,Y
+    dec A
+    sta.w entity_timer,Y
+    bne @continue
+        lda #STATE_IDLE
+        sta.w entity_state,Y
+        lda #8
+        sta.w entity_timer,Y
+@continue:
+    jmp _handle_directional_movement
+
+_handle_directional_movement:
+    .ACCU 8
+    .INDEX 8
+    ldx.w _current_direction,Y
+    lda.l Path_X,X
+    clc
+    adc.w entity_box_x1,Y
+    sta.w entity_box_x1,Y
+    lda.l Path_Y,X
+    clc
+    adc.w entity_box_y1,Y
+    sta.w entity_box_y1,Y
+    rts
+
+_funclist_state:
+    .dw _state_idle
+    .dw _state_move_start
+    .dw _state_move_mid
+    .dw _state_move_end
 
 entity_enemy_cube_tick:
     .ACCU 16
@@ -103,10 +280,24 @@ entity_enemy_cube_tick:
     and.w entity_signal,Y
     beq +
         ; We have perished
+        lda.w entity_box_y1,Y
+        clc
+        adc #12
+        sta.w entity_box_y1,Y
         jsl EntityPutSplatter
         jsl entity_free
         rts
     +:
+; AI
+    lda.w loword(entity_damageflash),Y
+    bne @no_tick
+    sep #$30
+    lda #1
+    bit.w tickCounter
+    beq @no_tick
+    ldx.w entity_state,Y
+    jsr (_funclist_state,X)
+    @no_tick:
 ; draw
     sep #$20
     rep #$10
@@ -130,7 +321,9 @@ entity_enemy_cube_tick:
     sta.w objectData.1.pos_y,X
     sta.w objectData.2.pos_y,X
     ; flags
-    lda #%00100001
+    lda.w _palette,Y
+    .PaletteIndexToPaletteSpriteA
+    ora #%00100001
     xba
     lda.w loword(entity_damageflash),Y
     beq +
@@ -206,6 +399,9 @@ entity_enemy_cube_free:
         rep #$30
         ldy.b _tmp_entityid
     .ENDR
+    ; free palette
+    ldx.w _palette,Y
+    jsl Palette.free
     rts
 
 .ENDS

@@ -348,6 +348,54 @@ FractionBinToDec:
         .db bin2dec(floor(i / 2.56))
     .ENDR
 
+PathOrthagonal:
+    .db PATH_DIR_NULL  ; PATH_DIR_NULL
+    .db PATH_DIR_DOWN  ; PATH_DIR_DOWN
+    .db PATH_DIR_RIGHT ; PATH_DIR_RIGHT
+    .db PATH_DIR_LEFT  ; PATH_DIR_LEFT
+    .db PATH_DIR_UP    ; PATH_DIR_UP
+    .db PATH_DIR_LEFT  ; PATH_DIR_UPLEFT
+    .db PATH_DIR_RIGHT ; PATH_DIR_UPRIGHT
+    .db PATH_DIR_LEFT  ; PATH_DIR_DOWNLEFT
+    .db PATH_DIR_RIGHT ; PATH_DIR_DOWNRIGHT
+    .db PATH_DIR_NONE  ; PATH_DIR_NONE
+
+PathValid:
+    .db 0 ; PATH_DIR_NULL
+    .db 1 ; PATH_DIR_DOWN
+    .db 1 ; PATH_DIR_RIGHT
+    .db 1 ; PATH_DIR_LEFT
+    .db 1 ; PATH_DIR_UP
+    .db 1 ; PATH_DIR_UPLEFT
+    .db 1 ; PATH_DIR_UPRIGHT
+    .db 1 ; PATH_DIR_DOWNLEFT
+    .db 1 ; PATH_DIR_DOWNRIGHT
+    .db 0 ; PATH_DIR_NONE
+
+Path_X:
+    .db  0 ; PATH_DIR_NULL
+    .db  0 ; PATH_DIR_DOWN
+    .db  1 ; PATH_DIR_RIGHT
+    .db -1 ; PATH_DIR_LEFT
+    .db  0 ; PATH_DIR_UP
+    .db -1 ; PATH_DIR_UPLEFT
+    .db  1 ; PATH_DIR_UPRIGHT
+    .db -1 ; PATH_DIR_DOWNLEFT
+    .db  1 ; PATH_DIR_DOWNRIGHT
+    .db  0 ; PATH_DIR_NONE
+
+Path_Y:
+    .db  0 ; PATH_DIR_NULL
+    .db  1 ; PATH_DIR_DOWN
+    .db  0 ; PATH_DIR_RIGHT
+    .db  0 ; PATH_DIR_LEFT
+    .db -1 ; PATH_DIR_UP
+    .db -1 ; PATH_DIR_UPLEFT
+    .db -1 ; PATH_DIR_UPRIGHT
+    .db  1 ; PATH_DIR_DOWNLEFT
+    .db  1 ; PATH_DIR_DOWNRIGHT
+    .db  0 ; PATH_DIR_NONE
+
 .ENDS
 
 .bank $20

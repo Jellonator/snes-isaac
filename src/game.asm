@@ -378,6 +378,12 @@ _Game.Loop:
     wai
     jmp _Game.Loop
 
+Game.UpdateAllPathfinding:
+    jsl Pathing.UpdatePlayer
+    jsl Pathing.UpdateEnemy
+    jsl Pathing.UpdateEnemyNearest
+    rtl
+
 _UpdateUsables:
     rep #$30 ; 16 bit AXY
     rep #$30

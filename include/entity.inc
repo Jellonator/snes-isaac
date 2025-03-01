@@ -172,13 +172,15 @@
 
 ; ENTITY FLAGS
 ; Indicates that entity should not be serialized
-.DEFINE ENTITY_FLAGS_DONT_SERIALIZE $01
+.DEFINE ENTITY_FLAGS_DONT_SERIALIZE $0001
+; Indicates that this entity blocks other entities from entering this tile
+.DEFINE ENTITY_FLAGS_BLOCKING $0002
 
 ; COLLISION
 
 ; Try to insert A into spatial partition at X
 ; ACCU should be 8b
-.MACRO .InsertHitboxLite
+.MACRO .InsertHitboxLite_X
     .REPT SPATIAL_LAYER_COUNT INDEX i
         ldy.w spatial_partition.{i+1},X
         bne +++++
@@ -188,6 +190,20 @@
     .ENDR
     @@@@@\.\@:
 .ENDM
+
+; Try to insert A into spatial partition at Y
+; ACCU should be 8b
+.MACRO .InsertHitboxLite_Y
+    .REPT SPATIAL_LAYER_COUNT INDEX i
+        ldx.w spatial_partition.{i+1},Y
+        bne +++++
+        sta.w spatial_partition.{i+1},Y
+        jmp @@@@@\.\@
+        +++++:
+    .ENDR
+    @@@@@\.\@:
+.ENDM
+
 
 ; Try to remove A from spatial partition at X
 ; ACCU should be 8b

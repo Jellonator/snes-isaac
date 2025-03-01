@@ -348,7 +348,7 @@ FractionBinToDec:
         .db bin2dec(floor(i / 2.56))
     .ENDR
 
-PathOrthagonal:
+PathOrthagonal_H:
     .db PATH_DIR_NULL  ; PATH_DIR_NULL
     .db PATH_DIR_DOWN  ; PATH_DIR_DOWN
     .db PATH_DIR_RIGHT ; PATH_DIR_RIGHT
@@ -358,6 +358,18 @@ PathOrthagonal:
     .db PATH_DIR_RIGHT ; PATH_DIR_UPRIGHT
     .db PATH_DIR_LEFT  ; PATH_DIR_DOWNLEFT
     .db PATH_DIR_RIGHT ; PATH_DIR_DOWNRIGHT
+    .db PATH_DIR_NONE  ; PATH_DIR_NONE
+
+PathOrthagonal_V:
+    .db PATH_DIR_NULL  ; PATH_DIR_NULL
+    .db PATH_DIR_DOWN  ; PATH_DIR_DOWN
+    .db PATH_DIR_RIGHT ; PATH_DIR_RIGHT
+    .db PATH_DIR_LEFT  ; PATH_DIR_LEFT
+    .db PATH_DIR_UP    ; PATH_DIR_UP
+    .db PATH_DIR_UP    ; PATH_DIR_UPLEFT
+    .db PATH_DIR_UP    ; PATH_DIR_UPRIGHT
+    .db PATH_DIR_DOWN  ; PATH_DIR_DOWNLEFT
+    .db PATH_DIR_DOWN  ; PATH_DIR_DOWNRIGHT
     .db PATH_DIR_NONE  ; PATH_DIR_NONE
 
 PathValid:
@@ -395,6 +407,18 @@ Path_Y:
     .db  1 ; PATH_DIR_DOWNLEFT
     .db  1 ; PATH_DIR_DOWNRIGHT
     .db  0 ; PATH_DIR_NONE
+
+Path_TileOffset:
+    .db $00 ; PATH_DIR_NULL
+    .db $10 ; PATH_DIR_DOWN
+    .db $01 ; PATH_DIR_RIGHT
+    .db $FF ; PATH_DIR_LEFT
+    .db $F0 ; PATH_DIR_UP
+    .db $EF ; PATH_DIR_UPLEFT
+    .db $F1 ; PATH_DIR_UPRIGHT
+    .db $0F ; PATH_DIR_DOWNLEFT
+    .db $11 ; PATH_DIR_DOWNRIGHT
+    .db $00 ; PATH_DIR_NONE
 
 .ENDS
 

@@ -825,6 +825,7 @@ entity_refresh_hitboxes:
     .DEFINE INDEX $06
     .DEFINE WIDTH_STORE $08
     .DEFINE INC_Y $0A
+    .DEFINE TMP $0E
     ; put hitboxes
     sep #$30
     lda.l numEntities
@@ -834,24 +835,33 @@ entity_refresh_hitboxes:
         ldx.b ENTITY_INDEX
         ldy.w entityExecutionOrder-1,X
         lda.w entity_mask,Y
-        beq @skip_entity
+        beql @skip_entity
         sty.b ENTITY_ID
         ; WIDTH
-        lda.w entity_box_x2,Y
+        ldx.w entity_box_x1,Y
+        lda.l Div16,X
+        sta.b TMP
+        ldx.w entity_box_x2,Y
+        dex
+        lda.l Div16,X
         sec
-        sbc.w entity_box_x1,Y
-        tax
-        lda.w HitboxWidthToPartitionSize,X
+        sbc.b TMP
+        inc A
         sta.b WIDTH_STORE
         ; INC_Y
         lda #16
         sbc.b WIDTH_STORE ; we assume carry flag is still set
         sta.b INC_Y
         ; HEIGHT
-        lda.w entity_box_y2,Y
-        sbc.w entity_box_y1,Y ; we assume carry flag is still set
-        tax
-        lda.w HitboxWidthToPartitionSize,X
+        ldx.w entity_box_y1,Y
+        lda.l Div16,X
+        sta.b TMP
+        ldx.w entity_box_y2,Y
+        dex
+        lda.l Div16,X
+        sec
+        sbc.b TMP
+        inc A
         sta.b HEIGHT
         ; INDEX
         ldx.w entity_box_x1,Y
@@ -867,7 +877,7 @@ entity_refresh_hitboxes:
             sta.b WIDTH
             @loop_x:
                 lda.b ENTITY_ID
-                .InsertHitboxLite
+                .InsertHitboxLite_X
                 inx
                 dec.b WIDTH
                 bne @loop_x
@@ -879,7 +889,7 @@ entity_refresh_hitboxes:
             bne @loop_y
     @skip_entity:
         dec.b ENTITY_INDEX
-        bne @loop
+        bnel @loop
 @end:
     rtl
     .UNDEFINE ENTITY_INDEX
@@ -889,5 +899,6 @@ entity_refresh_hitboxes:
     .UNDEFINE INDEX
     .UNDEFINE WIDTH_STORE
     .UNDEFINE INC_Y
+    .UNDEFINE TMP
 
 .ENDS

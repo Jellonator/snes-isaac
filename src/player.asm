@@ -945,8 +945,10 @@ _update_player_head_facing:
     rts
 
 PlayerUpdate:
-; check hp
     rep #$30 ; 16 bit AXY
+    lda #0
+    sta.l ENTITY_INDEX_PLAYER+entity_flags
+; check hp
     lda.w player_damageflag
     bpl +
         jsl _PlayerHandleDamaged

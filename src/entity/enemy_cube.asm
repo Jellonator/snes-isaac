@@ -115,6 +115,9 @@ entity_enemy_cube_init:
     lda #0
     sta.w entity_state,Y
     sta.w _current_rotation,Y
+    rep #$20
+    lda #ENTITY_FLAGS_BLOCKING
+    sta.w loword(entity_flags),Y
     ; end
     rts
 
@@ -134,19 +137,62 @@ _state_idle:
     lda.w entity_box_y1,Y
     and #$F0
     ora.b $00
+    sta.b $14 ; $14 - TILE
     tax
     lda.w pathfind_player_data,X
     tax
     lda.l PathValid,X
-    beq @not_valid
-        ; orthagonalize
-        lda.l PathOrthagonal,X
+    beql @not_valid
+        ; Check Orthagonal horizontal
+        stx.b $12 ; $12 - DIRECTION (ORIGINAL)
+        lda.l PathOrthagonal_H,X
+        sta.b $16 ; $16 - DIRECTION (NEW)
+        tax
+        lda.l Path_TileOffset,X
+        clc
+        adc.b $14
+        tay
+        lda #ENTITY_FLAGS_BLOCKING
+        .REPT SPATIAL_LAYER_COUNT INDEX i
+            ldx.w spatial_partition.{i+1},Y
+            beq @valid_dir
+            bit.w loword(entity_flags),X
+            bne @invalid_h
+        .ENDR
+        jmp @valid_dir
+    @invalid_h:
+        ; Check orthagonal vertical
+        ldx.b $12
+        lda.l PathOrthagonal_V,X
+        sta.b $16
+        tax
+        lda.l Path_TileOffset,X
+        clc
+        adc.b $14
+        tay
+        lda #ENTITY_FLAGS_BLOCKING
+        .REPT SPATIAL_LAYER_COUNT INDEX i
+            ldx.w spatial_partition.{i+1},Y
+            beq @valid_dir
+            bit.w loword(entity_flags),X
+            bne @not_valid
+        .ENDR
+    @valid_dir:
+        ; Insert into spatial partition, to prevent same-frame bugs
+        lda.b _tmp_entityid
+        .InsertHitboxLite_Y
+        tay
+        ; set direction, properly
+        lda.b $16
         sta.w _current_direction,Y
         lda #STATE_MOVE_START
         sta.w entity_state,Y
-        lda #4
+        lda #3 ; 4-1 for timer since we do movement on this tick as well
         sta.w entity_timer,Y
+        ; handle one tick of movement
+        jmp _handle_directional_movement
 @not_valid:
+    ldy.b _tmp_entityid
     rts
 
 _midframes_by_direction:

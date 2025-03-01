@@ -88,9 +88,9 @@ DefaultUiData:
     .dsw 5, deft($43, 6) | T_HIGHP | T_FLIPV
     .dw deft($42, 6) | T_FLIPH | T_HIGHP | T_FLIPV
     .dw 0
-    ; row 6-22
+    ; row 6-23
     .dsw 32*15, 0
-    ; row 23-27
+    ; row 24-27
     .REPT 4 INDEX iy
         .dsw 27, 0
         .REPT 4 INDEX ix

@@ -177,6 +177,12 @@
     ; .MultiplyStatic (ENTITY_DATA_ARRAY_SIZE/2)
     ; tay
     entity_array_data ds (ENTITY_TOTAL_MAX + 1) * ENTITY_DATA_ARRAY_SIZE
+    ; stored max health for characters
+    private_entity_char_maximum_health dsw ENTITY_CHARACTER_MAX
+; boss health bar data
+    boss_health_need_rerender db
+    boss_contributor_count db
+    boss_contributor_array ds ENTITY_CHARACTER_MAX
 ; room locations
     roomslot_star db
     roomslot_boss db

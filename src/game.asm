@@ -265,6 +265,9 @@ tile_data_loop:
     sep #$30
     lda #1
     sta.l needResetEntireGround
+    sta.l boss_health_need_rerender
+    lda #0
+    sta.l boss_contributor_count
     lda #$FF
     sta.l numTilesToUpdate
     ; re-enable rendering
@@ -339,6 +342,7 @@ _Game.Loop:
 @skip_paused:
     jsl GroundProcessOps
     jsl Overlay.update
+    jsl BossBar.Update
     ; update pause timer
     sep #$30
     lda.w shouldGamePause

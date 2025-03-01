@@ -28,6 +28,7 @@ entity_boss_monstro_init:
     ; default info
     lda #MONSTRO_BASE_HEALTH
     sta.w entity_health,Y
+    sta.w loword(entity_char_max_health),Y
     lda #10
     sta.w entity_timer,Y
     sep #$20
@@ -59,6 +60,8 @@ entity_boss_monstro_init:
         .ENDR
     .ENDR
     ply
+    tya
+    jsl BossBar.Add
     rts
 
 entity_boss_monstro_tick:
@@ -66,21 +69,18 @@ entity_boss_monstro_tick:
     .INDEX 16
     sty.b $08
 ; check signal
+    sep #$30
     lda #ENTITY_SIGNAL_KILL
     and.w entity_signal,Y
     beq @not_kill
-        lda.w entity_variant,Y
-        bne @not_headless
-            ; We have perished
-            jsl entity_free
-            rts
-        @not_headless:
-        lda #0
-        sta.w entity_variant,Y
-        rep #$20
-        lda #10
-        sta.w entity_health,Y
+        jsl entity_free
+        rts
     @not_kill:
+    lda #ENTITY_SIGNAL_DAMAGE
+    and.w entity_signal,Y
+    beq @not_damage
+        jsl BossBar.ReRender
+    @not_damage:
 ; load & set gfx
     sep #$20
     rep #$10
@@ -225,6 +225,8 @@ entity_boss_monstro_free:
         plp
         ply
     .ENDR
+    tya
+    jsl BossBar.Remove
     rts
 
 .ENDS

@@ -113,6 +113,11 @@ _duke_endtick:
         sta.w entity_state,Y
         rts
     @not_kill:
+    lda #ENTITY_SIGNAL_DAMAGE
+    and.w entity_signal,Y
+    beq @not_damage
+        jsl BossBar.ReRender
+    @not_damage:
 ; X VELOC
     rep #$30
     lda.w entity_posx,Y
@@ -275,6 +280,7 @@ entity_boss_duke_of_flies_init:
     ; default info
     lda #BASE_HP
     sta.w entity_health,Y
+    sta.w loword(entity_char_max_health),Y
     lda #10
     sta.w entity_timer,Y
     sep #$20
@@ -311,6 +317,9 @@ entity_boss_duke_of_flies_init:
     lda #TARGET_VELOC
     sta.w duke_target_velocx,Y
     sta.w duke_target_velocy,Y
+    ; add to bossbar
+    lda.b _tmp_entityid
+    jsl BossBar.Add
     rts
 
 entity_boss_duke_of_flies_tick:
@@ -347,6 +356,9 @@ entity_boss_duke_of_flies_free:
         plp
         ply
     .ENDR
+    ; remove from bossbar
+    lda.b _tmp_entityid
+    jsl BossBar.Remove
     rts
 
 .ENDS

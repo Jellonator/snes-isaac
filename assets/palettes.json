@@ -29,51 +29,51 @@
     },
     {
         "name": "item_active",
-        "src": "assets/palettes/item_active.hex"
+        "src": "assets/palettes/item/item_active.hex"
     },
     {
         "name": "item_inactive",
-        "src": "assets/palettes/item_inactive.hex"
+        "src": "assets/palettes/item/item_inactive.hex"
     },
     {
         "name": "item_sad_onion",
-        "src": "assets/palettes/item_onion.hex"
+        "src": "assets/palettes/item/item_onion.hex"
     },
     {
         "name": "item_growth_hormones",
-        "src": "assets/palettes/item_growth_hormones.hex"
+        "src": "assets/palettes/item/item_growth_hormones.hex"
     },
     {
         "name": "item_chocolate_milk",
-        "src": "assets/palettes/item_chocolate_milk.hex"
+        "src": "assets/palettes/item/item_chocolate_milk.hex"
     },
     {
         "name": "item_compass",
-        "src": "assets/palettes/item_compass.hex"
+        "src": "assets/palettes/item/item_compass.hex"
     },
     {
         "name": "item_deck_of_cards",
-        "src": "assets/palettes/item_deck_of_cards.hex"
+        "src": "assets/palettes/item/item_deck_of_cards.hex"
     },
     {
         "name": "item_spoon_bender",
-        "src": "assets/palettes/item_spoon_bender.hex"
+        "src": "assets/palettes/item/item_spoon_bender.hex"
     },
     {
         "name": "item_map",
-        "src": "assets/palettes/item_map.hex"
+        "src": "assets/palettes/item/item_map.hex"
     },
     {
         "name": "item_dinner",
-        "src": "assets/palettes/item_dinner.hex"
+        "src": "assets/palettes/item/item_dinner.hex"
     },
     {
         "name": "item_polyphemus",
-        "src": "assets/palettes/item_polyphemus.hex"
+        "src": "assets/palettes/item/item_polyphemus.hex"
     },
     {
         "name": "item_brother_bobby",
-        "src": "assets/palettes/item_brother_bobby.hex"
+        "src": "assets/palettes/item/item_brother_bobby.hex"
     },
     {
         "name": "stage_caves1",
@@ -101,39 +101,39 @@
     },
     {
         "name": "tarot_cards1",
-        "src": "assets/palettes/tarot_cards1.hex"
+        "src": "assets/palettes/consumable/tarot_cards1.hex"
     },
     {
         "name": "tarot_cards_magician",
-        "src": "assets/palettes/tarot_cards_magician.hex"
+        "src": "assets/palettes/consumable/tarot_cards_magician.hex"
     },
     {
         "name": "tarot_cards_high_priestess",
-        "src": "assets/palettes/tarot_cards_high_priestess.hex"
+        "src": "assets/palettes/consumable/tarot_cards_high_priestess.hex"
     },
     {
         "name": "tarot_cards_empress",
-        "src": "assets/palettes/tarot_cards_empress.hex"
+        "src": "assets/palettes/consumable/tarot_cards_empress.hex"
     },
     {
         "name": "tarot_cards_emperor",
-        "src": "assets/palettes/tarot_cards_emperor.hex"
+        "src": "assets/palettes/consumable/tarot_cards_emperor.hex"
     },
     {
         "name": "tarot_cards_lovers",
-        "src": "assets/palettes/tarot_cards_lovers.hex"
+        "src": "assets/palettes/consumable/tarot_cards_lovers.hex"
     },
     {
         "name": "tarot_cards_star",
-        "src": "assets/palettes/tarot_cards_star.hex"
+        "src": "assets/palettes/consumable/tarot_cards_star.hex"
     },
     {
         "name": "tarot_cards_wheel_of_fortune",
-        "src": "assets/palettes/tarot_cards_wheel_of_fortune.hex"
+        "src": "assets/palettes/consumable/tarot_cards_wheel_of_fortune.hex"
     },
     {
         "name": "tarot_cards_hermit",
-        "src": "assets/palettes/tarot_cards_hermit.hex"
+        "src": "assets/palettes/consumable/tarot_cards_hermit.hex"
     },
     {
         "name": "tilesprite_fire_normal",
@@ -158,5 +158,9 @@
     {
         "name": "menu.text_gray",
         "src": "assets/palettes/menu_text_gray.hex"
+    },
+    {
+        "name": "enemy.isaac_cube",
+        "src": "assets/palettes/enemy/enemy_isaac_cube.hex"
     }
 ]

@@ -16,6 +16,7 @@ SOURCES  := bindata.asm\
 			entity/effect.asm\
 			entity/enemy_fly.asm\
 			entity/enemy_zombie.asm\
+			entity/enemy_cube.asm\
 			entity/enemy_boss_duke_of_flies.asm\
 			entity/enemy_boss_monstro.asm\
 			entity/item_pedastal.asm\

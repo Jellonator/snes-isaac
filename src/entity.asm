@@ -382,6 +382,11 @@ _player_tick:
     entity_boss_monstro_free,\
     ENTITY_SPAWNGROUP_ENEMY
 
+._DefineEntity ENTITY_TYPE_ENEMY_CUBE,\
+    entity_enemy_cube_init,\
+    entity_enemy_cube_tick,\
+    entity_enemy_cube_free,\
+    ENTITY_SPAWNGROUP_ENEMY
 
 EntityDef_InitFunc:
 .REPT 256 INDEX index

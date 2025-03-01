@@ -314,6 +314,8 @@ entity_boss_duke_of_flies_init:
     rts
 
 entity_boss_duke_of_flies_tick:
+    .ACCU 16
+    .INDEX 16
     sty.b _tmp_entityid
     sep #$30 ; 8B AXY
     ; main tick

@@ -32,7 +32,9 @@ for palette in json_palettes:
     out_inc.write("palettes.{}:\n".format(name))
     out_inc.write("\t.incbin \"palettes/{}.bin\"\n".format(name))
     # out_inc.write("\t@end:\n")
-    palettebin = open(os.path.join(PALETTE_PATH, "{}.bin".format(name)), 'wb')
+    out_path = os.path.join(PALETTE_PATH, "{}.bin".format(name))
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+    palettebin = open(out_path, 'wb')
     with open(palette["src"], 'r') as hexfh:
         for hexline in hexfh.readlines():
             r = int(hexline[0:2], 16) >> 3

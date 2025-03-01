@@ -326,6 +326,7 @@ true_entity_pickup_tick:
     asl
     tax
     lda.l _variant_sprite_tileflag,X
+    ora #%00100000 * $0100
     ldx.w objectIndex
     sta.w objectData.1.tileid,X
     ; X position

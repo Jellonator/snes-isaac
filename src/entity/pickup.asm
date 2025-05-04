@@ -1,5 +1,7 @@
 .include "base.inc"
 
+.include "rng.inc"
+
 ; steal state and timer, since they are serialized
 .define pickup_price entity_state
 .define consumable_type entity_timer
@@ -448,7 +450,8 @@ true_entity_pickup_init_spawn:
         lda.l PickupRandomizerTables,X
         sta.b $00
         ; get RNG
-        jsl RoomRand_Update8
+        .Call "RNG.Room.Rand8"
+        .InvalidateFlags
         .ACCU 16
         and #$00FF
         ; get variant
@@ -474,7 +477,8 @@ true_entity_pickup_init_spawn:
     lda.w entity_variant,Y
     cmp #ENTITY_PICKUP_VARIANT_CONSUMABLE
     bne @dont_set_consumable_type
-        jsl RoomRand_Update8
+        .Call "RNG.Room.Rand8"
+        .InvalidateFlags
         .ACCU 16
         sta.l DIVU_DIVIDEND
         sep #$30

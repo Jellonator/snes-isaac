@@ -1,5 +1,7 @@
 .include "base.inc"
 
+.include "rng.inc"
+
 .BANK $01 SLOT "ROM"
 .SECTION "GAME" FREE
 
@@ -189,7 +191,8 @@ tile_data_loop:
     lda #0
     sta.l tickCounter
     ; init rng
-    jsl RNG.InitFromTimer
+    .Call "RNG.InitFromTimer"
+    .InvalidateFlags
     ; init vqueue
     jsl ClearVQueue
     ; init overlay
@@ -226,7 +229,10 @@ tile_data_loop:
     lda #1
     sta.w isGameUpdateRunning
     ; clear entity table
-    jsl EntityInfoInitialize
+    phb
+    .Call "EntityInfoInitialize"
+    .InvalidateFlags
+    plb
     ; clear pathfinding data
     jsl Pathing.Initialize
     ; clear ground data

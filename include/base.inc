@@ -1,5 +1,6 @@
 .include "header.inc"
 .include "defines.inc"
+.include "context.inc"
 .include "structs.inc"
 .include "block.inc"
 .include "entity.inc"

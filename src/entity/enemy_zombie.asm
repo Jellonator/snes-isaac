@@ -60,7 +60,8 @@ entity_zombie_tick:
     and.w entity_signal,Y
     beq @not_kill
         phy
-        jsl EntityPutSplatter
+        .Call "EntityPutSplatter"
+        .InvalidateFlags
         sep #$30
         ply
         lda.w entity_variant,Y
@@ -235,7 +236,8 @@ entity_zombie_tick:
     inx
     stx.w objectIndex
     pea $0405
-    jsl EntityPutShadow
+    .Call "EntityPutShadow"
+    .InvalidateFlags
     plx
     ; Check collision with player
     sep #$20

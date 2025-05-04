@@ -401,11 +401,10 @@ _ClearTiles:
 ; line  (y-pos) [db] $06
 ; length        [db] $05
 ; palette       [db] $04
-GroundAddOp:
-    rep #$30
+.FuncImpl "GroundAddOp"
     lda.l groundOpListStart
     tax
-    sep #$20
+    .SetA 8
     ; set line
     ; only allow lines 64-192, subtract 64
     lda $06
@@ -437,12 +436,13 @@ GroundAddOp:
     lda $04
     sta.l groundOpList_palette,X
     ; add to list
-    rep #$30
+    .SetAX 16, 16
     txa
     inc A
     and #MAX_GROUND_OPS-1
     sta.l groundOpListStart
 @skipAdd:
     rtl
+.FuncImplEnd
 
 .ENDS

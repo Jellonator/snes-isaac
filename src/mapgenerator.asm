@@ -1,5 +1,7 @@
 .include "base.inc"
 
+.include "rng.inc"
+
 .BANK $01 SLOT "ROM"
 .SECTION "MapGeneratorCode" FREE
 
@@ -795,23 +797,12 @@ BeginMapGeneration:
 @retry:
     jsl MapGen.ClearAll
     ; First, choose starting tile
-    jsl StageRand_Update4
+    .Call "RNG.Stage.Rand4"
+    .InvalidateFlags
     sep #$30 ; 8 bit AXY
     and #$03
     clc
     adc #6 ; X: [6-9]
-    ; sta.b start_pos
-    ; jsl StageRand_Update4
-    ; sep #$30 ; 8 bit AXY
-    ; and #$01
-    ; clc
-    ; adc #2 ; Y: [2-3]
-    ; asl
-    ; asl
-    ; asl
-    ; asl
-    ; clc
-    ; adc.b start_pos
     lda #(8 + 8*16)
     sta.b start_pos
     sta.w loadedRoomIndex
@@ -848,7 +839,8 @@ BeginMapGeneration:
             jsr _CalculateAvailableStartingRoomEndpointTiles
     @skip_adjacent_to_start:
         ; First, get random tile
-        jsl StageRand_Update8
+        .Call "RNG.Stage.Rand8"
+        .InvalidateFlags
         .ACCU 16 ; Rng changes A to 16
             ; .ChangeDataBank $00
             sta.l DIVU_DIVIDEND
@@ -987,7 +979,8 @@ BeginMapGeneration:
 _PushRandomRoomFromPool:
     rep #$30 ; 16b AXY
 ; Get RNG value
-    jsl StageRand_Update8
+    .Call "RNG.Stage.Rand8"
+    .InvalidateFlags
     sta.l DIVU_DIVIDEND
 ; Put pointer in Y
 ; For efficiency, Y starts at size*3

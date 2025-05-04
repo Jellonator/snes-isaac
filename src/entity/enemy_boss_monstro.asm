@@ -148,8 +148,9 @@ entity_boss_monstro_tick:
     .ENDR
     ldy $08
     pea (MONSTRO_HEIGHT - 14) + ($100*10)
-    jsl EntityPutBigShadow
+    .Call "EntityPutBigShadow"
     plx
+    .InvalidateFlags
     
 ; add to partition
     sep #$30

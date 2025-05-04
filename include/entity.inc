@@ -405,3 +405,60 @@
     cmp.w player_box_y1
     bmi addr
 .ENDM
+
+; Function definitions
+
+.FuncDefine "SortEntityExecutionOrder"
+    .FuncInA 8
+    .FuncInX 8
+    .FuncInBank $7E
+    .FuncIgnoreDirect
+.FuncDefineEnd
+
+.FuncDefine "EntityInfoInitialize"
+    .FuncInA 16
+    .FuncInBank $7E
+    .FuncIgnoreDirect
+.FuncDefineEnd
+
+.FuncDefine "SpatialPartitionClear"
+    .FuncInBank $7E
+    .FuncIgnoreDirect
+.FuncDefineEnd
+
+.FuncDefine "GetEntityCollisionAt"
+    .FuncInA 8
+    .FuncInX 8
+    .FuncInBank $7E
+    .FuncIgnoreDirect
+.FuncDefineEnd
+
+.FuncDefine "EntityPutShadow"
+    .FuncInA 8
+    .FuncInX 16
+    .FuncInBank $7E
+    .FuncIgnoreDirect
+.FuncDefineEnd
+
+.FuncDefine "EntityPutMediumShadow"
+    .FuncInA 16
+    .FuncInX 16
+    .FuncInBank $7E
+    .FuncIgnoreDirect
+.FuncDefineEnd
+
+.FuncDefine "EntityPutBigShadow"
+    .FuncInA 16
+    .FuncInX 16
+    .FuncInBank $7E
+    .FuncIgnoreDirect
+.FuncDefineEnd
+
+.FuncDefine "EntityPutSplatter"
+    .FuncInA 8
+    .FuncInX 16
+    .FuncInBank $7E
+    .FuncIgnoreDirect
+    .FuncOutA 16
+    .FuncOutX 16
+.FuncDefineEnd

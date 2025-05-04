@@ -1,16 +1,18 @@
 .include "base.inc"
 
+.include "vqueue.inc"
+
 .BANK $01 SLOT "ROM"
 .SECTION "VQueue" FREE
 
-ClearVQueue:
-    rep #$20 ; 16b A
+.FuncImpl "ClearVQueue"
     stz.w vqueueNumOps
     lda #loword(vqueueBinData_End)
     sta.w vqueueBinOffset
     stz.w vqueueNumMiniOps
     stz.w vqueueNumRegOps
     rtl
+.FuncImplEnd
 
 _proc_vqueue_vram:
     .ACCU 16
@@ -70,10 +72,7 @@ _proc_modes:
     .dw _proc_vqueue_cgram
     .dw _proc_vqueue_vram_clear
 
-ProcessVQueue:
-    phb
-    .ChangeDataBank $7F
-    rep #$30 ; 8b A
+.FuncImpl "ProcessVQueue"
     lda.l vqueueNumOps
     beq @process_vqueue_end
     sta.b $00
@@ -100,7 +99,7 @@ ProcessVQueue:
     beq @process_reg_end
     asl
     sta.b $00
-    sep #$20
+    .SetA 8
     ldy #0
 @process_reg_loop:
     ldx.w vqueueRegOps_Addr,Y
@@ -112,8 +111,8 @@ ProcessVQueue:
     bcc @process_reg_loop
 @process_reg_end:
 ; Clear vqueue and reset bank
-    plb
-    rep #$30
+    .SetBank $00
+    .SetAX 16, 16
     stz.w vqueueNumOps
     stz.w vqueueNumRegOps
     lda.w #loword(vqueueBinData_End)
@@ -129,11 +128,13 @@ ProcessVQueue:
     sta.w DMA0_CTL
     lda #loword(vqueueMiniOps)
     sta.w DMA0_SRCL
-    sep #$20 ; 8b A
+    .SetA 8
     lda #bankbyte(vqueueMiniOps)
     sta DMA0_SRCH
     lda #$01
     sta.w MDMAEN
 @process_mini_end:
     rtl
+.FuncImplEnd
+
 .ENDS

@@ -45,9 +45,11 @@ entity_basic_fly_tick:
     and.w entity_signal,Y
     beq +
         ; We have perished
-        jsl EntityPutSplatter
+        .Call "EntityPutSplatter"
+        .InvalidateFlags
         jsl entity_free
         rts
+        .UpdateAX 8, 8
     +:
 ; move
     ; TO PLAYER
@@ -208,7 +210,7 @@ entity_basic_fly_tick:
     inx
     stx.w objectIndex
     pea $0404
-    jsl EntityPutShadow
+    .Call "EntityPutShadow"
     plx
     ; Check collision with player
     sep #$20
@@ -231,6 +233,7 @@ entity_basic_fly_tick:
 @no_player_col:
     ; end
     rts
+    .InvalidateFlags
 
 entity_basic_fly_free:
     .ACCU 16

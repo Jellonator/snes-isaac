@@ -572,31 +572,31 @@
     jsl ResetRegisters
     sep #$20
     lda #$01
-    sta MEMSEL ; set FastROM
+    sta.l MEMSEL ; set FastROM
 .ENDM
 
 .MACRO .DisableINT
     sei
     sep #$20
     lda #1
-    sta.w NMITIMEN
+    sta.l NMITIMEN
 .ENDM
 
 .MACRO .EnableINT
     sep #$20
     cli
     lda #$81
-    sta NMITIMEN
+    sta.l NMITIMEN
 .ENDM
 
 .MACRO .DisableRENDER
     sep #$20
     lda #%10000000
-    sta.w INIDISP
+    sta.l INIDISP
 .ENDM
 
 .MACRO .EnableRENDER
     sep #$20
-    lda.w roomBrightness
-    sta.w INIDISP
+    lda.l roomBrightness
+    sta.l INIDISP
 .ENDM

@@ -1,5 +1,7 @@
 .include "base.inc"
 
+.include "vqueue.inc"
+
 .SECTION "RenderInterrupt" BANK ROMBANK_BASE SLOT "ROM" ORGA $8000 SEMIFREE
 
 VBlank:
@@ -66,7 +68,9 @@ VBlank2:
         jsr UpdateEntireMinimap
 @skipUpdateAllTiles:
 ; Process vqueue
-    jsl ProcessVQueue
+    phb
+    .Call "ProcessVQueue"
+    plb
 ; end
     sep #$20 ; 8 bit A
     pla ; compensate for phb earlier
@@ -76,6 +80,7 @@ VBlank2:
     stz.w isGameUpdateRunning
     cli ; enable interrupts
     rti
+    .InvalidateFlags
 
 ClearSpriteTable:
     .ACCU 16

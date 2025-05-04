@@ -425,7 +425,8 @@ projectile_tick__:
         lda #ENTITY_MASK_PROJECTILE
         sta.b $00
     +:
-    jsl GetEntityCollisionAt ; Y = new entity
+    .Call "GetEntityCollisionAt" ; Y = new entity
+    .InvalidateFlags
     cpy #0
     beq @skipCollisionHandler
         ; found object:

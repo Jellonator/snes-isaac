@@ -247,16 +247,17 @@ entity_free_all:
     dey
     bne @loop
 @end:
+    .Call "EntityInfoInitialize"
     plb
-    jsl EntityInfoInitialize
     rtl
+    .InvalidateFlags
 
 ; Tick all entities
 entity_tick_all:
     phb
-    .ChangeDataBank $7E
-    jsl SortEntityExecutionOrder
-    rep #$30 ; 16B AXY
+    .Call "SortEntityExecutionOrder"
+    .SetBank $7E
+    .SetAX 16, 16
     ldx.w numEntities
     beq @end
     @loop:
@@ -277,6 +278,7 @@ entity_tick_all:
 @end:
     plb
     rtl
+    .InvalidateFlags
 
 _player_tick:
     jsl PlayerRender
@@ -440,8 +442,7 @@ EntityDef_Flags:
 .ORG 0
 .SECTION "EntityExtCode"
 
-SortEntityExecutionOrder:
-    sep #$30
+.FuncImpl "SortEntityExecutionOrder"
     lda.w numEntities
     cmp #2
     bcc @noSort
@@ -499,27 +500,28 @@ SortEntityExecutionOrder:
 ; end
 @noSort:
     rtl
+.FuncImplEnd
 
-EntityInfoInitialize:
-    rep #$20
+.FuncImpl "EntityInfoInitialize"
     ; save player info
     lda.w player_posx
     pha
     lda.w player_posy
     pha
     ; clear
-    sep #$20
+    .SetA 8
     phd
     pea $4300
     pld
     .ClearWRam_ZP entity_data_begin, (entity_data_end-entity_data_begin)
+    .InvalidateAX
     pld
     ; set player type
-    sep #$20
+    .SetA 8
     lda #ENTITY_TYPE_PLAYER
     sta.w player_type
     ; load player info
-    rep #$20
+    .SetA 16
     pla
     sta.w player_posy
     pla
@@ -533,23 +535,23 @@ EntityInfoInitialize:
     lda #ENTITY_SPAWN_CONTEXT_STANDARD
     sta.b entitySpawnContext
     rtl
+.FuncImplEnd
 
-SpatialPartitionClear:
+.FuncImpl "SpatialPartitionClear"
     phd
     pea $4300
     pld
     .ClearWRam_ZP spatial_partition, _sizeof_spatial_partition
     pld
     rtl
+.FuncImplEnd
 
 ; Get the collision at the given position, if available
 ; $00: Mask
 ; $01: X
 ; $02: Y
 ; Return: Y as entity ID
-GetEntityCollisionAt:
-    .INDEX 8
-    .ACCU 8
+.FuncImpl "GetEntityCollisionAt"
     lda.b $02
     and #$F0
     sta.b $03
@@ -588,15 +590,14 @@ GetEntityCollisionAt:
     .ENDR
     ldy #0
     rtl
+.FuncImplEnd
 
 ; place entity shadow for entity at index Y
 ; assumes 16 bit index, 8 bit accumulator
 ; Parameters:
 ;   offs x [db] $05
 ;   offs y [db] $04
-EntityPutShadow:
-    .INDEX 16
-    .ACCU 8
+.FuncImpl "EntityPutShadow"
     ldx.w objectIndexShadow
     cpx.w objectIndex
     bcc @skipShadow
@@ -620,20 +621,20 @@ EntityPutShadow:
         sta.w objectData.1.flags,X
     @skipShadow:
     rtl
+.FuncImplEnd
 
 ; place medium-sized entity shadow for entity at index Y
 ; assumes 16 bit index, 8 bit accumulator
 ; Parameters:
 ;   offs x [db] $05
 ;   offs y [db] $04
-EntityPutMediumShadow:
-    rep #$30
+.FuncImpl "EntityPutMediumShadow"
     lda.w objectIndexShadow
     sec
     sbc #8
     cmp.w objectIndex
     bcc @skipShadow
-        sep #$20
+        .SetA 8
         tax
         stx.w objectIndexShadow
         lda.w entity_posy+1,Y
@@ -656,7 +657,7 @@ EntityPutMediumShadow:
         lda #%01011000
         sta.w objectData.2.flags,X
         ; now, need to make sprites big
-        rep #$20
+        .SetA 16
         ; phy
         txa
         ;
@@ -688,20 +689,20 @@ EntityPutMediumShadow:
         rtl
     @skipShadow:
     rtl
+.FuncImplEnd
 
 ; place big entity shadow for entity at index Y
 ; assumes 16 bit index, 8 bit accumulator
 ; Parameters:
 ;   offs x [db] $05
 ;   offs y [db] $04
-EntityPutBigShadow:
-    rep #$30
+.FuncImpl "EntityPutBigShadow"
     lda.w objectIndexShadow
     sec
     sbc #12
     cmp.w objectIndex
     bcc @skipShadow
-        sep #$20
+        .SetA 8
         tax
         stx.w objectIndexShadow
         lda.w entity_posy+1,Y
@@ -732,7 +733,7 @@ EntityPutBigShadow:
         lda #%01011000
         sta.w objectData.3.flags,X
         ; now, need to make sprites big
-        rep #$20
+        .SetA 16
         ; phy
         txa
         ;
@@ -764,16 +765,15 @@ EntityPutBigShadow:
         rtl
     @skipShadow:
     rtl
+.FuncImplEnd
 
-EntityPutSplatter:
-    rep #$10
-    sep #$20
+.FuncImpl "EntityPutSplatter"
     lda.w loword(entity_ysort),Y
     sta.b $06
     lda #GROUND_PALETTE_RED
     sta.b $04
     .REPT 8 INDEX i
-        sep #$20
+        .SetA 8
         lda.w entity_box_x1,Y
         .IF i == 0 || i == 7
             clc
@@ -801,12 +801,13 @@ EntityPutSplatter:
             sta $05
         .ENDIF
         phy
-        jsl GroundAddOp
+        .Call "GroundAddOp"
         ply
         inc.b $06
     .ENDR
-    rep #$30
+    .SetAX 16, 16
     rtl
+.FuncImplEnd
 
 entity_clear_hitboxes:
     phd

@@ -1,5 +1,7 @@
 .include "base.inc"
 
+.include "rng.inc"
+
 .BANK $01 SLOT "ROM"
 .SECTION "PlayerItem" FREE
 
@@ -743,7 +745,7 @@ BatteryTileMap:
 
 
 _use_deck_of_cards:
-    jsl RoomRand_Update8
+    .Call "RNG.Room.Rand8"
     .ACCU 16
     sta.l DIVU_DIVIDEND
     sep #$30
@@ -758,5 +760,6 @@ _use_deck_of_cards:
     jsl Consumable.pickup
     jsl Item.update_charge_display
     rts
+    .InvalidateFlags
 
 .ENDS

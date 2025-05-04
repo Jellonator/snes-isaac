@@ -1,5 +1,7 @@
 .include "base.inc"
 
+.include "rng.inc"
+
 .BANK $01 SLOT "ROM"
 .SECTION "LevelCode" FREE
 
@@ -66,11 +68,12 @@ InitializeRoomSlot:
         sta.l roomSlotTiles.1.entityStoreTable.{i+1}.type,X
     .ENDR
     ; set room rng
-    jsl StageRand_Update32
+    .Call "RNG.Stage.Rand32"
     sta.l roomSlotTiles.1.rng,X
     tya
     sta.l roomSlotTiles.1.rng+2,X
     rtl
+    .InvalidateFlags
 
 .MACRO .CopyGroundAddr ARGS addr
     lda #bankbyte(addr)

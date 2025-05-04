@@ -1,5 +1,7 @@
 .include "base.inc"
 
+.include "rng.inc"
+
 .DEFINE _item_gfxptr_pedastal loword(entity_char_custom.1)
 .DEFINE _item_gfxptr_item loword(entity_char_custom.2)
 .DEFINE _item_palette loword(entity_char_custom.3)
@@ -48,7 +50,8 @@ _item_pedastal_get_variant_from_pool:
     pha
     phy
     php
-    jsl RoomRand_Update16
+    .Call "RNG.Room.Rand16"
+    .InvalidateFlags
     sta.l DIVU_DIVIDEND
     plp
     ply

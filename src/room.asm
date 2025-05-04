@@ -1,5 +1,7 @@
 .include "base.inc"
 
+.include "rng.inc"
+
 .BANK $01 SLOT "ROM"
 .SECTION "RoomCode" FREE
 
@@ -226,7 +228,7 @@ _Room_Close_Doors:
 
 _Room_Spawn_Reward:
     rep #$30
-    jsl RoomRand_Update8
+    .Call "RNG.Room.Rand8"
     and #$00FF
     asl
     tax
@@ -240,6 +242,7 @@ _Room_Spawn_Reward:
     sta.w entity_posy,Y
 @no_spawn:
     rts
+    .InvalidateFlags
 
 _Room_Spawn_Boss_Reward:
     rep #$30

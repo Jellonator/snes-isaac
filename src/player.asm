@@ -1,5 +1,7 @@
 .include "base.inc"
 
+.include "vqueue.inc"
+
 .DEFINE PLAYER_BOMB_PLACE_TIMER 30
 
 .DEFINE TempTileX $08
@@ -1446,9 +1448,12 @@ PlayerRender:
     rep #$10
     ldy #ENTITY_INDEX_PLAYER
     pea $0405
-    jsl EntityPutShadow
+    phb
+    .Call "EntityPutShadow"
+    plb
     plx
     rtl
+    .InvalidateFlags
 
 PlayerShootTear:
     sep #$20
@@ -2007,7 +2012,10 @@ _MakeWaitScrollSub2:
 
 .MACRO .MakeWaitScroll ARGS SREG, SVAR, AMT, NFRAMES, SAMT, TEMP1, SPRVAL
     wai
-    jsl ProcessVQueue
+    phb
+    .Call "ProcessVQueue"
+    .InvalidateFlags
+    plb
     rep #$20 ; 16 bit A
     sep #$10 ; 8 bit XY
     lda #NFRAMES

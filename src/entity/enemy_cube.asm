@@ -330,7 +330,7 @@ entity_enemy_cube_tick:
         clc
         adc #12
         sta.w entity_box_y1,Y
-        jsl EntityPutSplatter
+        .Call "EntityPutSplatter"
         jsl entity_free
         rts
     +:
@@ -433,6 +433,7 @@ entity_enemy_cube_tick:
 @no_player_col:
     ; end
     rts
+    .InvalidateFlags
 
 entity_enemy_cube_free:
     .ACCU 16
@@ -449,5 +450,6 @@ entity_enemy_cube_free:
     ldx.w _palette,Y
     jsl Palette.free
     rts
+    .InvalidateFlags
 
 .ENDS

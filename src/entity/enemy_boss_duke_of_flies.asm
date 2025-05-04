@@ -250,7 +250,7 @@ _duke_endtick:
     .ENDR
     ldy _tmp_entityid
     pea (BOSS_HEIGHT - 8) + ($100*0)
-    jsl EntityPutMediumShadow
+    .Call "EntityPutMediumShadow"
     plx
 ; set some flags
     sep #$20
@@ -259,6 +259,7 @@ _duke_endtick:
     lda #0
     sta.w entity_signal,Y
     rts
+    .InvalidateFlags
 
 entity_duke_of_flies_main_tick:
     sep #$20

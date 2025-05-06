@@ -166,12 +166,14 @@ tile_data_loop:
     sta CGWSEL
     lda #%01110100
     sta CGADSUB
-    stz SCRNDESTMW
-    stz SCRNDESTSW
-    stz W34SEL
+    lda #%00010110
+    sta SCRNDESTMW
+    lda #%00010110
+    sta SCRNDESTSW
+    stz W12SEL
+    lda #%00000010
+    sta W34SEL
     stz WOBJSEL
-    lda #%00001011
-    sta W12SEL
     ; Set background color
     sep #$20 ; 8 bit A
     stz CGADDR
@@ -270,6 +272,8 @@ tile_data_loop:
     sta.l boss_contributor_count
     lda #$FF
     sta.l numTilesToUpdate
+    ; Clear HDMA table
+    jsl Render.ClearHDMA
     ; re-enable rendering
     rep #$20
     stz.w isGameUpdateRunning

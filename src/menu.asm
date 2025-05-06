@@ -392,16 +392,9 @@ Menu.Begin:
     jsl CopyVMEM
     .POPN 7
     ; Upload start layout
-    ; pea MENU_BG2_TILE_BASE_ADDR
-    ; pea 32*32*2
-    ; sep #$20
-    ; lda #bankbyte(_MenuLayout_PageStart)
-    ; pha
     rep #$30
     lda #STATE_START
     jsr _Menu.SetState
-    ; jsl CopyVMEM
-    ; .POPN 7
     ; Upload background palette
     pea 2*4
     pea $0000 + bankbyte(palettes.menu.background)
@@ -447,6 +440,8 @@ Menu.Begin:
     sta.l gamePauseTimer
     sta.l needResetEntireGround
     sta.l numTilesToUpdate
+    ; Clear HDMA table
+    jsl Render.ClearHDMA
     ; re-enable rendering
     rep #$20
     stz.w isGameUpdateRunning

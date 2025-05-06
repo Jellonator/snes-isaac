@@ -17,6 +17,10 @@ VBlank2:
     .ChangeDataBank $00
     lda.w isGameUpdateRunning
     beq @continuevblank
+    phx
+    jsl Render.UpdateHDMA
+    rep #$30
+    plx
     pla
     plb
     rti
@@ -67,6 +71,8 @@ VBlank2:
 @skipUpdateAllTiles:
 ; Process vqueue
     jsl ProcessVQueue
+; Process HDMA
+    jsl Render.UpdateHDMA
 ; end
     sep #$20 ; 8 bit A
     pla ; compensate for phb earlier
@@ -76,6 +82,59 @@ VBlank2:
     stz.w isGameUpdateRunning
     cli ; enable interrupts
     rti
+
+Render.UpdateHDMA:
+    rep #$30
+    lda #%00000001 + ($0100*lobyte(WH0))
+    sta.w DMA7_CTL
+    lda #%00000001 + ($0100*lobyte(WH2))
+    sta.w DMA6_CTL
+    sep #$20
+    ldx #loword(hdmaWindowMainPositionBuffer1)
+    lda.l hdmaWindowMainPositionActiveBufferId
+    beq +
+        ldx #loword(hdmaWindowMainPositionBuffer2)
+    +:
+    stx.w DMA7_SRCL
+    ldx #loword(hdmaWindowSubPositionBuffer1)
+    lda.l hdmaWindowSubPositionActiveBufferId
+    beq +
+        ldx #loword(hdmaWindowSubPositionBuffer2)
+    +:
+    stx.w DMA6_SRCL
+    lda #$7E
+    sta.w DMA7_SRCH
+    sta.w DMA6_SRCH
+    lda #%11000000
+    sta.w HDMAEN
+    rtl
+
+Render.ClearHDMA:
+    sep #$30
+    lda #0
+    sta.l hdmaWindowMainPositionActiveBufferId
+    sta.l hdmaWindowSubPositionActiveBufferId
+    lda #1
+    sta.l hdmaWindowMainPositionBuffer1
+    sta.l hdmaWindowMainPositionBuffer2
+    sta.l hdmaWindowSubPositionBuffer1
+    sta.l hdmaWindowSubPositionBuffer2
+    lda #100
+    sta.l hdmaWindowMainPositionBuffer1+1
+    sta.l hdmaWindowMainPositionBuffer2+1
+    sta.l hdmaWindowSubPositionBuffer1+1
+    sta.l hdmaWindowSubPositionBuffer2+1
+    lda #155
+    sta.l hdmaWindowMainPositionBuffer1+2
+    sta.l hdmaWindowMainPositionBuffer2+2
+    sta.l hdmaWindowSubPositionBuffer1+2
+    sta.l hdmaWindowSubPositionBuffer2+2
+    lda #0
+    sta.l hdmaWindowMainPositionBuffer1+3
+    sta.l hdmaWindowMainPositionBuffer2+3
+    sta.l hdmaWindowSubPositionBuffer1+3
+    sta.l hdmaWindowSubPositionBuffer2+3
+    rtl
 
 ClearSpriteTable:
     .ACCU 16
@@ -199,6 +258,7 @@ _UpdateMinimapLine:
             lda #deft($53, 6)
         +:
     @store_{i}:
+        ora #T_HIGHP
         sta.w VMDATA
         iny
     .ENDR

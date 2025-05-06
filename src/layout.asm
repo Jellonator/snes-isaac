@@ -190,6 +190,19 @@
     roomslot_shop db
     roomslot_secret1 db
     roomslot_secret2 db
+; HDMA buffers
+; We double-buffer most HDMA buffers, so that we can write to the other buffer
+; while the screen draws.
+    ; in-memory HDMA window position buffers
+    ; we store the [left, right] window bounds together as a 16b value in each buffer.
+    ; This saves on DMA slot usage.
+    ; 256B each should be sufficient; this is 85 value changes total + null terminator
+    hdmaWindowMainPositionBuffer1 ds 256
+    hdmaWindowMainPositionBuffer2 ds 256
+    hdmaWindowMainPositionActiveBufferId db
+    hdmaWindowSubPositionBuffer1 ds 256
+    hdmaWindowSubPositionBuffer2 ds 256
+    hdmaWindowSubPositionActiveBufferId db
 ; reserved data
     _extraneous_data_buffer2 ds 256
 .ENDS

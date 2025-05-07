@@ -119,7 +119,7 @@ _subtract_money:
     sec
     sbc.w pickup_price,Y
     sta.w playerData.money
-    jsl Player.update_money_display
+    jsl UI.update_money_display
 @skip:
     plp
     ply
@@ -143,7 +143,7 @@ _handle_penny:
     +:
     rep #$08 ; disable decimal
     sta.w playerData.money
-    jsl Player.update_money_display
+    jsl UI.update_money_display
     plp
     ply
     ; KILL
@@ -165,7 +165,7 @@ _handle_nickle:
     +:
     rep #$08 ; disable decimal
     sta.w playerData.money
-    jsl Player.update_money_display
+    jsl UI.update_money_display
     plp
     ply
     ; KILL
@@ -187,7 +187,7 @@ _handle_dime:
     +:
     rep #$08 ; disable decimal
     sta.w playerData.money
-    jsl Player.update_money_display
+    jsl UI.update_money_display
     plp
     ply
     ; KILL
@@ -207,7 +207,7 @@ _handle_bomb:
 @skip_add_bombs:
     sta.w playerData.bombs
     rep #$08 ; disable decimal
-    jsl Player.update_bomb_display
+    jsl UI.update_bomb_display
     plp
     ply
     jsr _subtract_money
@@ -228,7 +228,7 @@ _handle_key:
     sta.w playerData.keys
 @skip_add_keys:
     rep #$08 ; disable decimal
-    jsl Player.update_key_display
+    jsl UI.update_key_display
     plp
     ply
     jsr _subtract_money

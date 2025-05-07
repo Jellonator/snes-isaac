@@ -413,23 +413,7 @@ entity_enemy_cube_tick:
     adc #16
     sta.w entity_box_y2,Y
 ; Check collision with player
-    sep #$20
-    lda.w player_box_x1
-    clc
-    adc #8 ; ACC = player center x
-    cmp.w entity_box_x1,Y
-    bmi @no_player_col
-    cmp.w entity_box_x2,Y
-    bpl @no_player_col
-    lda.w player_box_y1
-    clc
-    adc #8
-    cmp.w entity_box_y1,Y
-    bmi @no_player_col
-    cmp.w entity_box_y2,Y
-    bpl @no_player_col
-    rep #$20
-    dec.w player_damageflag
+    jsr Entity.Enemy.TickContactDamage
 @no_player_col:
     ; end
     rts

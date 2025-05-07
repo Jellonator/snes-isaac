@@ -39,15 +39,6 @@ _PlayerNextHealthValueTable:
     .db HEALTH_SOULHEART_HALF ; spirit full
     .db HEALTH_NULL           ; eternal
 
-_PlayerHealthTileValueTable:
-    .dw deft($00, 0) | T_HIGHP ; null
-    .dw deft($32, 5) | T_HIGHP ; red empty
-    .dw deft($33, 5) | T_HIGHP ; red half
-    .dw deft($30, 5) | T_HIGHP ; red full
-    .dw deft($31, 6) | T_HIGHP ; spirit half
-    .dw deft($30, 6) | T_HIGHP ; spirit full
-    .dw deft($00, 5) | T_HIGHP ; eternal
-
 _PlayerHealthEffectiveValueTable:
     .db 0 ; null
     .db 0 ; red empty
@@ -56,52 +47,6 @@ _PlayerHealthEffectiveValueTable:
     .db 1 ; spirit half
     .db 2 ; spirit full
     .db 1 ; eternal
-
-; Render heart at slot Y
-_PlayerRenderSingleHeart:
-    rep #$30 ; 16B AXY
-    ; Init vqueue
-    lda.w vqueueNumMiniOps
-    asl
-    asl
-    tax
-    inc.w vqueueNumMiniOps
-    ; first, determine offset
-    tya
-    and #$0007 ; 8 per line
-    sta.b $00
-    tya
-    and #$00F8 ; x8
-    asl      ; x16
-    asl      ; x32
-    ora.b $00 ; X|Y
-    sta.b $00
-    clc
-    adc #BG1_TILE_BASE_ADDR + 8 + 64
-    sta.l vqueueMiniOps.1.vramAddr,X
-    ; now, determine character
-    lda.w playerData.healthSlots,Y
-    and #$00FF
-    asl
-    phx
-    tax
-    lda.l _PlayerHealthTileValueTable,X
-    plx
-    sta.l vqueueMiniOps.1.data,X
-    rtl
-
-_PlayerRenderAllHearts:
-    sep #$30
-    ldy #HEALTHSLOT_COUNT-1
-    @loop:
-        phy
-        php
-        jsl _PlayerRenderSingleHeart
-        plp
-        ply
-    dey
-    bpl @loop
-    rtl
 
 ; Returns true (A=1) if player has any empty heart containers
 Player.CanHeal:
@@ -152,7 +97,7 @@ Player.Heal:
             pha
             phx
             php
-            jsl _PlayerRenderSingleHeart
+            jsl UI.update_single_heart
             plp
             plx
             pla
@@ -168,7 +113,7 @@ Player.Heal:
             pha
             phx
             php
-            jsl _PlayerRenderSingleHeart
+            jsl UI.update_single_heart
             plp
             plx
             pla
@@ -183,7 +128,7 @@ Player.Heal:
 @end_and_render:
     phx
     php
-    jsl _PlayerRenderSingleHeart
+    jsl UI.update_single_heart
     plp
     plx
     txa
@@ -235,7 +180,7 @@ Player.AddSoulHearts
             pha
             phx
             php
-            jsl _PlayerRenderSingleHeart
+            jsl UI.update_single_heart
             plp
             plx
             pla
@@ -251,7 +196,7 @@ Player.AddSoulHearts
             pha
             phx
             php
-            jsl _PlayerRenderSingleHeart
+            jsl UI.update_single_heart
             plp
             plx
             pla
@@ -266,7 +211,7 @@ Player.AddSoulHearts
 @end_and_render:
     phx
     php
-    jsl _PlayerRenderSingleHeart
+    jsl UI.update_single_heart
     plp
     plx
     txa
@@ -294,7 +239,7 @@ _PlayerTakeHealth:
     ; update UI
     phy
     php
-    jsl _PlayerRenderSingleHeart
+    jsl UI.update_single_heart
     plp
     ply
     ; if last slot and new value is empty: kill
@@ -336,7 +281,7 @@ Player.health_up:
 @end:
     lda #HEALTH_REDHEART_FULL
     sta.w playerData.healthSlots,Y
-    jmp _PlayerRenderAllHearts
+    jmp UI.update_all_hearts
 
 Player.get_effective_health:
     sep #$30
@@ -353,11 +298,10 @@ Player.get_effective_health:
         bpl @loop
     lda.b $00
     rtl
-        
 @end:
     lda #HEALTH_REDHEART_FULL
     sta.w playerData.healthSlots,Y
-    jmp _PlayerRenderAllHearts
+    jmp UI.update_all_hearts
 
 Player.reset_stats:
     rep #$20
@@ -374,99 +318,6 @@ Player.reset_stats:
     lda #PLAYER_STATBASE_TEAR_LIFETIME
     sta.w playerData.stat_tear_lifetime
     stz.w playerData.tearflags
-    rtl
-
-Player.update_money_display:
-    rep #$30 ; 16B AXY
-    ; inc vqueue
-    lda.w vqueueNumMiniOps
-    asl
-    asl
-    tax
-    inc.w vqueueNumMiniOps
-    inc.w vqueueNumMiniOps
-    ; first, determine offset
-    lda #BG1_TILE_BASE_ADDR + $46
-    sta.l vqueueMiniOps.1.vramAddr,X
-    lda #BG1_TILE_BASE_ADDR + $47
-    sta.l vqueueMiniOps.2.vramAddr,X
-    ; now, determine character
-    lda.w playerData.money
-    and #$00F0
-    lsr
-    lsr
-    lsr
-    lsr
-    clc
-    adc #deft(TILE_TEXT_UINUMBER_BASE,5) | T_HIGHP
-    sta.l vqueueMiniOps.1.data,X
-    lda.w playerData.money
-    and #$000F
-    clc
-    adc #deft(TILE_TEXT_UINUMBER_BASE,5) | T_HIGHP
-    sta.l vqueueMiniOps.2.data,X
-    rtl
-
-Player.update_bomb_display:
-    rep #$30 ; 16B AXY
-    ; inc vqueue
-    lda.w vqueueNumMiniOps
-    asl
-    asl
-    tax
-    inc.w vqueueNumMiniOps
-    inc.w vqueueNumMiniOps
-    ; first, determine offset
-    lda #BG1_TILE_BASE_ADDR + $66
-    sta.l vqueueMiniOps.1.vramAddr,X
-    lda #BG1_TILE_BASE_ADDR + $67
-    sta.l vqueueMiniOps.2.vramAddr,X
-    ; now, determine character
-    lda.w playerData.bombs
-    and #$00F0
-    lsr
-    lsr
-    lsr
-    lsr
-    clc
-    adc #deft(TILE_TEXT_UINUMBER_BASE,5) | T_HIGHP
-    sta.l vqueueMiniOps.1.data,X
-    lda.w playerData.bombs
-    and #$000F
-    clc
-    adc #deft(TILE_TEXT_UINUMBER_BASE,5) | T_HIGHP
-    sta.l vqueueMiniOps.2.data,X
-    rtl
-
-Player.update_key_display:
-    rep #$30 ; 16B AXY
-    ; inc vqueue
-    lda.w vqueueNumMiniOps
-    asl
-    asl
-    tax
-    inc.w vqueueNumMiniOps
-    inc.w vqueueNumMiniOps
-    ; first, determine offset
-    lda #BG1_TILE_BASE_ADDR + $86
-    sta.l vqueueMiniOps.1.vramAddr,X
-    lda #BG1_TILE_BASE_ADDR + $87
-    sta.l vqueueMiniOps.2.vramAddr,X
-    ; now, determine character
-    lda.w playerData.keys
-    and #$00F0
-    lsr
-    lsr
-    lsr
-    lsr
-    clc
-    adc #deft(TILE_TEXT_UINUMBER_BASE,5) | T_HIGHP
-    sta.l vqueueMiniOps.1.data,X
-    lda.w playerData.keys
-    and #$000F
-    clc
-    adc #deft(TILE_TEXT_UINUMBER_BASE,5) | T_HIGHP
-    sta.l vqueueMiniOps.2.data,X
     rtl
 
 PlayerInit:
@@ -500,10 +351,10 @@ PlayerInit:
     stz.w playerData.current_active_charge
     lda #0
     jsl Item.set_active
-    jsl Item.update_charge_display
-    jsl Player.update_bomb_display
-    jsl Player.update_key_display
-    jsl Player.update_money_display
+    jsl UI.update_charge_display
+    jsl UI.update_bomb_display
+    jsl UI.update_key_display
+    jsl UI.update_money_display
     jsl Consumable.update_display_no_overlay
     sep #$30
     stz.w player_signal
@@ -511,7 +362,7 @@ PlayerInit:
     sta.w playerData.healthSlots.1
     sta.w playerData.healthSlots.2
     sta.w playerData.healthSlots.3
-    jsl _PlayerRenderAllHearts
+    jsl UI.update_all_hearts
     jsl Item.reset_items
     jsl Player.reset_stats
     sep #$30
@@ -583,12 +434,12 @@ PlayerInitPostLoad:
     sep #$30
     lda #2
     jsl Player.set_body_frame@upload_frame
-    jsl _PlayerRenderAllHearts
-    jsl Player.update_bomb_display
-    jsl Player.update_key_display
-    jsl Player.update_money_display
+    jsl UI.update_all_hearts
+    jsl UI.update_bomb_display
+    jsl UI.update_key_display
+    jsl UI.update_money_display
     jsl Consumable.update_display_no_overlay
-    jsl Item.update_charge_display
+    jsl UI.update_charge_display
     jsl Item.update_active_palette
     rtl
 
@@ -994,7 +845,7 @@ PlayerUpdate:
         sbc #1
         sta.w playerData.bombs
         rep #$08
-        jsl Player.update_bomb_display
+        jsl UI.update_bomb_display
         jmp @end_place_bomb
     @cant_place_bomb:
         dec A
@@ -1260,7 +1111,7 @@ player_outside_door_v:
         sbc #1
         sta.w playerData.keys
         rep #$08
-        jsl Player.update_key_display
+        jsl UI.update_key_display
         sep #$30
         lda [MAP_DOOR_MEM_LOC(i)]
         ora #DOOR_OPEN

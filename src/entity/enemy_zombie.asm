@@ -238,24 +238,7 @@ entity_zombie_tick:
     jsl EntityPutShadow
     plx
     ; Check collision with player
-    sep #$20
-    lda.w player_box_x1
-    clc
-    adc #8 ; ACC = player center x
-    cmp.w entity_box_x1,Y
-    bmi @no_player_col
-    cmp.w entity_box_x2,Y
-    bpl @no_player_col
-    lda.w player_box_y1
-    clc
-    adc #8
-    cmp.w entity_box_y1,Y
-    bmi @no_player_col
-    cmp.w entity_box_y2,Y
-    bpl @no_player_col
-    rep #$20
-    dec.w player_damageflag
-@no_player_col:
+    jsr Entity.Enemy.TickContactDamage
     ; end
     rts
 

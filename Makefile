@@ -46,6 +46,7 @@ SOURCES  := bindata.asm\
 			save.asm\
 			spritedefs.asm\
 			spriteslot.asm\
+			ui.asm\
 			vqueue.asm
 
 OBJECTS  := $(SOURCES:%.asm=$(OBJDIR)/%.obj)

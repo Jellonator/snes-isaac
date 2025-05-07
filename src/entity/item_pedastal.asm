@@ -410,7 +410,7 @@ true_item_pedastal_tick_base:
             sec
             sbc.w _item_price,Y
             sta.w playerData.money
-            jsl Player.update_money_display
+            jsl UI.update_money_display
         @dont_subtract_money:
         rep #$08
         ; set price to 0
@@ -611,7 +611,7 @@ _item_pedastal_pickup:
     sta.w playerData.current_active_charge
     phy
     php
-    jsl Item.update_charge_display
+    jsl UI.update_charge_display
     plp
     ply
     ; set charge of own item

@@ -616,7 +616,7 @@ BlockVariantAddresses:
 .ENDR
 
 BlockEmptyVariants:
-    .dw deft($20, 2)
+    .dw deft($20, 1)
     .dw deft($A4, 3) ; 1: rubble
 BlockRockVariants:
     .dw deft($A0, 3)
@@ -692,7 +692,7 @@ EmptyRoomTiles:
 .dw deft($02, 2) | T_FLIPH | T_FLIPV
 ; row 12-15
 .REPT 16*4
-    .dw 0
+    .dw deft($00, 1)
 .ENDR
 
 ; INDEXED BY method

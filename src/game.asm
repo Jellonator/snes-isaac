@@ -121,7 +121,7 @@ Game.Begin:
     rep #$30 ; 16 bit X, Y, Z
     lda #BG2_TILE_BASE_ADDR
     sta VMADDR
-    lda #$0020
+    lda #deft($00, 2)
     ldx #$0000
 tile_map_loop:
     sta VMDATA
@@ -168,12 +168,16 @@ tile_data_loop:
     sta CGADSUB
     lda #%00010110
     sta SCRNDESTMW
-    lda #%00010110
+    lda #%00011110
     sta SCRNDESTSW
-    stz W12SEL
+    lda #%00100000
+    sta W12SEL
     lda #%00000010
     sta W34SEL
-    stz WOBJSEL
+    lda #%00000010
+    sta WOBJSEL
+    lda #%00111111
+    sta COLDATA
     ; Set background color
     sep #$20 ; 8 bit A
     stz CGADDR

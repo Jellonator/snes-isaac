@@ -119,12 +119,12 @@ Render.ClearHDMA:
     sta.l hdmaWindowMainPositionBuffer2
     sta.l hdmaWindowSubPositionBuffer1
     sta.l hdmaWindowSubPositionBuffer2
-    lda #100
+    lda #127-6
     sta.l hdmaWindowMainPositionBuffer1+1
     sta.l hdmaWindowMainPositionBuffer2+1
     sta.l hdmaWindowSubPositionBuffer1+1
     sta.l hdmaWindowSubPositionBuffer2+1
-    lda #155
+    lda #128+6
     sta.l hdmaWindowMainPositionBuffer1+2
     sta.l hdmaWindowMainPositionBuffer2+2
     sta.l hdmaWindowSubPositionBuffer1+2
@@ -170,174 +170,6 @@ UploadSpriteTable:
     sta DMA0_DEST
     lda #$01
     sta MDMAEN
-    rtl
-
-; Update the entire minimap
-; NOTE: this requires blank to be enabled
-; We assume that this will be performed during stage load.
-; Just set numTilesToUpdate to $FF instead.
-UpdateEntireMinimap:
-    rep #$30 ; 16 bit AXY
-    lda #$80
-    sta.w VMAIN ; single increment, no mapping
-    .REPT 5 INDEX i
-        lda #BG1_TILE_BASE_ADDR + (i+2)*32 + 25
-        sta.w VMADDR
-        lda.b loadedRoomIndex
-        and #$00FF
-        .IF i == 0
-            cmp #$20
-            bcs +
-                jsr _ClearMinimapLine
-                jmp @skip_{i}
-            +:
-        .ELIF i == 1
-            cmp #$10
-            bcs +
-                jsr _ClearMinimapLine
-                jmp @skip_{i}
-            +:
-        .ELIF i == 3
-            cmp #$E0
-            bcc +
-                jsr _ClearMinimapLine
-                jmp @skip_{i}
-            +:
-        .ELIF i == 4
-            cmp #$F0
-            bcc +
-                jsr _ClearMinimapLine
-                jmp @skip_{i}
-            +:
-        .ENDIF
-        clc
-        adc #(i - 2) * MAP_MAX_WIDTH - 2
-        tay
-        jsr _UpdateMinimapLine
-        @skip_{i}:
-    .ENDR
-    rts
-
-_ClearMinimapLine:
-    .ACCU 16
-    .INDEX 16
-    lda #deft($53, 6)
-    .REPT 5 INDEX i
-        sta.w VMDATA
-        iny
-    .ENDR
-    rts
-
-_UpdateMinimapLine:
-    .ACCU 16
-    .INDEX 16
-    .REPT 5 INDEX i
-        .IF i != 2
-            lda.b loadedRoomIndex
-            and #$0F
-            .IF i == 0
-                cmp #2
-                bcs +
-            .ELIF i == 1
-                cmp #1
-                bcs +
-            .ELIF i == 3
-                cmp #$0E
-                bcc +
-            .ELIF i == 4
-                cmp #$0F
-                bcc +
-            .ENDIF
-                lda #0
-                jmp @store_{i}
-            +:
-        .ENDIF
-        jsl Map.GetTileValue
-        cmp #0
-        bne +
-            lda #deft($53, 6)
-        +:
-    @store_{i}:
-        ora #T_HIGHP
-        sta.w VMDATA
-        iny
-    .ENDR
-    rts
-
-; Get tile value for tile Y
-Map.GetTileValue:
-    .INDEX 16
-    .ACCU 16
-    lda.w mapTileTypeTable,Y
-    and #$00FF
-    asl
-    tax
-    lda.l MapTiles,X
-    sta.b $00
-    beq @empty_tile
-; modify value by flags
-    lda.w mapTileFlagsTable,Y
-    bit #MAPTILE_COMPLETED
-    beq +
-        lda #$0010
-        ora.b $00
-        sta.b $00
-    +:
-    lda.w mapTileFlagsTable,Y
-    bit #MAPTILE_HAS_PLAYER
-    beq +
-        lda #$0020
-        ora.b $00
-        sta.b $00
-    +:
-    ; hide undiscovered rooms
-    lda.w mapTileFlagsTable,Y
-    bit #MAPTILE_DISCOVERED
-    bne @tile_discovered
-        ; always hide secret rooms
-        lda.w mapTileTypeTable,Y
-        and #$00FF
-        cmp #ROOMTYPE_SECRET
-        beq @no_map_no_compass
-            lda.w playerData.playerItemStackNumber + ITEMID_MAP
-            and #$00FF
-            beq @no_map
-                ; has map
-                lda.w playerData.playerItemStackNumber + ITEMID_COMPASS
-                and #$00FF
-                bne @tile_discovered ; has map has compass - discover all rooms
-                    ; has map no compass - all undiscovered rooms appear as normal rooms
-                    lda #deft($08, 6) | T_HIGHP
-                    sta.b $00
-                    jmp @tile_discovered
-            @no_map:
-                ; no map
-                lda.w playerData.playerItemStackNumber + ITEMID_COMPASS
-                and #$00FF
-                beq @no_map_no_compass ; no map no compass - don't discover any rooms
-                    ; no map has compass - discover non-normal rooms
-                    lda.w mapTileTypeTable,Y
-                    and #$00FF
-                    cmp #ROOMTYPE_NORMAL+1
-                    bcs @tile_discovered
-        @no_map_no_compass:
-        lda #$0000
-        and.b $00
-        sta.b $00
-    @tile_discovered:
-@empty_tile:
-; set value
-    lda.b $00
-    rtl
-
-; Update minimap slot
-; Args:
-;    slot dw $04,S
-UpdateMinimapSlot:
-    ; screw it, just update the whole minimap now
-    sep #$20
-    lda #$FF
-    sta.w numTilesToUpdate
     rtl
 
 ; Copy palette to CGRAM

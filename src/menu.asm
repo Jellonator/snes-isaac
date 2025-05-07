@@ -285,7 +285,7 @@ _Menu.PutTextBG1:
 
 ; Enter menu
 Menu.Begin:
-    .ChangeDataBank $00
+    .ChangeDataBank $80
     ; Disable rendering temporarily
     .DisableINT
     ; Disable interrupts

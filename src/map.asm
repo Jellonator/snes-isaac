@@ -364,7 +364,7 @@ HandleTileChanged:
     .INDEX 16
     phb
     phy
-    .ChangeDataBank $00
+    .ChangeDataBank $80
     lda [currentRoomTileTypeTableAddress],Y ; get TYPE
     and #$00FF
     asl

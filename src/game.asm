@@ -5,7 +5,7 @@
 
 ; Enter game
 Game.Begin:
-    .ChangeDataBank $00
+    .ChangeDataBank $80
     ; Disable rendering temporarily
     .DisableINT
     ; Disable interrupts

@@ -1131,6 +1131,19 @@ player_outside_door_v:
         rep #$08
     .ENDR
 @skip_open_doors:
+; do thing
+    sep #$20
+    lda.l player_box_x1
+    clc
+    adc #3
+    pha
+    lda.l player_box_y1
+    sec
+    sbc #4
+    pha
+    jsl Render.HDMAEffect.BrimstoneLeft
+    rep #$20
+    pla
 ; handle animation
     jsr _update_player_animation
     ; set box pos

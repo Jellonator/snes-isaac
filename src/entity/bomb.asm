@@ -162,7 +162,7 @@ true_entity_bomb_tick:
             ; update tile
             phy
             phb
-            .ChangeDataBank $00
+            .ChangeDataBank $80
             .IF i == 0 ; NORTH
                 jsl UpdateDoorTileNorth
             .ELIF i == 1 ; EAST
@@ -274,7 +274,7 @@ true_entity_bomb_tick:
         adc #4
         sta.b $06
         phb
-        .ChangeDataBank $00
+        .ChangeDataBank $80
         jsl Splat.explode_small
         rep #$10
         ldy.b Y_STORE

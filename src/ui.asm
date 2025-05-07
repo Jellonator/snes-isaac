@@ -3,8 +3,6 @@
 .BANK $01 SLOT "ROM"
 .SECTION "UI" FREE
 
-
-
 UI.update_money_display:
     rep #$30 ; 16B AXY
     ; inc vqueue

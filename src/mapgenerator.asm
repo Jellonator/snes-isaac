@@ -850,7 +850,7 @@ BeginMapGeneration:
         ; First, get random tile
         jsl StageRand_Update8
         .ACCU 16 ; Rng changes A to 16
-            ; .ChangeDataBank $00
+            ; .ChangeDataBank $80
             sta.l DIVU_DIVIDEND
             sep #$30 ; 8 bit AXY
             lda.b mapgenNumAvailableEndpointTiles

@@ -206,8 +206,8 @@ Render.HDMAEffect.BrimstoneRight:
     plb
     rtl
 
-; Set up HDMA Window main for brimstone firing to right
-; Render.HDMAEffect.BrimstoneRight([s8]x, [s8]y)
+; Set up HDMA Window main for brimstone firing to left
+; Render.HDMAEffect.BrimstoneLeft([s8]x, [s8]y)
 ; $04,S: Y
 ; $05,S: X
 Render.HDMAEffect.BrimstoneLeft:
@@ -273,6 +273,152 @@ Render.HDMAEffect.BrimstoneLeft:
     dec A
     sta.w $02*3 + 2,X
     sta.w $08*3 + 2,X
+    plb
+    rtl
+
+; Set up HDMA Window main for brimstone firing up
+; Render.HDMAEffect.BrimstoneUp([s8]x, [s8]y)
+; $04,S: Y
+; $05,S: X
+Render.HDMAEffect.BrimstoneUp:
+    phb
+    .ChangeDataBank $7E
+    sep #$20
+    rep #$10
+    ; get address of inactive table
+    ldx #hdmaWindowMainPositionBuffer1
+    ; lda.w hdmaWindowMainPositionActiveBufferId
+    ; bne +
+        ; ldx #hdmaWindowMainPositionBuffer2
+    ; +:
+    ; line counts for Y offset
+    lda #ROOM_TOP - 8
+    sta.w $00*3 + 0,X ; LINES[0] = TOP
+    lda 1+$04,S
+    sec
+    sbc #ROOM_TOP - 8
+    lsr
+    sta.w $01*3 + 0,X ; LINES[1] = floor((Y-TOP)/2)
+    lda 1+$04,S
+    sec
+    sbc.w $01*3 + 0,X
+    sbc #ROOM_TOP - 8
+    sta.w $02*3 + 0,X ; LINES[2] = Y-floor((Y-TOP)/2)
+    ;
+    lda #0
+    sta.w $07*3 + 0,X ; LINES[7] = 0
+    sta.w $06*3 + 2,X ; RIGHT[4] = 0
+    sta.w $00*3 + 2,X ; RIGHT[0] = 0
+    ;
+    inc A
+    sta.w $04*3 + 0,X ; LINES[4] = 1
+    sta.w $05*3 + 0,X ; LINES[5] = 1
+    sta.w $06*3 + 0,X ; LINES[6] = 1
+    ;
+    inc A
+    sta.w $03*3 + 0,X ; LINES[3] = 2
+    ;
+    lda #$FF
+    sta.w $06*3 + 1,X ; LEFT[6] = 255
+    sta.w $00*3 + 1,X ; LEFT[0] = 255
+    ;
+    lda 1+$05,S
+    sta.w $01*3 + 1,X ; LEFT[1] = X
+    sta.w $02*3 + 1,X ; LEFT[2] = X
+    inc A
+    sta.w $03*3 + 1,X ; LEFT[3] = X+1
+    inc A
+    sta.w $04*3 + 1,X ; LEFT[4] = X+2
+    inc A
+    inc A
+    sta.w $05*3 + 1,X ; LEFT[5] = X+4
+    inc A
+    inc A
+    inc A
+    sta.w $05*3 + 2,X ; RIGHT[4] = X+7
+    inc A
+    inc A
+    sta.w $04*3 + 2,X ; RIGHT[3] = X+9
+    inc A
+    sta.w $03*3 + 2,X ; RIGHT[2] = X+10
+    inc A
+    sta.w $02*3 + 2,X ; RIGHT[2] = X+11
+    sta.w $01*3 + 2,X ; RIGHT[1] = X+11
+    plb
+    rtl
+
+; Set up HDMA Window main for brimstone firing down
+; Render.HDMAEffect.BrimstoneDown([s8]x, [s8]y)
+; $04,S: Y
+; $05,S: X
+Render.HDMAEffect.BrimstoneDown:
+    phb
+    .ChangeDataBank $7E
+    sep #$20
+    rep #$10
+    ; get address of inactive table
+    ldx #hdmaWindowMainPositionBuffer1
+    ; lda.w hdmaWindowMainPositionActiveBufferId
+    ; bne +
+        ; ldx #hdmaWindowMainPositionBuffer2
+    ; +:
+    ; line counts for Y offset
+    lda 1+$04,S
+    lsr
+    sta.w $00*3 + 0,X ; LINES[0] = floor(Y/2)
+    lda 1+$04,S
+    sec
+    sbc.w $00*3 + 0,X
+    sta.w $01*3 + 0,X ; LINES[1] = ceil(Y/2)
+    lda #ROOM_BOTTOM + 4
+    sec
+    sbc 1+$04,S
+    lsr
+    sta.w $05*3 + 0,X ; LINES[5] = (BOTTOM - Y)/2
+    bcc +
+        inc A
+    +:
+    sta.w $06*3 + 0,X ; LINES[6] = (BOTTOM - Y)/2
+    ;
+    lda #0
+    sta.w $08*3 + 0,X ; LINES[8] = 0
+    sta.w $00*3 + 2,X ; RIGHT[0] = 0
+    sta.w $01*3 + 2,X ; RIGHT[1] = 0
+    sta.w $07*3 + 2,X ; RIGHT[7] = 0
+    inc A
+    sta.w $02*3 + 0,X ; LINES[2] = 1
+    sta.w $03*3 + 0,X ; LINES[3] = 1
+    sta.w $07*3 + 0,X ; LINES[7] = 1
+    inc A
+    sta.w $04*3 + 0,X ; LINES[4] = 2
+    ;
+    lda #$FF
+    sta.w $00*3 + 1,X ; LEFT[0] = 255
+    sta.w $01*3 + 1,X ; LEFT[1] = 255
+    sta.w $07*3 + 1,X ; LEFT[7] = 255
+    ;
+    lda 1+$05,S
+    sta.w $05*3 + 1,X ; LEFT[5] = X
+    sta.w $06*3 + 1,X ; LEFT[6] = X
+    inc A
+    sta.w $04*3 + 1,X ; LEFT[4] = X+1
+    inc A
+    sta.w $03*3 + 1,X ; LEFT[3] = X+2
+    inc A
+    inc A
+    sta.w $02*3 + 1,X ; LEFT[2] = X+4
+    inc A
+    inc A
+    inc A
+    sta.w $02*3 + 2,X ; RIGHT[2] = X+7
+    inc A
+    inc A
+    sta.w $03*3 + 2,X ; RIGHT[3] = X+9
+    inc A
+    sta.w $04*3 + 2,X ; RIGHT[4] = X+10
+    inc A
+    sta.w $05*3 + 2,X ; RIGHT[5] = X+11
+    sta.w $06*3 + 2,X ; RIGHT[6] = X+11
     plb
     rtl
 

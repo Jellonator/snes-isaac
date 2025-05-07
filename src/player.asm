@@ -1141,7 +1141,7 @@ player_outside_door_v:
     sec
     sbc #4
     pha
-    jsl Render.HDMAEffect.BrimstoneLeft
+    jsl Render.HDMAEffect.BrimstoneDown
     rep #$20
     pla
 ; handle animation

@@ -158,9 +158,7 @@
 ; a lot of entity data can just be used here, since entity tick, init, and free
 ; are executed in bank $7E. If not in bank $7E, you must access with $long,X
     numEntities dw
-    ; Y-sort of entities
-    ; I'll figure out something to combine with later.
-    ; YSORT is just one byte
+    ; Y-sort of entities and flash timer
     private_base_entity_combined_ysort_flash dsw ENTITY_TOTAL_MAX
     ; Custom data per entity
     private_entity_custom INSTANCEOF entitycustomdata_t 4

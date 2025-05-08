@@ -212,7 +212,7 @@ _projectile_tile_poop:
     ply
     rts
 
-_ProjectileTileHandlerTable:
+ProjectileTileHandlerTable:
 .REPT 256 INDEX i
     .IF i == BLOCK_POOP
         .dw _projectile_tile_poop
@@ -220,6 +220,10 @@ _ProjectileTileHandlerTable:
         .dw _projectile_tile_do_nothing
     .ENDIF
 .ENDR
+
+ProjectileTileHandleTrampoline:
+    jsr (ProjectileTileHandlerTable,X)
+    rtl
 
 .define PROJECTILE_TMP_IDX $20
 .define PROJECTILE_TMP_POSX $01
@@ -410,7 +414,7 @@ projectile_tick__:
     and #$00FF
     asl
     tax
-    jsr (_ProjectileTileHandlerTable,X)
+    jsr (ProjectileTileHandlerTable,X)
     jmp _projectile_delete
 @skipTileHandler:
 ; Check collisions

@@ -1287,6 +1287,10 @@ _player_handle_shoot_chocolate_milk:
     stz.w playerData.tear_timer
     rts
 
+.DEFINE BOX_LEFT $10
+.DEFINE BOX_TOP $11
+.DEFINE BOX_RIGHT $12
+.DEFINE BOX_BOTTOM $13
 _player_render_brimstone_left:
     .ACCU 8
     .INDEX 8
@@ -1302,7 +1306,22 @@ _player_render_brimstone_left:
     jsl Render.HDMAEffect.BrimstoneLeft
     rep #$20
     pla
-    rts
+    sep #$30
+    lda.w player_box_x1
+    clc
+    adc #8
+    sta.b BOX_RIGHT
+    lda.w player_box_y1
+    inc A
+    inc A
+    sta.b BOX_TOP
+    lda.w player_box_y2
+    dec A
+    dec A
+    sta.b BOX_BOTTOM
+    lda #ROOM_LEFT
+    sta.b BOX_LEFT
+    jmp _player_handle_brimstone_damage_tick
 
 _player_render_brimstone_right:
     .ACCU 8
@@ -1319,7 +1338,22 @@ _player_render_brimstone_right:
     jsl Render.HDMAEffect.BrimstoneRight
     rep #$20
     pla
-    rts
+    sep #$30
+    lda.w player_box_x1
+    clc
+    adc #8
+    sta.b BOX_LEFT
+    lda.w player_box_y1
+    inc A
+    inc A
+    sta.b BOX_TOP
+    lda.w player_box_y2
+    dec A
+    dec A
+    sta.b BOX_BOTTOM
+    lda #ROOM_RIGHT
+    sta.b BOX_RIGHT
+    jmp _player_handle_brimstone_damage_tick
 
 _player_render_brimstone_up:
     .ACCU 8
@@ -1335,7 +1369,22 @@ _player_render_brimstone_up:
     jsl Render.HDMAEffect.BrimstoneUp
     rep #$20
     pla
-    rts
+    sep #$30
+    lda.w player_box_x1
+    inc A
+    inc A
+    sta.b BOX_LEFT
+    lda.w player_box_x2
+    dec A
+    dec A
+    sta.b BOX_RIGHT
+    lda #ROOM_TOP
+    sta.b BOX_TOP
+    lda.w player_box_y1
+    clc
+    adc #8
+    sta.b BOX_BOTTOM
+    jmp _player_handle_brimstone_damage_tick
 
 _player_render_brimstone_down:
     .ACCU 8
@@ -1349,7 +1398,195 @@ _player_render_brimstone_down:
     jsl Render.HDMAEffect.BrimstoneDown
     rep #$20
     pla
+    sep #$30
+    lda.w player_box_x1
+    inc A
+    inc A
+    sta.b BOX_LEFT
+    lda.w player_box_x2
+    dec A
+    dec A
+    sta.b BOX_RIGHT
+    lda #ROOM_BOTTOM
+    sta.b BOX_BOTTOM
+    lda.w player_box_y1
+    clc
+    adc #8
+    sta.b BOX_TOP
+    jmp _player_handle_brimstone_damage_tick
+
+.DEFINE WIDTH_STORE $14
+.DEFINE WIDTH $15
+.DEFINE HEIGHT $1D
+.DEFINE TMP $18
+.DEFINE INDEX $19
+.DEFINE INC_Y $1A
+.DEFINE DAMAGE_AMOUNT $1B
+_player_handle_brimstone_damage_tick:
+    .ACCU 8
+    .INDEX 8
+; only do this tick once every four ticks,
+; aligned against other important ticks. This gives us the extra 20% of update
+; time, so we don't have to worry about time as much.
+    lda.w tickCounter
+    and #$03
+    beq +
+        rts
+    +:
+; ensure that left < right, top < bottom
+    lda.b BOX_LEFT
+    cmp.b BOX_RIGHT
+    bcc +
+        clc
+        adc.b BOX_RIGHT
+        ror
+        sta.b BOX_LEFT
+        inc A
+        sta.b BOX_RIGHT
+    +:
+    lda.b BOX_TOP
+    cmp.b BOX_BOTTOM
+    bcc +
+        clc
+        adc.b BOX_BOTTOM
+        ror
+        sta.b BOX_TOP
+        inc A
+        sta.b BOX_BOTTOM
+    +:
+; calc damage
+    ; we do `ceil(damage/4)` damage 15 times per second, about `4×damage` per second
+    rep #$20
+    lda.w playerData.stat_damage
+    clc
+    adc #3
+    .DivideStatic 4
+    sta.b DAMAGE_AMOUNT
+    sep #$30
+; set up iterators
+    ; WIDTH
+    ldx.b BOX_LEFT
+    lda.l Div16,X
+    sta.b TMP
+    ldx.b BOX_RIGHT
+    dex
+    lda.l Div16,X
+    sec
+    sbc.b TMP
+    inc A
+    sta.b WIDTH_STORE
+    ; INC_Y
+    lda #16
+    sbc.b WIDTH_STORE
+    sta.b INC_Y
+    ; HEIGHT
+    ldx.b BOX_TOP
+    lda.l Div16,X
+    sta.b TMP
+    ldx.b BOX_BOTTOM
+    dex
+    lda.l Div16,X
+    sec
+    sbc.b TMP
+    inc A
+    sta.b HEIGHT
+    ; INDEX
+    ldx.b BOX_LEFT
+    lda.l Div16,X
+    sta.b INDEX
+    lda.b BOX_TOP
+    and #$F0
+    ora.b INDEX
+    tay
+    ; loop
+    @loop_y:
+        lda.b WIDTH_STORE
+        sta.b WIDTH
+        @loop_x:
+            ; handle tile
+            phy
+            tyx
+            lda.l GameTileToRoomTileIndexTable,X
+            cmp #96
+            bcs @skip_tile
+            tay
+            lda [currentRoomTileTypeTableAddress],Y
+            bpl @skip_tile
+                rep #$30
+                and #$00FF
+                asl
+                tax
+                jsl ProjectileTileHandleTrampoline
+                sep #$30
+            @skip_tile:
+            ply
+            ; handle entity collisions
+            .REPT SPATIAL_LAYER_COUNT INDEX i
+                ldx.w spatial_partition.{i+1},Y
+                beql @spatial_end
+                    ; found entity, check mask
+                    lda.w entity_mask,X
+                    and #ENTITY_MASK_TEAR
+                    beq @spatial_skip_{i}
+                    ; entity mask checks out, compare box
+                    lda.b BOX_RIGHT
+                    cmp.w entity_box_x1,X
+                    bcc @spatial_skip_{i}
+                    lda.b BOX_LEFT
+                    cmp.w entity_box_x2,X
+                    bcs @spatial_skip_{i}
+                    lda.b BOX_BOTTOM
+                    cmp.w entity_box_y1,X
+                    bcc @spatial_skip_{i}
+                    lda.b BOX_TOP
+                    cmp.w entity_box_y2,X
+                    bcs @spatial_skip_{i}
+                    ; box checks out, deal damage
+                    rep #$20
+                    lda.w entity_health,X
+                    sec
+                    sbc.b DAMAGE_AMOUNT
+                    sta.w entity_health,X
+                    sep #$20
+                    php
+                    lda.w entity_signal,X
+                    ora #ENTITY_SIGNAL_DAMAGE
+                    plp
+                    bcs @spatial_notkill_{i}
+                        ora #ENTITY_SIGNAL_KILL
+                    @spatial_notkill_{i}:
+                    sta.w entity_signal,X
+                    lda #ENTITY_FLASH_TIME
+                    sta.l entity_damageflash,X
+                    lda.w entity_mask,X
+                    and #$FF ~ ENTITY_MASK_TEAR
+                    sta.w entity_mask,X
+                @spatial_skip_{i}:
+            .ENDR
+            @spatial_end:
+            ; end
+            iny
+            dec.b WIDTH
+            bnel @loop_x
+        tya
+        clc
+        adc.b INC_Y
+        tay
+        dec.b HEIGHT
+        bnel @loop_y
     rts
+
+.UNDEFINE BOX_LEFT
+.UNDEFINE BOX_TOP
+.UNDEFINE BOX_RIGHT
+.UNDEFINE BOX_BOTTOM
+.UNDEFINE WIDTH_STORE
+.UNDEFINE WIDTH
+.UNDEFINE HEIGHT
+.UNDEFINE TMP
+.UNDEFINE INDEX
+.UNDEFINE INC_Y
+.UNDEFINE DAMAGE_AMOUNT
 
 _player_render_brimstone_funcs:
     .dw _player_render_brimstone_right

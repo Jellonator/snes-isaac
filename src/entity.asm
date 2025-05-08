@@ -890,7 +890,7 @@ entity_refresh_hitboxes:
         sta.b HEIGHT
         ; INDEX
         ldx.w entity_box_x1,Y
-        lda.w Div16,X
+        lda.l Div16,X
         sta.b INDEX
         lda.w entity_box_y1,Y
         and #$F0

@@ -333,6 +333,18 @@ _pickup_map:
     tagline: .ASCSTR "May You Find What You Seek", 0
 .ENDST
 
+.DSTRUCT Item.definitions.brimstone INSTANCEOF itemdef_t VALUES
+    sprite_index: .db 11
+    palette_ptr: .dw palettes.item_brimstone
+    palette_depth: .db 8
+    flags: .db 0
+    on_pickup: .dw _pickup_empty
+    on_use: .dw _use_empty
+    shop_price: .db $30
+    name: .ASCSTR "Brimstone", 0
+    tagline: .ASCSTR "May You Find What You Seek", 0
+.ENDST
+
 Item.items:
     .dw Item.definitions.null
     .dw Item.definitions.sad_onion
@@ -346,6 +358,7 @@ Item.items:
     .dw Item.definitions.map
     .dw Item.definitions.compass
     .dw Item.definitions.deck_of_cards
+    .dw Item.definitions.brimstone
     .REPT 256-11
         .dw Item.definitions.null
     .ENDR

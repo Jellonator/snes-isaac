@@ -76,6 +76,10 @@
         "src": "assets/palettes/item/item_brother_bobby.hex"
     },
     {
+        "name": "item_brimstone",
+        "src": "assets/palettes/item/item_brimstone.hex"
+    },
+    {
         "name": "stage_caves1",
         "src": "assets/palettes/stage_caves1.hex"
     },

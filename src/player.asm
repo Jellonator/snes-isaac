@@ -335,11 +335,11 @@ PlayerInit:
     sta.w player_posx
     lda #((64 + 4 * 16 - 8) * 256)
     sta.w player_posy
-    ; stz.w projectile_count_2x
     ; setup HP
     .REPT HEALTHSLOT_COUNT INDEX i
         stz.w playerData.healthSlots + (i * 2)
     .ENDR
+    stz.w playerData.brimstone_timer
     stz.w playerData.invuln_timer
     lda #$99
     sta.w playerData.money
@@ -365,6 +365,10 @@ PlayerInit:
     jsl UI.update_all_hearts
     jsl Item.reset_items
     jsl Player.reset_stats
+    sep #$30
+    ; GIVE TEST ITEMS
+    lda #ITEMID_BRIMSTONE
+    jsl Item.add
     sep #$30
     stz.w playerData.walk_frame
     stz.w playerData.bomb_wait_timer
@@ -393,6 +397,7 @@ PlayerEnterFloor:
     lda #((64 + 4 * 16 - 8) * 256)
     sta.w player_posy
     stz.w playerData.invuln_timer
+    stz.w playerData.brimstone_timer
     jsl PlayerDiscoverNearbyRooms
     sep #$30
     stz.w player_signal
@@ -419,6 +424,7 @@ PlayerInitPostLoad:
     sta.w player_velocy
     stz.w player_damageflag
     stz.w playerData.invuln_timer
+    stz.w playerData.brimstone_timer
     jsl PlayerDiscoverNearbyRooms
     sep #$30
     stz.w player_signal
@@ -677,8 +683,8 @@ _update_player_animation:
     lda #FACINGDIR_DOWN
     sta.w playerData.facingdir_body
     stz.w playerData.head_offset_y
-    lda #0
-    jsl Player.set_head_frame
+    ; lda #0
+    ; jsl Player.set_head_frame
     rep #$30
     lda.w player_velocx
     .ABS_A16_POSTLOAD
@@ -712,9 +718,16 @@ _update_player_animation:
         @nomovey:
         jsr _update_player_animation_vy
     @end:
-    ; update head sprite
+    ; update head sprite, if brimstone timer is zero
+    lda.w playerData.brimstone_timer
+    beq +
+        ; TODO: use firing laser sprite
+        rts
+    +:
     sep #$30
     lda.w playerData.playerItemStackNumber+ITEMID_CHOCOLATE_MILK
+    bne @chocolate_milk
+    lda.w playerData.playerItemStackNumber+ITEMID_BRIMSTONE
     bne @chocolate_milk
 ; regular
     lda.w playerData.tear_timer+1
@@ -1131,21 +1144,6 @@ player_outside_door_v:
         rep #$08
     .ENDR
 @skip_open_doors:
-; do thing
-    sep #$20
-    lda.l player_box_x1
-    clc
-    adc #3
-    pha
-    lda.l player_box_y1
-    sec
-    sbc #4
-    pha
-    jsl Render.HDMAEffect.BrimstoneDown
-    rep #$20
-    pla
-; handle animation
-    jsr _update_player_animation
     ; set box pos
     sep #$30
     lda.w player_box_x1
@@ -1162,9 +1160,22 @@ player_outside_door_v:
     lda #ENTITY_MASKSET_PLAYER
     sta.w player_mask
     sep #$30 ; 16b AXY
+    lda.w playerData.playerItemStackNumber+ITEMID_BRIMSTONE
+    beq +
+        jsr _player_handle_shoot_brimstone
+        jmp _update_player_animation
+    +:
+    stz.w playerData.brimstone_timer ; just in case, clear brimstone timer here
+    stz.w playerData.brimstone_timer+1
     lda.w playerData.playerItemStackNumber+ITEMID_CHOCOLATE_MILK
-    bnel _player_handle_shoot_chocolate_milk
-; handle player shoot
+    beq +
+        jsr _player_handle_shoot_chocolate_milk
+        jmp _update_player_animation
+    +:
+    jsr _player_handle_shoot_standard
+    jmp _update_player_animation
+
+; standard player shoot
 _player_handle_shoot_standard:
     rep #$30 ; 16b AXY
     lda.w playerData.tear_timer
@@ -1270,6 +1281,137 @@ _player_handle_shoot_chocolate_milk:
     sta.w projectile_damage,X
     jsl Tear.set_size_from_damage
     ; DAMAGE = projectile_damage * timer / $3C00
+    rts
+@end:
+    rep #$30
+    stz.w playerData.tear_timer
+    rts
+
+_player_render_brimstone_left:
+    .ACCU 8
+    .INDEX 8
+    lda.w player_box_x1
+    inc A
+    inc A
+    pha
+    lda.w player_box_y1
+    dec A
+    dec A
+    dec A
+    pha
+    jsl Render.HDMAEffect.BrimstoneLeft
+    rep #$20
+    pla
+    rts
+
+_player_render_brimstone_right:
+    .ACCU 8
+    .INDEX 8
+    lda.w player_box_x1
+    clc
+    adc #13
+    pha
+    lda.w player_box_y1
+    dec A
+    dec A
+    dec A
+    pha
+    jsl Render.HDMAEffect.BrimstoneRight
+    rep #$20
+    pla
+    rts
+
+_player_render_brimstone_up:
+    .ACCU 8
+    .INDEX 8
+    lda.w player_box_x1
+    inc A
+    inc A
+    pha
+    lda.w player_box_y1
+    sec
+    sbc #12
+    pha
+    jsl Render.HDMAEffect.BrimstoneUp
+    rep #$20
+    pla
+    rts
+
+_player_render_brimstone_down:
+    .ACCU 8
+    .INDEX 8
+    lda.w player_box_x1
+    inc A
+    inc A
+    pha
+    lda.w player_box_y1
+    pha
+    jsl Render.HDMAEffect.BrimstoneDown
+    rep #$20
+    pla
+    rts
+
+_player_render_brimstone_funcs:
+    .dw _player_render_brimstone_right
+    .dw _player_render_brimstone_down
+    .dw _player_render_brimstone_left
+    .dw _player_render_brimstone_up
+
+_player_handle_tick_brimstone:
+    .ACCU 16
+    .INDEX 16
+; tick timer
+    dec.w playerData.brimstone_timer
+    lda.w joy1held
+    bit #(JOY_A|JOY_B|JOY_Y|JOY_X)
+    beq +
+        stz.w playerData.brimstone_timer
+    +:
+; put effect, depending on facing direction
+    sep #$30
+    lda.w playerData.facingdir_head
+    asl
+    tax
+    jsr (_player_render_brimstone_funcs,X)
+    rts
+
+_player_handle_shoot_brimstone:
+    rep #$30
+    lda.w playerData.brimstone_timer
+    bne _player_handle_tick_brimstone
+    ; check inputs
+    lda.w joy1held
+    bit #(JOY_A|JOY_B|JOY_Y|JOY_X)
+    beq @finish_charge
+    sta.w playerData.input_buffer
+; HOLDING BUTTON TO CHARGE
+@keep_charging:
+    lda.w playerData.stat_tear_rate
+    clc
+    adc.w playerData.tear_timer
+    cmp #$F000
+    bcs @cap_charge ; overshot max
+    cmp.w playerData.stat_tear_rate
+    bcc @cap_charge ; overshot max and overflowed
+    jmp @store_charge
+@cap_charge:
+    lda #$F000
+@store_charge:
+    sta.w playerData.tear_timer
+    rts
+; BUTTON NOT HELD - FIRE IF FULL CHARGE
+@finish_charge:
+    lda.w playerData.tear_timer
+    cmp #$F000
+    bcc @end
+; TODO: FIRE LASER
+    rep #$30
+    lda.w playerData.stat_tear_lifetime
+    lsr
+    clc
+    adc #30
+    sta.w playerData.brimstone_timer ; TIMER = tear_life / 2 + 0.5
+    stz.w playerData.tear_timer
     rts
 @end:
     rep #$30

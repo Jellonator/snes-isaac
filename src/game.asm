@@ -304,6 +304,7 @@ _Game.Loop:
         ; clear data
         jsl ClearSpriteTable
         jsl entity_clear_hitboxes
+        jsl Render.HDMAEffect.Clear
         ; run one of the slow update functions, depending on current tick.
         ; We spread these out over multiple frames to reduce their frame impact.
         ; Each of these functions may take up to 20% of runtime each, and running

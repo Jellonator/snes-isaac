@@ -73,6 +73,13 @@ VBlank2:
     jsl ProcessVQueue
 ; Process HDMA
     jsl Render.UpdateHDMA
+    .ACCU 8
+    lda.l hdmaWindowMainPositionActiveBufferId
+    eor #1
+    sta.l hdmaWindowMainPositionActiveBufferId
+    lda.l hdmaWindowSubPositionActiveBufferId
+    eor #1
+    sta.l hdmaWindowSubPositionActiveBufferId
 ; end
     sep #$20 ; 8 bit A
     pla ; compensate for phb earlier
@@ -136,6 +143,25 @@ Render.ClearHDMA:
     sta.l hdmaWindowSubPositionBuffer2+3
     rtl
 
+Render.HDMAEffect.Clear:
+    sep #$20
+    rep #$10
+    ; get address of inactive table
+    ldx #hdmaWindowMainPositionBuffer1
+    lda.l hdmaWindowMainPositionActiveBufferId
+    beq +
+        ldx #hdmaWindowMainPositionBuffer2
+    +:
+    lda #0
+    sta.l $7E0002,X
+    sta.l $7E0003,X
+    dec A
+    sta.l $7E0001,X
+    inc A
+    inc A
+    sta.l $7E0000,X
+    rtl
+
 ; Set up HDMA Window main for brimstone firing to right
 ; Render.HDMAEffect.BrimstoneRight([s8]x, [s8]y)
 ; $04,S: Y
@@ -147,10 +173,10 @@ Render.HDMAEffect.BrimstoneRight:
     rep #$10
     ; get address of inactive table
     ldx #hdmaWindowMainPositionBuffer1
-    ; lda.w hdmaWindowMainPositionActiveBufferId
-    ; bne +
-        ; ldx #hdmaWindowMainPositionBuffer2
-    ; +:
+    lda.w hdmaWindowMainPositionActiveBufferId
+    beq +
+        ldx #hdmaWindowMainPositionBuffer2
+    +:
     ; line counts for Y offset
     lda 1+$04,S
     lsr
@@ -217,10 +243,10 @@ Render.HDMAEffect.BrimstoneLeft:
     rep #$10
     ; get address of inactive table
     ldx #hdmaWindowMainPositionBuffer1
-    ; lda.w hdmaWindowMainPositionActiveBufferId
-    ; bne +
-        ; ldx #hdmaWindowMainPositionBuffer2
-    ; +:
+    lda.w hdmaWindowMainPositionActiveBufferId
+    beq +
+        ldx #hdmaWindowMainPositionBuffer2
+    +:
     ; line counts for Y offset
     lda 1+$04,S
     lsr
@@ -287,10 +313,10 @@ Render.HDMAEffect.BrimstoneUp:
     rep #$10
     ; get address of inactive table
     ldx #hdmaWindowMainPositionBuffer1
-    ; lda.w hdmaWindowMainPositionActiveBufferId
-    ; bne +
-        ; ldx #hdmaWindowMainPositionBuffer2
-    ; +:
+    lda.w hdmaWindowMainPositionActiveBufferId
+    beq +
+        ldx #hdmaWindowMainPositionBuffer2
+    +:
     ; line counts for Y offset
     lda #ROOM_TOP - 8
     sta.w $00*3 + 0,X ; LINES[0] = TOP
@@ -358,10 +384,10 @@ Render.HDMAEffect.BrimstoneDown:
     rep #$10
     ; get address of inactive table
     ldx #hdmaWindowMainPositionBuffer1
-    ; lda.w hdmaWindowMainPositionActiveBufferId
-    ; bne +
-        ; ldx #hdmaWindowMainPositionBuffer2
-    ; +:
+    lda.w hdmaWindowMainPositionActiveBufferId
+    beq +
+        ldx #hdmaWindowMainPositionBuffer2
+    +:
     ; line counts for Y offset
     lda 1+$04,S
     lsr

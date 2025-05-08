@@ -48,10 +48,17 @@
 
 ; EXTRA NON-ENTITY PLAYER DATA
 .STRUCT playerextdata_t
+; variables
     flags dw
     invuln_timer dw
+    bomb_wait_timer db
+; tears
     tear_timer dw
+    tearflags dw
+    brimstone_timer dw
+; input
     input_buffer dw
+; animation
     active_body_frame db
     active_head_frame db
     body_flags db
@@ -60,10 +67,8 @@
     walk_timer dw
     facingdir_head db
     facingdir_body db
-    tearflags dw
     head_offset_y db
     anim_wait_timer db
-    bomb_wait_timer db
 ; stats
     ; Player Maximum Speed, in pixels per frame (Q8.8)
     stat_speed dw

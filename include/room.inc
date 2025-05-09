@@ -124,3 +124,16 @@
     adc TEMPMEM
     adc XMEM
 .ENDM
+
+; devil deal flags
+
+; Player has taken damage this floor
+.DEFINE DEVILFLAG_PLAYER_TAKEN_DAMAGE $01
+; Player has taken damage in the boss this floor
+.DEFINE DEVILFLAG_PLAYER_TAKEN_DAMAGE_IN_BOSS $02
+; Check for devil deal has already been performed (i.e., player has defeated boss)
+.DEFINE DEVILFLAG_DEVIL_DEAL_CHECKED $04
+; Player has bombed a shopkeeper this floor
+.DEFINE DEVILFLAG_BOMBED_SHOPKEEPER $08
+; Player has bombed a beggar this floor
+.DEFINE DEVILFLAG_BOMBED_BEGGAR $10

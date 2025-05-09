@@ -1504,6 +1504,10 @@ _player_handle_brimstone_damage_tick:
         sta.b WIDTH
         @loop_x:
             ; handle tile
+            jsl QuickRand16
+            sep #$30
+            cmp #100
+            bcs @skip_tile2
             phy
             tyx
             lda.l GameTileToRoomTileIndexTable,X
@@ -1520,6 +1524,7 @@ _player_handle_brimstone_damage_tick:
                 sep #$30
             @skip_tile:
             ply
+            @skip_tile2:
             ; handle entity collisions
             .REPT SPATIAL_LAYER_COUNT INDEX i
                 ldx.w spatial_partition.{i+1},Y

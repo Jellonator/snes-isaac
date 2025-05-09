@@ -397,4 +397,81 @@ Room_Unload:
     jsr _Room_Serialize_Entities
     rtl
 
+; get devil deal chance, between 0 and 255 (inclusive)
+; To check if devil deal is achieved: (rand()%256) <= GetDevilDealChance() && GetDevilDealChance() != 0
+GetDevilDealChance:
+    rep #$20
+    lda.l currentFloorIndex
+    bne +
+@no_chance:
+        sep #$20
+        lda #0
+        rtl
+        .ACCU 16
+    +:
+    ; sep #$20
+    ; if flags indicates devil deal has been checked, then return 0%
+    lda.l devil_deal_flags
+    bit #DEVILFLAG_DEVIL_DEAL_CHECKED
+    bne @no_chance
+    stz.b $00
+; check modifier flags
+    lda.l devil_deal_flags
+    bit #DEVILFLAG_BOMBED_BEGGAR
+    beq +
+        lda.b $00
+        clc
+        adc #75
+        sta.b $00
+        lda.l devil_deal_flags
+    +:
+    bit #DEVILFLAG_BOMBED_SHOPKEEPER
+    beq +
+        lda.b $00
+        clc
+        adc #25
+        sta.b $00
+        lda.l devil_deal_flags
+    +:
+    bit #DEVILFLAG_PLAYER_TAKEN_DAMAGE
+    bne +
+        lda.b $00
+        clc
+        adc #250
+        sta.b $00
+        lda.l devil_deal_flags
+    +:
+    bit #DEVILFLAG_PLAYER_TAKEN_DAMAGE_IN_BOSS
+    beq +
+        lda.b $00
+        clc
+        adc #90
+        sta.b $00
+    +:
+    lda.b $00
+; check number of floors since devil deal
+    ; 0 - got devil deal this floor: chance ×= 0%
+    ; 1 - gotten devil deal last floor: chance ×= 25%
+    ; 2 - gotten devil deal two floors ago: chance ×= 50%
+    ; 3+: chance ×= 100%
+    lda.l floors_since_devil_deal
+    beq @no_chance
+    cmp #2
+    beq @mid_chance
+    bcs @end_get_base_chance
+        inc.b $00
+        lsr.b $00
+@mid_chance:
+        inc.b $00
+        lsr.b $00
+@end_get_base_chance:
+; end
+    lda.b $00
+    cmp #255
+    bcc +
+        lda #255
+    +:
+    sep #$20
+    rtl
+
 .ENDS

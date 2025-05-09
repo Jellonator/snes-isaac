@@ -188,6 +188,9 @@
     roomslot_shop db
     roomslot_secret1 db
     roomslot_secret2 db
+; devil deal flags
+    floors_since_devil_deal db
+    devil_deal_flags db
 ; HDMA buffers
 ; We double-buffer most HDMA buffers, so that we can write to the other buffer
 ; while the screen draws.

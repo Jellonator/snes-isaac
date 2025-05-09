@@ -17,6 +17,8 @@
 
 ; Indicates that an item is an active item
 .DEFINE ITEMFLAG_ACTIVE $01
+; Indicates that an item has double the heart cost in a devil deal
+.DEFINE ITEMFLAG_COST_TWO_HEARTS $02
 
 ; ITEM DEFINITION
 .STRUCT itemdef_t

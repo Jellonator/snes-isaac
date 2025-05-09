@@ -208,6 +208,51 @@ _projectile_tile_poop:
     phy
     php
     jsl Splat.poop1
+    ; maybe spawn a pickup
+    jsl RoomRand_Update8
+    sep #$30
+    cmp #26
+    bcs @no_spawn
+    cmp #7
+    bcc @spawn_heart
+    ;spawn_coin:
+        rep #$30
+        lda #entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_RANDOM_COIN)
+        jsl entity_create ; Y = entity ID
+        sep #$30
+        lda $02,S
+        tax
+        lda.l RoomTileToXTable,X
+        .MultiplyStatic 16
+        clc
+        adc #ROOM_LEFT
+        sta.w entity_box_x1,Y
+        lda.l RoomTileToYTable,X
+        .MultiplyStatic 16
+        clc
+        adc #ROOM_TOP
+        sta.w entity_box_y1,Y
+        jsl entity_init
+        jmp @no_spawn
+    @spawn_heart:
+        rep #$30
+        lda #entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_RANDOM_HEART)
+        jsl entity_create ; Y = entity ID
+        sep #$30
+        lda $02,S
+        tax
+        lda.l RoomTileToXTable,X
+        .MultiplyStatic 16
+        clc
+        adc #ROOM_LEFT
+        sta.w entity_box_x1,Y
+        lda.l RoomTileToYTable,X
+        .MultiplyStatic 16
+        clc
+        adc #ROOM_TOP
+        sta.w entity_box_y1,Y
+        jsl entity_init
+@no_spawn:
     plp
     ply
     rts

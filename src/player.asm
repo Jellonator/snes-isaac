@@ -1498,6 +1498,8 @@ _player_handle_brimstone_damage_tick:
     and #$F0
     ora.b INDEX
     tay
+    phb
+    .ChangeDataBank $7E
     ; loop
     @loop_y:
         lda.b WIDTH_STORE
@@ -1562,7 +1564,7 @@ _player_handle_brimstone_damage_tick:
                     @spatial_notkill_{i}:
                     sta.w entity_signal,X
                     lda #ENTITY_FLASH_TIME
-                    sta.l entity_damageflash,X
+                    sta.w loword(entity_damageflash),X
                     lda.w entity_mask,X
                     and #$FF ~ ENTITY_MASK_TEAR
                     sta.w entity_mask,X
@@ -1579,6 +1581,7 @@ _player_handle_brimstone_damage_tick:
         tay
         dec.b HEIGHT
         bnel @loop_y
+    plb
     rts
 
 .UNDEFINE BOX_LEFT

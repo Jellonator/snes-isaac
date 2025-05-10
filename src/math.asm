@@ -88,4 +88,51 @@ ConvertBinaryToDecimalU8:
     rtl
     .UNDEFINE RESULT
 
+; Get square root of 16b accumulator, rounded down
+Sqrt16:
+    rep #$30
+    cmp #2
+    bcs +
+        rtl
+    +:
+; first bisection
+    cmp #128*128
+    bcc @iter2_ls_128
+    jmp @iter2_ge_128
+    .REPT 6 INDEX bisection
+        .DEFINE BASE pow(2, 6-bisection)
+        .REPT pow(2, bisection) INDEX i
+            .DEFINE SECTION (4*BASE*i + 2*BASE)
+            @iter{bisection+2}_ls_{SECTION}:
+                cmp #pow(SECTION - BASE, 2)
+                bccl @iter{bisection+3}_ls_{SECTION - BASE}
+                jmp @iter{bisection+3}_ge_{SECTION - BASE}
+            @iter{bisection+2}_ge_{SECTION}:
+                cmp #pow(SECTION + BASE, 2)
+                bccl @iter{bisection+3}_ls_{SECTION + BASE}
+                jmp @iter{bisection+3}_ge_{SECTION + BASE}
+            .UNDEFINE SECTION
+        .ENDR
+        .UNDEFINE BASE
+    .ENDR
+    .REPT 64 INDEX i
+        .DEFINE SECTION (4*i + 2)
+        @iter8_ls_{SECTION}:
+            cmp #pow(SECTION - 1, 2)
+            bcs +
+                lda #SECTION - 2
+                rtl
+            +:
+                lda #SECTION - 1
+                rtl
+        @iter8_ge_{SECTION}:
+            cmp #pow(SECTION+  1, 2)
+            bcs +
+                lda #SECTION
+                rtl
+            +:
+                lda #SECTION + 1
+                rtl
+        .UNDEFINE SECTION
+    .ENDR
 .ENDS

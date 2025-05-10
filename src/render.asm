@@ -448,19 +448,307 @@ Render.HDMAEffect.BrimstoneDown:
     plb
     rtl
 
+.DEFINE BRIMWIN_TOP (ROOM_TOP-8)
+.DEFINE BRIMWIN_LEFT (ROOM_LEFT-8)
+.DEFINE BRIMWIN_RIGHT (ROOM_RIGHT+8)
+.DEFINE BRIMWIN_BOTTOM (ROOM_BOTTOM+8)
+
+_default_window_data:
+    .db BRIMWIN_TOP, $FF, 0
+    .REPT 128
+        .db 1, $FF, 0
+    .ENDR
+    .db 1, $FF, 0
+    .db 0
+    @end:
+
 ; Render an omnidirectional brimstone blast
 ; Render.HDMAEffect.BrimstoneOmnidirectional(
 ;     [s8] x,     $07,S
 ;     [s8] y,     $06,S
-;     [s8] dir_x, $05,S
-;     [s8] dir_y, $04,S
+;     [s8] dir_x, $05,S [-128, 127]
+;     [s8] dir_y, $04,S [-128, 127]
 ; )
 Render.HDMAEffect.BrimstoneOmnidirectional:
     phb
     .ChangeDataBank $7E
-;
-    
-;
+; get normal 'N'
+    .DEFINE DIR_LEN $1C
+    .DEFINE NORM_X $1E
+    .DEFINE NORM_Y $20
+    .DEFINE TEMP $06
+    .DEFINE SLOPE $08
+    .DEFINE INVSLOPE $0A
+    .DEFINE BASE_INDEX $0C
+    .DEFINE ITER $0E
+    .DEFINE CUMM_X $10
+    .DEFINE NORM_X_MULT $12
+    .DEFINE NORM_Y_MULT $14
+    .DEFINE CAP_POINT_Y $16
+    .DEFINE CAP_END_Y $18
+    .DEFINE CAP_X $1A
+    ; $00 = LEN(dir)
+    rep #$30
+    lda 1+$04,S
+    and #$00FF
+    asl
+    tax
+    lda.l SquareTableS16,X
+    sta.b DIR_LEN
+    lda 1+$05,S
+    and #$00FF
+    asl
+    tax
+    lda.l SquareTableS16,X
+    clc
+    adc.b DIR_LEN
+    jsl Sqrt16
+    sta.b DIR_LEN
+    ; $02 = dir_x / LEN(DIR) as Q8.8
+    lda 1+$05,S
+    xba
+    and #$FF00
+    .ABS_A16_POSTLOAD
+    sta.l DIVU_DIVIDEND
+    sep #$20
+    lda.b DIR_LEN
+    sta.l DIVU_DIVISOR
+    ; do rep and prepare next value while waiting for multiplication to finish
+    rep #$30  ; +3 cycles = 3
+    lda 1+$04,S ; +5 cycles = 8
+    xba       ; +3 cycles = 11
+    and #$FF00; +3 cycles = 14
+    .ABS_A16_POSTLOAD ; +a bunch of cycles = idk
+    tax       ; +2 cycles = idk
+    lda.l DIVU_QUOTIENT ; +4 cycles (partial) = idk
+    sta.b NORM_X
+    ; $04 = dir_y / LEN(DIR) as Q8.8
+    txa
+    sta.l DIVU_DIVIDEND
+    sep #$20
+    lda.b DIR_LEN
+    sta.l DIVU_DIVISOR
+    .REPT 6
+        nop
+    .ENDR
+    rep #$30 ; +3 cycles
+    lda.l DIVU_QUOTIENT ; +4 cycles (partial)
+    sta.b NORM_Y
+; SLOPE = NORM_X / NORM_Y as Q8.8, but how? DIVISOR is 8b, but NORM_Y is 16b.
+; Actually, NORM_Y should never be greater than 1.0, so the divisor can be 8b.
+    lda.b NORM_X
+    cmp #$0100
+    bcc +
+        lda #$FF
+    +:
+    xba
+    pha
+    sta.l DIVU_DIVIDEND
+    lda.b NORM_Y
+    cmp #$0100
+    bcc +
+        lda #$FF
+    +:
+    pha
+    sep #$20
+    sta.l DIVU_DIVISOR
+    .REPT 6
+        nop
+    .ENDR
+    rep #$30
+    lda.l DIVU_QUOTIENT
+    sta.b SLOPE
+; now, the same for INVSLOPE
+    pla
+    sta.l DIVU_DIVIDEND
+    pla
+    sep #$20
+    sta.l DIVU_DIVISOR
+    .REPT 6
+        nop
+    .ENDR
+    rep #$30
+    lda.l DIVU_QUOTIENT
+; get address of inactive table
+    sep #$20
+    ldx #hdmaWindowMainPositionBuffer1
+    lda.w hdmaWindowMainPositionActiveBufferId
+    beq +
+        ldx #hdmaWindowMainPositionBuffer2
+    +:
+    stx.b BASE_INDEX
+; copy default data to window data
+    rep #$20
+    lda #_default_window_data@end - _default_window_data
+    sta.l DMA0_SIZE
+    lda #loword(_default_window_data)
+    sta.l DMA0_SRCL
+    txa
+    sta.l WMADDL
+    sep #$20
+    lda #$7E
+    sta.l WMADDH
+    lda #bankbyte(_default_window_data)
+    sta.l DMA0_SRCH
+    lda #$80
+    sta.l DMA0_DEST
+    lda #0
+    sta.l DMA0_CTL
+    lda #1
+    sta.l MDMAEN
+; Note, at this point, that NORM_X, NORM_Y, and SLOPE are all unsigned. I will
+; just keep them this way, and calculate the sign to determine what to do.
+    lda 1+$05,S
+    bmi @neg_x
+        lda 1+$04,S
+        bmi @pos_x_neg_y
+        ;pos_x_pos_y:
+            jmp @sub_pos_x_pos_y
+        @pos_x_neg_y:
+            jmp @sub_pos_x_neg_y
+    @neg_x:
+        lda 1+$04,S
+        bmi @neg_x_neg_y
+        ;neg_x_pos_y:
+            jmp @sub_neg_x_pos_y
+        @neg_x_neg_y:
+            jmp @sub_neg_x_neg_y
+
+; subroutines for each combination
+@sub_pos_x_pos_y:
+    plb
+    rtl
+
+@sub_pos_x_neg_y:
+    ; multiply NORM_Y by 6
+    rep #$30
+    lda.b NORM_Y
+    asl
+    clc
+    adc.b NORM_Y
+    asl
+    sta.b NORM_Y_MULT
+    ; Get base X coord
+    lda 1+$07,S
+    and #$00FF
+    xba
+    sec
+    sbc.b NORM_Y_MULT
+    sta.b CUMM_X
+    ; Multiply NORM_X by 6
+    lda.b NORM_X
+    asl
+    clc
+    adc.b NORM_X
+    asl
+    sta.b NORM_X_MULT
+    ; Set X register to Y position
+    lda 1+$06,S
+    sec
+    sbc.b NORM_X_MULT + 1
+    and #$00FF
+    sec
+    sbc #BRIMWIN_TOP
+    tay
+    sta.b TEMP
+    asl
+    clc
+    adc.b TEMP
+    clc
+    adc.b BASE_INDEX
+    tax
+    stx.b CAP_POINT_Y
+    ; iterate until X is zero, or CUMM_X overflows
+    lda.b CUMM_X
+    sta.b CAP_X
+    @@loop_set_left:
+        sep #$20
+        xba
+        sta.w $0001,X
+        xba
+        rep #$20
+        clc
+        adc.b SLOPE
+        bcs @@end_set_left
+        dex
+        dex
+        dex
+        dey
+        bne @@loop_set_left
+    @@end_set_left:
+    ; Get base X coord
+    lda 1+$07,S
+    and #$00FF
+    xba
+    clc
+    adc.b NORM_Y_MULT
+    sta.b CUMM_X
+    ; Set X register to Y position
+    lda 1+$06,S
+    clc
+    adc.b NORM_X_MULT+1
+    and #$00FF
+    sec
+    sbc #BRIMWIN_TOP
+    tay
+    sta.b TEMP
+    asl
+    clc
+    adc.b TEMP
+    clc
+    adc.b BASE_INDEX
+    tax
+    stx.b CAP_END_Y
+    lda.b CUMM_X
+    @@loop_set_right:
+        sep #$20
+        xba
+        sta.w $0002,X
+        xba
+        rep #$20
+        clc
+        adc.b SLOPE
+        cmp #BRIMWIN_RIGHT * $0100
+        bcs @@set_right2
+        dex
+        dex
+        dex
+        dey
+        bne @@loop_set_right
+    jmp @@end_set_right
+    @@set_right2:
+        sec
+        sbc.b SLOPE
+        sep #$20
+        xba
+    @@loop_set_right2:
+        sta.w $0002,X
+        dex
+        dex
+        dex
+        dey
+        bne @@loop_set_right2
+    rep #$30
+    @@end_set_right:
+    ; set cap
+    ldx.b CAP_END_Y
+    sep #$20
+    lda.b CAP_X+1
+    @@loop_set_cap:
+        sta.w $0001,X
+        dex
+        dex
+        dex
+        cpx.b CAP_POINT_Y
+        bne @@loop_set_cap
+    plb
+    rtl
+
+@sub_neg_x_pos_y:
+    plb
+    rtl
+
+@sub_neg_x_neg_y:
     plb
     rtl
 

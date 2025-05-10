@@ -1220,6 +1220,24 @@ player_outside_door_v:
         rep #$08
     .ENDR
 @skip_open_doors:
+    ; temp code
+    sep #$30
+    lda.w player_box_x1
+    clc
+    adc #8
+    pha
+    lda.w player_box_y1
+    ; clc
+    ; adc #8
+    pha
+    lda #65
+    pha
+    lda #-31
+    pha
+    jsl Render.HDMAEffect.BrimstoneOmnidirectional
+    rep #$20
+    pla
+    pla
     ; set box pos
     sep #$30
     lda.w player_box_x1

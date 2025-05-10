@@ -231,6 +231,26 @@ VecLenTableB:
         .ENDR
     .ENDR
 
+; 256 words for squaring byte values
+SquareTableU16:
+    .REPT 256 INDEX i
+        .dw i*i
+    .ENDR
+
+SquareTableS16:
+    .REPT 128 INDEX i
+        .dw i*i
+    .ENDR
+    .REPT 128 INDEX i
+        .dw (128-i) * (128-i)
+    .ENDR
+
+; 512 words for getting the square root of a word value
+SquareRootTable16:
+    .REPT 512 INDEX i
+        .dw sqrt(i)
+    .ENDR
+
 GameTileToRoomTileIndexTable:
     .REPT 16*3
         .db 97

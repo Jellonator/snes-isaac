@@ -89,6 +89,8 @@ ConvertBinaryToDecimalU8:
     .UNDEFINE RESULT
 
 ; Get square root of 16b accumulator, rounded down
+; Since there are only 256 possible values, we can just use a binary search
+; powered by far too many compare instructions
 Sqrt16:
     rep #$30
     cmp #2

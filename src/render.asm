@@ -470,6 +470,92 @@ _default_window_data:
 ;     [s8] dir_y, $04,S [-128, 127]
 ; )
 Render.HDMAEffect.BrimstoneOmnidirectional:
+; if dir_x or dir_y are 0, then use one of the above brimstone beam functions
+    sep #$30
+    lda $04,S
+    bne @nonzero_diry
+@zero_diry:
+        lda $05,S
+        beq @zero_diry_zero_dirx
+        bpl @zero_diry_positive_dirx
+        ;zero_diry_negative_dirx
+            lda $07,S
+            clc
+            adc #6
+            pha
+            lda 1+$06,S
+            sec
+            sbc #6
+            pha
+            jsl Render.HDMAEffect.BrimstoneLeft
+            rep #$20
+            pla
+            rtl
+            .ACCU 8
+            .INDEX 8
+        @zero_diry_positive_dirx:
+            lda $07,S
+            sec
+            sbc #6
+            pha
+            lda 1+$06,S
+            sec
+            sbc #6
+            pha
+            jsl Render.HDMAEffect.BrimstoneRight
+            rep #$20
+            pla
+            rtl
+            .ACCU 8
+            .INDEX 8
+        @zero_diry_zero_dirx:
+            rtl
+@nonzero_diry:
+    cmp #1
+    beq @zero_diry
+    cmp #-1
+    beq @zero_diry
+    lda $05,S
+    bne @nonzero_dirx
+    @zero_dirx:
+        lda $04,S
+        bpl @zero_dirx_positive_diry
+        ;zero_dirx_negative_diry
+            lda $07,S
+            sec
+            sbc #6
+            pha
+            lda 1+$06,S
+            ; clc
+            ; adc #6
+            pha
+            jsl Render.HDMAEffect.BrimstoneUp
+            rep #$20
+            pla
+            rtl
+            .ACCU 8
+            .INDEX 8
+        @zero_dirx_positive_diry:
+            lda $07,S
+            sec
+            sbc #6
+            pha
+            lda 1+$06,S
+            sec
+            sbc #6
+            pha
+            jsl Render.HDMAEffect.BrimstoneDown
+            rep #$20
+            pla
+            rtl
+            .ACCU 8
+            .INDEX 8
+@nonzero_dirx:
+    cmp #1
+    beq @zero_dirx
+    cmp #-1
+    beq @zero_dirx
+; begin function properly
     phb
     .ChangeDataBank $7E
 ; get normal 'N'
@@ -617,6 +703,114 @@ Render.HDMAEffect.BrimstoneOmnidirectional:
     rtl
 
 @sub_neg_x_neg_y:
+    rep #$30
+    ; Get base X coord
+    lda 1+$07,S
+    and #$00FF
+    xba
+    clc
+    adc.b NORM_Y_MULT
+    sta.b CUMM_X
+    sta.b CAP_X
+    ; Set X register to Y position
+    lda 1+$06,S
+    sec
+    sbc.b NORM_X_MULT+1
+    and #$00FF
+    .AMAXU P_IMM, BRIMWIN_TOP+1
+    .AMINU P_IMM, BRIMWIN_BOTTOM-1
+    sec
+    sbc #BRIMWIN_TOP
+    tay
+    sta.b TEMP
+    asl
+    clc
+    adc.b TEMP
+    clc
+    adc.b BASE_INDEX
+    tax
+    stx.b CAP_POINT_Y
+    lda.b CUMM_X
+    sec
+    @@loop_set_right:
+        sta.w $0001,X
+        sbc.b SLOPE
+        bcc @@end_set_right
+        dex
+        dex
+        dex
+        dey
+        bne @@loop_set_right
+    @@end_set_right:
+    ; Get base X coord
+    lda 1+$07,S
+    and #$00FF
+    xba
+    sec
+    sbc.b NORM_Y_MULT
+    sta.b CUMM_X
+    ; Set X register to Y position
+    lda 1+$06,S
+    clc
+    adc.b NORM_X_MULT + 1
+    and #$00FF
+    .AMAXU P_IMM, BRIMWIN_TOP+2
+    .AMINU P_IMM, BRIMWIN_BOTTOM-1
+    sec
+    sbc #BRIMWIN_TOP
+    tay
+    sta.b TEMP
+    asl
+    clc
+    adc.b TEMP
+    clc
+    adc.b BASE_INDEX
+    tax
+    stx.b CAP_END_Y
+    ; iterate until X is zero, or CUMM_X overflows
+    lda.b CUMM_X
+    sec
+    @@loop_set_left:
+        sep #$20
+        xba
+        sta.w $0001,X
+        xba
+        rep #$20
+        sbc.b SLOPE
+        cmp #BRIMWIN_LEFT*$0100
+        bcc @@set_left2
+        dex
+        dex
+        dex
+        dey
+        bne @@loop_set_left
+    jmp @@end_set_left
+    @@set_left2:
+        sep #$20
+        lda #BRIMWIN_LEFT
+    @@loop_set_left2:
+        sta.w $0001,X
+        dex
+        dex
+        dex
+        dey
+        bne @@loop_set_left2
+    rep #$30
+    @@end_set_left:
+    ; set cap
+    ldx.b CAP_END_Y
+    cpx.b CAP_POINT_Y
+    beq @@end_set_cap
+    sep #$20
+    lda.b CAP_X+1
+    @@loop_set_cap:
+        sta.w $0002,X
+        dex
+        dex
+        dex
+        cpx.b CAP_POINT_Y
+        bne @@loop_set_cap
+    @@end_set_cap:
     plb
     rtl
 
@@ -661,9 +855,8 @@ Render.HDMAEffect.BrimstoneOmnidirectional:
         bne @@loop_set_right
     jmp @@end_set_right
     @@set_right2:
-        sbc.b SLOPE
         sep #$20
-        xba
+        lda #BRIMWIN_RIGHT
     @@loop_set_right2:
         sta.w $0002,X
         dex

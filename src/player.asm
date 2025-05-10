@@ -1230,9 +1230,17 @@ player_outside_door_v:
     ; clc
     ; adc #8
     pha
-    lda #65
+    lda #ROOM_CENTER_X
+    sec
+    sbc.w player_box_x1
+    ror
+    eor #$80
     pha
-    lda #-31
+    lda #ROOM_CENTER_Y
+    sec
+    sbc.w player_box_y1
+    ror
+    eor #$80
     pha
     jsl Render.HDMAEffect.BrimstoneOmnidirectional
     rep #$20

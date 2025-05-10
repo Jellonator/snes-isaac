@@ -169,6 +169,13 @@ Room_Init:
         ora #MAPTILE_COMPLETED
         jsr _Room_Open_Doors
 @finish_close_doors:
+; if this is a boss room, then close devil room doors
+    ldx.b loadedRoomIndex
+    lda.w mapTileTypeTable,X
+    cmp #ROOMTYPE_BOSS
+    bne +
+        jsr _Room_Close_Devil_Doors
+    +:
     php
     jsl updateAllDoorsInRoom
     ; pee splat if player is on low health
@@ -224,6 +231,18 @@ _Room_Close_Doors:
     .ENDR
     rts
 
+_Room_Close_Devil_Doors:
+    sep #$30
+    .REPT 4 INDEX i
+        lda.b [MAP_DOOR_MEM_LOC(i)]
+        cmp #(DOOR_TYPE_NORMAL | DOOR_METHOD_DEVIL | DOOR_OPEN)
+        bne +
+            lda #0
+            sta.b [MAP_DOOR_MEM_LOC(i)]
+        +:
+    .ENDR
+    rts
+
 _Room_Spawn_Reward:
     rep #$30
     jsl RoomRand_Update8
@@ -266,6 +285,8 @@ _Room_Spawn_Trapdoor:
     rts
 
 _room_spawn_devildoor_cancel:
+    .ACCU 8
+    .INDEX 8
     lda.l devil_deal_flags
     ora #DEVILFLAG_DEVIL_DEAL_CHECKED
     sta.l devil_deal_flags

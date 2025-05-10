@@ -2352,6 +2352,7 @@ _MakeWaitScrollSub2:
 
 .MACRO .MakeWaitScroll ARGS SREG, SVAR, AMT, NFRAMES, SAMT, TEMP1, SPRVAL
     wai
+    jsl Render.HDMAEffect.Clear
     jsl ProcessVQueue
     rep #$20 ; 16 bit A
     sep #$10 ; 8 bit XY

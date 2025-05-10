@@ -455,7 +455,7 @@ Render.HDMAEffect.BrimstoneDown:
 
 _default_window_data:
     .db BRIMWIN_TOP, $FF, 0
-    .REPT 128
+    .REPT BRIMWIN_BOTTOM-BRIMWIN_TOP+4
         .db 1, $FF, 0
     .ENDR
     .db 1, $FF, 0
@@ -528,10 +528,15 @@ Render.HDMAEffect.BrimstoneOmnidirectional:
     sep #$20
     lda.b DIR_LEN
     sta.l DIVU_DIVISOR
-    .REPT 6
-        nop
-    .ENDR
     rep #$30 ; +3 cycles
+    ; NORM_X_MULT = NORM_X × 6
+    lda.b NORM_X
+    asl
+    clc
+    adc.b NORM_X
+    asl
+    sta.b NORM_X_MULT
+    ; finish division into NORM_Y
     lda.l DIVU_QUOTIENT ; +4 cycles (partial)
     sta.b NORM_Y
 ; SLOPE = NORM_X / NORM_Y as Q8.8, but how? DIVISOR is 8b, but NORM_Y is 16b.
@@ -542,33 +547,25 @@ Render.HDMAEffect.BrimstoneOmnidirectional:
         lda #$FF
     +:
     xba
-    pha
     sta.l DIVU_DIVIDEND
     lda.b NORM_Y
     cmp #$0100
     bcc +
         lda #$FF
     +:
-    pha
     sep #$20
     sta.l DIVU_DIVISOR
-    .REPT 6
-        nop
-    .ENDR
     rep #$30
+    ; NORM_Y_MULT = NORM_Y × 6
+    lda.b NORM_Y
+    asl
+    clc
+    adc.b NORM_Y
+    asl
+    sta.b NORM_Y_MULT
+    ; finish division into slope
     lda.l DIVU_QUOTIENT
     sta.b SLOPE
-; now, the same for INVSLOPE
-    pla
-    sta.l DIVU_DIVIDEND
-    pla
-    sep #$20
-    sta.l DIVU_DIVISOR
-    .REPT 6
-        nop
-    .ENDR
-    rep #$30
-    lda.l DIVU_QUOTIENT
 ; get address of inactive table
     sep #$20
     ldx #hdmaWindowMainPositionBuffer1
@@ -619,15 +616,63 @@ Render.HDMAEffect.BrimstoneOmnidirectional:
     plb
     rtl
 
+@sub_neg_x_neg_y:
+    plb
+    rtl
+
 @sub_pos_x_neg_y:
-    ; multiply NORM_Y by 6
     rep #$30
-    lda.b NORM_Y
+    ; Get base X coord
+    lda 1+$07,S
+    and #$00FF
+    xba
+    clc
+    adc.b NORM_Y_MULT
+    sta.b CUMM_X
+    ; Set X register to Y position
+    lda 1+$06,S
+    clc
+    adc.b NORM_X_MULT+1
+    and #$00FF
+    .AMAXU P_IMM, BRIMWIN_TOP+2
+    .AMINU P_IMM, BRIMWIN_BOTTOM-1
+    sec
+    sbc #BRIMWIN_TOP
+    tay
+    sta.b TEMP
     asl
     clc
-    adc.b NORM_Y
-    asl
-    sta.b NORM_Y_MULT
+    adc.b TEMP
+    clc
+    adc.b BASE_INDEX
+    tax
+    stx.b CAP_END_Y
+    lda.b CUMM_X
+    clc
+    @@loop_set_right:
+        sta.w $0001,X
+        adc.b SLOPE
+        cmp #BRIMWIN_RIGHT * $0100
+        bcs @@set_right2
+        dex
+        dex
+        dex
+        dey
+        bne @@loop_set_right
+    jmp @@end_set_right
+    @@set_right2:
+        sbc.b SLOPE
+        sep #$20
+        xba
+    @@loop_set_right2:
+        sta.w $0002,X
+        dex
+        dex
+        dex
+        dey
+        bne @@loop_set_right2
+    rep #$30
+    @@end_set_right:
     ; Get base X coord
     lda 1+$07,S
     and #$00FF
@@ -635,18 +680,13 @@ Render.HDMAEffect.BrimstoneOmnidirectional:
     sec
     sbc.b NORM_Y_MULT
     sta.b CUMM_X
-    ; Multiply NORM_X by 6
-    lda.b NORM_X
-    asl
-    clc
-    adc.b NORM_X
-    asl
-    sta.b NORM_X_MULT
     ; Set X register to Y position
     lda 1+$06,S
     sec
     sbc.b NORM_X_MULT + 1
     and #$00FF
+    .AMAXU P_IMM, BRIMWIN_TOP+1
+    .AMINU P_IMM, BRIMWIN_BOTTOM-1
     sec
     sbc #BRIMWIN_TOP
     tay
@@ -661,13 +701,13 @@ Render.HDMAEffect.BrimstoneOmnidirectional:
     ; iterate until X is zero, or CUMM_X overflows
     lda.b CUMM_X
     sta.b CAP_X
+    clc
     @@loop_set_left:
         sep #$20
         xba
         sta.w $0001,X
         xba
         rep #$20
-        clc
         adc.b SLOPE
         bcs @@end_set_left
         dex
@@ -676,62 +716,10 @@ Render.HDMAEffect.BrimstoneOmnidirectional:
         dey
         bne @@loop_set_left
     @@end_set_left:
-    ; Get base X coord
-    lda 1+$07,S
-    and #$00FF
-    xba
-    clc
-    adc.b NORM_Y_MULT
-    sta.b CUMM_X
-    ; Set X register to Y position
-    lda 1+$06,S
-    clc
-    adc.b NORM_X_MULT+1
-    and #$00FF
-    sec
-    sbc #BRIMWIN_TOP
-    tay
-    sta.b TEMP
-    asl
-    clc
-    adc.b TEMP
-    clc
-    adc.b BASE_INDEX
-    tax
-    stx.b CAP_END_Y
-    lda.b CUMM_X
-    @@loop_set_right:
-        sep #$20
-        xba
-        sta.w $0002,X
-        xba
-        rep #$20
-        clc
-        adc.b SLOPE
-        cmp #BRIMWIN_RIGHT * $0100
-        bcs @@set_right2
-        dex
-        dex
-        dex
-        dey
-        bne @@loop_set_right
-    jmp @@end_set_right
-    @@set_right2:
-        sec
-        sbc.b SLOPE
-        sep #$20
-        xba
-    @@loop_set_right2:
-        sta.w $0002,X
-        dex
-        dex
-        dex
-        dey
-        bne @@loop_set_right2
-    rep #$30
-    @@end_set_right:
     ; set cap
     ldx.b CAP_END_Y
+    cpx.b CAP_POINT_Y
+    beq @@end_set_cap
     sep #$20
     lda.b CAP_X+1
     @@loop_set_cap:
@@ -741,17 +729,13 @@ Render.HDMAEffect.BrimstoneOmnidirectional:
         dex
         cpx.b CAP_POINT_Y
         bne @@loop_set_cap
+    @@end_set_cap:
     plb
     rtl
 
 @sub_neg_x_pos_y:
     plb
     rtl
-
-@sub_neg_x_neg_y:
-    plb
-    rtl
-
 
 ClearSpriteTable:
     .ACCU 16

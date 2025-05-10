@@ -49,7 +49,7 @@
 
 ; IN-MEMORY ROOM INFO
 ; Actual generated room data, laid out in RAM
-.STRUCT roominfo_t
+.STRUCT roominfo_t SIZE 352
     ; two extra tiles:
     ; tile[96] is a gap
     ; tile[97] is a solid block
@@ -59,6 +59,22 @@
     entityStoreTable INSTANCEOF entitystore_t ENTITY_STORE_COUNT
     rng INSTANCEOF rng_t
 .ENDST
+
+.MACRO .MultiplyIndexByRoomSizeA ARGS p_method, p_value
+    .g_instruction lda, p_method, p_value
+    asl
+    asl
+    asl
+    clc
+    .g_instruction adc, p_method, p_value
+    .g_instruction adc, p_method, p_value
+    .g_instruction adc, p_method, p_value
+    asl
+    asl
+    asl
+    asl
+    asl
+.ENDM
 
 ; ROOMGEN OBJECT DEFINITION
 ; Structure which defines object spawning rules

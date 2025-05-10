@@ -448,6 +448,23 @@ Render.HDMAEffect.BrimstoneDown:
     plb
     rtl
 
+; Render an omnidirectional brimstone blast
+; Render.HDMAEffect.BrimstoneOmnidirectional(
+;     [s8] x,     $07,S
+;     [s8] y,     $06,S
+;     [s8] dir_x, $05,S
+;     [s8] dir_y, $04,S
+; )
+Render.HDMAEffect.BrimstoneOmnidirectional:
+    phb
+    .ChangeDataBank $7E
+;
+    
+;
+    plb
+    rtl
+
+
 ClearSpriteTable:
     .ACCU 16
     .INDEX 16

@@ -18,14 +18,11 @@ InitializeRoomSlot:
     lda $06,s
     sta.b $0C
     ; Turn slot index into slot address in X
-    lda #lobyte(_sizeof_roominfo_t)
-    sta.l MULTS_A
-    lda #hibyte(_sizeof_roominfo_t)
-    sta.l MULTS_A
-    lda $07,s
-    sta.l MULTS_B
-    rep #$30 ; 16 bit AXY
-    lda.l MULTS_RESULT_LOW
+    rep #$30
+    lda $07,S
+    and #$00FF
+    sta.b $0D
+    .MultiplyIndexByRoomSizeA P_DIR, $0D
     sta.b $0D ; store pointer for later use
     tax
     lda $04,s
@@ -119,17 +116,14 @@ LoadRoomSlotIntoLevel:
     @ground_end:
     ; then, clear floor
     jsl GroundOpClear
-    sep #$30 ; 8 bit AXY
     ; Turn slot index into slot address in X
-    lda #lobyte(_sizeof_roominfo_t)
-    sta MULTS_A
-    lda #hibyte(_sizeof_roominfo_t)
-    sta MULTS_A
-    lda $04,s
+    sep #$30
+    lda $04,S
     sta.b currentRoomSlot
-    sta MULTS_B
-    rep #$30 ; 16 bit AXY
-    lda MULTS_RESULT_LOW
+    rep #$30
+    and #$00FF
+    sta.b $10
+    .MultiplyIndexByRoomSizeA P_DIR, $10
     tax
     lda.l roomSlotTiles.1.roomDefinition,X
     sta.b currentRoomDefinition ; $0A: roomDefinition

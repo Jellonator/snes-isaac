@@ -198,11 +198,11 @@
     ; we store the [left, right] window bounds together as a 16b value in each buffer.
     ; This saves on DMA slot usage.
     ; 256B each should be sufficient; this is 85 value changes total + null terminator
-    hdmaWindowMainPositionBuffer1 ds 256
-    hdmaWindowMainPositionBuffer2 ds 256
+    hdmaWindowMainPositionBuffer1 ds 512
+    hdmaWindowMainPositionBuffer2 ds 512
     hdmaWindowMainPositionActiveBufferId db
-    hdmaWindowSubPositionBuffer1 ds 256
-    hdmaWindowSubPositionBuffer2 ds 256
+    hdmaWindowSubPositionBuffer1 ds 512
+    hdmaWindowSubPositionBuffer2 ds 512
     hdmaWindowSubPositionActiveBufferId db
 ; reserved data
     _extraneous_data_buffer2 ds 256

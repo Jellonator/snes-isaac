@@ -523,15 +523,7 @@ Save.ReadSaveState:
             adc.b $10
             sta.b $10
             ; figure out new X
-            sep #$20
-            lda #lobyte(_sizeof_roominfo_t)
-            sta.l MULTS_A
-            lda #hibyte(_sizeof_roominfo_t)
-            sta.l MULTS_A
-            lda.b $10
-            sta.l MULTS_B
-            rep #$20
-            lda.l MULTS_RESULT_LOW
+            .MultiplyIndexByRoomSizeA P_DIR, $10
             clc
             adc #roomSlotTiles.1.entityStoreTable
             tax
@@ -577,15 +569,7 @@ Save.ReadSaveState:
         adc.b $10
         sta.b $10
         ; figure out new X
-        sep #$20
-        lda #lobyte(_sizeof_roominfo_t)
-        sta.l MULTS_A
-        lda #hibyte(_sizeof_roominfo_t)
-        sta.l MULTS_A
-        lda.b $10
-        sta.l MULTS_B
-        rep #$20
-        lda.l MULTS_RESULT_LOW
+        .MultiplyIndexByRoomSizeA P_DIR, $10
         clc
         adc #roomSlotTiles.1.entityStoreTable
         tax

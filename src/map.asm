@@ -33,7 +33,6 @@ InitializeRoomSlot:
     sep #$20 ; 8 bit A, 16 bit XY
     ; write tile position
     lda $08,s
-    ; TODO: set door flags
     ; write room size
     ldy #$01
     lda [$0A],Y

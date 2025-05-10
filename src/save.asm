@@ -159,6 +159,10 @@ Save.WriteSaveState:
     sta.w savestate.0.player_active_item
     lda.l playerData.current_active_charge
     sta.w savestate.0.player_active_charge
+    lda.l floors_since_devil_deal
+    sta.w savestate.0.floors_since_devil_deal
+    lda.l devil_deal_flags
+    sta.w savestate.0.devil_deal_flags
     .REPT HEALTHSLOT_COUNT INDEX i
         lda.l playerData.healthSlots+i
         sta.w savestate.0.player_health+i
@@ -425,6 +429,10 @@ Save.ReadSaveState:
     sta.l playerData.current_active_item
     lda.w savestate.0.player_active_charge
     sta.l playerData.current_active_charge
+    lda.w savestate.0.floors_since_devil_deal
+    sta.l floors_since_devil_deal
+    lda.w savestate.0.devil_deal_flags
+    sta.l devil_deal_flags
     .REPT HEALTHSLOT_COUNT INDEX i
         lda.w savestate.0.player_health+i
         sta.l playerData.healthSlots+i

@@ -337,12 +337,12 @@ _pickup_map:
     sprite_index: .db 11
     palette_ptr: .dw palettes.item_brimstone
     palette_depth: .db 8
-    flags: .db 0
+    flags: .db ITEMFLAG_COST_TWO_HEARTS
     on_pickup: .dw _pickup_empty
     on_use: .dw _use_empty
     shop_price: .db $30
     name: .ASCSTR "Brimstone", 0
-    tagline: .ASCSTR "May You Find What You Seek", 0
+    tagline: .ASCSTR "Bloody Laser Blast", 0
 .ENDST
 
 Item.items:
@@ -385,6 +385,10 @@ Item.pool.shop:
     .db ITEMID_MAP
     .db ITEMID_COMPASS
     .db ITEMID_DECK_OF_CARDS
+    @end:
+
+Item.pool.devil:
+    .db ITEMID_BRIMSTONE
     @end:
 
 Item.try_use_active:

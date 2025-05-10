@@ -50,6 +50,9 @@
     player_item_list ds 256
     player_posx db
     player_posy db
+    ; devil deal info
+    floors_since_devil_deal db
+    devil_deal_flags db
     ; active room data
     room_current_slot db
     floor_current_index dw

@@ -265,9 +265,80 @@ _Room_Spawn_Trapdoor:
     sta.w entity_posy,Y
     rts
 
+_room_spawn_devildoor_cancel:
+    lda.l devil_deal_flags
+    ora #DEVILFLAG_DEVIL_DEAL_CHECKED
+    sta.l devil_deal_flags
+    rts
+_Room_Spawn_Devildoor:
+; check if devil door can spawn
+    ; get random number first, and always get random number so that room seed is
+    ; always polled.
+    jsl StageRand_Update8
+    sep #$30
+    sta.b $30
+    jsl GetDevilDealChance
+    .ACCU 8
+    .INDEX 8
+    cmp #0
+    beq _room_spawn_devildoor_cancel ; CHANCE == 0: cancel
+    cmp.b $30
+    bcc _room_spawn_devildoor_cancel ; CHANCE >= RAND: spawn devil room
+; step one: determine where devil room should spawn.
+; we can just check adjacent room tiles to see which are empty.
+    lda.b loadedRoomIndex
+    sec
+    sbc #16
+    tax
+    lda.w mapTileTypeTable,X
+    beq @found_tile
+    lda.b loadedRoomIndex
+    clc
+    adc #16
+    tax
+    lda.w mapTileTypeTable,X
+    beq @found_tile
+    ; considering boss rooms can only have one adjacent tile normally,
+    ; if we get here, something is probably amiss. oh well.
+    ldx.b loadedRoomIndex
+    dex
+    lda.w mapTileTypeTable,X
+    beq @found_tile
+    inx
+    inx
+    lda.w mapTileTypeTable,X
+    beq @found_tile
+    jmp _room_spawn_devildoor_cancel
+@found_tile:
+    stx.b $30
+; set up bank
+    phb
+    .ChangeDataBank $7E
+; initialize room slot
+    lda #MAPSLOT_DEVIL
+    pha
+    lda #ROOMTYPE_DEVIL
+    pha
+    jsl MapGen.InitializeRoomXIntoSlot
+    pla
+    pla
+    ldx.b $30
+    jsl MapGen.SetupRoomX
+; update doors
+    ldx.b $30
+    jsl MapGen.UpdateDoorsForDevilRoom
+; number of floors since devil deal = 0
+    sep #$20
+    stz.w floors_since_devil_deal
+; end
+    plb
+    lda.l devil_deal_flags
+    ora #DEVILFLAG_DEVIL_DEAL_CHECKED
+    sta.l devil_deal_flags
+    rts
+
 _Room_Complete:
     jsr _Room_Open_Doors
-    jsl updateAllDoorsInRoom
     sep #$30
     ldx.b loadedRoomIndex
     lda.w mapTileFlagsTable,X
@@ -295,7 +366,9 @@ _Room_Complete:
     @spawnBossReward:
         jsr _Room_Spawn_Boss_Reward
         jsr _Room_Spawn_Trapdoor
+        jsr _Room_Spawn_Devildoor
     +:
+    jsl updateAllDoorsInRoom
     plp
     plx
     ;
@@ -404,12 +477,11 @@ GetDevilDealChance:
     lda.l currentFloorIndex
     bne +
 @no_chance:
-        sep #$20
+        sep #$30
         lda #0
         rtl
         .ACCU 16
     +:
-    ; sep #$20
     ; if flags indicates devil deal has been checked, then return 0%
     lda.l devil_deal_flags
     bit #DEVILFLAG_DEVIL_DEAL_CHECKED
@@ -442,7 +514,7 @@ GetDevilDealChance:
         lda.l devil_deal_flags
     +:
     bit #DEVILFLAG_PLAYER_TAKEN_DAMAGE_IN_BOSS
-    beq +
+    bne +
         lda.b $00
         clc
         adc #90
@@ -471,7 +543,7 @@ GetDevilDealChance:
     bcc +
         lda #255
     +:
-    sep #$20
+    sep #$30
     rtl
 
 .ENDS

@@ -19,6 +19,12 @@
 .DEFINE ITEM_INFOSTORE_ACTIVE $80
 .DEFINE ITEM_INFOSTORE_CHARGE $3F
 
+; Specific price values, indicating heart costs.
+; Since normal price values are in decimal, non-decimal values can be used
+; to indicate non-monetary cost.
+.DEFINE ITEMPRICE_HEART_BASE $A0
+.DEFINE ITEMPRICE_SOULHEART_BASE $B0
+
 .BANK $02 SLOT "ROM"
 .SECTION "Entity Item Pedastal" SUPERFREE
 
@@ -27,11 +33,13 @@ _item_pedastal_get_variant_from_pool:
     .INDEX 16
     lda.w entity_variant,Y
     sta.b $00
-    and #$007F
+    and #ENTITY_ITEMPEDASTAL_POOLFLAG
     cmp #ENTITY_ITEMPEDASTAL_POOL_BOSS
     beq @pool_boss
     cmp #ENTITY_ITEMPEDASTAL_POOL_SHOP
     beq @pool_shop
+    cmp #ENTITY_ITEMPEDASTAL_POOL_DEVIL
+    beq @pool_devil
 @pool_item_room:
     lda #Item.pool.item_room@end - Item.pool.item_room
     ldx #loword(Item.pool.item_room)
@@ -43,6 +51,10 @@ _item_pedastal_get_variant_from_pool:
 @pool_shop:
     lda #Item.pool.shop@end - Item.pool.shop
     ldx #loword(Item.pool.shop)
+    jmp @begin
+@pool_devil:
+    lda #Item.pool.devil@end - Item.pool.devil
+    ldx #loword(Item.pool.devil)
     jmp @begin
 @begin:
     pha
@@ -66,8 +78,15 @@ _item_pedastal_get_variant_from_pool:
     sta.w entity_variant,Y
     ; maybe set price
     lda.b $00
-    and #ENTITY_ITEMPEDASTAL_PRICED
-    beq @dont_set_price
+    and #ENTITY_ITEMPEDASTAL_COSTFLAG
+    cmp #ENTITY_ITEMPEDASTAL_PRICED
+    beq @price_with_money
+    cmp #ENTITY_ITEMPEDASTAL_HEARTCOST
+    beq @price_with_hearts
+    lda #$00
+    sta.w _item_price,Y
+    jmp @end_set_price
+    @price_with_money:
         rep #$30
         lda.w entity_variant,Y
         and #$00FF
@@ -79,9 +98,24 @@ _item_pedastal_get_variant_from_pool:
         lda.l bankaddr(Item.items) + itemdef_t.shop_price,X
         sta.w _item_price,Y
         jmp @end_set_price
-@dont_set_price:
-    lda #$00
-    sta.w _item_price,Y
+    @price_with_hearts:
+        rep #$30
+        lda.w entity_variant,Y
+        and #$00FF
+        asl
+        tax
+        lda.l Item.items,X
+        tax
+        sep #$20
+        lda.l bankaddr(Item.items) + itemdef_t.flags,X
+        ldx #ITEMPRICE_HEART_BASE+1
+        bit #ITEMFLAG_COST_TWO_HEARTS
+        beq @price_one_heart
+           inx
+        @price_one_heart:
+        txa
+        sta.w _item_price,Y
+        jmp @end_set_price
 @end_set_price:
     ; set infostore
     rep #$20
@@ -269,6 +303,50 @@ _draw_no_pedastal:
     ply
     rts
 
+_set_text_with_hearts:
+    .ACCU 16
+    .INDEX 16
+    ; determine palette
+    lda.w _item_price,Y
+    and #$00FF
+    cmp #$00B0
+    bcs @pal_blue
+        lda #deft(0, 5) | T_HIGHP
+        jmp @pal_end
+    @pal_blue:
+        lda #deft(0, 6) | T_HIGHP
+    @pal_end:
+    sta.l vqueueMiniOps.1.data,X
+    sta.l vqueueMiniOps.2.data,X
+    sta.l vqueueMiniOps.3.data,X
+    sta.l vqueueMiniOps.4.data,X
+    ; put heart tiles
+    lda.w _item_price,Y
+    and #$000F
+    cmp #$01
+    beq @one
+    cmp #$02
+    beq @two
+    cmp #$03
+    beq @three
+;four:
+    lda #deft($30, 0)
+    ora.l vqueueMiniOps.1.data,X
+    sta.l vqueueMiniOps.1.data,X
+@three:
+    lda #deft($30, 0)
+    ora.l vqueueMiniOps.4.data,X
+    sta.l vqueueMiniOps.4.data,X
+@two:
+    lda #deft($30, 0)
+    ora.l vqueueMiniOps.3.data,X
+    sta.l vqueueMiniOps.3.data,X
+@one:
+    lda #deft($30, 0)
+    ora.l vqueueMiniOps.2.data,X
+    sta.l vqueueMiniOps.2.data,X
+    rts
+
 true_item_pedastal_tick_base:
     .ACCU 8
     .INDEX 16
@@ -284,9 +362,9 @@ true_item_pedastal_tick_base:
     ldy.b $10
     sep #$20
     lda.w _item_price,Y
-    beq @skip_set_text
+    beql @skip_set_text
     lda.w _has_put_text,Y
-    bne @skip_set_text
+    bnel @skip_set_text
         lda #1
         sta.w _has_put_text,Y
         ; get address
@@ -316,6 +394,7 @@ true_item_pedastal_tick_base:
         inc.w vqueueNumMiniOps
         inc.w vqueueNumMiniOps
         inc.w vqueueNumMiniOps
+        inc.w vqueueNumMiniOps
         ; set vram address
         lda.b $00
         dec A
@@ -324,7 +403,16 @@ true_item_pedastal_tick_base:
         sta.l vqueueMiniOps.2.vramAddr,X
         inc A
         sta.l vqueueMiniOps.3.vramAddr,X
+        inc A
+        sta.l vqueueMiniOps.4.vramAddr,X
         ; set data
+        lda.w _item_price,Y
+        and #$00FF
+        cmp #$A0
+        bcc @set_price_text_money
+        jsr _set_text_with_hearts
+        jmp @skip_set_text
+    @set_price_text_money:
         lda.w _item_price,Y
         and #$00F0
         beq +
@@ -341,63 +429,33 @@ true_item_pedastal_tick_base:
         sta.l vqueueMiniOps.2.data,X
         lda #deft(TILE_TEXT_UINUMBER_BASE+10,5) | T_HIGHP
         sta.l vqueueMiniOps.3.data,X
+        lda #0
+        sta.l vqueueMiniOps.4.data,X
 @skip_set_text:
     rep #$30
     lda #0
     sep #$20
-    ; check player position, and potentially change state
     .EntityEasySetBox 16 12
+    ; check player position, and potentially change state
     lda.w playerData.anim_wait_timer
     bnel @no_player_col
-    lda.w playerData.money
-    cmp.w _item_price,Y
-    bccl @no_player_col
     .EntityEasyCheckPlayerCollision_Box @has_player_col
     jmp @no_player_col
     @has_player_col:
-        sep #$20
-        lda #STATE_PICKUP
-        sta.w _item_state,Y
-        lda #60
-        sta.w _item_anim_timer,Y
-        lda #60
-        sta.w playerData.anim_wait_timer
-        phy
-        php
-        lda #22
-        jsl Player.set_head_frame
-        sep #$30
-        lda #30
-        jsl Player.set_body_frame
-        ; display pickup text
-        rep #$30
-        lda $02,S
-        tay
-        lda entity_variant,Y
-        and #$00FF
-        asl
-        tax
-        lda.l Item.items,X
-        pha
-        phb
-        .ChangeDataBank bankbyte(Item.items)
-        lda $02,S
-        clc
-        adc #itemdef_t.name
-        tax
-        jsl Overlay.putline
-        rep #$30
-        lda $02,S
-        clc
-        adc #itemdef_t.tagline
-        tax
-        jsl Overlay.putline
-        rep #$30
-        plb
-        plx
-        ; end
-        plp
-        ply
+    lda.w _item_price,Y
+    beq @col_price_none
+    cmp #ITEMPRICE_SOULHEART_BASE
+    bcs @col_price_soul_hearts
+    cmp #ITEMPRICE_HEART_BASE
+    bcs @col_price_red_hearts
+    @col_price_money:
+        .ACCU 8
+        .INDEX 16
+        lda.w playerData.money
+        cmp.w _item_price,Y
+        bccl @no_player_col
+        jsr _do_item_pickup
+        ; take money
         rep #$20
         lda.w loword(entity_flags),Y
         ora #ENTITY_FLAGS_DONT_SERIALIZE
@@ -417,8 +475,91 @@ true_item_pedastal_tick_base:
         sep #$20
         lda #0
         sta.w _item_price,Y
+        jmp @no_player_col
+    @col_price_red_hearts:
+        .ACCU 8
+        .INDEX 16
+        ; check hearts
+        lda.w _item_price,Y
+        and #$0F
+        sta.b $12
+        jsl Player.count_red_heart_slots
+        .ACCU 8
+        .INDEX 8
+        ldy.b $10
+        cmp.b $12
+        bcc @no_player_col
+        ; give item
+        jsr _do_item_pickup
+        ; take heart containers
+        @loop:
+            jsl Player.take_heart_container
+            sep #$20
+            dec.b $12
+            bne @loop
+        ldy.b $10
+        jmp @no_player_col
+    @col_price_soul_hearts:
+        ; TODO: soul heart cost
+    @col_price_none:
+        .ACCU 8
+        .INDEX 16
+        jsr _do_item_pickup
 @no_player_col:
     rtl
+
+_do_item_pickup:
+    ; set state
+    sep #$20
+    lda #STATE_PICKUP
+    sta.w _item_state,Y
+    lda #60
+    sta.w _item_anim_timer,Y
+    ; player pickup animation
+    lda #60
+    sta.w playerData.anim_wait_timer
+    phy
+    php
+    lda #22
+    jsl Player.set_head_frame
+    sep #$30
+    lda #30
+    jsl Player.set_body_frame
+    ; display pickup text
+    rep #$30
+    lda $02,S
+    and #$00FF
+    tay
+    lda entity_variant,Y
+    and #$00FF
+    asl
+    tax
+    lda.l Item.items,X
+    pha
+    phb
+    .ChangeDataBank bankbyte(Item.items)
+    lda $02,S
+    clc
+    adc #itemdef_t.name
+    tax
+    jsl Overlay.putline
+    rep #$30
+    lda $02,S
+    clc
+    adc #itemdef_t.tagline
+    tax
+    jsl Overlay.putline
+    rep #$30
+    plb
+    plx
+    ; end
+    plp
+    ply
+    rep #$20
+    lda.w loword(entity_flags),Y
+    ora #ENTITY_FLAGS_DONT_SERIALIZE
+    sta.w loword(entity_flags),Y
+    rts
 
 true_item_pedastal_tick_pickup:
     .ACCU 8

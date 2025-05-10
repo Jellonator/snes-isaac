@@ -112,6 +112,7 @@ MapTiles:
     .dw deft($0D, 5) | T_HIGHP ; curse
     .dw deft($0E, 6) | T_HIGHP ; secret
     .dw deft($08, 6) | T_HIGHP ; start
+    .dw 0 ; devil
 SpriteIndexToExtMaskXS:
     .REPT 128 / 4 INDEX i
         .db %00000011 0 i 0

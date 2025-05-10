@@ -42,9 +42,15 @@
         ]
     },
     {
-        "id": "secret_room",
+        "id": "secret",
         "rooms": [
             "secret_rooms/basic.tmx"
+        ]
+    },
+    {
+        "id": "devil",
+        "rooms": [
+            "devil_rooms/basic.tmx"
         ]
     }
 ]

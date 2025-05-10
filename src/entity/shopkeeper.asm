@@ -14,6 +14,10 @@ true_entity_shopkeeper_tick:
     lda #ENTITY_SIGNAL_KILL
     and.w entity_signal,Y
     beq +
+        ; set shopkeeper flag
+        lda.l devil_deal_flags
+        ora #DEVILFLAG_BOMBED_SHOPKEEPER
+        sta.l devil_deal_flags
         jsl entity_free
         rtl
     +:

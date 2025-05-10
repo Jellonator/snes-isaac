@@ -7,13 +7,21 @@
 _Floor_Begin:
     jsl BeginMapGeneration
     sep #$30 ; 8 bit AXY
+    ; reset ground
     lda #1
     sta.l needResetEntireGround
+    ; reset devil deal flags
+    lda.l floors_since_devil_deal
+    inc A
+    sta.l floors_since_devil_deal
     lda #0
+    sta.l devil_deal_flags
+    ; load room slot 0
     pha
     jsl LoadRoomSlotIntoLevel
     sep #$30 ; 8 bit AXY
     pla
+    ; init player
     jsl PlayerEnterFloor
     ; put overlay
     rep #$30
@@ -30,8 +38,15 @@ _Floor_Begin:
     plb
     rts
 
-; Initialize floor data on game load
+; Initialize floor data when beginning a new game
 Floor_Init:
+    sep #$20
+    ; clear devil deal flags (base devil chance should be 100%)
+    lda #3
+    sta.l floors_since_devil_deal
+    lda #0
+    sta.l devil_deal_flags
+    ; clear floor information
     rep #$30
     lda #0
     sta.w floorFlags
@@ -40,11 +55,12 @@ Floor_Init:
     tax
     lda.l FloorDefinitions,X
     sta.w currentFloorPointer
+    ; initialize
     jsr _Floor_Begin
     jsr _Floor_Update_Graphics
     rtl
 
-; Initialize floor data on game load
+; Initialize floor data when loading from a save file
 Floor_Init_PostLoad:
     rep #$30
     lda #0

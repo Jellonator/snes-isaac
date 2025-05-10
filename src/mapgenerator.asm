@@ -59,32 +59,72 @@
     bne label
 .ENDM
 
-.MACRO ._UpdateDoors ARGS newValue
+; Update doors connected to room 'X' to value 'A'
+MapGen.UpdateDoors:
+    .ACCU 8
+    .INDEX 8
     ; west door
-    lda.w loword(mapDoorHorizontal)-1,X
+    ldy.w loword(mapDoorHorizontal)-1,X
     beq +
-        lda #newValue
         sta.w loword(mapDoorHorizontal)-1,X
     +:
     ; east door
-    lda.w loword(mapDoorHorizontal),X
+    ldy.w loword(mapDoorHorizontal),X
     beq +
-        lda #newValue
         sta.w loword(mapDoorHorizontal),X
     +:
     ; north door
-    lda.w loword(mapDoorVertical-MAP_MAX_WIDTH),X
+    ldy.w loword(mapDoorVertical-MAP_MAX_WIDTH),X
     beq +
-        lda #newValue
         sta.w loword(mapDoorVertical-MAP_MAX_WIDTH),X
     +:
     ; south door
-    lda.w loword(mapDoorVertical),X
+    ldy.w loword(mapDoorVertical),X
     beq +
-        lda #newValue
         sta.w loword(mapDoorVertical),X
     +:
-.ENDM
+    rtl
+
+.DEFINE DEVILROOM_DOORTYPE (DOOR_TYPE_NORMAL | DOOR_METHOD_DEVIL | DOOR_OPEN)
+; Update doors connected to room 'X', such that:
+;  * All doors only connect to boss rooms
+;  * All doors are set to the special devil room type
+MapGen.UpdateDoorsForDevilRoom:
+    .ACCU 8
+    .INDEX 8
+    ; west door
+    lda #DEVILROOM_DOORTYPE
+    ldy.w loword(mapTileTypeTable)-1,X
+    cpy #ROOMTYPE_BOSS
+    beq +
+        lda #0
+    +:
+    sta.w loword(mapDoorHorizontal)-1,X
+    ; east door
+    lda #DEVILROOM_DOORTYPE
+    ldy.w loword(mapTileTypeTable)+1,X
+    cpy #ROOMTYPE_BOSS
+    beq +
+        lda #0
+    +:
+    sta.w loword(mapDoorHorizontal),X
+    ; north door
+    lda #DEVILROOM_DOORTYPE
+    ldy.w loword(mapTileTypeTable)-MAP_MAX_WIDTH,X
+    cpy #ROOMTYPE_BOSS
+    beq +
+        lda #0
+    +:
+    sta.w loword(mapDoorVertical)-MAP_MAX_WIDTH,X
+    ; south door
+    lda #DEVILROOM_DOORTYPE
+    ldy.w loword(mapTileTypeTable)+MAP_MAX_WIDTH,X
+    cpy #ROOMTYPE_BOSS
+    beq +
+        lda #0
+    +:
+    sta.w loword(mapDoorVertical),X
+    rtl
 
 _CmpRoomsByAvailableEndpointTiles:
     .INDEX 16
@@ -481,12 +521,12 @@ _PushAvailableTileX:
 ; Initialize the tile at X
 ; Parameters:
 ;     roomtype: db $03,S
-_InitializeRoomX:
+MapGen.InitializeRoomX:
     .ACCU 8
     .INDEX 8
     pha ; >1
 ; set up map data
-    lda $03+1,S
+    lda $04+1,S
     cmp #ROOMTYPE_START
     ; bne + ; start becomes normal room
     ;     lda #ROOMTYPE_NORMAL
@@ -501,15 +541,45 @@ _InitializeRoomX:
     tax ; X now contains tile slot
     lda $01,S
     sta.w loword(roomSlotMapPos),X
-    lda $03+2,S
+    lda $04+2,S
     sta.w loword(roomSlotRoomType),X
     plx ; <1
 ; end
     pla ; <1
-    rts
+    rtl
+
+; Initialize the tile at X, into given slot
+; Parameters:
+;     slot:     db $05,S
+;     roomtype: db $04,S
+MapGen.InitializeRoomXIntoSlot:
+    .ACCU 8
+    .INDEX 8
+    pha ; >1
+; set up map data
+    lda $04+1,S
+    cmp #ROOMTYPE_START
+    ; bne + ; start becomes normal room
+    ;     lda #ROOMTYPE_NORMAL
+    ; +:
+    sta.w mapTileTypeTable,X
+    stz.w mapTileFlagsTable,X
+    lda $05+1,S
+    sta.w loword(mapTileSlotTable),X
+; set up room slot data
+    phx ; >1
+    tax ; X now contains tile slot
+    lda $01,S
+    sta.w loword(roomSlotMapPos),X
+    lda $04+2,S
+    sta.w loword(roomSlotRoomType),X
+    plx ; <1
+; end
+    pla ; <1
+    rtl
 
 ; Setup the room at tile position X
-_SetupRoomX:
+MapGen.SetupRoomX:
     .INDEX 8
     .ACCU 8
     phy ; >1
@@ -584,6 +654,8 @@ _SetupRoomX:
     beq @room_shop
     cmp #ROOMTYPE_SECRET
     beq @room_secret
+    cmp #ROOMTYPE_DEVIL
+    beq @room_devil
     bra @room_empty ; uh oh; something has gone wrong probably. Just make it empty
     @room_normal:
         ; normal room type
@@ -624,10 +696,19 @@ _SetupRoomX:
     @room_secret:
         ; item room type
         sep #$30
-        lda #bankbyte(RoomPoolDefinitions@secret_room)
+        lda #bankbyte(RoomPoolDefinitions@secret)
         sta.b currentRoomPoolBase+2
         rep #$30 ; 16b AXY
-        lda #loword(RoomPoolDefinitions@secret_room)
+        lda #loword(RoomPoolDefinitions@secret)
+        sta.b currentRoomPoolBase
+        bra @end
+    @room_devil:
+        ; devil room type
+        sep #$30
+        lda #bankbyte(RoomPoolDefinitions@devil)
+        sta.b currentRoomPoolBase+2
+        rep #$30 ; 16b AXY
+        lda #loword(RoomPoolDefinitions@devil)
         sta.b currentRoomPoolBase
         bra @end
     @room_empty:
@@ -652,7 +733,7 @@ _SetupRoomX:
     plx ; <1
     pla ; <1
     ply ; <1
-    rts
+    rtl
 
 ; Count tiles adjacent to A
 ; consumes X
@@ -819,7 +900,7 @@ BeginMapGeneration:
     tax
     lda #ROOMTYPE_START
     pha
-    jsr _InitializeRoomX
+    jsl MapGen.InitializeRoomX
     pla
     lda.b start_pos
     jsr _PushAdjacentEmptyTilesA
@@ -876,7 +957,7 @@ BeginMapGeneration:
         ldx $05
         lda #ROOMTYPE_NORMAL
         pha
-        jsr _InitializeRoomX
+        jsl MapGen.InitializeRoomX
         pla
         lda $05
         jsr _PushAdjacentEmptyTilesA
@@ -945,39 +1026,45 @@ BeginMapGeneration:
     ldx.b $14
     lda #ROOMTYPE_SECRET
     pha
-    jsr _InitializeRoomX
+    jsl MapGen.InitializeRoomX
     sep #$30
     pla
 ; Setup rooms
     ldy.w numUsedMapSlots
 @loop_setup_tiles:
     ldx.w loword(roomSlotMapPos-1),Y
-    jsr _SetupRoomX
+    jsl MapGen.SetupRoomX
     sep #$30 ; 8b AXY
     dey
     bne @loop_setup_tiles
 ; setup special door rooms
     ; BOSS
         ldx.b $10
-        ._UpdateDoors (DOOR_OPEN | DOOR_TYPE_BOSS | DOOR_METHOD_FINISH_ROOM)
+        lda #(DOOR_OPEN | DOOR_TYPE_BOSS | DOOR_METHOD_FINISH_ROOM)
+        jsl MapGen.UpdateDoors
     ; ITEM
         ldx.b $11
         lda.w currentFloorIndex
         beq @first_floor
-            ._UpdateDoors (DOOR_CLOSED | DOOR_TYPE_TREASURE | DOOR_METHOD_KEY)
+            lda #(DOOR_CLOSED | DOOR_TYPE_TREASURE | DOOR_METHOD_KEY)
+            jsl MapGen.UpdateDoors
             jmp @not_first_floor
         @first_floor:
-            ._UpdateDoors (DOOR_OPEN | DOOR_TYPE_TREASURE | DOOR_METHOD_FINISH_ROOM)
+            lda #(DOOR_OPEN | DOOR_TYPE_TREASURE | DOOR_METHOD_FINISH_ROOM)
+            jsl MapGen.UpdateDoors
         @not_first_floor:
     ; SHOP
         ldx.b $12
-        ._UpdateDoors (DOOR_CLOSED | DOOR_TYPE_SHOP | DOOR_METHOD_KEY)
+        lda #(DOOR_CLOSED | DOOR_TYPE_SHOP | DOOR_METHOD_KEY)
+        jsl MapGen.UpdateDoors
     ; SECRET
         ldx.b $14
-        ._UpdateDoors (DOOR_CLOSED | DOOR_TYPE_SECRET | DOOR_METHOD_BOMB)
+        lda #(DOOR_CLOSED | DOOR_TYPE_SECRET | DOOR_METHOD_BOMB)
+        jsl MapGen.UpdateDoors
     ; SUPER SECRET
         ldx.b $13
-        ._UpdateDoors (DOOR_CLOSED | DOOR_TYPE_SECRET | DOOR_METHOD_BOMB)
+        lda #(DOOR_CLOSED | DOOR_TYPE_SECRET | DOOR_METHOD_BOMB)
+        jsl MapGen.UpdateDoors
 ; end
     lda #$FF
     sta.w numTilesToUpdate

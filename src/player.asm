@@ -48,6 +48,15 @@ _PlayerHealthEffectiveValueTable:
     .db 2 ; spirit full
     .db 1 ; eternal
 
+_PlayerHealthIsRedHeartTable:
+    .db 0 ; null
+    .db 1 ; red empty
+    .db 1 ; red half
+    .db 1 ; red full
+    .db 0 ; spirit half
+    .db 0 ; spirit full
+    .db 0 ; eternal
+
 ; Returns true (A=1) if player has any empty heart containers
 Player.CanHeal:
     ; check health slots
@@ -217,6 +226,13 @@ Player.AddSoulHearts
     txa
     rtl
 
+_PlayerDied:
+    ; TODO: handle player death
+    rtl
+
+.DEFINE PLAYER_TOOK_LETHAL_DAMAGE 0
+.DEFINE PLAYER_TOOK_RED_HEALTH 1
+.DEFINE PLAYER_TOOK_SOUL_HEALTH 2
 _PlayerTakeHealth:
     ; check health slots
     sep #$30
@@ -229,10 +245,12 @@ _PlayerTakeHealth:
     bpl @loop
 ; player has died; eventually handle
 @died:
+    jsl _PlayerDied
     rtl
 @foundHealth:
 ; found health slot; Y is slot, A is value
     ; health[Y] = NextHealthValue[A]
+    sta.b $02
     tax
     lda.l _PlayerNextHealthValueTable,X
     sta.w playerData.healthSlots,Y
@@ -252,6 +270,22 @@ _PlayerTakeHealth:
     rep #$30
     lda #60 ; 1 second
     sta.w playerData.invuln_timer
+    ; check damage that was taken. If it is a red heart, then set devil deal flag.
+    sep #$30
+    ldx.b $02
+    lda.l _PlayerHealthIsRedHeartTable,X
+    beq +
+        lda #DEVILFLAG_PLAYER_TAKEN_DAMAGE
+        ora.l devil_deal_flags
+        sta.l devil_deal_flags
+        ldx.b loadedRoomIndex
+        lda.l mapTileTypeTable,X
+        cmp #ROOMTYPE_BOSS
+        bne +
+        lda #DEVILFLAG_PLAYER_TAKEN_DAMAGE_IN_BOSS
+        ora.l devil_deal_flags
+        sta.l devil_deal_flags
+    +:
     rtl
 
 _PlayerHandleDamaged:
@@ -301,6 +335,52 @@ Player.get_effective_health:
 @end:
     lda #HEALTH_REDHEART_FULL
     sta.w playerData.healthSlots,Y
+    jmp UI.update_all_hearts
+
+Player.count_red_heart_slots:
+    sep #$30
+    ldy #0
+    @loop:
+        ldx.w playerData.healthSlots,Y
+        lda.l _PlayerHealthIsRedHeartTable,X
+        beq @end
+        iny
+        cpy #HEALTHSLOT_COUNT
+        bne @loop
+    @end:
+    tya
+    rtl
+
+Player.take_heart_container:
+    sep #$30
+    ldy #0
+    ; first, loop until non-red heart is found.
+    ; This is to maintain the player's current sum red health as best as possible.
+    @search:
+        ldx.w playerData.healthSlots,Y
+        lda.l _PlayerHealthIsRedHeartTable,X
+        beq @search_end
+        iny
+        cpy #HEALTHSLOT_COUNT 
+        bne @search
+    @search_end:
+    ; now, Y points to first non-red heart. If Y is 0, then no hearts to take.
+    cpy #0
+    bne +
+        rtl
+    +:
+    ; now, copy Y to Y-1 while Y < HEALTHSLOT_COUNT
+    ; cpy #HEALTHSLOT_COUNT
+    @loop_copy:
+        cpy #HEALTHSLOT_COUNT
+        beq @copy_end
+        lda.w playerData.healthSlots,Y
+        sta.w playerData.healthSlots-1,Y
+        iny
+        jmp @loop_copy
+    @copy_end:
+    ; Finally, healthSlots[HEALTHSLOT_COUNT-1] = HEALTH_NULL
+    stz.w playerData.healthSlots + HEALTHSLOT_COUNT-1
     jmp UI.update_all_hearts
 
 Player.reset_stats:
@@ -365,10 +445,6 @@ PlayerInit:
     jsl UI.update_all_hearts
     jsl Item.reset_items
     jsl Player.reset_stats
-    sep #$30
-    ; GIVE TEST ITEMS
-    lda #ITEMID_BRIMSTONE
-    jsl Item.add
     sep #$30
     stz.w playerData.walk_frame
     stz.w playerData.bomb_wait_timer
@@ -1172,8 +1248,8 @@ player_outside_door_v:
         jsr _player_handle_shoot_chocolate_milk
         jmp _update_player_animation
     +:
-    jsr _player_handle_shoot_standard
-    jmp _update_player_animation
+    jsr _update_player_animation
+    jmp _player_handle_shoot_standard
 
 ; standard player shoot
 _player_handle_shoot_standard:

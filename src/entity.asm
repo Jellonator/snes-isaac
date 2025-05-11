@@ -50,6 +50,7 @@ entity_create_and_init:
     pha
     xba
     pha
+    xba
     ldy #ENTITY_FIRST_CUSTOM_INDEX
     ; for character entities, start from ENTITY_CHARACTER_MAX instead.
     cmp #0
@@ -110,6 +111,7 @@ entity_create:
     pha
     xba
     pha
+    xba
     ldy #ENTITY_FIRST_CUSTOM_INDEX
     ; for character entities, start from ENTITY_CHARACTER_MAX instead.
     cmp #0

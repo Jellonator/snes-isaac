@@ -453,6 +453,8 @@ Render.HDMAEffect.BrimstoneDown:
 .DEFINE BRIMWIN_RIGHT (ROOM_RIGHT+8)
 .DEFINE BRIMWIN_BOTTOM (ROOM_BOTTOM+8)
 
+.DEFINE BRIM_NUM_LINES_MAX (BRIMWIN_BOTTOM-BRIMWIN_TOP+4)
+
 _default_window_data:
     .db BRIMWIN_TOP, $FF, 0
     .REPT BRIMWIN_BOTTOM-BRIMWIN_TOP+4
@@ -697,11 +699,6 @@ Render.HDMAEffect.BrimstoneOmnidirectional:
         @neg_x_neg_y:
             jmp @sub_neg_x_neg_y
 
-; subroutines for each combination
-@sub_pos_x_pos_y:
-    plb
-    rtl
-
 @sub_neg_x_neg_y:
     rep #$30
     ; Get base X coord
@@ -927,6 +924,244 @@ Render.HDMAEffect.BrimstoneOmnidirectional:
     rtl
 
 @sub_neg_x_pos_y:
+    rep #$30
+    ; Get base X coord
+    lda 1+$07,S
+    and #$00FF
+    xba
+    clc
+    adc.b NORM_Y_MULT
+    sta.b CUMM_X
+    ; Set X register to Y position
+    lda 1+$06,S
+    clc
+    adc.b NORM_X_MULT+1
+    and #$00FF
+    .AMAXU P_IMM, BRIMWIN_TOP+2
+    .AMINU P_IMM, BRIMWIN_BOTTOM-1
+    sec
+    sbc #BRIMWIN_TOP
+    sta.b TEMP
+    asl
+    clc
+    adc.b TEMP
+    clc
+    adc.b BASE_INDEX
+    tax
+    stx.b CAP_END_Y
+    ; invert Y
+    lda #BRIM_NUM_LINES_MAX-1
+    sec
+    sbc.b TEMP
+    tay
+    ; do write right
+    lda.b CUMM_X
+    sta.b CAP_X
+    sec
+    @@loop_set_right:
+        sta.w $0001,X
+        sbc.b SLOPE
+        bcc @@end_set_right
+        inx
+        inx
+        inx
+        dey
+        bne @@loop_set_right
+    @@end_set_right:
+    ; Get base X coord
+    lda 1+$07,S
+    and #$00FF
+    xba
+    sec
+    sbc.b NORM_Y_MULT
+    sta.b CUMM_X
+    ; Set X register to Y position
+    lda 1+$06,S
+    sec
+    sbc.b NORM_X_MULT + 1
+    and #$00FF
+    .AMAXU P_IMM, BRIMWIN_TOP+1
+    .AMINU P_IMM, BRIMWIN_BOTTOM-1
+    sec
+    sbc #BRIMWIN_TOP
+    sta.b TEMP
+    asl
+    clc
+    adc.b TEMP
+    clc
+    adc.b BASE_INDEX
+    tax
+    stx.b CAP_POINT_Y
+    ; invert Y
+    lda #BRIM_NUM_LINES_MAX-1
+    sec
+    sbc.b TEMP
+    tay
+    ; iterate until X is zero, or CUMM_X overflows
+    lda.b CUMM_X
+    sec
+    @@loop_set_left:
+        sep #$20
+        xba
+        sta.w $0001,X
+        xba
+        rep #$20
+        sbc.b SLOPE
+        cmp #BRIMWIN_LEFT*$0100
+        bcc @@set_left2
+        inx
+        inx
+        inx
+        dey
+        bne @@loop_set_left
+    jmp @@end_set_left
+    @@set_left2:
+        sep #$20
+        lda #BRIMWIN_LEFT
+    @@loop_set_left2:
+        sta.w $0001,X
+        inx
+        inx
+        inx
+        dey
+        bne @@loop_set_left2
+    rep #$30
+    @@end_set_left:
+    ; set cap
+    ldx.b CAP_POINT_Y
+    cpx.b CAP_END_Y
+    beq @@end_set_cap
+    sep #$20
+    lda.b CAP_X+1
+    @@loop_set_cap:
+        sta.w $0002,X
+        inx
+        inx
+        inx
+        cpx.b CAP_END_Y
+        bne @@loop_set_cap
+    @@end_set_cap:
+    plb
+    rtl
+
+@sub_pos_x_pos_y:
+    rep #$30
+    ; Get base X coord
+    lda 1+$07,S
+    and #$00FF
+    xba
+    clc
+    adc.b NORM_Y_MULT
+    sta.b CUMM_X
+    ; Set X register to Y position
+    lda 1+$06,S
+    sec
+    sbc.b NORM_X_MULT+1
+    and #$00FF
+    .AMAXU P_IMM, BRIMWIN_TOP+1
+    .AMINU P_IMM, BRIMWIN_BOTTOM-1
+    sec
+    sbc #BRIMWIN_TOP
+    sta.b TEMP
+    asl
+    clc
+    adc.b TEMP
+    clc
+    adc.b BASE_INDEX
+    tax
+    stx.b CAP_POINT_Y
+    ; invert Y
+    lda #BRIM_NUM_LINES_MAX-1
+    sec
+    sbc.b TEMP
+    tay
+    ; do write right
+    lda.b CUMM_X
+    clc
+    @@loop_set_right:
+        sta.w $0001,X
+        adc.b SLOPE
+        cmp #BRIMWIN_RIGHT * $0100
+        bcs @@set_right2
+        inx
+        inx
+        inx
+        dey
+        bne @@loop_set_right
+    jmp @@end_set_right
+    @@set_right2:
+        sep #$20
+        lda #BRIMWIN_RIGHT
+    @@loop_set_right2:
+        sta.w $0002,X
+        inx
+        inx
+        inx
+        dey
+        bne @@loop_set_right2
+    rep #$30
+    @@end_set_right:
+    ; Get base X coord
+    lda 1+$07,S
+    and #$00FF
+    xba
+    sec
+    sbc.b NORM_Y_MULT
+    sta.b CUMM_X
+    ; Set X register to Y position
+    lda 1+$06,S
+    clc
+    adc.b NORM_X_MULT + 1
+    and #$00FF
+    .AMAXU P_IMM, BRIMWIN_TOP+2
+    .AMINU P_IMM, BRIMWIN_BOTTOM-1
+    sec
+    sbc #BRIMWIN_TOP
+    sta.b TEMP
+    asl
+    clc
+    adc.b TEMP
+    clc
+    adc.b BASE_INDEX
+    tax
+    stx.b CAP_END_Y
+    ; invert Y
+    lda #BRIM_NUM_LINES_MAX-1
+    sec
+    sbc.b TEMP
+    tay
+    ; iterate until X is zero, or CUMM_X overflows
+    lda.b CUMM_X
+    sta.b CAP_X
+    clc
+    @@loop_set_left:
+        sep #$20
+        xba
+        sta.w $0001,X
+        xba
+        rep #$20
+        adc.b SLOPE
+        bcs @@end_set_left
+        inx
+        inx
+        inx
+        dey
+        bne @@loop_set_left
+    @@end_set_left:
+    ; set cap
+    ldx.b CAP_POINT_Y
+    cpx.b CAP_END_Y
+    beq @@end_set_cap
+    sep #$20
+    lda.b CAP_X+1
+    @@loop_set_cap:
+        sta.w $0001,X
+        inx
+        inx
+        inx
+        cpx.b CAP_END_Y
+        bne @@loop_set_cap
+    @@end_set_cap:
     plb
     rtl
 
@@ -1289,8 +1524,10 @@ BossBar.Update:
 ; sum health of all entities
     rep #$20
     ; $00,$01,$02 - health
+    stz.b $00
     stz.b $02
     ; $04,$05,$06 - max health
+    stz.b $04
     stz.b $06
     lda #0
 @loop_sum_health:
@@ -1347,19 +1584,17 @@ BossBar.Update:
     sep #$20
     lda.b $05
     sta.l DIVU_DIVISOR
-    .REPT 8
-        nop
-    .ENDR
     rep #$30
-    lda.l DIVU_QUOTIENT ; A is now 256 * health / maxhealth
-    lsr
-    sta.b $00 ; $00 is now number of subtiles to set
-; allocate bin
+; allocate bin, while waiting on division
     lda.w vqueueBinOffset
     sec
     sbc #19*2*2
     sta.w vqueueBinOffset
     tax
+    ; finalize division
+    lda.l DIVU_QUOTIENT ; A is now 256 * health / maxhealth
+    lsr
+    sta.b $00 ; $00 is now number of subtiles to set
 ; set borders
     lda #deft($D8, 5) | T_HIGHP
     sta.l $7F0000 + $00*2,X

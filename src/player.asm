@@ -1230,13 +1230,13 @@ player_outside_door_v:
     ; clc
     ; adc #8
     pha
-    lda #ROOM_CENTER_X
+    lda #ROOM_CENTER_X-8
     sec
     sbc.w player_box_x1
     ror
     eor #$80
     pha
-    lda #ROOM_CENTER_Y
+    lda #ROOM_CENTER_Y-8
     sec
     sbc.w player_box_y1
     ror

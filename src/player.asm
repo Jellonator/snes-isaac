@@ -1220,32 +1220,6 @@ player_outside_door_v:
         rep #$08
     .ENDR
 @skip_open_doors:
-    ; temp code
-    sep #$30
-    lda.w player_box_x1
-    clc
-    adc #8
-    pha
-    lda.w player_box_y1
-    ; clc
-    ; adc #8
-    pha
-    lda #ROOM_CENTER_X-8
-    sec
-    sbc.w player_box_x1
-    ror
-    eor #$80
-    pha
-    lda #ROOM_CENTER_Y-8
-    sec
-    sbc.w player_box_y1
-    ror
-    eor #$80
-    pha
-    jsl Render.HDMAEffect.BrimstoneOmnidirectional
-    rep #$20
-    pla
-    pla
     ; set box pos
     sep #$30
     lda.w player_box_x1
@@ -1704,6 +1678,493 @@ _player_render_brimstone_funcs:
     .dw _player_render_brimstone_left
     .dw _player_render_brimstone_up
 
+_player_find_aligned_right:
+    .ACCU 8
+    .INDEX 8
+    stz.b $00 ; $00 - ENTITY
+    lda #$FF
+    sta.b $01 ; $01 - DISTANCE
+    ldx.w numEntities
+    beq @end
+    jmp @loop
+    @continue:
+        dex
+        beq @end
+    @loop:
+        ldy.w entityExecutionOrder-1,X
+        lda.w entity_mask,Y
+        bit #ENTITY_MASK_TEAR
+        beq @continue
+        lda.w entity_box_x2,Y
+        cmp.w player_box_x2
+        bcc @continue
+        lda.w loword(entity_ysort),Y
+        sec
+        sbc.w loword(entity_ysort) + ENTITY_INDEX_PLAYER
+        .ABS_A8_POSTSBC
+        cmp.b $01
+        bcs @continue
+        sta.b $01
+        sty.b $00
+        dex
+        bne @loop
+    @end:
+    ldy.b $00
+    rts
+
+_player_find_aligned_left:
+    .ACCU 8
+    .INDEX 8
+    stz.b $00 ; $00 - ENTITY
+    lda #$FF
+    sta.b $01 ; $01 - DISTANCE
+    ldx.w numEntities
+    beq @end
+    jmp @loop
+    @continue:
+        dex
+        beq @end
+    @loop:
+        ldy.w entityExecutionOrder-1,X
+        lda.w entity_mask,Y
+        bit #ENTITY_MASK_TEAR
+        beq @continue
+        lda.w entity_box_x1,Y
+        cmp.w player_box_x1
+        bcs @continue
+        lda.w loword(entity_ysort),Y
+        sec
+        sbc.w loword(entity_ysort) + ENTITY_INDEX_PLAYER
+        .ABS_A8_POSTSBC
+        cmp.b $01
+        bcs @continue
+        sta.b $01
+        sty.b $00
+        dex
+        bne @loop
+    @end:
+    ldy.b $00
+    rts
+
+_player_find_aligned_up:
+    .ACCU 8
+    .INDEX 8
+    stz.b $00 ; $00 - ENTITY
+    lda #$FF
+    sta.b $01 ; $01 - DISTANCE
+    lda.w player_box_x1
+    clc
+    adc.w player_box_x2
+    ror
+    sta.b $02 ; $02 = PLAYER X
+    ldx.w numEntities
+    beq @end
+    jmp @loop
+    @continue:
+        dex
+        beq @end
+    @loop:
+        ldy.w entityExecutionOrder-1,X
+        lda.w entity_mask,Y
+        bit #ENTITY_MASK_TEAR
+        beq @continue
+        lda.w entity_box_y1,Y
+        cmp.w player_box_y1
+        bcs @continue
+        lda.w entity_box_x1,Y
+        clc
+        adc.w entity_box_x2,Y
+        ror
+        sec
+        sbc.b $02
+        .ABS_A8_POSTSBC
+        cmp.b $01
+        bcs @continue
+        sta.b $01
+        sty.b $00
+        dex
+        bne @loop
+    @end:
+    ldy.b $00
+    rts
+
+_player_find_aligned_down:
+    .ACCU 8
+    .INDEX 8
+    stz.b $00 ; $00 - ENTITY
+    lda #$FF
+    sta.b $01 ; $01 - DISTANCE
+    lda.w player_box_x1
+    clc
+    adc.w player_box_x2
+    ror
+    sta.b $02 ; $02 = PLAYER X
+    ldx.w numEntities
+    beq @end
+    jmp @loop
+    @continue:
+        dex
+        beq @end
+    @loop:
+        ldy.w entityExecutionOrder-1,X
+        lda.w entity_mask,Y
+        bit #ENTITY_MASK_TEAR
+        beq @continue
+        lda.w entity_box_y2,Y
+        cmp.w player_box_y2
+        bcc @continue
+        lda.w entity_box_x1,Y
+        clc
+        adc.w entity_box_x2,Y
+        ror
+        sec
+        sbc.b $02
+        .ABS_A8_POSTSBC
+        cmp.b $01
+        bcs @continue
+        sta.b $01
+        sty.b $00
+        dex
+        bne @loop
+    @end:
+    ldy.b $00
+    rts
+
+_player_find_aligned_entity_funcs:
+    .dw _player_find_aligned_right
+    .dw _player_find_aligned_down
+    .dw _player_find_aligned_left
+    .dw _player_find_aligned_up
+
+
+_player_render_brimstone_homing:
+    .ACCU 8
+    .INDEX 8
+    phb
+    .ChangeDataBank $7E
+; FIRST: push bytes for X position and Y position
+    sep #$30
+    lda.w player_box_x1
+    clc
+    adc #8
+    pha
+    lda.w player_box_y1
+    pha
+; SECOND: find entity most aligned with axis
+    lda.w playerData.facingdir_head
+    asl
+    tax
+    jsr (_player_find_aligned_entity_funcs,X)
+    cpy #0
+    bne +
+        ; no entity found: use standard method
+        pla
+        pla
+        plb
+        lda.w playerData.facingdir_head
+        asl
+        tax
+        jmp (_player_render_brimstone_funcs,X)
+        .ACCU 8
+    +:
+    sty.b $30
+; THIRD: push bytes for X offset and Y offset
+    lda.w entity_box_x1,Y
+    clc
+    adc.w entity_box_x2,Y
+    ror
+    sec
+    sbc $02,S
+    ror
+    eor #$80
+    pha
+    lda.w entity_box_y1,Y
+    clc
+    adc.w entity_box_y2,Y
+    ror
+    sec
+    sbc $02,S
+    ror
+    eor #$80
+    pha
+    ; check if dir_x or dir_y are aligned, or nearly aligned. If so, then use
+    ; standard function, depending on direction.
+    lda $01,S ; dir_y
+    .ABS_A8_POSTLOAD
+    cmp #3
+    bcs +
+        ; Y is zero
+        lda $02,S
+        plb
+        plb
+        plb
+        plb
+        plb
+        cmp #0
+        bpl @fire_right
+            jmp _player_render_brimstone_left
+        @fire_right:
+            jmp _player_render_brimstone_right
+    +:
+    lda $02,S ; dir_x
+    .ABS_A8_POSTLOAD
+    cmp #3
+    bcs +
+        ; X is zero
+        lda $01,S
+        plb
+        plb
+        plb
+        plb
+        plb
+        cmp #0
+        bpl @fire_down
+            jmp _player_render_brimstone_up
+        @fire_down:
+            jmp _player_render_brimstone_down
+    +:
+; FOURTH: render brimstone
+    jsl Render.HDMAEffect.BrimstoneOmnidirectional
+; FIFTH: collision.
+    ; check tick
+    sep #$20
+    lda.w tickCounter
+    and #$03
+    beq +
+        plb
+        plb
+        plb
+        plb
+        plb
+        rts
+    +:
+; We can use values set in DP by BrimstoneOmnidirectional to speed up some calculations.
+; Relying on data set by a subroutine isn't ideal, but we work with what we got.
+    .DEFINE SLOPE $10 ; dX/dY
+    ; .DEFINE SLOPE_TILE $1A ; 16×dX/dY
+    ; .DEFINE SLOPE_HALF_TILE $1C ; 16×dX/dY
+    .DEFINE TILE_X1 $20
+    .DEFINE TILE_X2 $22
+    .DEFINE INDEX_FROM $24
+    .DEFINE INDEX_TO $26
+    .DEFINE TILE_Y $28
+    .DEFINE TILE_Y_CHANGE $2A
+    .DEFINE DAMAGE_AMOUNT $2C
+    ; Determine DAMAGE_AMOUNT
+    ; we do `ceil(damage/4)` damage 15 times per second, about `4×damage` per second
+    rep #$30
+    lda.w playerData.stat_damage
+    clc
+    adc #3
+    .DivideStatic 4
+    sta.b DAMAGE_AMOUNT
+    ; deal damage to target entity directly, since we can sometimes, uh, miss,
+    ; at sufficiently steep angles. don't ask and fixing is hard.
+    sep #$10
+    ldy.b $30
+        rep #$20
+        lda.w entity_health,Y
+        sec
+        sbc.b DAMAGE_AMOUNT
+        sta.w entity_health,Y
+        sep #$20
+        php
+        lda.w entity_signal,Y
+        ora #ENTITY_SIGNAL_DAMAGE
+        plp
+        bcs +
+            ora #ENTITY_SIGNAL_KILL
+        +:
+        sta.w entity_signal,Y
+        lda #ENTITY_FLASH_TIME
+        sta.w loword(entity_damageflash),Y
+        lda.w entity_mask,Y
+        and #$FF ~ ENTITY_MASK_TEAR
+        sta.w entity_mask,Y
+    ; get Y coordinate of current tile
+    rep #$30
+    lda.w player_box_y1
+    and #$00F0
+    sta.b TILE_Y
+    ldx #$10
+    lda.b $01-1,S
+    bpl @facing_down
+        lda.w player_box_y2
+        and #$00F0
+        sta.b TILE_Y
+        ldx #$F0
+    @facing_down:
+    stx.b TILE_Y_CHANGE
+    ; get left and right bounds of current tile.
+    lda.w player_box_x1-1
+    and #$FF00
+    ora #$0080
+    .DivideStatic 16
+    sta.b TILE_X1
+    lda.w player_box_x2-1
+    and #$FF00
+    ora #$0080
+    .DivideStatic 16
+    sta.b TILE_X2
+    lda $02-1,S
+    bpl @facing_right
+        lda.b TILE_X1
+        sec
+        sbc.b SLOPE
+        sta.b TILE_X1
+        lda.b SLOPE
+        .NEG_A16
+        sta.b SLOPE
+        jmp @end_facing_check
+    @facing_right:
+        lda.b TILE_X2
+        clc
+        adc.b SLOPE
+        sta.b TILE_X2
+    @end_facing_check:
+    ; main brunt of collision code
+    @loop_y:
+        ; check bounds of X1
+        lda.b TILE_X1
+        bpl @x1_pos
+            ; x1 wrapped to negative; set to 0
+            stz.b TILE_X1
+            jmp @x1_end
+        @x1_pos:
+        cmp #$1000
+        bcc @x1_end
+            ; x1 wrapped past right border, set to $0FFF
+            lda #$0FFF
+            sta.b TILE_X1
+        @x1_end:
+        ; check bounds of X2
+        lda.b TILE_X2
+        bpl @x2_pos
+            ; x1 wrapped to negative; set to 0
+            stz.b TILE_X2
+            jmp @x2_end
+        @x2_pos:
+        cmp #$1000
+        bcc @x2_end
+            ; x1 wrapped past right border, set to $0FFF
+            lda #$0FFF
+            sta.b TILE_X2
+        @x2_end:
+        ; iterate tiles between TILE_X1 and TILE_X2, at Y=TILE_Y
+        sep #$30
+        lda.b TILE_X1+1
+        and #$0F
+        sta.b INDEX_FROM
+        lda.b TILE_X2+1
+        and #$0F
+        sta.b INDEX_TO
+        cmp.b INDEX_FROM
+        bcs +
+            sta.b INDEX_FROM
+        +:
+        lda.b TILE_Y
+        tsb.b INDEX_FROM
+        tsb.b INDEX_TO
+        ldx.b INDEX_FROM
+        @loop_x:
+            ; handle tiles at tile
+            lda.l GameTileToRoomTileIndexTable,X
+            cmp #96
+            bcs @skip_tile
+            tay
+            lda [currentRoomTileTypeTableAddress],Y
+            bpl @skip_tile
+                phx
+                rep #$30
+                and #$00FF
+                asl
+                tax
+                jsl ProjectileTileHandleTrampoline
+                sep #$30
+                plx
+            @skip_tile:
+            ; damage all entities at tile
+            .REPT SPATIAL_LAYER_COUNT INDEX i
+                ldy.w spatial_partition.{i+1},X
+                beql @spatial_end
+                    ; found entity, check mask
+                    lda.w entity_mask,Y
+                    and #ENTITY_MASK_TEAR
+                    beq @spatial_skip_{i}
+                    ; deal damage - no box check, we don't care at this point
+                    rep #$20
+                    lda.w entity_health,Y
+                    sec
+                    sbc.b DAMAGE_AMOUNT
+                    sta.w entity_health,Y
+                    sep #$20
+                    php
+                    lda.w entity_signal,Y
+                    ora #ENTITY_SIGNAL_DAMAGE
+                    plp
+                    bcs @spatial_notkill_{i}
+                        ora #ENTITY_SIGNAL_KILL
+                    @spatial_notkill_{i}:
+                    sta.w entity_signal,Y
+                    lda #ENTITY_FLASH_TIME
+                    sta.w loword(entity_damageflash),Y
+                    lda.w entity_mask,Y
+                    and #$FF ~ ENTITY_MASK_TEAR
+                    sta.w entity_mask,Y
+                @spatial_skip_{i}:
+            .ENDR
+            @spatial_end:
+            ; iterate next X
+            cpx.b INDEX_TO
+            beq @end_loop_x
+            inx
+            jmp @loop_x
+        @end_loop_x:
+            ; if INDEX_FROM = INDEX_TO and INDEX is OOB, then exit
+            cpx.b INDEX_FROM
+            bne +
+                lda.l GameTileBoundaryCheck,X
+                bne @end_collision_code
+            +:
+            ; iterate next Y
+            lda.b TILE_Y
+            clc
+            adc.b TILE_Y_CHANGE
+            sta.b TILE_Y
+            tax
+            lda.l GameTileBoundaryCheck+2,X ; if Y is OOB, then exit
+            bne @end_collision_code
+            rep #$20
+            ; x1 += slope
+            lda.b TILE_X1
+            clc
+            adc.b SLOPE
+            sta.b TILE_X1
+            ; x2 += slope
+            lda.b TILE_X2
+            clc
+            adc.b SLOPE
+            sta.b TILE_X2
+            jmp @loop_y
+@end_collision_code:
+; END
+    rep #$20
+    pla
+    pla
+    plb
+    rts
+
+.UNDEFINE SLOPE
+; .UNDEFINE SLOPE_TILE
+; .UNDEFINE SLOPE_HALF_TILE
+.UNDEFINE TILE_X1
+.UNDEFINE TILE_X2
+.UNDEFINE INDEX_FROM
+.UNDEFINE INDEX_TO
+.UNDEFINE TILE_Y
+.UNDEFINE TILE_Y_CHANGE
+.UNDEFINE DAMAGE_AMOUNT
+
 _player_handle_tick_brimstone:
     .ACCU 16
     .INDEX 16
@@ -1716,6 +2177,10 @@ _player_handle_tick_brimstone:
     +:
 ; put effect, depending on facing direction
     sep #$30
+    lda.w playerData.playerItemStackNumber+ITEMID_SPOON_BENDER
+    beq @not_homing
+        jmp _player_render_brimstone_homing
+@not_homing:
     lda.w playerData.facingdir_head
     asl
     tax

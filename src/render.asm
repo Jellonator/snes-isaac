@@ -471,110 +471,24 @@ _default_window_data:
 ;     [s8] dir_x, $05,S [-128, 127]
 ;     [s8] dir_y, $04,S [-128, 127]
 ; )
+; Do NOT use dir_x or dir_y which are too close to 0, which may cause bugs (about ±3)
 Render.HDMAEffect.BrimstoneOmnidirectional:
-; if dir_x or dir_y are 0, then use one of the above brimstone beam functions
-    sep #$30
-    lda $04,S
-    bne @nonzero_diry
-@zero_diry:
-        lda $05,S
-        beq @zero_diry_zero_dirx
-        bpl @zero_diry_positive_dirx
-        ;zero_diry_negative_dirx
-            lda $07,S
-            clc
-            adc #6
-            pha
-            lda 1+$06,S
-            sec
-            sbc #6
-            pha
-            jsl Render.HDMAEffect.BrimstoneLeft
-            rep #$20
-            pla
-            rtl
-            .ACCU 8
-            .INDEX 8
-        @zero_diry_positive_dirx:
-            lda $07,S
-            sec
-            sbc #6
-            pha
-            lda 1+$06,S
-            sec
-            sbc #6
-            pha
-            jsl Render.HDMAEffect.BrimstoneRight
-            rep #$20
-            pla
-            rtl
-            .ACCU 8
-            .INDEX 8
-        @zero_diry_zero_dirx:
-            rtl
-@nonzero_diry:
-    cmp #1
-    beq @zero_diry
-    cmp #-1
-    beq @zero_diry
-    lda $05,S
-    bne @nonzero_dirx
-    @zero_dirx:
-        lda $04,S
-        bpl @zero_dirx_positive_diry
-        ;zero_dirx_negative_diry
-            lda $07,S
-            sec
-            sbc #6
-            pha
-            lda 1+$06,S
-            ; clc
-            ; adc #6
-            pha
-            jsl Render.HDMAEffect.BrimstoneUp
-            rep #$20
-            pla
-            rtl
-            .ACCU 8
-            .INDEX 8
-        @zero_dirx_positive_diry:
-            lda $07,S
-            sec
-            sbc #6
-            pha
-            lda 1+$06,S
-            sec
-            sbc #6
-            pha
-            jsl Render.HDMAEffect.BrimstoneDown
-            rep #$20
-            pla
-            rtl
-            .ACCU 8
-            .INDEX 8
-@nonzero_dirx:
-    cmp #1
-    beq @zero_dirx
-    cmp #-1
-    beq @zero_dirx
 ; begin function properly
     phb
     .ChangeDataBank $7E
 ; get normal 'N'
-    .DEFINE DIR_LEN $1C
-    .DEFINE NORM_X $1E
-    .DEFINE NORM_Y $20
-    .DEFINE TEMP $06
-    .DEFINE SLOPE $08
-    .DEFINE INVSLOPE $0A
-    .DEFINE BASE_INDEX $0C
-    .DEFINE ITER $0E
-    .DEFINE CUMM_X $10
-    .DEFINE NORM_X_MULT $12
-    .DEFINE NORM_Y_MULT $14
-    .DEFINE CAP_POINT_Y $16
-    .DEFINE CAP_END_Y $18
-    .DEFINE CAP_X $1A
+    .DEFINE DIR_LEN $08
+    .DEFINE NORM_X $0A
+    .DEFINE NORM_Y $0C
+    .DEFINE TEMP $0E
+    .DEFINE SLOPE $10
+    .DEFINE BASE_INDEX $12
+    .DEFINE CUMM_X $14
+    .DEFINE NORM_X_MULT $16
+    .DEFINE NORM_Y_MULT $18
+    .DEFINE CAP_POINT_Y $1A
+    .DEFINE CAP_END_Y $1C
+    .DEFINE CAP_X $1E
     ; $00 = LEN(dir)
     rep #$30
     lda 1+$04,S

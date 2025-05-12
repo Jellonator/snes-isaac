@@ -272,6 +272,34 @@ GameTileToRoomTileIndexTable:
         .db 97
     .ENDR
 
+; $00 for tiles that are fully in bounds
+; $01 for tiles that are walls
+; $81 for tiles that are fully out of bounds
+; To test if tile is considered partially in-bounds (floor and walls):
+;     lda GameTileBoundaryCheck,X
+;     bpl @tile_is_in_bounds
+; To test if tile is considered totally in-bounds (floors only):
+;     lda GameTileBoundaryCheck,X
+;     beq @tile_is_in_bounds
+GameTileBoundaryCheck:
+    .REPT 3
+        .dsb 16, $81
+    .ENDR
+    .db $81, $01
+    .dsb 12, $01
+    .db $01, $81
+    .REPT 8
+        .db $81, $01
+        .dsb 12, $00
+        .db $81, $01
+    .ENDR
+    .db $81, $01
+    .dsb 12, $01
+    .db $01, $81
+    .REPT 3
+        .dsb 16, $81
+    .ENDR
+
 RoomTileToXTable:
     .REPT 8
         .REPT 12 INDEX i

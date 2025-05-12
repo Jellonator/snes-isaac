@@ -302,6 +302,15 @@
 @@@@@\.\@:
 .ENDM
 
+; Calculate the absolute value of (A-B), after the SBC instruction
+; Note that the result is an UNSIGNED distance between A and B, up to $FFFF
+.MACRO .ABS_A16_POSTSBC
+    bcs @@@@@\.\@
+    eor.b #$FFFF
+    inc A
+@@@@@\.\@:
+.ENDM
+
 ; Negate 16b A register
 .MACRO .NEG_A16
     eor.w #$FFFF
@@ -312,6 +321,15 @@
 ; ONLY use after an instruction that loads the value into A (checks N flag)
 .MACRO .ABS_A8_POSTLOAD
     bpl @@@@@\.\@
+    eor.b #$FF
+    inc A
+@@@@@\.\@:
+.ENDM
+
+; Calculate the absolute value of (A-B), after the SBC instruction.
+; Note that the result is an UNSIGNED distance between A and B, up to $FF
+.MACRO .ABS_A8_POSTSBC
+    bcs @@@@@\.\@
     eor.b #$FF
     inc A
 @@@@@\.\@:

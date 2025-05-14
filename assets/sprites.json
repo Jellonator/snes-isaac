@@ -40,7 +40,7 @@
         "name": "enemy_zombie",
         "src": "assets/sprites/enemy/zombie.raw",
         "depth": 16,
-        "size": 2
+        "size": [2, 2]
     },
     {
         "name": "boss_monstro",

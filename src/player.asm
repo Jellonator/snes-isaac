@@ -688,18 +688,12 @@ _update_player_animation_vy_up:
     bcs @next_frame
     sta.w playerData.walk_timer
     jmp @upload_frame
-@not_moving:
-    stz.w playerData.walk_timer
-    sep #$20
-    stz.w playerData.walk_frame
-    jmp @upload_frame
 @next_frame:
     stz.w playerData.walk_timer
     sep #$20
     lda.w playerData.walk_frame
     dec A
-    cmp #6
-    bcc +
+    bpl +
         lda #5
     +:
     sta.w playerData.walk_frame

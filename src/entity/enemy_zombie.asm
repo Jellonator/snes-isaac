@@ -2,6 +2,13 @@
 
 .DEFINE _zombie_gfxptr.1 loword(entity_char_custom.1)
 .DEFINE _zombie_gfxptr.2 loword(entity_char_custom.2)
+.DEFINE _zombie_body_frame loword(entity_char_custom.16)
+.DEFINE _zombie_body_flags loword(entity_char_custom.16+1)
+.DEFINE _zombie_walk_frame loword(entity_char_custom.15)
+.DEFINE _zombie_walk_timer loword(entity_char_custom.14)
+
+.DEFINE ZOMBIE_ACCEL 4
+.DEFINE WALK_TIMER_FRAME_DELAY $0400
 
 .BANK $02 SLOT "ROM"
 .SECTION "Entity Enemy Zombie Extra" SUPERFREE
@@ -16,7 +23,7 @@ _entity_zombie_default_init:
 _entity_zombie_default_tick:
     .ACCU 16
     .INDEX 16
-; move
+; get movement target
     jsl Entity.Enemy.PathfindTargetPlayer
     sep #$30
     lda.b entityTargetFound
@@ -24,22 +31,72 @@ _entity_zombie_default_tick:
         ldx.b entityTargetAngle
         lda.l SinTable8,X
         .Convert8To16_SIGNED 0, 0
-        .ShiftRight_SIGN 1, 0
-        clc
-        adc.w entity_posy,Y
-        sta.w entity_posy,Y
+        ; .ShiftRight_SIGN 1, 0
+        sta.b $02
         sep #$20
         lda.l CosTable8,X
         .Convert8To16_SIGNED 0, 0
-        .ShiftRight_SIGN 1, 0
-        clc
-        adc.w entity_posx,Y
-        sta.w entity_posx,Y
+        ; .ShiftRight_SIGN 1, 0
+        sta.b $00
+        jmp @end_target
     @no_target:
-    rep #$20
+        rep #$20
+        stz.b $00
+        stz.b $02
+    @end_target:
+; adjust and apply velocity
+    ; X
+    lda.w entity_velocx,Y
+    .CMPS_BEGIN P_DIR, $00
+        ; velocx < target
+        lda.w entity_velocx,Y
+        clc
+        adc #ZOMBIE_ACCEL
+        .AMIN P_DIR, $00
+        .AMAX P_IMM, -$0040
+    .CMPS_GREATER
+        ; velocx > target
+        lda.w entity_velocx,Y
+        sec
+        sbc #ZOMBIE_ACCEL
+        .AMAX P_DIR, $00
+        .AMIN P_IMM, $0040
+    .CMPS_EQUAL
+        lda.b $00
+    .CMPS_END
+    sta.w entity_velocx,Y
+    clc
+    adc.w entity_posx,Y
+    sta.w entity_posx,Y
+    ; Y
+    lda.w entity_velocy,Y
+    .CMPS_BEGIN P_DIR, $02
+        ; velocx < target
+        lda.w entity_velocy,Y
+        clc
+        adc #ZOMBIE_ACCEL
+        .AMIN P_DIR, $02
+        .AMAX P_IMM, -$0040
+    .CMPS_GREATER
+        ; velocx > target
+        lda.w entity_velocy,Y
+        sec
+        sbc #ZOMBIE_ACCEL
+        .AMAX P_DIR, $02
+        .AMIN P_IMM, $0040
+    .CMPS_EQUAL
+        lda.b $02
+    .CMPS_END
+    sta.w entity_velocy,Y
+    clc
+    adc.w entity_posy,Y
+    sta.w entity_posy,Y
+; update animation
+    jsr _zombie_update_walk_animation
 ; load & set gfx
+    rep #$20
     lda #0
-    sep #$20
+    sep #$30
     ; determine palette
     ldx #%00100001
     lda.w loword(entity_damageflash),Y
@@ -48,7 +105,9 @@ _entity_zombie_default_tick:
         sta.w loword(entity_damageflash),Y
         ldx #%00101111
     +:
-    stx.b $02
+    txa
+    ora.w _zombie_body_flags,Y
+    sta.b $02
     ; get tile IDs
     ldx.w _zombie_gfxptr.1,Y
     lda.l SpriteSlotIndexTable,X
@@ -188,6 +247,161 @@ EntityZombie.free:
     tax
     jmp (EntityZombie.FreeTable,X)
 
+; animation functions
+
+_zombie_update_walk_animation:
+    rep #$20
+    lda.w entity_velocy,Y
+    .ABS_A16_POSTLOAD
+    sta.b $00
+    lda.w entity_velocx,Y
+    .ABS_A16_POSTLOAD
+    asl
+    cmp.b $00
+    bcsl @horizontal
+;vertical:
+    lda.w entity_velocy,Y
+    beq @not_moving
+    bpl @vertical_down
+;vertical_up:
+    .NEG_A16
+    clc
+    adc.w _zombie_walk_timer,Y
+    cmp #WALK_TIMER_FRAME_DELAY
+    bcs @vertical_up_next_frame
+    sta.w _zombie_walk_timer,Y
+    lda #%00100001
+    sta.w _zombie_body_flags,Y
+    sep #$20
+    lda.w _zombie_walk_frame,Y
+    jmp _zombie_set_walk_frame
+@vertical_up_next_frame:
+    .ACCU 16
+    lda #0
+    sta.w _zombie_walk_timer,Y
+    sep #$20
+    lda.w _zombie_walk_frame,Y
+    dec A
+    bpl +
+        lda #5
+    +:
+    sta.w _zombie_walk_frame,Y
+    lda #%00100001
+    sta.w _zombie_body_flags,Y
+    lda.w _zombie_walk_frame,Y
+    jmp _zombie_set_walk_frame
+@vertical_down:
+    .ACCU 16
+    clc
+    adc.w _zombie_walk_timer,Y
+    cmp #WALK_TIMER_FRAME_DELAY
+    bcs @vertical_down_next_frame
+    sta.w _zombie_walk_timer,Y
+    sep #$20
+    lda #%00100001
+    sta.w _zombie_body_flags,Y
+    lda.w _zombie_walk_frame,Y
+    jmp _zombie_set_walk_frame
+@vertical_down_next_frame:
+    .ACCU 16
+    lda #0
+    sta.w _zombie_walk_timer,Y
+    sep #$20
+    lda.w _zombie_walk_frame,Y
+    inc A
+    cmp #6
+    bcc +
+        lda #0
+    +:
+    sta.w _zombie_walk_frame,Y
+    lda #%00100001
+    sta.w _zombie_body_flags,Y
+    lda.w _zombie_walk_frame,Y
+    jmp _zombie_set_walk_frame
+@not_moving:
+    .ACCU 16
+    lda #0
+    sta.w _zombie_walk_timer,Y
+    sep #$20
+    sta.w _zombie_walk_frame,Y
+    lda #%00100001
+    sta.w _zombie_body_flags,Y
+    lda # 0
+    jmp _zombie_set_walk_frame
+@horizontal:
+    .ACCU 16
+    lda.w entity_velocx,Y
+    beq @not_moving
+    .ABS_A16_POSTLOAD
+    clc
+    adc.w _zombie_walk_timer,Y
+    cmp #WALK_TIMER_FRAME_DELAY
+    bcs @horizontal_next_frame
+    sta.w _zombie_walk_timer,Y
+    jmp @horizontal_update_frame
+@horizontal_next_frame:
+    .ACCU 16
+    lda #0
+    sta.w _zombie_walk_timer,Y
+    sep #$20
+    lda.w _zombie_walk_frame,Y
+    inc A
+    cmp #6
+    bcc +
+        lda #0
+    +:
+    sta.w _zombie_walk_frame,Y
+@horizontal_update_frame:
+    sep #$20
+    lda #%00100001
+    xba
+    lda.w entity_velocx+1,Y
+    bpl +
+        lda #%01100001
+        xba
+    +:
+    xba
+    sta.w _zombie_body_flags,Y
+    lda.w _zombie_walk_frame,Y
+    clc
+    adc #8
+    jmp _zombie_set_walk_frame
+    rts
+
+_zombie_set_walk_frame:
+    .ACCU 8
+    ; don't upload frame if it is active
+    cmp.w _zombie_body_frame,Y
+    bne +
+        rts
+    +:
+    sta.w _zombie_body_frame,Y
+    ; upload frame
+    phy
+    php
+    pea bankbyte(spritedata.enemy_zombie) * $0101
+    rep #$20
+    and #$00FF
+    xba
+    lsr
+    clc
+    adc #loword(spritedata.enemy_zombie)
+    pha
+    clc
+    adc #64
+    pha
+    lda.w _zombie_gfxptr.2,Y
+    and #$00FF
+    tax
+    jsl spriteman_write_sprite_to_raw_slot
+    rep #$20
+    pla
+    pla
+    pla
+    plp
+    ply
+    rts
+
 .ENDS
 
 .BANK ROMBANK_ENTITYCODE SLOT "ROM"
@@ -207,7 +421,15 @@ entity_zombie_init:
     tax
     lda.l EntityZombie.HealthTable
     sta.w entity_health,Y
+    lda #0
+    sta.w _zombie_walk_timer,Y
+    sep #$20
+    sta.w _zombie_walk_frame,Y
+    sta.w _zombie_body_flags,Y
+    lda #$FF
+    sta.w _zombie_body_frame,Y
     ; call init function
+    rep #$30
     jsl EntityZombie.init
     ; get raw slots
     sep #$30
@@ -215,27 +437,7 @@ entity_zombie_init:
     sta.w _zombie_gfxptr.1,Y
     .spriteman_get_raw_slot_lite
     sta.w _zombie_gfxptr.2,Y
-    ; ; load frame 1
-    ; lda #sprite.enemy.zombie.0
-    ; phy
-    ; jsl spriteman_new_sprite_ref
-    ; rep #$30
-    ; ply
-    ; txa
-    ; sta.w _zombie_gfxptr.1,Y
-    ; ; load frame 2
-    ; lda #sprite.enemy.zombie.1
-    ; phy
-    ; jsl spriteman_new_sprite_ref
-    ; rep #$30
-    ; ply
-    ; txa
-    ; sta.w _zombie_gfxptr.2,Y
-    ; end
     rts
-
-.DefinePathSpeedTable "_e_zombie_speedtable", 128, 1
-.DEFINE ZOMBIE_ACCEL 4
 
 entity_zombie_tick:
     .ACCU 16
@@ -267,130 +469,7 @@ entity_zombie_tick:
         rep #$30
         jsl entity_replace
     @not_kill:
-; move
-;     sep #$30
-;     lda.w entity_posx+1,Y
-;     adc #8
-;     lsr
-;     lsr
-;     lsr
-;     lsr
-;     sta.b $00
-;     lda.w entity_posy+1,Y
-;     adc #8
-;     and #$F0
-;     ora.b $00
-;     tax
-;     lda.w pathfind_player_data,X
-;     rep #$30
-;     and #$00FF
-;     asl
-;     tax
-;     ; X
-;     lda.w entity_velocx,Y
-;     .CMPS_BEGIN P_LONG_X, _e_zombie_speedtable_X
-;         ; velocx < target
-;         lda.w entity_velocx,Y
-;         clc
-;         adc #ZOMBIE_ACCEL
-;         .AMIN P_LONG_X, _e_zombie_speedtable_X
-;         .AMAX P_IMM, -$0040
-;     .CMPS_GREATER
-;         ; velocx > target
-;         lda.w entity_velocx,Y
-;         sec
-;         sbc #ZOMBIE_ACCEL
-;         .AMAX P_LONG_X, _e_zombie_speedtable_X
-;         .AMIN P_IMM, $0040
-;     .CMPS_EQUAL
-;         .AMAX P_IMM, -$0100
-;         .AMIN P_IMM, $0100
-;     .CMPS_END
-;     sta.w entity_velocx,Y
-;     clc
-;     adc.w entity_posx,Y
-;     sta.w entity_posx,Y
-;     ; Y
-;     lda.w entity_velocy,Y
-;     .CMPS_BEGIN P_LONG_X, _e_zombie_speedtable_Y
-;         ; velocx < target
-;         lda.w entity_velocy,Y
-;         clc
-;         adc #ZOMBIE_ACCEL
-;         .AMIN P_LONG_X, _e_zombie_speedtable_Y
-;         .AMAX P_IMM, -$0040
-;     .CMPS_GREATER
-;         ; velocx > target
-;         lda.w entity_velocy,Y
-;         sec
-;         sbc #ZOMBIE_ACCEL
-;         .AMAX P_LONG_X, _e_zombie_speedtable_Y
-;         .AMIN P_IMM, $0040
-;     .CMPS_EQUAL
-;         .AMAX P_IMM, -$0100
-;         .AMIN P_IMM, $0100
-;     .CMPS_END
-;     sta.w entity_velocy,Y
-;     clc
-;     adc.w entity_posy,Y
-;     sta.w entity_posy,Y
-; ; load & set gfx
-;     rep #$30
-;     lda #0
-;     sep #$20
-
-;     ldx #%00100001
-;     lda.w loword(entity_damageflash),Y
-;     beq +
-;         dec A
-;         sta.w loword(entity_damageflash),Y
-;         ldx #%00101111
-;     +:
-;     stx.b $02
-
-;     ldx.w _zombie_gfxptr.1,Y
-;     lda.w loword(spriteTableValue + spritetab_t.spritemem),X
-;     tax
-;     lda.l SpriteSlotIndexTable,X
-;     sta.b $00
-
-;     ldx.w _zombie_gfxptr.2,Y
-;     lda.w loword(spriteTableValue + spritetab_t.spritemem),X
-;     tax
-;     lda.l SpriteSlotIndexTable,X
-;     sta.b $01
-    
-;     lda.w entity_variant,Y
-;     beq @headless
-;         ldx.w objectIndex
-;         lda.b $01
-;         sta.w objectData.2.tileid,X
-;         lda.w entity_posx + 1,Y
-;         sta.w objectData.1.pos_x,X
-;         sta.w objectData.2.pos_x,X
-;         lda.w entity_posy + 1,Y
-;         sta.w objectData.2.pos_y,X
-;         sec
-;         sbc #10
-;         sta.w objectData.1.pos_y,X
-;         lda.b $02
-;         sta.w objectData.1.flags,X
-;         sta.w objectData.2.flags,X
-;         lda.b $00
-;         sta.w objectData.1.tileid,X
-;         bra +
-;     @headless:
-;         ldx.w objectIndex
-;         lda.b $01
-;         sta.w objectData.1.tileid,X
-;         lda.w entity_posx + 1,Y
-;         sta.w objectData.1.pos_x,X
-;         lda.w entity_posy + 1,Y
-;         sta.w objectData.1.pos_y,X
-;         lda.b $02
-;         sta.w objectData.1.flags,X
-;     +
-    ; add to partition
+    ; set box
     sep #$30
     lda.w entity_box_x1,Y
     clc

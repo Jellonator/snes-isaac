@@ -213,6 +213,7 @@
 .MACRO .CMPS_BEGIN ARGS method, addr
     sec
     .g_instruction sbc, method, addr
+    beq @@@@@\@cmps_equal
     bvs @@@@@\@cmps_invert
     bpl @@@@@\@cmps_greater
 @@@@@\@cmps_lesser:
@@ -225,7 +226,6 @@
     bpl @@@@@\@cmps_lesser
 @@@@@\@cmps_greater:
 .ENDM
-
 
 ; Signed Compare: IF equal to than
 .MACRO .CMPS_EQUAL

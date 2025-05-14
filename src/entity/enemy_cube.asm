@@ -413,7 +413,7 @@ entity_enemy_cube_tick:
     adc #16
     sta.w entity_box_y2,Y
 ; Check collision with player
-    jsr Entity.Enemy.TickContactDamage
+    jsl Entity.Enemy.TickContactDamage
 @no_player_col:
     ; end
     rts

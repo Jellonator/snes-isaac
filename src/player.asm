@@ -2058,10 +2058,6 @@ _player_render_brimstone_homing:
         lda.b TILE_X2+1
         and #$0F
         sta.b INDEX_TO
-        cmp.b INDEX_FROM
-        bcs +
-            sta.b INDEX_FROM
-        +:
         lda.b TILE_Y
         tsb.b INDEX_FROM
         tsb.b INDEX_TO
@@ -2120,32 +2116,32 @@ _player_render_brimstone_homing:
             inx
             jmp @loop_x
         @end_loop_x:
-            ; if INDEX_FROM = INDEX_TO and INDEX is OOB, then exit
-            cpx.b INDEX_FROM
-            bne +
-                lda.l GameTileBoundaryCheck,X
-                bne @end_collision_code
-            +:
-            ; iterate next Y
-            lda.b TILE_Y
-            clc
-            adc.b TILE_Y_CHANGE
-            sta.b TILE_Y
-            tax
-            lda.l GameTileBoundaryCheck+2,X ; if Y is OOB, then exit
+        ; if INDEX_FROM = INDEX_TO and INDEX is OOB, then exit
+        cpx.b INDEX_FROM
+        bne +
+            lda.l GameTileBoundaryCheck,X
             bne @end_collision_code
-            rep #$20
-            ; x1 += slope
-            lda.b TILE_X1
-            clc
-            adc.b SLOPE
-            sta.b TILE_X1
-            ; x2 += slope
-            lda.b TILE_X2
-            clc
-            adc.b SLOPE
-            sta.b TILE_X2
-            jmp @loop_y
+        +:
+        ; iterate next Y
+        lda.b TILE_Y
+        clc
+        adc.b TILE_Y_CHANGE
+        sta.b TILE_Y
+        tax
+        lda.l GameTileBoundaryCheck+2,X ; if Y is OOB, then exit
+        bne @end_collision_code
+        rep #$20
+        ; x1 += slope
+        lda.b TILE_X1
+        clc
+        adc.b SLOPE
+        sta.b TILE_X1
+        ; x2 += slope
+        lda.b TILE_X2
+        clc
+        adc.b SLOPE
+        sta.b TILE_X2
+        jmp @loop_y
 @end_collision_code:
 ; END
     rep #$20
@@ -2155,8 +2151,6 @@ _player_render_brimstone_homing:
     rts
 
 .UNDEFINE SLOPE
-; .UNDEFINE SLOPE_TILE
-; .UNDEFINE SLOPE_HALF_TILE
 .UNDEFINE TILE_X1
 .UNDEFINE TILE_X2
 .UNDEFINE INDEX_FROM
@@ -2937,7 +2931,7 @@ _MakeWaitScrollSub2:
                 lda #8 * 2
                 sta DMA0_SIZE
                 sep #$20
-                lda #$0001
+                lda #$01
                 sta MDMAEN
             .ENDR
             ; next, clear tile data to defaults

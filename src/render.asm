@@ -614,8 +614,18 @@ Render.HDMAEffect.BrimstoneOmnidirectional:
             jmp @sub_neg_x_neg_y
 
 @sub_neg_x_neg_y:
-    rep #$30
+    ; offset X and Y coords, so that they don't overlap the player sprite so much
+    .ACCU 8
+    lda 1+$07,S
+    sec
+    sbc.b NORM_X_MULT+1
+    sta 1+$07,S
+    lda 1+$06,S
+    sec
+    sbc.b NORM_Y_MULT+1
+    sta 1+$06,S
     ; Get base X coord
+    rep #$30
     lda 1+$07,S
     and #$00FF
     xba
@@ -726,8 +736,18 @@ Render.HDMAEffect.BrimstoneOmnidirectional:
     rtl
 
 @sub_pos_x_neg_y:
-    rep #$30
+    ; offset X and Y coords, so that they don't overlap the player sprite so much
+    .ACCU 8
+    lda 1+$07,S
+    clc
+    adc.b NORM_X_MULT+1
+    sta 1+$07,S
+    lda 1+$06,S
+    sec
+    sbc.b NORM_Y_MULT+1
+    sta 1+$06,S
     ; Get base X coord
+    rep #$30
     lda 1+$07,S
     and #$00FF
     xba
@@ -838,8 +858,18 @@ Render.HDMAEffect.BrimstoneOmnidirectional:
     rtl
 
 @sub_neg_x_pos_y:
-    rep #$30
+    ; offset X and Y coords, so that they don't overlap the player sprite so much
+    .ACCU 8
+    lda 1+$07,S
+    sec
+    sbc.b NORM_X_MULT+1
+    sta 1+$07,S
+    lda 1+$06,S
+    clc
+    adc.b NORM_Y_MULT+1
+    sta 1+$06,S
     ; Get base X coord
+    rep #$30
     lda 1+$07,S
     and #$00FF
     xba
@@ -959,8 +989,18 @@ Render.HDMAEffect.BrimstoneOmnidirectional:
     rtl
 
 @sub_pos_x_pos_y:
-    rep #$30
+    ; offset X and Y coords, so that they don't overlap the player sprite so much
+    .ACCU 8
+    lda 1+$07,S
+    clc
+    adc.b NORM_X_MULT+1
+    sta 1+$07,S
+    lda 1+$06,S
+    clc
+    adc.b NORM_Y_MULT+1
+    sta 1+$06,S
     ; Get base X coord
+    rep #$30
     lda 1+$07,S
     and #$00FF
     xba

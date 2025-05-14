@@ -25,8 +25,12 @@ _proc_vqueue_vram:
     sta.l DMA0_SRCH
     lda.w vqueueOps.1.numBytes,Y
     sta.l DMA0_SIZE
-    lda #$0001
-    sta.l MDMAEN
+    ; we can avoid switching to 8b to set MDMAEN here while also avoiding
+    ; accidentally overwriting MDMAEN by writing to VTIMEH. Since IRQ is
+    ; disabled anyways and probably will see no use, we can overwrite it with
+    ; no issue.
+    lda #$0100
+    sta.l MDMAEN-1
     jmp ProcessVQueue@process_vqueue_loop_continue
 
 _proc_vqueue_cgram:
@@ -44,8 +48,8 @@ _proc_vqueue_cgram:
     sta.l DMA0_SRCH
     lda.w vqueueOps.1.numBytes,Y
     sta.l DMA0_SIZE
-    lda #$0001
-    sta.l MDMAEN
+    lda #$0100
+    sta.l MDMAEN-1
     jmp ProcessVQueue@process_vqueue_loop_continue
 
 _proc_vqueue_vram_clear:
@@ -61,8 +65,8 @@ _proc_vqueue_vram_clear:
     sta.l DMA0_SRCH
     lda.w vqueueOps.1.numBytes,Y
     sta.l DMA0_SIZE
-    lda #$0001
-    sta.l MDMAEN
+    lda #$0100
+    sta.l MDMAEN-1
     jmp ProcessVQueue@process_vqueue_loop_continue
 
 _proc_modes:

@@ -306,7 +306,7 @@
 ; Note that the result is an UNSIGNED distance between A and B, up to $FFFF
 .MACRO .ABS_A16_POSTSBC
     bcs @@@@@\.\@
-    eor.b #$FFFF
+    eor.w #$FFFF
     inc A
 @@@@@\.\@:
 .ENDM
@@ -337,7 +337,7 @@
 
 ; Negate 8b register
 .MACRO .NEG_A8
-    eor.w #$FF
+    eor.b #$FF
     inc A
 .ENDM
 
@@ -346,6 +346,12 @@
 
 ; returns log₂x
 .FUNCTION log2(x) log(x) / log(2.0)
+
+; returns inverse square root of X, as Q0.16
+.FUNCTION invsqrt16(x) min(2^16 - 1, floor(2^16 / max(x, 1)))
+
+; Returns inverse square root of X, as Q0.8
+.FUNCTION invsqrt8(x) min(2^8 - 1, floor(2^8 / max(x, 1)))
 
 ; Cheap method of (A % num), in 8b mode
 ; only works if 'num' is a power of 2

@@ -156,80 +156,60 @@ SpriteIndexToExtMaskS_16:
 ; INDEX: angle b/t 0 and 255
 ; OUTPUT: signed sin or cos value with magnitude of 127
 
-SinTableB:
+SinTable8:
     .DBSIN 0.0, 63, (360.0/256.0), 127, 0
-CosTableB:
+CosTable8:
     .DBCOS 0.0, 255, (360.0/256.0), 127, 0
 
-; vector norm
-; INDEX: xxxxyyyy (x,y: signed value b/t -8 and 7)
-VecNormTableB_X:
-    .REPT 8 INDEX ix
-        .REPT 8 INDEX iy
-            .IF (ix == 0) && (iy == 0)
-                .db 0
-            .ELSE
-                .db ((127 * ix) / sqrt((ix * ix) + (iy * iy)))
-            .ENDIF
-        .ENDR
-        .REPT 8 INDEX iy
-            .db ((127 * ix) / sqrt((ix * ix) + ((iy-8) * (iy-8))))
-        .ENDR
-    .ENDR
-    .REPT 8 INDEX ix
-        .REPT 8 INDEX iy
-            .db ((127 * (ix - 8)) / sqrt(((ix - 8) * (ix - 8)) + (iy * iy)))
-        .ENDR
-        .REPT 8 INDEX iy
-            .db ((127 * (ix - 8)) / sqrt(((ix - 8) * (ix - 8)) + ((iy-8) * (iy-8))))
-        .ENDR
-    .ENDR
-VecNormTableB_Y:
-    .REPT 8 INDEX ix
-        .REPT 8 INDEX iy
-            .IF (ix == 0) && (iy == 0)
-                .db 0
-            .ELSE
-                .db ((127 * iy) / sqrt((ix * ix) + (iy * iy)))
-            .ENDIF
-        .ENDR
-        .REPT 8 INDEX iy
-            .db ((127 * (iy - 8)) / sqrt((ix * ix) + ((iy-8) * (iy-8))))
-        .ENDR
-    .ENDR
-    .REPT 8 INDEX ix
-        .REPT 8 INDEX iy
-            .db ((127 * iy) / sqrt(((ix - 8) * (ix - 8)) + (iy * iy)))
-        .ENDR
-        .REPT 8 INDEX iy
-            .db ((127 * (iy - 8)) / sqrt(((ix - 8) * (ix - 8)) + ((iy-8) * (iy-8))))
-        .ENDR
+TanTable16:
+    .REPT 256 INDEX i
+        .dw clamp(tan(i * 3.1415926535 / 128) * 256, -2^15, 2^15-1)
     .ENDR
 
-; vector length
-; INDEX: xxxxyyyy (x,y: signed value b/t -8 and 7)
-; output is between 0 and 12
-VecLenTableB:
-    .REPT 8 INDEX ix
-        .REPT 8 INDEX iy
-            .IF (ix == 0) && (iy == 0)
-                .db 0
-            .ELSE
-                .db sqrt((ix * ix) + (iy * iy))
-            .ENDIF
-        .ENDR
-        .REPT 8 INDEX iy
-            .db sqrt((ix * ix) + ((iy-8) * (iy-8)))
-        .ENDR
+; log₂(x) where x is 8b, rounded down
+; Returns a value between 0 and 7
+Log2Table8:
+    .db 0 ; just treat log(0) as 0, this is fine :)
+    .REPT 255 INDEX i
+        .db floor(log2(i + 1))
     .ENDR
-    .REPT 8 INDEX ix
-        .REPT 8 INDEX iy
-            .db sqrt(((ix - 8) * (ix - 8)) + (iy * iy))
-        .ENDR
-        .REPT 8 INDEX iy
-            .db sqrt(((ix - 8) * (ix - 8)) + ((iy-8) * (iy-8)))
-        .ENDR
+
+; 32log₂(x) where x is 8b, rounded down
+; Returns a value between 0 and 255
+Log2Mult32Table8:
+    .db 0 ; just treat log(0) as 0, this is fine :)
+    .REPT 255 INDEX i
+        .db min(255,floor(32 * log2(i + 1)))
     .ENDR
+
+; Table used for calculating atan using logarithms
+AtanLogTable8:
+    .REPT 256 INDEX i
+        .db 64 - atan(2^((256 - i) / 32)) * 128 / 3.1415926535
+    .ENDR
+
+; Used to adjust result of atan. Used in various areas.
+; See https://codebase64.org/doku.php?id=base:8bit_atan2_8-bit_angle for more information.
+AtanOctantAdjustTable8:
+    .db %00111111		;; x+,y+,|x|>|y|
+    .db %00000000		;; x+,y+,|x|<|y|
+    .db %11000000		;; x+,y-,|x|>|y|
+    .db %11111111		;; x+,y-,|x|<|y|
+    .db %01000000		;; x-,y+,|x|>|y|
+    .db %01111111		;; x-,y+,|x|<|y|
+    .db %10111111		;; x-,y-,|x|>|y|
+    .db %10000000		;; x-,y-,|x|<|y|
+
+Pow2Div32Table8:
+    .REPT 256 INDEX i
+        .db 2^(i / 32)
+    .ENDR
+
+; Flip nibble
+NibbleFlip8:
+.REPT 256 INDEX i
+    .db ((i & $0F) << 4) | ((i & $F0) >> 4)
+.ENDR
 
 ; 256 words for squaring byte values
 SquareTableU16:
@@ -243,12 +223,6 @@ SquareTableS16:
     .ENDR
     .REPT 128 INDEX i
         .dw (128-i) * (128-i)
-    .ENDR
-
-; 512 words for getting the square root of a word value
-SquareRootTable16:
-    .REPT 512 INDEX i
-        .dw sqrt(i)
     .ENDR
 
 GameTileToRoomTileIndexTable:
@@ -456,6 +430,18 @@ Path_Y:
     .db  1 ; PATH_DIR_DOWNLEFT
     .db  1 ; PATH_DIR_DOWNRIGHT
     .db  0 ; PATH_DIR_NONE
+
+Path_Angle:
+    .db $00 ; PATH_DIR_NULL
+    .db $40 ; PATH_DIR_DOWN
+    .db $00 ; PATH_DIR_RIGHT
+    .db $80 ; PATH_DIR_LEFT
+    .db $C0 ; PATH_DIR_UP
+    .db $A0 ; PATH_DIR_UPLEFT
+    .db $E0 ; PATH_DIR_UPRIGHT
+    .db $60 ; PATH_DIR_DOWNLEFT
+    .db $20 ; PATH_DIR_DOWNRIGHT
+    .db $00 ; PATH_DIR_NONE
 
 Path_TileOffset:
     .db $00 ; PATH_DIR_NULL

@@ -28,6 +28,10 @@
     mapDoorEast dl
     mapDoorSouth dl
     mapDoorWest dl
+; temp values; these are placed later, since they are guaranteed not to
+; overwrite mapgenerator values (as they are mostly used for entitites).
+    entityTargetAngle db
+    entityTargetFound db
 .ENDS
 
 ; Bank used for somewhat commonly used variables that need to be in bank 0

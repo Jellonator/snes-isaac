@@ -137,4 +137,49 @@ Sqrt16:
                 rtl
         .UNDEFINE SECTION
     .ENDR
+
+; Get inverse square root of 16b accumulator, as a Q0.16 value
+; This *does* mean that 1/sqrt(1) is not *quite* 1
+InvSqrt16:
+    rep #$30
+; first bisection
+    cmp #128*128
+    bcc @iter2_ls_128
+    jmp @iter2_ge_128
+    .REPT 6 INDEX bisection
+        .DEFINE BASE pow(2, 6-bisection)
+        .REPT pow(2, bisection) INDEX i
+            .DEFINE SECTION (4*BASE*i + 2*BASE)
+            @iter{bisection+2}_ls_{SECTION}:
+                cmp #pow(SECTION - BASE, 2)
+                bccl @iter{bisection+3}_ls_{SECTION - BASE}
+                jmp @iter{bisection+3}_ge_{SECTION - BASE}
+            @iter{bisection+2}_ge_{SECTION}:
+                cmp #pow(SECTION + BASE, 2)
+                bccl @iter{bisection+3}_ls_{SECTION + BASE}
+                jmp @iter{bisection+3}_ge_{SECTION + BASE}
+            .UNDEFINE SECTION
+        .ENDR
+        .UNDEFINE BASE
+    .ENDR
+    .REPT 64 INDEX i
+        .DEFINE SECTION (4*i + 2)
+        @iter8_ls_{SECTION}:
+            cmp #pow(SECTION - 1, 2)
+            bcs +
+                lda #invsqrt16(SECTION - 2)
+                rtl
+            +:
+                lda #invsqrt16(SECTION - 1)
+                rtl
+        @iter8_ge_{SECTION}:
+            cmp #pow(SECTION+  1, 2)
+            bcs +
+                lda #invsqrt16(SECTION)
+                rtl
+            +:
+                lda #invsqrt16(SECTION + 1)
+                rtl
+        .UNDEFINE SECTION
+    .ENDR
 .ENDS

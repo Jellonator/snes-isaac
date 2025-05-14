@@ -222,6 +222,64 @@ entity_free:
     plb
     rtl
 
+; Replace this entity slot with a different type.
+; This is a bit more efficient than calling `entity_free` followed by
+; `entity_create`, with the added benefit that stored values are kept (though
+; they might be replaced by the init function).
+; Do note that this will never change the entity ID. This means that non-character
+; entities may NOT be replaced with character entities, lest you introduce
+; hard-to-diagnose bugs.
+entity_replace:
+    rep #$30
+    phb
+    .ChangeDataBank $7E
+    pha ; store type and variant for later
+; call free function
+    lda.w entity_type,Y
+    and.w #$00FF
+    .MultiplyStatic 2
+    tax
+    phy
+    php
+    jsr (EntityDef_FreeFunc,X)
+    plp
+    ply
+; call init function
+    sep #$20
+    lda #0
+    sta.w entity_mask,Y
+    sta.w entity_signal,Y
+    sta.w loword(entity_damageflash),Y
+    sta.w loword(entity_flags),Y
+    rep #$20 ; 16B A
+    pla
+    sta.w entity_type,Y
+    and #$00FF
+    .MultiplyStatic 2
+    tax
+    phy
+    php
+    jsr (EntityDef_InitFunc, X)
+    plp
+    ply
+; return
+    plb
+    rtl
+
+; Change the type and variant of this entity, without freeing or initializing
+; this entity. ONLY USE THIS IF YOU KNOW WHAT YOU ARE DOING!!!
+; This is mostly only useful for swapping out variants. Though, if you want to
+; do that, you should just `sta.w entity_variant,Y` anyways.
+entity_change_type:
+    sep #$20
+    phb
+    .ChangeDataBank $7E
+    sta.w entity_type,Y
+    xba
+    sta.w entity_variant,Y
+    plb
+    rtl
+
 ; Free all entities
 entity_free_all:
     rep #$30 ; 16B AXY
@@ -279,29 +337,6 @@ entity_tick_all:
 @end:
     plb
     rtl
-
-; COMMON ENTITY FUNCTIONS
-
-Entity.Enemy.TickContactDamage:
-    sep #$20
-    lda.w player_box_x1
-    clc
-    adc #8 ; ACC = player center x
-    cmp.w entity_box_x1,Y
-    bmi @no_player_col
-    cmp.w entity_box_x2,Y
-    bpl @no_player_col
-    lda.w player_box_y1
-    clc
-    adc #8
-    cmp.w entity_box_y1,Y
-    bmi @no_player_col
-    cmp.w entity_box_y2,Y
-    bpl @no_player_col
-    rep #$20
-    dec.w player_damageflag
-@no_player_col:
-    rts
 
 ; ENTITY DEFINITIONS
 
@@ -567,6 +602,101 @@ SpatialPartitionClear:
     pld
     .ClearWRam_ZP spatial_partition, _sizeof_spatial_partition
     pld
+    rtl
+
+; COMMON ENTITY FUNCTIONS
+
+Entity.Enemy.TickContactDamage:
+    sep #$20
+    lda.w player_box_x1
+    clc
+    adc #8 ; ACC = player center x
+    cmp.w entity_box_x1,Y
+    bmi @no_player_col
+    cmp.w entity_box_x2,Y
+    bpl @no_player_col
+    lda.w player_box_y1
+    clc
+    adc #8
+    cmp.w entity_box_y1,Y
+    bmi @no_player_col
+    cmp.w entity_box_y2,Y
+    bpl @no_player_col
+    rep #$20
+    dec.w player_damageflag
+@no_player_col:
+    rtl
+
+; Set target direction based on pathfinding table.
+; This will generally allow this entity to pathfind towards the player.
+Entity.Enemy.PathfindTargetPlayer:
+; first: check pathfind data
+    sep #$30
+    lda.w entity_box_x1,Y
+    clc
+    adc.w entity_box_x2,Y
+    ror
+    .DivideStatic 16
+    sta.b $00
+    lda.w loword(entity_ysort),Y
+    and #$F0
+    ora.b $00
+    tax
+    lda.w pathfind_player_data,X
+    cmp #PATH_DIR_NONE
+    bne @follow_path
+    ; 'PATH_DIR_NONE' indicates that player is on same tile, so move toward player directly
+        jmp Entity.Enemy.DirectTargetPlayer
+@follow_path:
+    tax
+    sta.b entityTargetFound
+    lda.l Path_Angle,X
+    sta.b entityTargetAngle
+    rtl
+
+; Set target direction to face directly towards the player.
+; Credit for method of calculating the angle:
+; https://codebase64.org/doku.php?id=base:8bit_atan2_8-bit_angle
+; A couple of modifications were made for accuracy
+Entity.Enemy.DirectTargetPlayer:
+; get log(dx)
+    sep #$30
+    stz.b $00
+    lda.w entity_box_x1,Y
+    clc
+    adc.w entity_box_x2,Y
+    ror
+    sbc #8
+    sbc.w player_box_x1
+    bcs +
+        eor #$FF
+    +:
+    tax
+    rol.b $00
+; get log(dy)
+    lda.w loword(entity_ysort),Y
+    sbc.w loword(entity_ysort) + ENTITY_INDEX_PLAYER
+    bcs +
+        eor #$FF
+    +:
+    sta.b $01
+    rol.b $00
+; calculate difference in logs
+    lda.l Log2Mult32Table8,X
+    ldx.b $01
+    sbc.l Log2Mult32Table8,X
+    bcc +
+        eor #$FF
+    +:
+    tax
+    rol.b $00
+; calculate atan
+    lda.l AtanLogTable8,X
+    ldx.b $00
+    eor.l AtanOctantAdjustTable8,X
+    sta.b entityTargetAngle
+    lda #1
+    sta.b entityTargetFound
     rtl
 
 ; Get the collision at the given position, if available

@@ -368,42 +368,56 @@ projectile_tick__:
         ldx.b PROJECTILE_TMP_VAL
         lda.w pathfind_nearest_enemy_id,X
         beql @no_homing
-        ; get direction to entity
+; Calculate direction to this enemy
+; Credit for method of calculating the angle:
+; https://codebase64.org/doku.php?id=base:8bit_atan2_8-bit_angle
+; A couple of modifications were made for accuracy
+        ; get log(dx)
         tax
+        stz.b $00
         lda.w entity_box_x1,X
         clc
         adc.w entity_box_x2,X
         ror
         sec
         sbc.b PROJECTILE_TMP_POSX
-        ror
-        eor #$80
-        bmi +
-            adc #15
+        bcs +
+            eor #$FF
         +:
-        and #$F0
-        sta.b $00
-        lda.w entity_box_y1,X
-        clc
-        adc.w entity_box_y2,X
-        ror
-        sec
-        sbc.b PROJECTILE_TMP_POSY
-        ror
-        eor #$80
-        bmi +
-            adc #15
-        +:
-        lsr
-        lsr
-        lsr
-        lsr
-        ora.b $00
         tax
-        ; check distance
-        lda.l VecLenTableB,X
-        cmp #2
+        rol.b $00
+        ror
+        cmp #40
         bcsl @no_homing
+        ; get log(dy)
+        lda.w loword(entity_ysort),X
+        sbc.b PROJECTILE_TMP_POSY
+        bcs +
+            eor #$FF
+        +:
+        pha
+        rol.b $00
+        ror
+        cmp #40
+        bcc +
+            pla
+            jmp @no_homing
+        +:
+        ; calculate difference in logs
+        lda.l Log2Mult32Table8,X
+        plx
+        sbc.l Log2Mult32Table8,X
+        bcc +
+            eor #$FF
+        +:
+        tax
+        rol.b $00
+        ; calculate atan
+        lda.l AtanLogTable8,X
+        ldx.b $00
+        eor.l AtanOctantAdjustTable8,X
+        adc #$80
+        tax
         ; slow velocity
         rep #$30
         lda.w entity_velocx,Y
@@ -421,7 +435,7 @@ projectile_tick__:
         lda #0
         sep #$30
         ; add velocity
-        lda.l VecNormTableB_X,X
+        lda.l CosTable8,X
         .Convert8To16_SIGNED 0, 1
         .ShiftRight_SIGN 3, 1
         clc
@@ -429,7 +443,7 @@ projectile_tick__:
         sta.w entity_velocx,Y
         lda #0
         sep #$30
-        lda.l VecNormTableB_Y,X
+        lda.l SinTable8,X
         .Convert8To16_SIGNED 0, 1
         .ShiftRight_SIGN 3, 1
         clc

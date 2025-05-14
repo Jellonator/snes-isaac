@@ -18,6 +18,22 @@
 _entity_zombie_default_init:
     .ACCU 16
     .INDEX 16
+    ; upload head
+    phy
+    php
+    pea bankbyte(spritedata.enemy_zombie) * $0101
+    pea loword(spritedata.enemy_zombie) + 7 * 128
+    pea loword(spritedata.enemy_zombie) + 7 * 128 + 64
+    lda.w _zombie_gfxptr.1,Y
+    and #$00FF
+    tax
+    jsl spriteman_write_sprite_to_raw_slot
+    rep #$20
+    pla
+    pla
+    pla
+    plp
+    ply
     rtl
 
 _entity_zombie_default_tick:
@@ -128,8 +144,9 @@ _entity_zombie_default_tick:
     sbc #10
     sta.w objectData.1.pos_y,X
     lda.b $02
-    sta.w objectData.1.flags,X
     sta.w objectData.2.flags,X
+    and #%00111111
+    sta.w objectData.1.flags,X
     lda.b $00
     sta.w objectData.1.tileid,X
     ; inc object index
@@ -147,17 +164,93 @@ _entity_zombie_default_free:
 
 ; HEADLESS
 
+.DEFINE _zombie_headless_target_angle loword(entity_char_custom.8)
+.DEFINE _zombie_headless_timer loword(entity_char_custom.8+1)
+
 _entity_zombie_headless_init:
     .ACCU 16
     .INDEX 16
+    lda #0
+    sta.w _zombie_headless_target_angle,Y
     rtl
 
 _entity_zombie_headless_tick:
     .ACCU 16
     .INDEX 16
-; load & set gfx
-    lda #0
+; update angle, if needed
+    sep #$30
+    lda.w _zombie_headless_timer,Y
+    dec A
+    bpl +
+        jsl QuickRand16
+        sep #$30
+        sta.w _zombie_headless_target_angle,Y
+        xba
+        and #$1F
+        clc
+        adc #$10
+    +:
+    sta.w _zombie_headless_timer,Y
+; get movement target
+    ldx.w _zombie_headless_target_angle,Y
+    lda.l SinTable8,X
+    .Convert8To16_SIGNED 0, 0
+    .ShiftRight_SIGN 1, 0
+    sta.b $02
     sep #$20
+    lda.l CosTable8,X
+    .Convert8To16_SIGNED 0, 0
+    .ShiftRight_SIGN 1, 0
+    sta.b $00
+; adjust and apply velocity
+    ; X
+    lda.w entity_velocx,Y
+    .CMPS_BEGIN P_DIR, $00
+        ; velocx < target
+        lda.w entity_velocx,Y
+        inc A
+        .AMIN P_DIR, $00
+        .AMAX P_IMM, -$0040
+    .CMPS_GREATER
+        ; velocx > target
+        lda.w entity_velocx,Y
+        dec A
+        .AMAX P_DIR, $00
+        .AMIN P_IMM, $0040
+    .CMPS_EQUAL
+        lda.b $00
+    .CMPS_END
+    sta.w entity_velocx,Y
+    clc
+    adc.w entity_posx,Y
+    sta.w entity_posx,Y
+    ; Y
+    lda.w entity_velocy,Y
+    .CMPS_BEGIN P_DIR, $02
+        ; velocx < target
+        lda.w entity_velocy,Y
+        inc A
+        .AMIN P_DIR, $02
+        .AMAX P_IMM, -$0040
+    .CMPS_GREATER
+        ; velocx > target
+        lda.w entity_velocy,Y
+        dec A
+        .AMAX P_DIR, $02
+        .AMIN P_IMM, $0040
+    .CMPS_EQUAL
+        lda.b $02
+    .CMPS_END
+    sta.w entity_velocy,Y
+    clc
+    adc.w entity_posy,Y
+    sta.w entity_posy,Y
+; update animation
+    jsr _zombie_update_walk_animation
+; load & set gfx
+    rep #$20
+    lda #0
+    sep #$30
     ; determine palette
     ldx #%00100001
     lda.w loword(entity_damageflash),Y
@@ -166,17 +259,16 @@ _entity_zombie_headless_tick:
         sta.w loword(entity_damageflash),Y
         ldx #%00101111
     +:
-    stx.b $02
+    txa
+    ora.w loword(_zombie_body_flags),Y
+    sta.b $02
     ; get tile IDs
-    ldx.w _zombie_gfxptr.1,Y
-    lda.l SpriteSlotIndexTable,X
-    sta.b $00
     ldx.w _zombie_gfxptr.2,Y
     lda.l SpriteSlotIndexTable,X
     sta.b $01
     ; write data
     ldx.w objectIndex
-    lda.b $00
+    lda.b $01
     sta.w objectData.1.tileid,X
     lda.w entity_posx + 1,Y
     sta.w objectData.1.pos_x,X
@@ -419,24 +511,25 @@ entity_zombie_init:
     and #$00FF
     asl
     tax
-    lda.l EntityZombie.HealthTable
+    lda.l EntityZombie.HealthTable,X
     sta.w entity_health,Y
     lda #0
     sta.w _zombie_walk_timer,Y
-    sep #$20
+    sep #$30
     sta.w _zombie_walk_frame,Y
     sta.w _zombie_body_flags,Y
     lda #$FF
     sta.w _zombie_body_frame,Y
+    ; get raw slots
+    .spriteman_get_raw_slot_lite
+    txa
+    sta.w _zombie_gfxptr.1,Y
+    .spriteman_get_raw_slot_lite
+    txa
+    sta.w _zombie_gfxptr.2,Y
     ; call init function
     rep #$30
     jsl EntityZombie.init
-    ; get raw slots
-    sep #$30
-    .spriteman_get_raw_slot_lite
-    sta.w _zombie_gfxptr.1,Y
-    .spriteman_get_raw_slot_lite
-    sta.w _zombie_gfxptr.2,Y
     rts
 
 entity_zombie_tick:
@@ -511,10 +604,10 @@ entity_zombie_free:
     jsl EntityZombie.free
     ; free sprites
     sep #$30
-    lda.w _zombie_gfxptr.1,Y
-    .spriteman_get_raw_slot_lite
-    lda.w _zombie_gfxptr.2,Y
-    .spriteman_get_raw_slot_lite
+    ldx.w _zombie_gfxptr.1,Y
+    .spriteman_free_raw_slot_lite
+    ldx.w _zombie_gfxptr.2,Y
+    .spriteman_free_raw_slot_lite
     rts
 
 .ENDS

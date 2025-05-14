@@ -13,8 +13,11 @@ entity_basic_fly_init:
     .INDEX 16
     inc.w currentRoomEnemyCount
     ; default info
-    tya
+    tyx
+    sep #$20
+    lda.l RandTable,X
     sta.w entity_timer,Y
+    rep #$20
     lda #BASE_HEALTH
     sta.w entity_health,Y
     ; load sprite
@@ -69,103 +72,45 @@ entity_basic_fly_tick:
         adc.w entity_posx,Y
         sta.w entity_posx,Y
     @no_target:
-
-    ; ; TO PLAYER
-    ; lda.w player_box_x1
-    ; sec
-    ; sbc.w entity_box_x1,Y
-    ; ror
-    ; eor #$80
-    ; bmi +
-    ;     adc #15
-    ; +:
-    ; and #$F0
-    ; sta.b $02
-    ; lda.w player_box_y1
-    ; sec
-    ; sbc.w entity_box_y1,Y
-    ; ror
-    ; eor #$80
-    ; bmi +
-    ;     adc #15
-    ; +:
-    ; lsr
-    ; lsr
-    ; lsr
-    ; lsr
-    ; ora.b $02
-    ; tax
-    ; rep #$20
-    ; lda.l VecNormTableB_X,X
-    ; and #$00FF
-    ; cmp #$80
-    ; php
-    ; lsr
-    ; lsr
-    ; plp
-    ; bcc +
-    ;     ora #$FFC0
-    ; +:
-    ; sta.b $06 ; $02: Norm X
-    ; lda.l VecNormTableB_Y,X
-    ; and #$00FF
-    ; cmp #$80
-    ; php
-    ; lsr
-    ; lsr
-    ; plp
-    ; bcc +
-    ;     ora #$FFC0
-    ; +:
-    ; sta.b $04 ; $04: Norm Y
-    ; sep #$20
-    ; ; RAND X
-    ; stz.b $01
-    ; ldx.w entity_timer,Y
-    ; lda.l CosTable8,X
-    ; php
-    ; lsr
-    ; lsr
-    ; plp
-    ; bpl +
-    ;     dec $01
-    ;     ora #$C0
-    ; +:
-    ; sta.b $00
-    ; rep #$20
-    ; lda.w entity_posx,Y
-    ; ; Apply X
-    ; clc
-    ; adc.b $00
-    ; clc
-    ; adc.b $06
+    ; apply velocity
+    rep #$20
+    lda.w entity_velocx,Y
+    clc
+    adc.w entity_posx,Y
+    sta.w entity_posx,Y
+    lda.w entity_velocy,Y
+    clc
+    adc.w entity_posy,Y
+    sta.w entity_posy,Y
+    ; reduce velocity
+    lda.w entity_velocx,Y
+    .ShiftRight_SIGN 1, 0
+    sta.w entity_velocx,Y
+    lda.w entity_velocy,Y
+    .ShiftRight_SIGN 1, 0
+    sta.w entity_velocy,Y
+    ; randomish movement
+    sep #$30
+    ldx.w entity_timer,Y
+    lda.l SinTable8,X
+    .ShiftRight_SIGN 2, 0
+    .Convert8To16_SIGNED 0, 0
+    clc
+    adc.w entity_posx,Y
+    sta.w entity_posx,Y
+    sep #$20
+    lda.l CosTable8,X
+    .ShiftRight_SIGN 2, 0
+    .Convert8To16_SIGNED 0, 0
+    clc
+    adc.w entity_posy,Y
+    sta.w entity_posy,Y
+    ; set box
     sep #$30 ; 8B AXY
     lda.w entity_box_x1,Y
-    ; xba
     clc
     adc #15
     sta.w entity_box_x2,Y
-    ; ; RAND Y
-    ; stz.b $01
-    ; ldx.w entity_timer,Y
-    ; lda.l SinTable8,X
-    ; php
-    ; lsr
-    ; lsr
-    ; plp
-    ; bpl +
-    ;     dec $01
-    ;     ora #$C0
-    ; +:
-    ; sta.b $00
-    ; rep #$20
-    ; lda.w entity_posy,Y
-    ; ; Apply Y
-    ; clc
-    ; adc.b $00
-    ; clc
-    ; adc.b $04
-    ; sep #$30 ; 8B AXY
     lda.w entity_box_y1,Y
     clc
     adc #8

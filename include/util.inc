@@ -429,16 +429,11 @@
             .REPT num
                 ror
             .ENDR
-            ; ora #((2^(num-1)) - 1) << num
-            ; sec
             jmp @@@@@\.\@end
         @@@@@\.\@pos:
             .REPT num
                 lsr
             .ENDR
-        ; .REPT num
-        ;     ror
-        ; .ENDR
         @@@@@\.\@end:
     .ENDIF
 .ENDM

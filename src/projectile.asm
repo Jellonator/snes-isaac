@@ -372,7 +372,7 @@ projectile_tick__:
 ; Credit for method of calculating the angle:
 ; https://codebase64.org/doku.php?id=base:8bit_atan2_8-bit_angle
 ; A couple of modifications were made for accuracy
-        ; get log(dx)
+        ; get dx
         tax
         stz.b $00
         lda.w entity_box_x1,X
@@ -389,7 +389,7 @@ projectile_tick__:
         ror
         cmp #40
         bcsl @no_homing
-        ; get log(dy)
+        ; get dy
         lda.w loword(entity_ysort),X
         sbc.b PROJECTILE_TMP_POSY
         bcs +
@@ -403,7 +403,7 @@ projectile_tick__:
             pla
             jmp @no_homing
         +:
-        ; calculate difference in logs
+        ; calculate log(x) - log(y)
         lda.l Log2Mult32Table8,X
         plx
         sbc.l Log2Mult32Table8,X

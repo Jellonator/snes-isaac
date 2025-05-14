@@ -659,7 +659,7 @@ Entity.Enemy.PathfindTargetPlayer:
 ; https://codebase64.org/doku.php?id=base:8bit_atan2_8-bit_angle
 ; A couple of modifications were made for accuracy
 Entity.Enemy.DirectTargetPlayer:
-; get log(dx)
+; get dx
     sep #$30
     stz.b $00
     lda.w entity_box_x1,Y
@@ -673,7 +673,7 @@ Entity.Enemy.DirectTargetPlayer:
     +:
     tax
     rol.b $00
-; get log(dy)
+; get dy
     lda.w loword(entity_ysort),Y
     sbc.w loword(entity_ysort) + ENTITY_INDEX_PLAYER
     bcs +
@@ -681,7 +681,7 @@ Entity.Enemy.DirectTargetPlayer:
     +:
     sta.b $01
     rol.b $00
-; calculate difference in logs
+; calculate log(dx) - log(dy)
     lda.l Log2Mult32Table8,X
     ldx.b $01
     sbc.l Log2Mult32Table8,X

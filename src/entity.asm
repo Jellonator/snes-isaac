@@ -14,30 +14,6 @@ _e_null:
 ; * Y will be entity index (16B)
 ; * A,X,Y will be 16B
 
-; Insert entity into spatial partition slot
-; Inputs:
-;   A: The entity ID
-;   X: The spatial slot
-; Clobbers: Y
-InsertHitbox:
-    .REPT SPATIAL_LAYER_COUNT INDEX i
-        ldy.w spatial_partition.{i+1},X
-        bne +
-        sta.w spatial_partition.{i+1},X
-        rts
-        +:
-    .ENDR
-    rts
-
-; Remove entity from spatial partition slot
-; Inputs:
-;   A: The entity ID
-;   X: The spatial slot
-; Clobbers: A
-EraseHitbox:
-    .EraseHitboxLite
-    rts
-
 ; Create and initialize an entity of type+variant A
 ; lower byte is type, upper byte is variant
 ; Returns reference as Y
@@ -699,7 +675,8 @@ Entity.Enemy.DirectTargetPlayer:
     sta.b entityTargetFound
     rtl
 
-; Move this entity according to its velocity, and collide with blocks
+; Move this entity according to its velocity, and collide with blocks.
+; This function operates in two phases: horizontal movement, followed by vertical movement.
 ; $00 - width
 ; $01 - height
 .DEFINE WIDTH $00

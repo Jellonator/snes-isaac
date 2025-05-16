@@ -699,6 +699,231 @@ Entity.Enemy.DirectTargetPlayer:
     sta.b entityTargetFound
     rtl
 
+; Move this entity according to its velocity, and collide with blocks
+; $00 - width
+; $01 - height
+.DEFINE WIDTH $00
+.DEFINE HEIGHT $01
+.DEFINE ENTITYID (tempDP)
+.DEFINE TILES_X (tempDP+$02)
+.DEFINE TILES_Y (tempDP+$04)
+Entity.MoveAndCollide:
+    sep #$30
+    sty.b ENTITYID
+; get number of tiles (height_tiles) to check when moving in X direction
+    lda.w entity_box_y1,Y
+    and #$0F
+    clc
+    adc.b HEIGHT
+    dec A
+    .DivideStatic 16
+    sta.b TILES_Y
+; begin check properly
+    rep #$20
+    lda.w entity_velocx,Y
+    beq @end_horizontal_movement
+    bmi @left_movement
+;right_movement:
+    .ACCU 16
+    ; add x movement
+    clc
+    adc.w entity_posx,Y
+    sta.w entity_posx,Y
+    ; get right tile index
+    sep #$20
+    xba
+    clc
+    adc.b WIDTH
+    .DivideStatic 16
+    ldx.w entity_box_y1,Y
+    ora.l NibbleTop8,X
+    tax
+    lda.l GameTileToRoomTileIndexTable,X
+    tay
+    ; test if any right-bordering tiles are 
+    clc ; none of the loop instructions, except 'adc', should change this
+    @loop_right:
+        lda [currentRoomTileTypeTableAddress],Y
+        bmi @found_tile_right
+        beq @found_tile_right
+        dec.b TILES_Y
+        bmi @end_horizontal_movement
+        tya
+        adc #12
+        tay
+        bra @loop_right
+    @found_tile_right:
+        ldy.b ENTITYID
+        lda.l NibbleFlip8,X
+        and #$F0
+        sec
+        sbc.b WIDTH
+        sta.w entity_box_x1,Y
+        bra @end_horizontal_movement
+@left_movement:
+    .ACCU 16
+    ; add x movement
+    clc
+    adc.w entity_posx,Y
+    sta.w entity_posx,Y
+    ; get left tile index
+    sep #$20
+    xba
+    .DivideStatic 16
+    ldx.w entity_box_y1,Y
+    ora.l NibbleTop8,X
+    tax
+    lda.l GameTileToRoomTileIndexTable,X
+    tay
+    ; test if any right-bordering tiles are 
+    clc ; none of the loop instructions, except 'adc', should change this
+    @loop_left:
+        lda [currentRoomTileTypeTableAddress],Y
+        bmi @found_tile_left
+        beq @found_tile_left
+        dec.b TILES_Y
+        bmi @end_horizontal_movement
+        tya
+        adc #12
+        tay
+        bra @loop_left
+    @found_tile_left:
+        ldy.b ENTITYID
+        lda.l NibbleFlip8,X
+        and #$F0
+        adc #16
+        sta.w entity_box_x1,Y
+        ; bra @end_horizontal_movement
+@end_horizontal_movement:
+    ldy.b ENTITYID
+; get number of tiles (width_tiles) to check when moving in Y direction
+    sep #$30
+    lda.w entity_box_x1,Y
+    and #$0F
+    clc
+    adc.b WIDTH
+    dec A
+    .DivideStatic 16
+    sta.b TILES_X
+; now, perform vertical movement
+    rep #$20
+    lda.w entity_velocy,Y
+    beq @end_vertical_movement
+    bmi @up_movement
+;down_movement:
+    .ACCU 16
+    ; add x movement
+    clc
+    adc.w entity_posy,Y
+    sta.w entity_posy,Y
+    ; get bottom tile index
+    sep #$20
+    xba
+    clc
+    adc.b HEIGHT
+    and #$F0
+    ldx.w entity_box_x1,Y
+    ora.l Div16,X
+    tax
+    lda.l GameTileToRoomTileIndexTable,X
+    tay
+    ; test if any right-bordering tiles are 
+    clc ; none of the loop instructions, except 'adc', should change this
+    @loop_down:
+        lda [currentRoomTileTypeTableAddress],Y
+        bmi @found_tile_down
+        beq @found_tile_down
+        dec.b TILES_X
+        bmi @end_vertical_movement
+        iny
+        bra @loop_down
+    @found_tile_down:
+        ldy.b ENTITYID
+        txa
+        and #$F0
+        sec
+        sbc.b HEIGHT
+        sta.w entity_box_y1,Y
+        bra @end_vertical_movement
+@up_movement:
+    .ACCU 16
+    ; add x movement
+    clc
+    adc.w entity_posy,Y
+    sta.w entity_posy,Y
+    ; get top tile index
+    sep #$20
+    xba
+    and #$F0
+    ldx.w entity_box_x1,Y
+    ora.l Div16,X
+    tax
+    lda.l GameTileToRoomTileIndexTable,X
+    tay
+    ; test if any right-bordering tiles are 
+    clc ; none of the loop instructions, except 'adc', should change this
+    @loop_up:
+        lda [currentRoomTileTypeTableAddress],Y
+        bmi @found_tile_up
+        beq @found_tile_up
+        dec.b TILES_X
+        bmi @end_vertical_movement
+        iny
+        bra @loop_up
+    @found_tile_up:
+        ldy.b ENTITYID
+        txa
+        and #$F0
+        adc #16
+        sta.w entity_box_y1,Y
+        ; bra @end_vertical_movement
+@end_vertical_movement:
+    ldy.b ENTITYID
+    rtl
+.UNDEFINE WIDTH
+.UNDEFINE HEIGHT
+.UNDEFINE ENTITYID
+.UNDEFINE TILES_X
+.UNDEFINE TILES_Y
+
+; $00 - width
+; $01 - height
+Entity.KeepInBounds:
+    sep #$30
+    lda.w entity_posx,Y
+    cmp #ROOM_LEFT
+    bcs @skip_left
+        lda #ROOM_LEFT
+        sta.w entity_posx,Y
+        jmp @skip_right
+    @skip_left:
+    clc
+    adc.b $00
+    cmp #ROOM_RIGHT
+    bcc @skip_right
+        lda #ROOM_RIGHT
+        sec
+        sbc.b $00
+        sta.w entity_posx,Y
+    @skip_right:
+    lda.w entity_posy,Y
+    cmp #ROOM_TOP
+    bcs @skip_top
+        lda #ROOM_TOP
+        sta.w entity_posy,Y
+        jmp @skip_bottom
+    @skip_top:
+    clc
+    adc.b $01
+    cmp #ROOM_BOTTOM
+    bcc @skip_bottom
+        lda #ROOM_BOTTOM
+        sec
+        sbc.b $01
+        sta.w entity_posy,Y
+    @skip_bottom:
+    rtl
+
 ; Get the collision at the given position, if available
 ; $00: Mask
 ; $01: X

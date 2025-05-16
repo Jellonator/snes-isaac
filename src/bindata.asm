@@ -211,6 +211,18 @@ NibbleFlip8:
     .db ((i & $0F) << 4) | ((i & $F0) >> 4)
 .ENDR
 
+; Top nibble
+NibbleTop8:
+    .REPT 256 INDEX i
+        .db (i & $F0)
+    .ENDR
+
+; Bottom nibble
+NibbleBottom8:
+    .REPT 256 INDEX i
+        .db (i & $0F)
+    .ENDR
+
 ; 256 words for squaring byte values
 SquareTableU16:
     .REPT 256 INDEX i

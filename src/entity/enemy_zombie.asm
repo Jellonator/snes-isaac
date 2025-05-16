@@ -221,9 +221,6 @@ _entity_zombie_headless_tick:
         lda.b $00
     .CMPS_END
     sta.w entity_velocx,Y
-    clc
-    adc.w entity_posx,Y
-    sta.w entity_posx,Y
     ; Y
     lda.w entity_velocy,Y
     .CMPS_BEGIN P_DIR, $02
@@ -242,9 +239,27 @@ _entity_zombie_headless_tick:
         lda.b $02
     .CMPS_END
     sta.w entity_velocy,Y
+; move and collide
+    sep #$20
     clc
-    adc.w entity_posy,Y
-    sta.w entity_posy,Y
+    lda.w entity_box_x1,Y
+    adc #4
+    sta.w entity_box_x1,Y
+    lda.w entity_box_y1,Y
+    adc #4
+    sta.w entity_box_y1,Y
+    rep #$20
+    lda #8 + 8*$0100
+    sta.b $00
+    jsl Entity.MoveAndCollide
+    sep #$20
+    sec
+    lda.w entity_box_x1,Y
+    sbc #4
+    sta.w entity_box_x1,Y
+    lda.w entity_box_y1,Y
+    sbc #4
+    sta.w entity_box_y1,Y
 ; update animation
     jsr _zombie_update_walk_animation
 ; load & set gfx

@@ -994,7 +994,7 @@ TransitionRoomIndex:
         sta.w DMA0_CTL
         lda #1
         sta.w MDMAEN
-        ; EMPTY -> VRAM BG2 tiles (2KB)
+        ; BACKGROUND -> VRAM BG2 tiles (2KB)
         rep #$20
         lda #BG2_TILE_BASE_ADDR
         sta.w VMADDR
@@ -1011,7 +1011,41 @@ TransitionRoomIndex:
         sta.w DMA0_CTL
         lda #1
         sta.w MDMAEN
+        ; TRANSPARENT -> VRAM BG2 tiles current page (512B)
+        rep #$20
+        lda.w gameRoomBG2Offset
+        sta.b TEMP
+        lda #loword(TransparentBackgroundTile)
+        sta.w DMA0_SRCL
+        sep #$20
+        lda #bankbyte(TransparentBackgroundTile)
+        sta.w DMA0_SRCH
+        lda #$80
+        sta.w VMAIN
+        lda #%00001001
+        sta.w DMA0_CTL
+        .REPT 12 INDEX i
+            rep #$20
+            lda.b TEMP
+            sta.w VMADDR
+            lda #32
+            sta.w DMA0_SIZE
+            sep #$20
+            lda #1
+            sta.w MDMAEN
+            rep #$20
+            lda.b TEMP
+            clc
+            adc #32
+            cmp #BG2_TILE_BASE_ADDR + $0400
+            bcc +
+                sec
+                sbc #$0400
+            +:
+            sta.b TEMP
+        .ENDR
     ; update render flags
+        sep #$20
         ; enable BG1
         lda #%00010111
         sta SCRNDESTM
@@ -1124,7 +1158,7 @@ TransitionRoomIndex:
         PLA
         PLA
     .EnableRENDER
-    ; call some update functions for various UI components
+; call some update functions for various UI components
     jsl UI.update_money_display
     jsl UI.update_bomb_display
     jsl UI.update_key_display

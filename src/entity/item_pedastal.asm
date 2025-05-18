@@ -145,8 +145,8 @@ true_item_pedastal_init:
     .INDEX 16
     lda #0
     sta.w _has_put_text,Y
-    lda.b entitySpawnContext
-    cmp #ENTITY_SPAWN_CONTEXT_DESERIALIZE
+    lda.b entityExecutionContext
+    cmp #ENTITY_CONTEXT_INIT_DESERIALIZE
     beq @skip_get_pool
         ; get item from pool if not deserializing
         phy
@@ -361,6 +361,9 @@ true_item_pedastal_tick_base:
     rep #$30
     ldy.b $10
     sep #$20
+    lda.b entityExecutionContext
+    cmp #ENTITY_CONTEXT_STANDARD
+    bnel @skip_set_text
     lda.w _item_price,Y
     beql @skip_set_text
     lda.w _has_put_text,Y
@@ -671,6 +674,9 @@ true_item_pedastal_free:
 
 _check_and_erase_text:
     sep #$30
+    lda.b entityExecutionContext
+    cmp #ENTITY_CONTEXT_STANDARD
+    bne @no_erase_price_text
     lda.w _has_put_text,Y
     beq @no_erase_price_text
         lda #0

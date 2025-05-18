@@ -299,7 +299,7 @@ _Game.Loop:
     stz.w didPlayerJustEnterRoom
     lda.w isGamePaused
     bne @skip_paused
-        rep #$20
+        rep #$30
         inc.w tickCounter
         ; clear data
         jsl ClearSpriteTable

@@ -568,8 +568,8 @@ EntityInfoInitialize:
     lda #ENTITY_INDEX_PLAYER
     sta.w entityExecutionOrder
     ; clear entity spawn context
-    lda #ENTITY_SPAWN_CONTEXT_STANDARD
-    sta.b entitySpawnContext
+    lda #ENTITY_CONTEXT_STANDARD
+    sta.b entityExecutionContext
     rtl
 
 SpatialPartitionClear:

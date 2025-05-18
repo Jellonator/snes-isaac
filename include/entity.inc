@@ -36,9 +36,16 @@
 .DEFINE ENTITY_STORE_COUNT 24
 
 ; Spawn contexts
-.DEFINE ENTITY_SPAWN_CONTEXT_STANDARD 0    ; standard - e.g., entity is being created by another entity
-.DEFINE ENTITY_SPAWN_CONTEXT_ROOMSPAWN 1   ; entity is spawned by room
-.DEFINE ENTITY_SPAWN_CONTEXT_DESERIALIZE 2 ; entity is deserialized from stored data
+; standard, used in most contexts.
+.DEFINE ENTITY_CONTEXT_STANDARD 0
+; used during 'init' when entity is created by loading room definition
+.DEFINE ENTITY_CONTEXT_INIT_ROOMLOAD 1
+; used during 'init' when entity is deserialized
+.DEFINE ENTITY_CONTEXT_INIT_DESERIALIZE 2
+; used during 'tick' or 'free' while room is transitioning. We perform one single
+; tick during the transition so that we can update the sprite table.
+; This indicates that we can not make changes to to BG1.
+.DEFINE ENTITY_CONTEXT_TRANSITION 3
 
 ; ENTITY TYPES
 .DEFINE ENTITY_TYPE_PLAYER 1

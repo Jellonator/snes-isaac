@@ -1073,7 +1073,13 @@ TransitionRoomIndex:
     eor.l gameRoomBG2Offset
     sta.l gameRoomBG2Offset
 ; load new room
+    sep #$20
+    lda #ENTITY_CONTEXT_TRANSITION
+    sta.b entityExecutionContext
     jsl Room_Unload
+    sep #$20
+    lda #ENTITY_CONTEXT_STANDARD
+    sta.b entityExecutionContext
     sep #$30
     lda $05,S
     sta.b loadedRoomIndex
@@ -1085,6 +1091,18 @@ TransitionRoomIndex:
     pla
     rep #$30
     ; TODO: probably in LoadRoomSlotIntoLevel, load new tileset (if available)
+; init room, and run one single tick
+    jsl InitLoadedRoomslot
+    rep #$30
+    jsl ClearSpriteTable
+    jsl entity_clear_hitboxes
+    sep #$20
+    lda #ENTITY_CONTEXT_TRANSITION
+    sta.b entityExecutionContext
+    jsl entity_tick_all
+    sep #$20
+    lda #ENTITY_CONTEXT_STANDARD
+    sta.b entityExecutionContext
 ; scroll into new room
     rep #$30
     lda $04,S
@@ -1096,8 +1114,6 @@ TransitionRoomIndex:
     lda.l _transition_vertical_table,X
     sta.b VERTICAL_OFFSET
     jsr _transition_loop
-; init room
-    jsl InitLoadedRoomslot
 ; disable UI and re-upload UI character data
     wai
     .DisableRENDER

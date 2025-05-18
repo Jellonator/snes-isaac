@@ -9,8 +9,8 @@
 _room_spawn_entities:
 ; spawn entities
     rep #$30 ; 16B AXY
-    lda #ENTITY_SPAWN_CONTEXT_ROOMSPAWN
-    sta.b entitySpawnContext
+    lda #ENTITY_CONTEXT_INIT_ROOMLOAD
+    sta.b entityExecutionContext
     lda.b currentRoomDefinition
     tax
     lda.l ROOM_DEFINITION_BASE + roomdefinition_t.numObjects,X
@@ -70,8 +70,8 @@ _room_spawn_entities:
     bra @loop
 @end:
 ; deserialize entities
-    lda #ENTITY_SPAWN_CONTEXT_DESERIALIZE
-    sta.b entitySpawnContext
+    lda #ENTITY_CONTEXT_INIT_DESERIALIZE
+    sta.b entityExecutionContext
     stz.b $30
     @loop_deserialize:
         lda.b $30
@@ -109,8 +109,8 @@ _room_spawn_entities:
         inc.b $30
         jmp @loop_deserialize
 @end_deserialize:
-    lda #ENTITY_SPAWN_CONTEXT_STANDARD
-    sta.b entitySpawnContext
+    lda #ENTITY_CONTEXT_STANDARD
+    sta.b entityExecutionContext
     rts
 
 Room_Init:

@@ -364,6 +364,9 @@ true_entity_pickup_tick:
     @skip_pickup:
     ; maybe put text
     sep #$30
+    lda.b entityExecutionContext
+    cmp #ENTITY_CONTEXT_STANDARD
+    bne @no_put_price_text
     lda.w pickup_price,Y
     beq @no_put_price_text
     lda.w has_put_text,Y
@@ -491,8 +494,8 @@ true_entity_pickup_init_spawn:
     lda #30
     sta.w pickup_prevention_timer,Y
     lda #SPAWN_ANIM_FRAMES-1
-    ldx.b entitySpawnContext
-    cpx #ENTITY_SPAWN_CONTEXT_STANDARD
+    ldx.b entityExecutionContext
+    cpx #ENTITY_CONTEXT_STANDARD
     bne +
         lda #0
     +:
@@ -502,8 +505,8 @@ true_entity_pickup_init_spawn:
 true_entity_pickup_init:
     .ACCU 16
     .INDEX 16
-    lda.b entitySpawnContext
-    cmp #ENTITY_SPAWN_CONTEXT_DESERIALIZE
+    lda.b entityExecutionContext
+    cmp #ENTITY_CONTEXT_INIT_DESERIALIZE
     beq @deserialized
         jsl true_entity_pickup_init_spawn
 @deserialized:
@@ -514,8 +517,8 @@ true_entity_pickup_init:
     lda #30
     sta.w pickup_prevention_timer,Y
     lda #SPAWN_ANIM_FRAMES-1
-    ldx.b entitySpawnContext
-    cpx #ENTITY_SPAWN_CONTEXT_STANDARD
+    ldx.b entityExecutionContext
+    cpx #ENTITY_CONTEXT_STANDARD
     bne +
         lda #0
     +:
@@ -527,6 +530,9 @@ true_entity_pickup_free:
     .INDEX 16
     ; maybe erase text
     sep #$30
+    lda.b entityExecutionContext
+    cmp #ENTITY_CONTEXT_STANDARD
+    bne @no_erase_price_text
     lda.w has_put_text,Y
     beq @no_erase_price_text
         ; get address

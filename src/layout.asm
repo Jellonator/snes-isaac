@@ -47,6 +47,7 @@
     tickCounter dw
     currentSaveSlot dw
     loadFromSaveState db
+    didPlayerJustEnterRoom db
 ; pause menu
     isGamePaused db
     shouldGamePause db
@@ -218,15 +219,11 @@
 ; Perhaps will be used for decompressed animated sprites?
 .RAMSECTION "7F" BANK $7F SLOT "FullMemory" ORGA $0000 FORCE
 ; VQueue data
+    vqueueBinData ds $4000
     vqueueOps INSTANCEOF vqueueop_t VQUEUE_MAX_SIZE
     vqueueMiniOps INSTANCEOF vqueueminiop_t 255
     vqueueRegOps_Addr dsw 64
     vqueueRegOps_Value dsw 64
-    ; at least 4K of potential DMA data. We can only transfer ~5K per frame ($1400),
-    ; so if we somehow overreach this, we've messed something up bad.
-    ; Grabbing vqueue buffer space should be rare anyways.
-    ; $2000 - $087C = $1784
-    vqueueBinData INSTANCEOF byte_t 1 ($4000 - (255 * _sizeof_vqueueminiop_t) - (VQUEUE_MAX_SIZE * _sizeof_vqueueop_t))
 ; Player sprite buffer
     ; 64 sprites × 4 tiles/sprite × 32 bytes/tile = $2000 bytes
     playerSpriteBuffer ds 64 * 4 * 32
@@ -246,10 +243,11 @@
     groundOpList_line ds MAX_GROUND_OPS
     groundOpList_startPx ds MAX_GROUND_OPS
     groundOpList_endPx ds MAX_GROUND_OPS
+    ; temporary tile data buffer
+    tempTileData ds $0800
 .ENDS
 
-.DEFINE vqueueBinData_End $4000
-.EXPORT vqueueBinData_End
+.DEFINE vqueueBinData_End (vqueueBinData + _sizeof_vqueueBinData) EXPORT
 
 ; SRAM LAYOUT
 

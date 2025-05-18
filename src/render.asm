@@ -1137,22 +1137,23 @@ ClearSpriteTable:
 
 UploadSpriteTable:
     rep #$20 ; 16 bit A
-    stz OAMADDR
+    lda #0
+    sta.l OAMADDR
     lda #512+32
-    sta DMA0_SIZE
+    sta.l DMA0_SIZE
     lda.w #objectData
-    sta DMA0_SRCL
+    sta.l DMA0_SRCL
     sep #$20 ; 8 bit A
     lda #0
-    sta DMA0_SRCH
+    sta.l DMA0_SRCH
     ; Absolute address, auto increment, 1 byte at a time
     lda #%00000000
-    sta DMA0_CTL
+    sta.l DMA0_CTL
     ; Write to OAM
     lda #$04
-    sta DMA0_DEST
+    sta.l DMA0_DEST
     lda #$01
-    sta MDMAEN
+    sta.l MDMAEN
     rtl
 
 ; Copy palette to CGRAM

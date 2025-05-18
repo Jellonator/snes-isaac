@@ -18,7 +18,7 @@ _Floor_Begin:
     sta.l devil_deal_flags
     ; load room slot 0
     pha
-    jsl LoadRoomSlotIntoLevel
+    jsl LoadAndInitRoomSlotIntoLevel
     sep #$30 ; 8 bit AXY
     pla
     ; init player
@@ -232,13 +232,14 @@ _Floor_Update_Graphics:
 .ENDST
 
 ChapterDefinitions:
+    .dw ChapterDefinition_Basement ; null chapter
     .dw ChapterDefinition_Basement
     .dw ChapterDefinition_Caves
 
 ; Basement I
 .DSTRUCT FloorDefinition_Basement1 INSTANCEOF floordefinition_t VALUES
     name: .ASCSTR "The Basement \x80\0"
-    chapter: .db 0
+    chapter: .db CHAPTER_BASEMENT
     size: .db 9
     roomgen: .dw ROOMGEN_DEFAULT
 .ENDST
@@ -246,7 +247,7 @@ ChapterDefinitions:
 ; Basement II
 .DSTRUCT FloorDefinition_Basement2 INSTANCEOF floordefinition_t VALUES
     name: .ASCSTR "The Basement \x80\x80\0"
-    chapter: .db 0
+    chapter: .db CHAPTER_BASEMENT
     size: .db 10
     roomgen: .dw ROOMGEN_DEFAULT
 .ENDST
@@ -254,7 +255,7 @@ ChapterDefinitions:
 ; Caves I
 .DSTRUCT FloorDefinition_Caves1 INSTANCEOF floordefinition_t VALUES
     name: .ASCSTR "The Caves \x80\0"
-    chapter: .db 1
+    chapter: .db CHAPTER_CAVES
     size: .db 11
     roomgen: .dw ROOMGEN_DEFAULT
 .ENDST
@@ -262,7 +263,7 @@ ChapterDefinitions:
 ; Caves II
 .DSTRUCT FloorDefinition_Caves2 INSTANCEOF floordefinition_t VALUES
     name: .ASCSTR "The Caves \x80\x80\0"
-    chapter: .db 1
+    chapter: .db CHAPTER_CAVES
     size: .db 12
     roomgen: .dw ROOMGEN_DEFAULT
 .ENDST

@@ -13,7 +13,7 @@ _room_spawn_entities:
     sta.b entitySpawnContext
     lda.b currentRoomDefinition
     tax
-    lda.l $C20000 + roomdefinition_t.numObjects,X
+    lda.l ROOM_DEFINITION_BASE + roomdefinition_t.numObjects,X
     and #$00FF
     tay ; Y = num entities
     beq @end
@@ -25,7 +25,7 @@ _room_spawn_entities:
     ; Get and create entity
     phy ; >2
     phx ; >2
-    lda $C20000 + objectdef_t.objectType,X
+    lda ROOM_DEFINITION_BASE + objectdef_t.objectType,X
     and #$00FF
     ; .MultiplyStatic 2
     tax
@@ -35,7 +35,7 @@ _room_spawn_entities:
     rep #$20
     bcc @no_spawn
         plx ; <2
-        lda.l $C20000 + objectdef_t.objectType,X
+        lda.l ROOM_DEFINITION_BASE + objectdef_t.objectType,X
         phx ; >2
         jsl entity_create
         rep #$30
@@ -46,11 +46,11 @@ _room_spawn_entities:
         sta.w entity_posy,Y
         ; set X,Y
         sep #$20 ; 8B A
-        lda $C20000 + objectdef_t.x,X ; X coord
+        lda ROOM_DEFINITION_BASE + objectdef_t.x,X ; X coord
         clc
         adc #ROOM_LEFT
         sta.w entity_posx+1,Y
-        lda $C20000 + objectdef_t.y,X ; Y coord
+        lda ROOM_DEFINITION_BASE + objectdef_t.y,X ; Y coord
         clc
         adc #ROOM_TOP
         sta.w entity_posy+1,Y

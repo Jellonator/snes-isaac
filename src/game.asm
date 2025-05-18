@@ -121,7 +121,7 @@ Game.Begin:
     rep #$30 ; 16 bit X, Y, Z
     lda #BG2_TILE_BASE_ADDR
     sta VMADDR
-    lda #deft($00, 2)
+    lda #deft($08, 2)
     ldx #$0000
 tile_map_loop:
     sta VMDATA
@@ -136,8 +136,6 @@ tile_map_loop:
     ldx #$0000 ; rom tile data index
     ldy #$0000 ; vram tile data index
 tile_data_loop:
-    ; lda TileData.w,x
-    ; sta $2118
     tya
     and #%0000000000111111
     cmp #32.w
@@ -147,7 +145,7 @@ tile_data_loop:
     inx
     jmp @store
 @copyzero:
-    lda #$0020
+    lda #deft($08, 2)
 @store:
     sta VMDATA
     iny
@@ -254,7 +252,7 @@ tile_data_loop:
         tax
         lda.l roomSlotMapPos,X
         sta.b loadedRoomIndex
-        jsl LoadRoomSlotIntoLevel
+        jsl LoadAndInitRoomSlotIntoLevel
         sep #$20
         pla
         jsl Floor_Init_PostLoad
@@ -276,6 +274,7 @@ tile_data_loop:
     sta.l boss_contributor_count
     lda #$FF
     sta.l numTilesToUpdate
+    stz.w didPlayerJustEnterRoom
     ; Clear HDMA table
     jsl Render.ClearHDMA
     ; re-enable rendering
@@ -297,6 +296,7 @@ _Game.Loop:
     rep #$30 ; 16 bit AXY
     inc.w isGameUpdateRunning
     sep #$20
+    stz.w didPlayerJustEnterRoom
     lda.w isGamePaused
     bne @skip_paused
         rep #$20
@@ -338,6 +338,9 @@ _Game.Loop:
         jsr _UpdateUsables
         ; Finally, check if room should be changed
         jsr PlayerCheckEnterRoom
+        sep #$20
+        lda.w didPlayerJustEnterRoom
+        bne _Game.Loop
         ; Maybe Pause
         sep #$30
         lda.w joy1press+1

@@ -90,9 +90,12 @@
     doorMask db
     roomSize db
     numObjects db
+    chapterOverride db ; overrides chapter for display
     tileData INSTANCEOF byte_t ROOM_TILE_COUNT
     ; objectDefinitions INSTANCEOF objectdef_t *
 .ENDST
+
+.DEFINE ROOM_DEFINITION_BASE $C20000
 
 ; ROOMGEN POOL DEFINITION
 ; list of rooms to pick from

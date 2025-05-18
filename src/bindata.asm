@@ -7,6 +7,8 @@
 .SECTION "ExtraData" BANK ROMBANK_BASE SLOT "ROM" ORGA $8000 SEMIFREE
 EmptyData:
     .dw $0000
+EmptyBackgroundTile:
+    .dw deft($08, 2)
 EmptySpriteData:
     .REPT 128
         .db $00 $F0 $00 $00

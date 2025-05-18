@@ -338,6 +338,18 @@ LoadRoomSlotIntoLevel:
     jsl UpdateDoorTileEast
     jsl UpdateDoorTileWest
     plp
+    rtl
+
+; Push order:
+;   room slot index         [db] $04
+LoadAndInitRoomSlotIntoLevel:
+    sep #$20
+    lda $04,S
+    pha
+    jsl LoadRoomSlotIntoLevel
+    sep #$20
+    pla
+InitLoadedRoomslot:
     ; initialize and update certain variables
     jsl Room_Init
     jsl Game.UpdateAllPathfinding
@@ -750,4 +762,388 @@ DoorTileTopperTable_LEFT:
         .dw deft($22, 2), deft($22, 2) ; wall
     .ENDR
 
+; TRANSITION ZONE ;
+
+.DEFINE HORIZONTAL_OFFSET $20
+.DEFINE VERTICAL_OFFSET $22
+.DEFINE FRAMES $24
+.DEFINE TEMP $26
+_transition_loop:
+    .ACCU 16
+    .INDEX 16
+    lda #32
+    sta.b FRAMES
+@loop:
+; wait for NMI
+    wai
+; upload current data
+    .DisableRENDER
+    jsl Render.HDMAEffect.Clear
+    jsl ProcessVQueue
+    jsl UploadSpriteTable
+    ; update scroll
+    rep #$20
+    lda.w gameRoomScrollX
+    clc
+    adc.b HORIZONTAL_OFFSET
+    and #$01FF
+    sta.w gameRoomScrollX
+    lda.w gameRoomScrollY
+    clc
+    adc.b VERTICAL_OFFSET
+    and #$01FF
+    sta.w gameRoomScrollY
+    ; update BG2 scroll
+    sep #$20
+    lda.w gameRoomScrollX
+    sta.w BG2HOFS
+    lda.w gameRoomScrollX+1
+    sta.w BG2HOFS
+    lda.w gameRoomScrollY
+    sta.w BG2VOFS
+    lda.w gameRoomScrollY+1
+    sta.w BG2VOFS
+    ; update BG1 scroll
+    lda.w gameRoomScrollX
+    sta.w BG1HOFS
+    lda.w gameRoomScrollX+1
+    sta.w BG1HOFS
+    lda.w gameRoomScrollY
+    sta.w BG1VOFS
+    lda.w gameRoomScrollY+1
+    sta.w BG1VOFS
+    ; update BG3 scroll
+    lda.w gameRoomScrollX
+    sta.w BG3HOFS
+    lda.w gameRoomScrollX+1
+    sta.w BG3HOFS
+    rep #$20
+    lda.w gameRoomScrollY
+    clc
+    adc #32
+    sep #$20
+    sta.w BG3VOFS
+    xba
+    sta.w BG3VOFS
+    .EnableRENDER
+; update sprite locations
+; maybe end loop
+    dec.b FRAMES
+    bnel @loop
+    rts
+
+_transition_horizontal_table:
+    .dw 8, 0, -8, 0
+_transition_vertical_table:
+    .dw 0, 8, 0, -8
+
+_transition_bg2eor_table:
+    .dw BG2_TILE_ADDR_OFFS_X, BG2_TILE_ADDR_OFFS_Y, BG2_TILE_ADDR_OFFS_X, BG2_TILE_ADDR_OFFS_Y
+
+; Perform a room transition.
+; BeginRoomTransition([s8]uint room_id, [s8]uint direction)
+; room_id   $05,S
+; direction $04,S
+TransitionRoomIndex:
+    wai
+; disable BG1 (temporarily), and copy character data of current room to BG1
+    .DisableRENDER
+        jsl Render.HDMAEffect.Clear
+        jsl ProcessVQueue
+        ; copy character data page 1 (8K)
+        rep #$30
+        ldx.w currentRoomDefinition
+        lda.l ROOM_DEFINITION_BASE + roomdefinition_t.chapterOverride,X
+        and #$00FF
+        bne +
+            ldx.w currentFloorPointer
+            lda.l FLOOR_DEFINITION_BASE + floordefinition_t.chapter,X
+            and #$00FF
+        +:
+        asl
+        tax
+        lda.l ChapterDefinitions,X
+        tax
+        stx.b TEMP
+        lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.tiledata,X
+        sta.w DMA0_SRCL
+        lda #$2000
+        sta.w DMA0_SIZE
+        lda #BG1_CHARACTER_BASE_ADDR
+        sta.w VMADDR
+        sep #$20
+        lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.tiledata + 2,X
+        sta.w DMA0_SRCH
+        lda #$18
+        sta.w DMA0_DEST
+        lda #%00000001
+        sta.w DMA0_CTL
+        lda #$80
+        sta.w VMAIN
+        lda #1
+        sta.w MDMAEN
+        ; disable BG1
+        lda #%00010110
+        sta SCRNDESTM
+        ; disable second screen for BG1
+        lda #(BG1_TILE_BASE_ADDR >> 8) | %00
+        sta.w BG1SC
+    .EnableRENDER
+    wai
+    .DisableRENDER
+        ; copy character data page 2 (8K)
+        rep #$30
+        ldx.b TEMP
+        lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.tiledata,X
+        clc
+        adc #$2000
+        sta.w DMA0_SRCL
+        lda #$2000
+        sta.w DMA0_SIZE
+        lda #BG1_CHARACTER_BASE_ADDR + $1000
+        sta.w VMADDR
+        sep #$20
+        lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.tiledata + 2,X
+        sta.w DMA0_SRCH
+        lda #$18
+        sta.w DMA0_DEST
+        lda #%00000001
+        sta.w DMA0_CTL
+        lda #$80
+        sta.w VMAIN
+        lda #1
+        sta.w MDMAEN
+    .EnableRENDER
+    wai
+; copy BG2 tile data into RAM
+    .DisableRENDER
+        ; copy all four palettes (128B)
+        .REPT 4 INDEX i
+            rep #$30
+            ldx.b TEMP
+            pea 32
+            lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.palettes + (i*3) + 2,X
+            and #$00FF
+            ora #$1000 * i + $4000
+            pha
+            lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.palettes + (i*3),X
+            pha
+            jsl CopyPalette
+            rep #$30
+            pla
+            pla
+            pla
+        .ENDR
+        ; VRAM BG2 TILES -> RAM TILES (2KB)
+        rep #$20
+        lda #loword(tempTileData)
+        sta.w DMA0_SRCL
+        lda #$0800
+        sta.w DMA0_SIZE
+        lda #BG2_TILE_BASE_ADDR
+        sta.w VMADDR
+        lda.w VMDATAREAD
+        sep #$20
+        lda #bankbyte(tempTileData)
+        sta.w DMA0_SRCH
+        lda #$39
+        sta.w DMA0_DEST
+        lda #%10000001
+        sta.w DMA0_CTL
+        lda #$80
+        sta.w VMAIN
+        lda #1
+        sta.w MDMAEN
+    .EnableRENDER
+; during CPU, swap palettes for BG2
+    rep #$30
+    ldx #$0000
+    ldy #$0400
+    @loop_set_palette:
+        lda.l tempTileData,X
+        cmp #deft($08, 2)
+        bne +
+            lda #deft($20, 2)
+        +:
+        ora #$1000
+        sta.l tempTileData,X
+
+        inx
+        inx
+        dey
+        bne @loop_set_palette
+    wai
+; copy RAM tile data to BG1, clear BG2, and re-enable BG1 with new flags
+    .DisableRENDER
+        ; RAM TILES -> VRAM BG1 TILES (2KB)
+        rep #$20
+        lda #BG1_TILE_BASE_ADDR
+        sta.w VMADDR
+        lda #$0800
+        sta.w DMA0_SIZE
+        lda #loword(tempTileData)
+        sta.w DMA0_SRCL
+        sep #$20
+        lda #bankbyte(tempTileData)
+        sta.w DMA0_SRCH
+        lda #$80
+        sta.w VMAIN
+        lda #$18
+        sta.w DMA0_DEST
+        lda #%00000001
+        sta.w DMA0_CTL
+        lda #1
+        sta.w MDMAEN
+        ; EMPTY -> VRAM BG2 tiles (2KB)
+        rep #$20
+        lda #BG2_TILE_BASE_ADDR
+        sta.w VMADDR
+        lda #$0800
+        sta.w DMA0_SIZE
+        lda #loword(EmptyBackgroundTile)
+        sta.w DMA0_SRCL
+        sep #$20
+        lda #bankbyte(EmptyBackgroundTile)
+        sta.w DMA0_SRCH
+        lda #$80
+        sta.w VMAIN
+        lda #%00001001
+        sta.w DMA0_CTL
+        lda #1
+        sta.w MDMAEN
+    ; update render flags
+        ; enable BG1
+        lda #%00010111
+        sta SCRNDESTM
+        ; mode 1, with BG1 and BG2 both having 16px tiles
+        lda #%00110001
+        sta.w BGMODE
+        ; update BG1 scroll
+        lda.w gameRoomScrollX
+        sta.w BG1HOFS
+        lda.w gameRoomScrollX+1
+        sta.w BG1HOFS
+        lda.w gameRoomScrollY
+        sta.w BG1VOFS
+        lda.w gameRoomScrollY+1
+        sta.w BG1VOFS
+    .EnableRENDER
+    wai
+; set up for new room to load
+    rep #$30
+    lda $04,S
+    and #$00FF
+    asl
+    tax
+    lda.l _transition_bg2eor_table,X
+    eor.l gameRoomBG2Offset
+    sta.l gameRoomBG2Offset
+; load new room
+    jsl Room_Unload
+    sep #$30
+    lda $05,S
+    sta.b loadedRoomIndex
+    tax
+    lda.l mapTileSlotTable,X
+    pha
+    jsl LoadRoomSlotIntoLevel
+    sep #$30
+    pla
+    rep #$30
+    ; TODO: probably in LoadRoomSlotIntoLevel, load new tileset (if available)
+; scroll into new room
+    rep #$30
+    lda $04,S
+    and #$00FF
+    asl
+    tax
+    lda.l _transition_horizontal_table,X
+    sta.b HORIZONTAL_OFFSET
+    lda.l _transition_vertical_table,X
+    sta.b VERTICAL_OFFSET
+    jsr _transition_loop
+; init room
+    jsl InitLoadedRoomslot
+; disable UI and re-upload UI character data
+    wai
+    .DisableRENDER
+        ; copy UI to VRAM (8KB)
+        pea BG1_CHARACTER_BASE_ADDR
+        pea 16*16
+        sep #$20 ; 8 bit A
+        lda #bankbyte(spritedata.UI)
+        pha
+        pea spritedata.UI
+        jsl CopySprite
+        sep #$20 ; 8 bit A
+        pla
+        rep #$20 ; 16 bit A
+        pla
+        pla
+        pla
+        sep #$20
+        ; set UI to use 8px tiles
+        lda #%00100001
+        sta.w BGMODE
+        ; re-enable second page of BG1 tile data
+        lda #(BG1_TILE_BASE_ADDR >> 8) | %10
+        sta.w BG1SC
+        ; hide UI
+        lda #%00010110
+        sta SCRNDESTM
+        ; reset scroll
+        lda #0
+        sta.w BG1HOFS
+        sta.w BG1HOFS
+        sta.w BG1VOFS
+        sta.w BG1VOFS
+    .EnableRENDER
+; update UI. Make sure that re-enabling UI is done via register queue
+    wai
+    .DisableRENDER
+        jsl InitializeUI ; upload UI (2KB)
+        ; upload palettes
+        pea 32
+        PEA $5000 + bankbyte(palettes.ui_light.w)
+        PEA palettes.ui_light.w
+        jsl CopyPalette
+        rep #$20 ; 16 bit A
+        PLA
+        PLA
+        PEA $6000 + bankbyte(palettes.ui_gold.w)
+        PEA palettes.ui_gold.w
+        jsl CopyPalette
+        rep #$20 ; 16 bit A
+        PLA
+        PLA
+        PEA $4000 + bankbyte(palettes.item_inactive.w)
+        PEA palettes.item_inactive.w
+        jsl CopyPalette
+        rep #$20 ; 16 bit A
+        PLA
+        PLA
+        PLA
+    .EnableRENDER
+    ; call some update functions for various UI components
+    jsl UI.update_money_display
+    jsl UI.update_bomb_display
+    jsl UI.update_key_display
+    jsl UI.update_all_hearts
+    jsl Item.update_active_palette
+    sep #$20
+    lda #$FF
+    sta.w numTilesToUpdate
+    jsl UI.update_charge_display
+    jsl Consumable.update_display_no_overlay
+    rep #$30
+    lda.w vqueueNumRegOps
+    inc.w vqueueNumRegOps
+    asl
+    tax
+    lda #%00010111 | ($0100 * %11100100)
+    sta.l vqueueRegOps_Value,X
+    lda #SCRNDESTM
+    sta.l vqueueRegOps_Addr,X
+; end
+    rtl
 .ENDS

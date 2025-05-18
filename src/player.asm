@@ -2726,337 +2726,73 @@ PlayerCheckEnterRoom:
     sta.w player_posx
     lda #PLAYER_START_EAST_Y
     sta.w player_posy
-    lda #BG2_TILE_ADDR_OFFS_X
-    eor.w gameRoomBG2Offset
-    sta.w gameRoomBG2Offset
     sep #$20 ; 8 bit A
     lda.b loadedRoomIndex
-    sta.b TempTemp2
-    dec.b loadedRoomIndex
-    jsr @initialize
-    jmp WaitScrollLeft
+    dec A
+    pha
+    lda #FACINGDIR_LEFT
+    pha
+    jsl TransitionRoomIndex
+    rep #$20
+    pla
+    jmp @post_initialize
 @right:
     .ACCU 16
     lda #PLAYER_START_WEST_X
     sta.w player_posx
     lda #PLAYER_START_WEST_Y
     sta.w player_posy
-    lda #BG2_TILE_ADDR_OFFS_X
-    eor.w gameRoomBG2Offset
-    sta.w gameRoomBG2Offset
     sep #$20 ; 8 bit A
     lda.b loadedRoomIndex
-    sta.b TempTemp2
-    inc.b loadedRoomIndex
-    jsr @initialize
-    jmp WaitScrollRight
+    inc A
+    pha
+    lda #FACINGDIR_RIGHT
+    pha
+    jsl TransitionRoomIndex
+    rep #$20
+    pla
+    jmp @post_initialize
 @up:
     .ACCU 16
     lda #PLAYER_START_SOUTH_Y
     sta.w player_posy
     lda #PLAYER_START_SOUTH_X
     sta.w player_posx
-    lda #BG2_TILE_ADDR_OFFS_Y
-    eor.w gameRoomBG2Offset
-    sta.w gameRoomBG2Offset
     sep #$20 ; 8 bit A
     lda.b loadedRoomIndex
-    sta.b TempTemp2
     sec
     sbc #MAP_MAX_WIDTH
-    sta.b loadedRoomIndex
-    jsr @initialize
-    jmp WaitScrollUp
+    pha
+    lda #FACINGDIR_UP
+    pha
+    jsl TransitionRoomIndex
+    rep #$20
+    pla
+    jmp @post_initialize
 @down:
     .ACCU 16
     lda #PLAYER_START_NORTH_Y
     sta.w player_posy
     lda #PLAYER_START_NORTH_X
     sta.w player_posx
-    lda #BG2_TILE_ADDR_OFFS_Y
-    eor.w gameRoomBG2Offset
-    sta.w gameRoomBG2Offset
     sep #$20 ; 8 bit A
     lda.b loadedRoomIndex
-    sta.b TempTemp2
     clc
     adc #MAP_MAX_WIDTH
-    sta.b loadedRoomIndex
-    jsr @initialize
-    jmp WaitScrollDown
-@initialize:
-; unload previous room
-    jsl Room_Unload
-; Load room
-    sep #$30 ; 8 bit AXY
-    ldx.b loadedRoomIndex
-    lda.l mapTileSlotTable,X
     pha
-    jsl LoadRoomSlotIntoLevel
-    sep #$30 ; 8 bit AXY
+    lda #FACINGDIR_DOWN
+    pha
+    jsl TransitionRoomIndex
+    rep #$20
     pla
-    rep #$30 ; 16 bit AXY
-; Update map using vqueue
-; Note: TempTemp2 contains old tile index
+    jmp @post_initialize
+@post_initialize:
     jsl PlayerDiscoverNearbyRooms
+    rep #$20
     stz.w player_velocx
     stz.w player_velocy
+    sep #$20
+    inc.w didPlayerJustEnterRoom
     rts
-
-_MakeWaitScrollSub1:
-    .GetObjectPos_X
-    rts
-
-_MakeWaitScrollSub2:
-    .PutObjectPos_X
-    rts
-
-.MACRO .MakeWaitScroll ARGS SREG, SVAR, AMT, NFRAMES, SAMT, TEMP1, SPRVAL
-    wai
-    jsl Render.HDMAEffect.Clear
-    jsl ProcessVQueue
-    rep #$20 ; 16 bit A
-    sep #$10 ; 8 bit XY
-    lda #NFRAMES
-    sta.b TEMP1
-    @loopWait:
-    ; First, move objects
-        .IF SPRVAL != object_t.pos_x
-            sep #$20 ; 8 bit A
-        .ENDIF
-        rep #$10 ; 16 bit XY
-        ldx #0
-        cpx.w objectIndex
-        beq @loopSpriteEnd
-        @loopSprite:
-            .IF SPRVAL == object_t.pos_x
-                jsr _MakeWaitScrollSub1
-                sec
-                sbc #(AMT - SAMT)/NFRAMES
-                jsr _MakeWaitScrollSub2
-            .ELSE
-                lda.w objectData+SPRVAL,X
-                sec
-                sbc #(AMT - SAMT)/NFRAMES
-                sta.w objectData+SPRVAL,X
-            .ENDIF
-            inx
-            inx
-            inx
-            inx
-            cpx.w objectIndex
-            bne @loopSprite
-        @loopSpriteEnd:
-        .IF SPRVAL != object_t.pos_x
-            rep #$20 ; 16 bit A
-        .ENDIF
-        sep #$10 ; 8 bit XY
-    ; Wait for VBlank
-        wai
-    ; Scroll
-        lda.w SVAR
-        clc
-        adc #AMT/NFRAMES
-        and #$01FF
-        sta.w SVAR
-        ldx.w SVAR
-        stx SREG
-        ldx.w SVAR+1
-        stx SREG
-        lda.w SVAR
-        .IF SREG == BG2VOFS
-            clc
-            adc #32
-        .ENDIF
-        tax
-        stx SREG+2 ; scroll floor
-        xba
-        tax
-        stx SREG+2 ; scroll floor
-        ; Depending on scroll value, upload tile data.
-        ; We want to upload the line that has just came into view.
-        rep #$20 ; 16 bit A
-        .IF SREG == BG2HOFS
-        ; right / left
-            ; source address = ADDR + column * 8
-            ; inc address by 8 each update
-            lda.w SVAR
-            clc
-            .IF AMT > 0
-                adc #216
-            .ELSE
-                adc #224
-            .ENDIF
-            and #$00F8
-            cmp #24*8
-            bcc +
-                jmp @skipUpload
-            +:
-            sta.b $00
-            sep #$20 ; 8 bit A
-            ; source bank
-            lda.w currentRoomGroundData+2
-            sta DMA0_SRCH
-            ; VRAM address increment flags
-            lda #$80
-            sta VMAIN
-            ; write to PPU, absolute address, auto increment, 2 bytes at a time
-            lda #%00000001
-            sta DMA0_CTL
-            ; Write to VRAM
-            lda #$18
-            sta DMA0_DEST
-            ; begin transfer
-            rep #$30
-            .REPT 16 INDEX i
-                rep #$20
-                    lda.b $00
-                    clc
-                    adc #(8 * 24 * i) + BG3_CHARACTER_BASE_ADDR
-                    sta VMADDR
-                    lda.b $00
-                    asl
-                    clc
-                    adc #(16 * 24 * i)
-                    clc
-                    adc.w currentRoomGroundData
-                    sta DMA0_SRCL
-                ; number of bytes
-                lda #8 * 2
-                sta DMA0_SIZE
-                sep #$20
-                lda #$01
-                sta MDMAEN
-            .ENDR
-            ; next, clear tile data to defaults
-            lda #$81
-            sta VMAIN
-            rep #$30
-            lda.b $00
-            lsr
-            lsr
-            lsr
-            clc
-            adc #$0104 + BG3_TILE_BASE_ADDR
-            sta VMADDR
-            lda.b $00
-            lsr
-            lsr
-            lsr
-            ora.w currentRoomGroundPalette
-            .REPT 16
-                sta VMDATA
-                clc
-                adc #24
-            .ENDR
-        .ELIF SREG == BG2VOFS
-        ; up / down
-            ; number of bytes
-            lda #24 * 8 * 2
-            sta DMA0_SIZE
-            ; source address = ADDR + row * 24 * 8
-            lda.w SVAR
-            clc
-            .IF AMT > 0
-                adc #184
-            .ELSE
-                adc #224
-            .ENDIF
-            and #$00F8
-            cmp #16*8
-            bcc + 
-                jmp @skipUpload
-            +:
-            sta.b $02
-            asl
-            asl
-            asl
-            sta.b $00
-            asl
-            clc
-            adc.b $00
-            sta.b $00
-            asl
-            clc
-            adc.w currentRoomGroundData
-            sta DMA0_SRCL
-            ; VRAM address
-            lda.b $00
-            clc
-            adc #BG3_CHARACTER_BASE_ADDR
-            sta VMADDR
-            sep #$20 ; 8 bit A
-            ; source bank
-            lda.w currentRoomGroundData+2
-            sta DMA0_SRCH
-            ; VRAM address increment flags
-            lda #$80
-            sta VMAIN
-            ; write to PPU, absolute address, auto increment, 2 bytes at a time
-            lda #%00000001
-            sta DMA0_CTL
-            ; Write to VRAM
-            lda #$18
-            sta DMA0_DEST
-            ; begin transfer
-            lda #$01
-            sta MDMAEN
-            ; update tiles
-            rep #$20
-            lda.b $02
-            asl
-            asl
-            clc
-            adc #$0104 + BG3_TILE_BASE_ADDR
-            sta VMADDR
-            lda.b $02
-            clc
-            asl
-            adc $02
-            ora.w currentRoomGroundPalette
-            .REPT 24
-                sta VMDATA
-                inc A
-            .ENDR
-        .ENDIF
-        @skipUpload:
-        ; Upload objects to OAM
-        rep #$20
-        stz OAMADDR
-        lda #512+32
-        sta DMA0_SIZE
-        lda.w #objectData
-        sta DMA0_SRCL
-        sep #$20 ; 8 bit A
-        lda #0
-        sta DMA0_SRCH
-        ; Absolute address, auto increment, 1 byte at a time
-        lda #%00000000
-        sta DMA0_CTL
-        ; Write to OAM
-        lda #$04
-        sta DMA0_DEST
-        lda #$01
-        sta MDMAEN
-        rep #$20 ; 16 bit A
-    ; loop
-        dec TEMP1
-        beq +
-        jmp @loopWait
-        +:
-    rts
-.ENDM
-
-WaitScrollLeft:
-    .MakeWaitScroll BG2HOFS, gameRoomScrollX, (-256), 32, (-64), TempTemp1, object_t.pos_x
-
-WaitScrollRight:
-    .MakeWaitScroll BG2HOFS, gameRoomScrollX, 256, 32, 64, TempTemp1, object_t.pos_x
-
-WaitScrollUp:
-    .MakeWaitScroll BG2VOFS, gameRoomScrollY, (-256), 32, (-128), TempTemp1, object_t.pos_y
-
-WaitScrollDown:
-    .MakeWaitScroll BG2VOFS, gameRoomScrollY, 256, 32, 128, TempTemp1, object_t.pos_y
 
 .ENDS

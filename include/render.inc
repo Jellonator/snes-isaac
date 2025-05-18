@@ -262,6 +262,8 @@
     lsr
     tay ; Y is index into objectDataExt [0,31]
     lda $01,S
+    lsr
+    lsr
     and #3
     tax ; X is index into SpriteIndexToExtMaskX [0,3]
     lda.l SpriteIndexToExtMaskX,X
@@ -272,9 +274,11 @@
     plx
     lda.w objectData.1.pos_x,X
     and #$FF
-    eor #$FFFF
-    sec
-    adc #1
+    clc
+    adc #256
+    ; eor #$FFFF
+    ; sec
+    ; adc #1
     bra @@@@@\.\@end
 @@@@@\.\@pos:
     plx
@@ -299,6 +303,8 @@
     tay
 ; X is index into SpriteIndexToExtMaskX [0,3]
     lda $01,S
+    lsr
+    lsr
     and #3
     tax
 ; Check if A is positive or negative
@@ -310,9 +316,9 @@
     ora.w objectDataExt,Y
     sta.w objectDataExt,Y
     lda $03,S
-    eor #$FFFF
-    sec
-    adc #1
+    ; eor #$FFFF
+    ; sec
+    ; adc #1
     sep #$20 ; 8b A
     plx
     sta.w objectData.1.pos_x,X

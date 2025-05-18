@@ -234,7 +234,7 @@ TeleportToRoom:
     tax
     lda.l mapTileSlotTable,X
     pha
-    jsl LoadRoomSlotIntoLevel
+    jsl LoadAndInitRoomSlotIntoLevel
     sep #$30
     pla
     jsl PlayerDiscoverNearbyRooms

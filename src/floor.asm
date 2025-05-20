@@ -178,7 +178,7 @@ _Floor_Update_Graphics:
         pea 32
         lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.palettes + (i*3) + 2,X
         and #$00FF
-        ora #$1000 * i
+        ora #PALETTE_TILESET.{i}
         pha
         lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.palettes + (i*3),X
         pha
@@ -249,12 +249,12 @@ _Floor_Update_Graphics:
 .DSTRUCT ChapterDefinition_SecretRoom INSTANCEOF chapterdefinition_t VALUES
     name: .ASCSTR "Secret Room\0"
     palettes:
-        .dl palettes.stage_caves_ground
+        .dl palettes.stage_secret_room_ground
         .dl 0
         .dl palettes.stage_secret_room1
         .dl palettes.stage_secret_room2
     tiledata: .dl spritedata.stage_secret_room
-    ground: .dl spritedata.stage_caves_ground
+    ground: .dl spritedata.basement_ground_base
     groundPalette: .dw 2 * $0400
 .ENDST
 

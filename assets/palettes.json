@@ -100,6 +100,10 @@
         "src": "assets/palettes/stage_secret_room2.hex"
     },
     {
+        "name": "stage_secret_room_ground",
+        "src": "assets/palettes/stage_secret_room_ground.hex"
+    },
+    {
         "name": "effect_explosion",
         "src": "assets/palettes/effect_explosion.hex"
     },

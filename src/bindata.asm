@@ -35,8 +35,8 @@ DefaultUiData:
     ; row 3
     .dw 0
     .dw deft($12,6) | T_HIGHP
-    .dw deft($EE,4) | T_HIGHP
-    .dw deft($EF,4) | T_HIGHP
+    .dw deft($EE,1) | T_HIGHP
+    .dw deft($EF,1) | T_HIGHP
     .dw deft($12,6) | T_HIGHP | T_FLIPH
     .dw deft($01,6) | T_HIGHP
     .dw deft(TILE_TEXT_UINUMBER_BASE + 0,5) | T_HIGHP
@@ -49,8 +49,8 @@ DefaultUiData:
     ; row 4
     .dw 0
     .dw deft($12,6) | T_HIGHP
-    .dw deft($FE,4) | T_HIGHP
-    .dw deft($FF,4) | T_HIGHP
+    .dw deft($FE,1) | T_HIGHP
+    .dw deft($FF,1) | T_HIGHP
     .dw deft($12,6) | T_HIGHP | T_FLIPH
     .dw deft($11,5) | T_HIGHP
     .dw deft(TILE_TEXT_UINUMBER_BASE + 0,5) | T_HIGHP

@@ -67,7 +67,7 @@ Item.update_active_palette:
     ; upload palette
     rep #$30
     pea 24
-    pea $4400 | bankbyte(palettes.palette0.w)
+    pea PALETTE_UI.0 + $0400 | bankbyte(palettes.palette0.w)
     lda.l bankaddr(Item.items) | itemdef_t.palette_ptr,X
     clc
     adc #8

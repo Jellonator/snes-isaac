@@ -253,7 +253,7 @@ LoadRoomSlotIntoLevel:
         pea 32
         lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.palettes + (i*3) + 2,X
         and #$00FF
-        ora #$1000 * i
+        ora #PALETTE_TILESET.{i}
         pha
         lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.palettes + (i*3),X
         pha
@@ -1444,6 +1444,39 @@ TransitionRoomIndex:
     wai
 ; disable BG1 (temporarily), and copy character data of current room to BG1
     .DisableRENDER
+        ; VRAM BG3 TILES -> RAM TILES (2KB)
+        rep #$20
+        lda #loword(tempTileData)
+        sta.w DMA0_SRCL
+        lda #$0800
+        sta.w DMA0_SIZE
+        lda #BG3_TILE_BASE_ADDR
+        sta.w VMADDR
+        lda.w VMDATAREAD
+        sep #$20
+        lda #bankbyte(tempTileData)
+        sta.w DMA0_SRCH
+        lda #$39
+        sta.w DMA0_DEST
+        lda #%10000001
+        sta.w DMA0_CTL
+        lda #$80
+        sta.w VMAIN
+        lda #1
+        sta.w MDMAEN
+    .EnableRENDER
+    ; update BG3 tiles to use palettes 4-7 instead
+    rep #$30
+    ldx #$0800 - 2
+    @loop:
+        lda.l tempTileData,X
+        ora #$1000
+        sta.l tempTileData,X
+        dex
+        dex
+        bpl @loop
+    wai
+    .DisableRENDER
         jsl Render.HDMAEffect.Clear
         jsl ProcessVQueue
         ; copy character data page 1 (8K)
@@ -1522,7 +1555,7 @@ TransitionRoomIndex:
             pea 32
             lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.palettes + (i*3) + 2,X
             and #$00FF
-            ora #$1000 * i + $4000
+            ora #PALETTE_UI.{i}
             pha
             lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.palettes + (i*3),X
             pha
@@ -1532,6 +1565,25 @@ TransitionRoomIndex:
             pla
             pla
         .ENDR
+        ; RAM TILES -> VRAM BG3 TILES (2KB)
+        rep #$20
+        lda #BG3_TILE_BASE_ADDR
+        sta.w VMADDR
+        lda #$0800
+        sta.w DMA0_SIZE
+        lda #loword(tempTileData)
+        sta.w DMA0_SRCL
+        sep #$20
+        lda #bankbyte(tempTileData)
+        sta.w DMA0_SRCH
+        lda #$80
+        sta.w VMAIN
+        lda #$18
+        sta.w DMA0_DEST
+        lda #%00000001
+        sta.w DMA0_CTL
+        lda #1
+        sta.w MDMAEN
         ; VRAM BG2 TILES -> RAM TILES (2KB)
         rep #$20
         lda #loword(tempTileData)
@@ -1792,7 +1844,7 @@ TransitionRoomIndex:
         rep #$20 ; 16 bit A
         PLA
         PLA
-        PEA $4000 + bankbyte(palettes.item_inactive.w)
+        PEA PALETTE_UI.0 + bankbyte(palettes.item_inactive.w)
         PEA palettes.item_inactive.w
         jsl CopyPalette
         rep #$20 ; 16 bit A

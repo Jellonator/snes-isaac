@@ -96,6 +96,18 @@
 .DEFINE PALLETE_ALLOC_12C %00000101
 .DEFINE PALLETE_ALLOC_16  %00000111
 
+; Tile palette allocation
+.DEFINE PALETTE_TILESET.0 $0000 ; ground palette
+.DEFINE PALETTE_TILESET.1 $4000 ; unused (currently)
+.DEFINE PALETTE_TILESET.2 $2000 ; tileset 1
+.DEFINE PALETTE_TILESET.3 $3000 ; tileset 2
+
+; UI palette allocation
+.DEFINE PALETTE_UI.0 $1000 ; item slot
+.DEFINE PALETTE_UI.1 $5000 ; base UI 1
+.DEFINE PALETTE_UI.2 $6000 ; base UI 2
+.DEFINE PALETTE_UI.3 $7000 ; consumable slot
+
 ; COLOR FUNCTIONS
 .FUNCTION colorf(red, green, blue) ((round(blue * 31) << 10) + (round(green * 31) << 5) + round(blue * 31))
 .DEFINE CLEAR_COLOR colorf(0, 0, 0)

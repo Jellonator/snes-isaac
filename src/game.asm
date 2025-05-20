@@ -42,7 +42,7 @@ Game.Begin:
     rep #$20 ; 16 bit A
     PLA
     PLA
-    PEA $4000 + bankbyte(palettes.item_inactive.w)
+    PEA PALETTE_UI.0 + bankbyte(palettes.item_inactive.w)
     PEA palettes.item_inactive.w
     jsl CopyPalette
     rep #$20 ; 16 bit A

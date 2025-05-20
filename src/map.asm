@@ -778,9 +778,10 @@ _transition_ground_left:
     .ACCU 16
     .INDEX 16
     ; get column that was just loaded in
-    ; col = (scrollx / 8) % 32
+    ; col = (scrollx / 8 - 1) % 32
     lda.w gameRoomScrollX
     .DivideStatic 8
+    dec A
     and #$001F
     jmp _transition_ground_horizontal
 
@@ -806,6 +807,9 @@ _transition_ground_up:
     and #$001F
     jmp _transition_ground_vertical
 
+.DEFINE COLUMN (tempDP+0)
+.DEFINE ADDR (tempDP+2)
+.DEFINE TILE (tempDP+4)
 _transition_ground_horizontal:
     .ACCU 16
     .INDEX 16
@@ -815,12 +819,93 @@ _transition_ground_horizontal:
     bcc +
         rts
     +:
-; we need 
+    sta.b COLUMN
+; we need 16 vqueue ops: one for each tile, 16B each
+    .VQueueOpToA
+    tax
+    lda.w vqueueNumOps
+    clc
+    adc #$10
+    sta.w vqueueNumOps
+    ; size[*] = $10
+    lda #$10
+    .REPT 16 INDEX i
+        sta.l vqueueOps.{i+1}.numBytes,X
+    .ENDR
+    ; vramAddr[i] = BG3_CHARACTER_BASE_ADDR + i * $00C0 + COLUMN * $08
+    lda.b COLUMN
+    .MultiplyStatic $08
+    clc
+    adc #BG3_CHARACTER_BASE_ADDR
+    .REPT 16 INDEX i
+        sta.l vqueueOps.{i+1}.vramAddr,X
+        adc #$00C0 ; assume carry to be clear
+    .ENDR
+    ; aAddr[i] = currentRoomGroundData + i * $0180 + COLUMN * $10
+    lda.b COLUMN
+    .MultiplyStatic $10
+    clc
+    adc.w currentRoomGroundData
+    .REPT 16 INDEX i
+        sta.l vqueueOps.{i+1}.aAddr,X
+        adc #$0180 ; assume carry to be clear
+    .ENDR
+    sep #$20
+    lda.w currentRoomGroundData+2
+    .REPT 16 INDEX i
+        sta.l vqueueOps.{i+1}.aAddr+2,X
+    .ENDR
+    ; mode[*] = VQUEUE_MODE_VRAM
+    lda #VQUEUE_MODE_VRAM
+    .REPT 16 INDEX i
+        sta.l vqueueOps.{i+1}.mode,X
+    .ENDR
+; create mini ops for tile data
+    rep #$20
+    ; X = vqueueNumMiniOps * 4
+    lda.w vqueueNumMiniOps
+    asl
+    asl
+    tax
+    ; vqueueNumMiniOps += $10
+    lda.w vqueueNumMiniOps
+    clc
+    adc #$10
+    sta.w vqueueNumMiniOps
+    ; TILE = COLUMN | PALETTE
+    lda.b COLUMN
+    ora.w currentRoomGroundPalette
+    sta.b TILE
+    ; ADDR = BG3_TILE_BASE_ADDR + 4 + COLUMN + 8*$20
+    lda.b COLUMN
+    clc
+    adc #BG3_TILE_BASE_ADDR + 4 + 8*$20
+    sta.b ADDR
+    ; Y = $10
+    ldy #$10
+    ; set mini ops for tiles in loop
+    @loop:
+        lda.b ADDR
+        sta.l vqueueMiniOps.1.vramAddr,X
+        clc
+        adc #$0020
+        sta.b ADDR
+        lda.b TILE
+        sta.l vqueueMiniOps.1.data,X
+        clc
+        adc #$0018
+        sta.b TILE
+        inx
+        inx
+        inx
+        inx
+        dey
+        bne @loop
+; end
     rts
+.UNDEFINE COLUMN
 
-.DEFINE ROW tempDP
-.DEFINE ADDR (tempDP+2)
-.DEFINE TILE (tempDP+4)
+.DEFINE ROW (tempDP+0)
 ; we are *transitioning* vertically, so we are writing in a *row* of ground tiles
 _transition_ground_vertical:
     .ACCU 16

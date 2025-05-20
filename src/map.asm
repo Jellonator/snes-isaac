@@ -764,10 +764,162 @@ DoorTileTopperTable_LEFT:
 
 ; TRANSITION ZONE ;
 
+_transition_ground_right:
+    .ACCU 16
+    .INDEX 16
+    ; get column that was just loaded in
+    ; col = (scrollx / 8) % 32
+    lda.w gameRoomScrollX
+    .DivideStatic 8
+    and #$001F
+    jmp _transition_ground_horizontal
+
+_transition_ground_left:
+    .ACCU 16
+    .INDEX 16
+    ; get column that was just loaded in
+    ; col = (scrollx / 8) % 32
+    lda.w gameRoomScrollX
+    .DivideStatic 8
+    and #$001F
+    jmp _transition_ground_horizontal
+
+_transition_ground_down:
+    .ACCU 16
+    .INDEX 16
+    ; get row that was just loaded in
+    ; col = ((scrolly + 32) / 8 - 4) % 32
+    lda.w gameRoomScrollY
+    .DivideStatic 8
+    and #$001F
+    jmp _transition_ground_vertical
+
+_transition_ground_up:
+    .ACCU 16
+    .INDEX 16
+    ; get row that was just loaded in
+    ; col = ((scrolly + 32) / 8 - 1) % 32
+    lda.w gameRoomScrollY
+    clc
+    adc #24
+    .DivideStatic 8
+    and #$001F
+    jmp _transition_ground_vertical
+
+_transition_ground_horizontal:
+    .ACCU 16
+    .INDEX 16
+    sec
+    sbc #4
+    cmp #24
+    bcc +
+        rts
+    +:
+; we need 
+    rts
+
+.DEFINE ROW tempDP
+.DEFINE ADDR (tempDP+2)
+.DEFINE TILE (tempDP+4)
+; we are *transitioning* vertically, so we are writing in a *row* of ground tiles
+_transition_ground_vertical:
+    .ACCU 16
+    .INDEX 16
+    sec
+    sbc #8
+    cmp #16
+    bcc +
+        rts
+    +:
+    sta.b ROW
+; create vqueue op for character data
+    .VQueueOpToA
+    tax
+    inc.w vqueueNumOps
+    ; size = $0180
+    lda #$0180
+    sta.l vqueueOps.1.numBytes,X
+    ; vramAddr = BG3_CHARACTER_BASE_ADDR + ROW * $00C0 (= 3 * $40)
+    lda.b ROW
+    asl
+    clc
+    adc.b ROW
+    .MultiplyStatic $40
+    pha
+    clc
+    adc #BG3_CHARACTER_BASE_ADDR
+    sta.l vqueueOps.1.vramAddr,X
+    ; aAddr = currentRoomGroundData + ROW * $0180 (= 3 * $80)
+    pla
+    asl
+    clc
+    adc.w currentRoomGroundData
+    sta.l vqueueOps.1.aAddr,X
+    sep #$20
+    lda.w currentRoomGroundData+2
+    sta.l vqueueOps.1.aAddr+2,X
+    ; mode = VQUEUE_MODE_VRAM
+    lda #VQUEUE_MODE_VRAM
+    sta.l vqueueOps.1.mode,X
+; create mini ops for tile data
+    rep #$20
+    ; X = vqueueNumMiniOps * 4
+    lda.w vqueueNumMiniOps
+    asl
+    asl
+    tax
+    ; vqueueNumMiniOps += $18
+    lda.w vqueueNumMiniOps
+    clc
+    adc #$18
+    sta.w vqueueNumMiniOps
+    ; TILE = ROW * $18 (= 3 * $08) | PALETTE
+    lda.b ROW
+    asl
+    clc
+    adc.b ROW
+    .MultiplyStatic $08
+    ora.w currentRoomGroundPalette
+    sta.b TILE
+    ; ADDR = BG3_TILE_BASE_ADDR + 4 + ROW*$20 + 8*$20
+    lda.b ROW
+    .MultiplyStatic $20
+    clc
+    adc #BG3_TILE_BASE_ADDR + 4 + 8*$20
+    sta.b ADDR
+    ; Y = $18
+    ldy #$18
+    ; set mini ops for tiles in loop
+    @loop:
+        lda.b ADDR
+        sta.l vqueueMiniOps.1.vramAddr,X
+        inc.b ADDR
+        lda.b TILE
+        sta.l vqueueMiniOps.1.data,X
+        inc.b TILE
+        inx
+        inx
+        inx
+        inx
+        dey
+        bne @loop
+; end
+    rts
+.UNDEFINE ROW
+.UNDEFINE ADDR
+.UNDEFINE TILE
+
+_transition_ground_func_table:
+    .dw _transition_ground_right
+    .dw _transition_ground_down
+    .dw _transition_ground_left
+    .dw _transition_ground_up
+
 .DEFINE HORIZONTAL_OFFSET $20
 .DEFINE VERTICAL_OFFSET $22
 .DEFINE FRAMES $24
 .DEFINE TEMP $26
+.DEFINE DIRECTION $28
 _transition_loop:
     .ACCU 16
     .INDEX 16
@@ -826,8 +978,16 @@ _transition_loop:
     xba
     sta.w BG3VOFS
     .EnableRENDER
+; update ground
+    rep #$30
+    lda.b DIRECTION
+    and #$00FF
+    asl
+    tax
+    jsr (_transition_ground_func_table,X)
 ; update sprite locations
 ; maybe end loop
+    rep #$20
     dec.b FRAMES
     bnel @loop
     rts
@@ -1067,6 +1227,7 @@ TransitionRoomIndex:
     rep #$30
     lda $04,S
     and #$00FF
+    sta.b DIRECTION
     asl
     tax
     lda.l _transition_bg2eor_table,X
@@ -1077,9 +1238,6 @@ TransitionRoomIndex:
     lda #ENTITY_CONTEXT_TRANSITION
     sta.b entityExecutionContext
     jsl Room_Unload
-    sep #$20
-    lda #ENTITY_CONTEXT_STANDARD
-    sta.b entityExecutionContext
     sep #$30
     lda $05,S
     sta.b loadedRoomIndex
@@ -1088,6 +1246,8 @@ TransitionRoomIndex:
     pha
     jsl LoadRoomSlotIntoLevel
     sep #$30
+    lda #ENTITY_CONTEXT_STANDARD
+    sta.b entityExecutionContext
     pla
     rep #$30
     ; TODO: probably in LoadRoomSlotIntoLevel, load new tileset (if available)

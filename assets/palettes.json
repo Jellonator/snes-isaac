@@ -92,6 +92,14 @@
         "src": "assets/palettes/stage_caves_ground.hex"
     },
     {
+        "name": "stage_secret_room1",
+        "src": "assets/palettes/stage_secret_room1.hex"
+    },
+    {
+        "name": "stage_secret_room2",
+        "src": "assets/palettes/stage_secret_room2.hex"
+    },
+    {
         "name": "effect_explosion",
         "src": "assets/palettes/effect_explosion.hex"
     },

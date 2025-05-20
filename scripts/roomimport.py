@@ -89,6 +89,8 @@ for room in rooms:
         mask = '|'.join(dirls)
     out_inc.write("\t\tdoorMask:   .db {}\n".format(mask))
     out_inc.write("\t\troomSize:   .db ROOM_SIZE_REGULAR\n")
+    if "chapter" in tilemap.properties:
+        out_inc.write("\t\tchapterOverride: .db {}\n".format(tilemap.properties["chapter"]))
     tilelayers = [x for x in tilemap.layers if isinstance(x, pytiled_parser.TileLayer)]
     objectlayers = [x for x in tilemap.layers if isinstance(x, pytiled_parser.ObjectLayer)]
     objects = []

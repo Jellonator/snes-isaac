@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.11" tiledversion="1.11.1" orientation="orthogonal" renderorder="right-down" width="12" height="8" tilewidth="16" tileheight="16" infinite="0" nextlayerid="3" nextobjectid="8">
+<map version="1.11" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="12" height="8" tilewidth="16" tileheight="16" infinite="0" nextlayerid="3" nextobjectid="8">
  <properties>
+  <property name="chapter" value="CHAPTER_SECRET_ROOM"/>
   <property name="down" type="bool" value="true"/>
   <property name="left" type="bool" value="true"/>
   <property name="right" type="bool" value="true"/>

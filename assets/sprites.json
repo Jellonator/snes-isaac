@@ -21,6 +21,11 @@
         "depth": 4
     },
     {
+        "name": "stage_secret_room",
+        "src": "assets/sprites/stage_secret_room.raw",
+        "depth": 16
+    },
+    {
         "name": "isaac_tear",
         "src": "assets/sprites/tear_8px.raw",
         "depth": 16

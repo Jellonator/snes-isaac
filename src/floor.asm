@@ -231,10 +231,23 @@ _Floor_Update_Graphics:
     groundPalette: .dw 2 * $0400
 .ENDST
 
+.DSTRUCT ChapterDefinition_SecretRoom INSTANCEOF chapterdefinition_t VALUES
+    name: .ASCSTR "Secret Room\0"
+    palettes:
+        .dl palettes.stage_caves_ground
+        .dl 0
+        .dl palettes.stage_secret_room1
+        .dl palettes.stage_secret_room2
+    tiledata: .dl spritedata.stage_secret_room
+    ground: .dl spritedata.stage_caves_ground
+    groundPalette: .dw 2 * $0400
+.ENDST
+
 ChapterDefinitions:
     .dw ChapterDefinition_Basement ; null chapter
     .dw ChapterDefinition_Basement
     .dw ChapterDefinition_Caves
+    .dw ChapterDefinition_SecretRoom
 
 ; Basement I
 .DSTRUCT FloorDefinition_Basement1 INSTANCEOF floordefinition_t VALUES

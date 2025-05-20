@@ -1079,6 +1079,11 @@ _transition_update_and_upload_sprites:
             sta.b TEMP2
             jmp @loop
     @loop_end:
+    cpy #512
+    bcs +
+        lda #SPRITE_Y_DISABLED
+        sta.w objectData.1.pos_y,Y
+    +:
     rts
 
 _transition_loop:

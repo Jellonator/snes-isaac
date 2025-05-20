@@ -49,6 +49,8 @@
     currentSaveSlot dw
     loadFromSaveState db
     didPlayerJustEnterRoom db
+    ; Indicates if room is transitioning. Top bit also indicates if
+    ; restored backup palette data is currently in use.
     isRoomTransitioning db
 ; pause menu
     isGamePaused db

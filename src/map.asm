@@ -1251,6 +1251,9 @@ _palettedata_backup:
 
 ; restore palette data
 _palettedata_restore_backup:
+    sep #$20
+    lda #$80
+    tsb.w isRoomTransitioning
     rep #$30
     ldx #3*64-2
     @loop:
@@ -1263,8 +1266,12 @@ _palettedata_restore_backup:
 
 ; free palettes used by palette backup data
 _palettedata_free_backup:
+    sep #$30
+    lda.w isRoomTransitioning
+    bpl @loop_end
+    and #$7F
+    sta.w isRoomTransitioning
     rep #$20
-    sep #$10
     ; we only care about sprite palettes, so start at $21
     ldx #$00
     @loop_continue:
@@ -1275,6 +1282,19 @@ _palettedata_free_backup:
         lda.l PaletteIndexIsStatic,X
         bit #$0001
         bne @loop_continue
+        ; clear refcounts of subpalettes
+        lda.l paletteDataBackup.allocMode,X
+        bit #%010
+        beq +
+            lda #0
+            sta.l paletteDataBackup.refCount+2,X
+            lda.l paletteDataBackup.allocMode,X
+        +:
+        bit #%100
+        beq +
+            lda #0
+            sta.l paletteDataBackup.refCount+4,X
+        +:
     @loop_enter:
         lda.l paletteDataBackup.refCount,X
         beq @loop_continue
@@ -1286,11 +1306,7 @@ _palettedata_free_backup:
         rts
 
 Transition.ForceFreeBackedUpPalettes:
-    sep #$20
-    lda.w isRoomTransitioning
-    beq @skip
-        jsr _palettedata_free_backup
-    @skip:
+    jsr _palettedata_free_backup
     rtl
 
 ; Perform a room transition.

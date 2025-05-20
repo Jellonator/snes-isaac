@@ -2732,6 +2732,7 @@ PlayerCheckEnterRoom:
     pha
     lda #FACINGDIR_LEFT
     pha
+    jsr @pre_initialize
     jsl TransitionRoomIndex
     rep #$20
     pla
@@ -2748,6 +2749,7 @@ PlayerCheckEnterRoom:
     pha
     lda #FACINGDIR_RIGHT
     pha
+    jsr @pre_initialize
     jsl TransitionRoomIndex
     rep #$20
     pla
@@ -2765,6 +2767,7 @@ PlayerCheckEnterRoom:
     pha
     lda #FACINGDIR_UP
     pha
+    jsr @pre_initialize
     jsl TransitionRoomIndex
     rep #$20
     pla
@@ -2782,10 +2785,25 @@ PlayerCheckEnterRoom:
     pha
     lda #FACINGDIR_DOWN
     pha
+    jsr @pre_initialize
     jsl TransitionRoomIndex
     rep #$20
     pla
     jmp @post_initialize
+@pre_initialize:
+    ; set box pos
+    sep #$30
+    lda.w player_box_x1
+    clc
+    adc #16
+    sta.w player_box_x2
+    lda.w player_box_y1
+    clc
+    adc #8
+    sta.l entity_ysort + ENTITY_INDEX_PLAYER
+    adc #8
+    sta.w player_box_y2
+    rts
 @post_initialize:
     jsl PlayerDiscoverNearbyRooms
     rep #$20

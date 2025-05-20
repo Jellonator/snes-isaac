@@ -258,11 +258,24 @@ _Floor_Update_Graphics:
     groundPalette: .dw 2 * $0400
 .ENDST
 
+.DSTRUCT ChapterDefinition_DevilRoom INSTANCEOF chapterdefinition_t VALUES
+    name: .ASCSTR "Secret Room\0"
+    palettes:
+        .dl palettes.stage_devil_room_ground
+        .dl 0
+        .dl palettes.stage_devil_room1
+        .dl palettes.stage_devil_room2
+    tiledata: .dl spritedata.stage_secret_room
+    ground: .dl spritedata.basement_ground_base
+    groundPalette: .dw 2 * $0400
+.ENDST
+
 ChapterDefinitions:
     .dw ChapterDefinition_Basement ; null chapter
     .dw ChapterDefinition_Basement
     .dw ChapterDefinition_Caves
     .dw ChapterDefinition_SecretRoom
+    .dw ChapterDefinition_DevilRoom
 
 ; Basement I
 .DSTRUCT FloorDefinition_Basement1 INSTANCEOF floordefinition_t VALUES

@@ -104,6 +104,18 @@
         "src": "assets/palettes/stage_secret_room_ground.hex"
     },
     {
+        "name": "stage_devil_room1",
+        "src": "assets/palettes/stage_devil_room1.hex"
+    },
+    {
+        "name": "stage_devil_room2",
+        "src": "assets/palettes/stage_devil_room2.hex"
+    },
+    {
+        "name": "stage_devil_room_ground",
+        "src": "assets/palettes/stage_devil_room_ground.hex"
+    },
+    {
         "name": "effect_explosion",
         "src": "assets/palettes/effect_explosion.hex"
     },

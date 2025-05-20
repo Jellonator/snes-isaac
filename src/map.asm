@@ -1043,7 +1043,7 @@ _transition_update_and_upload_sprites:
         sec
         sbc.b VERTICAL_OFFSET
         sta.l objectBufferFullY,X
-        cmp #256
+        cmp #224
         bcs @loop ; skip if y is not in page
         sta.w objectData.1.pos_y,Y
         lda.l objectBufferTile,X

@@ -21,7 +21,9 @@ spriteman_init:
     lda #$FF
     sta.w loword(spriteQueueTabNext)+63
     lda #0
-    sta.w loword(spriteQueueTabNext)+SPRITE_LIST_EMPTY
+    sta.w loword(spriteQueueTabNext)+SPRITE_LIST_BEGIN
+    lda #63
+    sta.w loword(spriteQueueTabNext)+SPRITE_LIST_END
     plb
     rtl
 

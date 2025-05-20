@@ -70,7 +70,8 @@
 .DEFINE SPRITE_TABLE_TOTAL_SIZE (SPRITE_TABLE_SIZE + SPRITE_TABLE_CELLAR_SIZE)
 
 .ENUMID 64
-.ENUMID SPRITE_LIST_EMPTY
+.ENUMID SPRITE_LIST_BEGIN
+.ENUMID SPRITE_LIST_END
 .ENUMID SPRITE_QUEUE_SIZE
 
 ; SPRITE TABLE ENTRY
@@ -399,23 +400,27 @@
 ; Bank needs to be $7E, INDEX and ACCU must be 8
 .MACRO .spriteman_get_raw_slot_lite
     dec.w loword(spiteTableAvailableSlots)
-    ; ret = *queue->next
-    ldx.w loword(spriteQueueTabNext)+SPRITE_LIST_EMPTY
+    ; ret = *begin->next
+    ldx.w loword(spriteQueueTabNext)+SPRITE_LIST_BEGIN
     lda.w loword(spriteQueueTabNext),X
-    ; queue->next = queue->next->next (skip X)
-    sta.w loword(spriteQueueTabNext)+SPRITE_LIST_EMPTY
+    ; begin->next = begin->next->next (skip X)
+    sta.w loword(spriteQueueTabNext)+SPRITE_LIST_BEGIN
     ; rtl
 .ENDM
 
 ; Free slot in X
 ; Bank needs to be $7E, INDEX and ACCU must be 8
 .MACRO .spriteman_free_raw_slot_lite
+    ; TODO: handle when queue is empty
     inc.w loword(spiteTableAvailableSlots)
-    lda.w loword(spriteQueueTabNext)+SPRITE_LIST_EMPTY
-    ; X->next = queue->next
+    ; tmp = *end
+    lda.w loword(spriteQueueTabNext)+SPRITE_LIST_END
+    ; *end = X
+    stx.w loword(spriteQueueTabNext)+SPRITE_LIST_END
+    ; tmp->next = X
+    tax
+    lda.w loword(spriteQueueTabNext)+SPRITE_LIST_END
     sta.w loword(spriteQueueTabNext),X
-    ; queue->next = X
-    stx.w loword(spriteQueueTabNext)+SPRITE_LIST_EMPTY
 .ENDM
 
 .MACRO .PaletteIndexToPaletteSpriteA

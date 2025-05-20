@@ -1006,6 +1006,8 @@ _transition_ground_func_table:
 .DEFINE objectBufferFlags ($7F0000 | (tempTileData + $201))
 .DEFINE objectBufferS     ($7F0000 | (tempTileData + $202))
 
+.DEFINE paletteDataBackup ($7E0000 | tempTileData + $400)
+
 .DEFINE HORIZONTAL_OFFSET $20
 .DEFINE VERTICAL_OFFSET $22
 .DEFINE FRAMES $24
@@ -1230,6 +1232,58 @@ _copy_objects_to_object_buffer:
     @loop_end:
     stx.b OBJECT_TABLE_SIZE
     rts
+
+.DEFINE paletteDataBackup.ptr (paletteDataBackup + 0)
+.DEFINE paletteDataBackup.refCount (paletteDataBackup + 64)
+.DEFINE paletteDataBackup.allocMode (paletteDataBackup + 128)
+
+; Backup palette data
+_palettedata_backup:
+    rep #$30
+    ldx #3*64-2
+    @loop:
+        lda.w palettePtr,X
+        sta.l paletteDataBackup,X
+        dex
+        dex
+        bpl @loop
+    rts
+
+; restore palette data
+_palettedata_restore_backup:
+    rep #$30
+    ldx #3*64-2
+    @loop:
+        lda.l paletteDataBackup,X
+        sta.w palettePtr,X
+        dex
+        dex
+        bpl @loop
+    rts
+
+; free palettes used by palette backup data
+_palettedata_free_backup:
+    rep #$20
+    sep #$10
+    ; we only care about sprite palettes, so start at $21
+    ldx #$00
+    @loop_continue:
+        inx
+        inx
+        cpx #$40
+        bcs @loop_end
+        lda.l PaletteIndexIsStatic,X
+        bit #$0001
+        bne @loop_continue
+    @loop_enter:
+        lda.l paletteDataBackup.refCount,X
+        beq @loop_continue
+        dec A
+        sta.l paletteDataBackup.refCount,X
+        jsl Palette.free
+        jmp @loop_enter
+    @loop_end:
+        rts
 
 ; Perform a room transition.
 ; BeginRoomTransition([s8]uint room_id, [s8]uint direction)
@@ -1468,11 +1522,13 @@ TransitionRoomIndex:
     lda.l _transition_bg2eor_table,X
     eor.l gameRoomBG2Offset
     sta.l gameRoomBG2Offset
-; load new room
+    jsr _palettedata_backup
+; unload current room
     sep #$20
     lda #ENTITY_CONTEXT_TRANSITION
     sta.b entityExecutionContext
     jsl Room_Unload
+; load new room
     sep #$30
     lda $05,S
     sta.b loadedRoomIndex
@@ -1491,6 +1547,8 @@ TransitionRoomIndex:
     stz.b VERTICAL_OFFSET
     stz.b OBJECT_TABLE_SIZE
     jsr _copy_objects_to_object_buffer
+; restore backed up palette data
+    jsr _palettedata_restore_backup
 ; init room, and run one single tick
     jsl InitLoadedRoomslot
     rep #$30
@@ -1514,6 +1572,8 @@ TransitionRoomIndex:
     lda.l _sprite_offset_vertical_table,X
     sta.b VERTICAL_OFFSET
     jsr _copy_objects_to_object_buffer
+; free palettes allocated by previous room
+    jsr _palettedata_free_backup
 ; scroll into new room
     rep #$30
     lda $04,S

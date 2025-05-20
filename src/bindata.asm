@@ -368,7 +368,7 @@ PaletteIndexToPaletteSprite:
         .ENDR
     .ENDR
 
-PaletteAllocNeedSwizzle
+PaletteAllocNeedSwizzle:
     .db 0 ; PALLETE_ALLOC_NONE 0
     .db 0 ; PALLETE_ALLOC_8A  %00000001
     .db 1 ; PALLETE_ALLOC_8B  %00000010
@@ -377,6 +377,17 @@ PaletteAllocNeedSwizzle
     .db 1 ; PALLETE_ALLOC_12C %00000101
     .db 1 ; PALLETE_ALLOC_12B %00000110
     .db 0 ; PALLETE_ALLOC_16  %00000111
+
+PaletteIndexIsStatic:
+    .REPT 8 INDEX iy
+        .REPT 4 INDEX ix
+            .IF ix == 0 || iy == 0 || iy == 4 || iy == 7
+                .dw $01
+            .ELSE
+                .dw $00
+            .ENDIF
+        .ENDR
+    .ENDR
 
 RandTable:
     .SEED $B00B

@@ -49,6 +49,7 @@
     currentSaveSlot dw
     loadFromSaveState db
     didPlayerJustEnterRoom db
+    isRoomTransitioning db
 ; pause menu
     isGamePaused db
     shouldGamePause db

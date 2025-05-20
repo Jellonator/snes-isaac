@@ -218,6 +218,7 @@ tile_data_loop:
     sta.b mapDoorWest+2
     stz.w isGamePaused
     stz.w shouldGamePause
+    stz.w isRoomTransitioning
     rep #$30
     lda #0
     stz.w gamePauseTimer

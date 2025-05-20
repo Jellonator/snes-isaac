@@ -73,6 +73,11 @@ Palette.alloc_opaque:
             bcsl @found
         .ENDIF
     .ENDR
+    ; none found. See if we are in a transition state, and if so, then free some palettes.
+    lda.w isRoomTransitioning
+    beq @skip
+    jsl Transition.ForceFreeBackedUpPalettes
+    jmp Palette.alloc_transparent
 @skip:
     ; no palettes available, or 0 colors required: do nothing and return *a* palette
     ldx #3*8+2
@@ -159,6 +164,11 @@ Palette.alloc_transparent:
         .ENDIF
         .UNDEFINE palindex
     .ENDR
+    ; none found. See if we are in a transition state, and if so, then free some palettes.
+    lda.w isRoomTransitioning
+    beq @skip
+    jsl Transition.ForceFreeBackedUpPalettes
+    jmp Palette.alloc_transparent
 @skip:
     ; no palettes available, or 0 colors required: do nothing and return
     ldx #6*8+2

@@ -1285,11 +1285,22 @@ _palettedata_free_backup:
     @loop_end:
         rts
 
+Transition.ForceFreeBackedUpPalettes:
+    sep #$20
+    lda.w isRoomTransitioning
+    beq @skip
+        jsr _palettedata_free_backup
+    @skip:
+    rtl
+
 ; Perform a room transition.
 ; BeginRoomTransition([s8]uint room_id, [s8]uint direction)
 ; room_id   $05,S
 ; direction $04,S
 TransitionRoomIndex:
+    sep #$20
+    lda #1
+    sta.w isRoomTransitioning
     wai
 ; disable BG1 (temporarily), and copy character data of current room to BG1
     .DisableRENDER
@@ -1669,5 +1680,8 @@ TransitionRoomIndex:
     lda #SCRNDESTM
     sta.l vqueueRegOps_Addr,X
 ; end
+    sep #$20
+    lda #0
+    sta.w isRoomTransitioning
     rtl
 .ENDS

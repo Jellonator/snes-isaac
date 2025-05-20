@@ -1000,16 +1000,93 @@ _transition_ground_func_table:
     .dw _transition_ground_left
     .dw _transition_ground_up
 
+.DEFINE objectBufferFullX ($7F0000 | (tempTileData + 0))
+.DEFINE objectBufferFullY ($7F0000 | (tempTileData + 2))
+.DEFINE objectBufferTile  ($7F0000 | (tempTileData + 512 + 0))
+.DEFINE objectBufferFlags ($7F0000 | (tempTileData + 512 + 1))
+.DEFINE objectBufferS     ($7F0000 | (tempTileData + 512 + 2))
+
 .DEFINE HORIZONTAL_OFFSET $20
 .DEFINE VERTICAL_OFFSET $22
 .DEFINE FRAMES $24
 .DEFINE TEMP $26
+.DEFINE TEMP2 $2A
 .DEFINE DIRECTION $28
+.DEFINE OBJECT_TABLE_SIZE $FE
+
+_transition_update_and_upload_sprites:
+; first, clear sprite table
+    jsl ClearSpriteTable
+; now, update sprite table
+    rep #$30
+    lda #objectDataExt
+    sta.b TEMP
+    lda #%10
+    sta.b TEMP2
+    ldx #0
+    ldy #0
+    jmp @loop_enter
+    @loop:
+        inx
+        inx
+        inx
+        inx
+    @loop_enter:
+        cpx.b OBJECT_TABLE_SIZE
+        bcs @loop_end
+        lda.l objectBufferFullX,X
+        sec
+        sbc.b HORIZONTAL_OFFSET
+        sta.l objectBufferFullX,X
+        sta.w objectData.1.pos_x,Y
+        lda.l objectBufferFullY,X
+        sec
+        sbc.b VERTICAL_OFFSET
+        sta.l objectBufferFullY,X
+        cmp #256
+        bcs @loop ; skip if y is not in page
+        sta.w objectData.1.pos_y,Y
+        lda.l objectBufferTile,X
+        sta.w objectData.1.tileid,Y
+        lda.l objectBufferS,X
+        beq @dont_set_s
+            lda.b TEMP2
+            ora (TEMP)
+            sta (TEMP)
+        @dont_set_s:
+        lda.l objectBufferFullX,X
+        bit #$0100
+        beq @dont_set_x
+            lda.b TEMP2
+            lsr
+            ora (TEMP)
+            sta (TEMP)
+        @dont_set_x:
+        ; increment Y
+        iny
+        iny
+        iny
+        iny
+        ; increment shift
+        asl.b TEMP2
+        bcs @overflow
+        asl.b TEMP2
+        jmp @loop
+        @overflow:
+            inc.b TEMP
+            inc.b TEMP
+            lda #%10
+            sta.b TEMP2
+            jmp @loop
+    @loop_end:
+    rts
+
 _transition_loop:
     .ACCU 16
     .INDEX 16
     lda #32
     sta.b FRAMES
+    jsr _transition_update_and_upload_sprites
 @loop:
 ; wait for NMI
     wai
@@ -1071,6 +1148,7 @@ _transition_loop:
     tax
     jsr (_transition_ground_func_table,X)
 ; update sprite locations
+    jsr _transition_update_and_upload_sprites
 ; maybe end loop
     rep #$20
     dec.b FRAMES
@@ -1082,8 +1160,71 @@ _transition_horizontal_table:
 _transition_vertical_table:
     .dw 0, 8, 0, -8
 
+_sprite_offset_horizontal_table:
+    .dw 256, 0, -256, 0
+_sprite_offset_vertical_table:
+    .dw 0, 256, 0, -256
+
 _transition_bg2eor_table:
     .dw BG2_TILE_ADDR_OFFS_X, BG2_TILE_ADDR_OFFS_Y, BG2_TILE_ADDR_OFFS_X, BG2_TILE_ADDR_OFFS_Y
+
+_copy_objects_to_object_buffer:
+    rep #$30
+    ldy #0
+    ldx.b OBJECT_TABLE_SIZE
+    cpx #512
+    bcs @loop_end
+    lda #%10
+    sta.b TEMP
+    lda #objectDataExt
+    sta.b TEMP2
+    jmp @loop_enter
+    @loop:
+        iny
+        iny
+        iny
+        iny
+        cpy #512
+        bcs @loop_end
+        ; inc size flag
+        asl.b TEMP
+        bcs @overflow
+        asl.b TEMP
+        jmp @loop_enter
+        @overflow:
+            inc.b TEMP2
+            inc.b TEMP2
+            lda #%10
+            sta.b TEMP
+    @loop_enter:
+        lda.w objectData.1.pos_y,Y
+        and #$00FF
+        cmp #SPRITE_Y_DISABLED
+        beq @loop
+        clc
+        adc.b VERTICAL_OFFSET
+        sta.l objectBufferFullY,X
+        lda.w objectData.1.pos_x,Y
+        and #$00FF
+        clc
+        adc.b HORIZONTAL_OFFSET
+        sta.l objectBufferFullX,X
+        lda.w objectData.1.tileid,Y
+        sta.l objectBufferTile,X ; tile and flags
+        ; get size flag
+        lda (TEMP2)
+        and.b TEMP
+        sta.l objectBufferS,X
+        ; inc X
+        inx
+        inx
+        inx
+        inx
+        cpx #512
+        bcc @loop
+    @loop_end:
+    stx.b OBJECT_TABLE_SIZE
+    rts
 
 ; Perform a room transition.
 ; BeginRoomTransition([s8]uint room_id, [s8]uint direction)
@@ -1334,8 +1475,13 @@ TransitionRoomIndex:
     lda #ENTITY_CONTEXT_STANDARD
     sta.b entityExecutionContext
     pla
-    rep #$30
     ; TODO: probably in LoadRoomSlotIntoLevel, load new tileset (if available)
+; initialize sprite table with current sprites
+    rep #$30
+    stz.b HORIZONTAL_OFFSET
+    stz.b VERTICAL_OFFSET
+    stz.b OBJECT_TABLE_SIZE
+    jsr _copy_objects_to_object_buffer
 ; init room, and run one single tick
     jsl InitLoadedRoomslot
     rep #$30
@@ -1348,10 +1494,22 @@ TransitionRoomIndex:
     sep #$20
     lda #ENTITY_CONTEXT_STANDARD
     sta.b entityExecutionContext
+; add new sprites to sprite table
+    rep #$30
+    lda $04,S
+    and #$00FF
+    asl
+    tax
+    lda.l _sprite_offset_horizontal_table,X
+    sta.b HORIZONTAL_OFFSET
+    lda.l _sprite_offset_vertical_table,X
+    sta.b VERTICAL_OFFSET
+    jsr _copy_objects_to_object_buffer
 ; scroll into new room
     rep #$30
     lda $04,S
     and #$00FF
+    sta.b DIRECTION ; update DIRECTION again, in case an entity overwrote it
     asl
     tax
     lda.l _transition_horizontal_table,X

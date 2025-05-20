@@ -8,6 +8,9 @@
     flags db ; vhoopppN
 .ENDST
 
+; Y position set to sprites to disable them
+.DEFINE SPRITE_Y_DISABLED $F0
+
 ; VRAM
 ; VRAM is 64KB of 16b words addressed $0000-$7FFF
 

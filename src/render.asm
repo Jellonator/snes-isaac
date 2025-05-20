@@ -1129,7 +1129,7 @@ ClearSpriteTable:
         stz.w objectDataExt + (i*2)
     .ENDR
     sep #$20
-    lda #$F0
+    lda #SPRITE_Y_DISABLED
     .REPT 128 INDEX i
         sta.w objectData.{i+1}.pos_y
     .ENDR

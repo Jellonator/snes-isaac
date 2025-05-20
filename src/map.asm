@@ -1000,11 +1000,11 @@ _transition_ground_func_table:
     .dw _transition_ground_left
     .dw _transition_ground_up
 
-.DEFINE objectBufferFullX ($7F0000 | (tempTileData + 0))
-.DEFINE objectBufferFullY ($7F0000 | (tempTileData + 2))
-.DEFINE objectBufferTile  ($7F0000 | (tempTileData + 512 + 0))
-.DEFINE objectBufferFlags ($7F0000 | (tempTileData + 512 + 1))
-.DEFINE objectBufferS     ($7F0000 | (tempTileData + 512 + 2))
+.DEFINE objectBufferFullX ($7F0000 | (tempTileData + $0000))
+.DEFINE objectBufferFullY ($7F0000 | (tempTileData + $0002))
+.DEFINE objectBufferTile  ($7F0000 | (tempTileData + $200))
+.DEFINE objectBufferFlags ($7F0000 | (tempTileData + $201))
+.DEFINE objectBufferS     ($7F0000 | (tempTileData + $202))
 
 .DEFINE HORIZONTAL_OFFSET $20
 .DEFINE VERTICAL_OFFSET $22
@@ -1276,6 +1276,8 @@ TransitionRoomIndex:
         ; disable BG1
         lda #%00010110
         sta SCRNDESTM
+        lda #%11100110
+        sta SCRNDESTS
         ; disable second screen for BG1
         lda #(BG1_TILE_BASE_ADDR >> 8) | %00
         sta.w BG1SC
@@ -1439,7 +1441,9 @@ TransitionRoomIndex:
         sep #$20
         ; enable BG1
         lda #%00010111
-        sta SCRNDESTM
+        sta.w SCRNDESTM
+        lda #%11100111
+        sta.w SCRNDESTS
         ; mode 1, with BG1 and BG2 both having 16px tiles
         lda #%00110001
         sta.w BGMODE
@@ -1548,7 +1552,9 @@ TransitionRoomIndex:
         sta.w BG1SC
         ; hide UI
         lda #%00010110
-        sta SCRNDESTM
+        sta.w SCRNDESTM
+        lda #%11100110
+        sta.w SCRNDESTS
         ; reset scroll
         lda #0
         sta.w BG1HOFS
@@ -1598,7 +1604,7 @@ TransitionRoomIndex:
     inc.w vqueueNumRegOps
     asl
     tax
-    lda #%00010111 | ($0100 * %11100100)
+    lda #%00010111 | ($0100 * %11100111)
     sta.l vqueueRegOps_Value,X
     lda #SCRNDESTM
     sta.l vqueueRegOps_Addr,X

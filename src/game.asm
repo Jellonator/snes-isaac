@@ -157,7 +157,7 @@ tile_data_loop:
     lda #%00010111
     sta SCRNDESTM
     ; show BG1 on sub screen
-    lda #%11100100
+    lda #%11100111
     sta SCRNDESTS
     ; Setup color math and windowing
     lda #%00000010

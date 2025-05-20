@@ -232,13 +232,16 @@ TeleportToRoom:
     pla
     sta.b loadedRoomIndex
     tax
+    lda #ROOM_LOAD_CONTEXT_TELEPORT
+    pha
     lda.l mapTileSlotTable,X
     pha
     jsl LoadAndInitRoomSlotIntoLevel
-    sep #$30
+    rep #$30
     pla
     jsl PlayerDiscoverNearbyRooms
     ; Find safe spot for player
+    sep #$30
     lda.b [mapDoorSouth]
     beq +
         rep #$20

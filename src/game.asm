@@ -248,13 +248,15 @@ tile_data_loop:
         lda.w currentSaveSlot
         jsl Save.ReadSaveState
         sep #$30
+        lda #ROOM_LOAD_CONTEXT_SAVELOAD
+        pha
         lda.b currentRoomSlot
         pha
         tax
         lda.l roomSlotMapPos,X
         sta.b loadedRoomIndex
         jsl LoadAndInitRoomSlotIntoLevel
-        sep #$20
+        rep #$20
         pla
         jsl Floor_Init_PostLoad
         jmp @end_load

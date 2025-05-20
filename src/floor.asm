@@ -4,6 +4,8 @@
 .SECTION "Floor Code" FREE
 
 ; Generate and enter floor proper
+; Args:
+; $03,S room load context
 _Floor_Begin:
     jsl BeginMapGeneration
     sep #$30 ; 8 bit AXY
@@ -17,9 +19,12 @@ _Floor_Begin:
     lda #0
     sta.l devil_deal_flags
     ; load room slot 0
+    lda $03,S
+    pha
+    lda #0
     pha
     jsl LoadAndInitRoomSlotIntoLevel
-    sep #$30 ; 8 bit AXY
+    rep #$20 ; 16b A
     pla
     ; init player
     jsl PlayerEnterFloor
@@ -56,7 +61,12 @@ Floor_Init:
     lda.l FloorDefinitions,X
     sta.w currentFloorPointer
     ; initialize
+    sep #$20
+    lda #ROOM_LOAD_CONTEXT_GAMELOAD
+    pha
     jsr _Floor_Begin
+    sep #$20
+    pla
     jsr _Floor_Update_Graphics
     rtl
 
@@ -136,7 +146,12 @@ Floor_Tick:
         tax
         lda.l FloorDefinitions,X
         sta.w currentFloorPointer
+        sep #$20
+        lda #ROOM_LOAD_CONTEXT_FLOORBEGIN
+        pha
         jsr _Floor_Begin
+        sep #$20
+        pla
         rep #$30
         lda #FLOOR_FLAG_FADEIN
         tsb.w floorFlags

@@ -75,7 +75,7 @@ Palette.alloc_opaque:
     .ENDR
     ; none found. See if we are in a transition state, and if so, then free some palettes.
     lda.w isRoomTransitioning
-    beq @skip
+    bpl @skip
     jsl Transition.ForceFreeBackedUpPalettes
     jmp Palette.alloc_transparent
 @skip:
@@ -166,7 +166,7 @@ Palette.alloc_transparent:
     .ENDR
     ; none found. See if we are in a transition state, and if so, then free some palettes.
     lda.w isRoomTransitioning
-    beq @skip
+    bpl @skip
     jsl Transition.ForceFreeBackedUpPalettes
     jmp Palette.alloc_transparent
 @skip:

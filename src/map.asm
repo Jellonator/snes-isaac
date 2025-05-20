@@ -79,43 +79,12 @@ InitializeRoomSlot:
 
 ; Initialize a room slot from a room definition
 ; Push order:
+;   context                 [db] $05
 ;   room slot index         [db] $04
 LoadRoomSlotIntoLevel:
     ; first, clear existing level
     jsl entity_free_all
     jsl Palette.init_data
-    ; determine current ground data
-    sep #$30 ; 8 bit AXY
-    ldx.b loadedRoomIndex
-    lda.w mapTileTypeTable,X
-    cmp #ROOMTYPE_START
-    beq @ground_start
-    jmp @ground_default
-    @ground_start:
-        lda.w currentFloorIndex
-        bne @ground_default
-        .CopyGroundAddr spritedata.basement_ground_starting_room
-        jmp @ground_end
-    @ground_default:
-        rep #$30
-        ldx.w currentFloorPointer
-        lda.l FLOOR_DEFINITION_BASE + floordefinition_t.chapter,X
-        and #$00FF
-        asl
-        tax
-        lda.l ChapterDefinitions,X
-        tax
-        lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.ground,X
-        sta.w currentRoomGroundData
-        sep #$20
-        lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.ground+2,X
-        sta.w currentRoomGroundData+2
-        rep #$20
-        lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.groundPalette,X
-        sta.w currentRoomGroundPalette
-    @ground_end:
-    ; then, clear floor
-    jsl GroundOpClear
     ; Turn slot index into slot address in X
     sep #$30
     lda $04,S
@@ -140,6 +109,160 @@ LoadRoomSlotIntoLevel:
     inc A
     inc A
     sta.b currentRoomRngAddress_High
+    ; determine current ground data
+    rep #$30
+    ldx.w currentRoomDefinition
+    lda.l ROOM_DEFINITION_BASE + roomdefinition_t.chapterOverride,X
+    and #$00FF
+    bne +
+        ldx.w currentFloorPointer
+        lda.l FLOOR_DEFINITION_BASE + floordefinition_t.chapter,X
+        and #$00FF
+    +:
+    asl
+    tax
+    lda.l ChapterDefinitions,X
+    tax
+    sta.b tempDP
+    sep #$30 ; 8 bit AXY
+    ldx.b loadedRoomIndex
+    lda.w mapTileTypeTable,X
+    cmp #ROOMTYPE_START
+    beq @ground_start
+    jmp @ground_default
+    @ground_start:
+        lda.w currentFloorIndex
+        bne @ground_default
+        .CopyGroundAddr spritedata.basement_ground_starting_room
+        jmp @ground_end
+    @ground_default:
+        rep #$30
+        ldx.b tempDP
+        lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.ground,X
+        sta.w currentRoomGroundData
+        sep #$20
+        lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.ground+2,X
+        sta.w currentRoomGroundData+2
+        rep #$20
+        lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.groundPalette,X
+        sta.w currentRoomGroundPalette
+    @ground_end:
+    ; then, clear floor
+    jsl GroundOpClear
+    ; now, we need to load tile data. Unlike the rest of the data, which is
+    ; being uploaded via the vqueue, the tile data needs to be uploaded directly.
+    ; The full two pages of tile data is 16KB, so we will break it up into three
+    ; DMAs over three frames to prevent half the screen being blank.
+    ; TODO: could skip this step if the correct tileset is already loaded.
+    ; There are a few contexts which need to be considered:
+    ; * game loaded/save loaded - interrupts are disabled, so 'wai' would freeze us here.
+    ; but f-blank is enabled, so no need to disable rendering ourselves.
+    ; * floor begin - don't need to split, screen is black
+    ; * teleported to room - need to split
+    ; * room transition - need to split
+    sep #$20
+    lda $05,S
+    cmp #ROOM_LOAD_CONTEXT_GAMELOAD
+    beq @upload_full_direct
+    cmp #ROOM_LOAD_CONTEXT_SAVELOAD
+    beq @upload_full_direct
+    cmp #ROOM_LOAD_CONTEXT_TRANSITION
+    beql @upload_split_and_wait
+    cmp #ROOM_LOAD_CONTEXT_TELEPORT
+    beql @upload_split_and_wait
+    ; ROOM_LOAD_CONTEXT_FLOORBEGIN -> @upload_full_and_wait
+    @upload_full_and_wait:
+        wai
+        .DisableRENDER
+            rep #$30
+            ldx.b tempDP
+            lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.tiledata,X
+            sta.w DMA0_SRCL
+            lda #$4000
+            sta.w DMA0_SIZE
+            lda #BG2_CHARACTER_BASE_ADDR
+            sta.w VMADDR
+            sep #$20
+            lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.tiledata + 2,X
+            sta.w DMA0_SRCH
+            lda #$18
+            sta.w DMA0_DEST
+            lda #%00000001
+            sta.w DMA0_CTL
+            lda #$80
+            sta.w VMAIN
+            lda #1
+            sta.w MDMAEN
+        .EnableRENDER
+        jmp @upload_end
+    @upload_full_direct:
+        rep #$30
+        ldx.b tempDP
+        lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.tiledata,X
+        sta.w DMA0_SRCL
+        lda #$4000
+        sta.w DMA0_SIZE
+        lda #BG2_CHARACTER_BASE_ADDR
+        sta.w VMADDR
+        sep #$20
+        lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.tiledata + 2,X
+        sta.w DMA0_SRCH
+        lda #$18
+        sta.w DMA0_DEST
+        lda #%00000001
+        sta.w DMA0_CTL
+        lda #$80
+        sta.w VMAIN
+        lda #1
+        sta.w MDMAEN
+        jmp @upload_end
+    @upload_split_and_wait:
+    .REPT 3 INDEX i
+        wai
+        .DisableRENDER
+            rep #$30
+            ldx.b tempDP
+            lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.tiledata,X
+            .IF i > 0
+                clc
+                adc #$1600*i
+            .ENDIF
+            sta.w DMA0_SRCL
+            lda #min($1600*(i+1), $4000) - max($1600*i, $0000)
+            sta.w DMA0_SIZE
+            lda #BG2_CHARACTER_BASE_ADDR + $0B00*i
+            sta.w VMADDR
+            sep #$20
+            lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.tiledata + 2,X
+            sta.w DMA0_SRCH
+            lda #$18
+            sta.w DMA0_DEST
+            lda #%00000001
+            sta.w DMA0_CTL
+            lda #$80
+            sta.w VMAIN
+            lda #1
+            sta.w MDMAEN
+        .EnableRENDER
+    .ENDR
+    @upload_end:
+    ; copy all four palettes via vqueue
+    .REPT 4 INDEX i
+        rep #$30
+        ldx.b tempDP
+        pea 32
+        lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.palettes + (i*3) + 2,X
+        and #$00FF
+        ora #$1000 * i
+        pha
+        lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.palettes + (i*3),X
+        pha
+        jsl CopyPaletteVQueue
+        rep #$30
+        pla
+        pla
+        pla
+    .ENDR
 ; load tiles
     ; Copy default data to vqueueBinData
     .CopyROMToVQueueBin P_IMM, EmptyRoomTiles, 16*16*2
@@ -341,13 +464,14 @@ LoadRoomSlotIntoLevel:
     rtl
 
 ; Push order:
+;   room load context       [db] $05
 ;   room slot index         [db] $04
 LoadAndInitRoomSlotIntoLevel:
-    sep #$20
+    rep #$20
     lda $04,S
     pha
     jsl LoadRoomSlotIntoLevel
-    sep #$20
+    rep #$20
     pla
 InitLoadedRoomslot:
     ; initialize and update certain variables
@@ -1560,14 +1684,15 @@ TransitionRoomIndex:
     lda $05,S
     sta.b loadedRoomIndex
     tax
+    lda #ROOM_LOAD_CONTEXT_TRANSITION
+    pha
     lda.l mapTileSlotTable,X
     pha
     jsl LoadRoomSlotIntoLevel
-    sep #$30
+    rep #$30
+    pla
     lda #ENTITY_CONTEXT_STANDARD
     sta.b entityExecutionContext
-    pla
-    ; TODO: probably in LoadRoomSlotIntoLevel, load new tileset (if available)
 ; initialize sprite table with current sprites
     rep #$30
     stz.b HORIZONTAL_OFFSET

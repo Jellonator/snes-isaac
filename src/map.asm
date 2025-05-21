@@ -250,12 +250,14 @@ LoadRoomSlotIntoLevel:
     .REPT 4 INDEX i
         rep #$30
         ldx.b tempDP
-        pea 32
+        pea 30 ; skip first byte, to not overwrite clear color
         lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.palettes + (i*3) + 2,X
         and #$00FF
-        ora #PALETTE_TILESET.{i}
+        ora #PALETTE_TILESET.{i} + $0100
         pha
         lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.palettes + (i*3),X
+        clc
+        adc #2
         pha
         jsl CopyPaletteVQueue
         rep #$30
@@ -1513,9 +1515,9 @@ TransitionRoomIndex:
         sta.w MDMAEN
         ; disable BG1
         lda #%00010110
-        sta SCRNDESTM
+        sta.w SCRNDESTM
         lda #%11100110
-        sta SCRNDESTS
+        sta.w SCRNDESTS
         ; disable second screen for BG1
         lda #(BG1_TILE_BASE_ADDR >> 8) | %00
         sta.w BG1SC
@@ -1617,7 +1619,6 @@ TransitionRoomIndex:
         +:
         ora #$1000
         sta.l tempTileData,X
-
         inx
         inx
         dey
@@ -1699,7 +1700,7 @@ TransitionRoomIndex:
         ; enable BG1
         lda #%00010111
         sta.w SCRNDESTM
-        lda #%11100111
+        lda #%00000111
         sta.w SCRNDESTS
         ; mode 1, with BG1 and BG2 both having 16px tiles
         lda #%00110001
@@ -1817,7 +1818,7 @@ TransitionRoomIndex:
         ; hide UI
         lda #%00010110
         sta.w SCRNDESTM
-        lda #%11100110
+        lda #%00000110
         sta.w SCRNDESTS
         ; reset scroll
         lda #0
@@ -1866,12 +1867,17 @@ TransitionRoomIndex:
     rep #$30
     lda.w vqueueNumRegOps
     inc.w vqueueNumRegOps
+    inc.w vqueueNumRegOps
     asl
     tax
-    lda #%00010111 | ($0100 * %11100111)
+    lda #%00010111
     sta.l vqueueRegOps_Value,X
     lda #SCRNDESTM
     sta.l vqueueRegOps_Addr,X
+    lda #%00000111
+    sta.l vqueueRegOps_Value+2,X
+    lda #SCRNDESTS
+    sta.l vqueueRegOps_Addr+2,X
 ; end
     sep #$20
     lda #0

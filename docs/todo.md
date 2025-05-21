@@ -36,8 +36,8 @@
 ## BOSSES
 
 - Bosses
-    * [ ] (basement) Monstro
-    * [ ] (basement) Duke of Flies
+    * [ ] (basement) Finish Monstro
+    * [ ] (basement) Finish Duke of Flies
 
 ## OTHER
 

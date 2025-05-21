@@ -112,7 +112,7 @@ ProcessVQueue:
     sta.b $00,X
     iny
     iny
-    cpy $00
+    cpy.b $00
     bcc @process_reg_loop
 @process_reg_end:
 ; Clear vqueue and reset bank

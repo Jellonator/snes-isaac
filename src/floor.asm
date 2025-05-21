@@ -259,7 +259,7 @@ _Floor_Update_Graphics:
 .ENDST
 
 .DSTRUCT ChapterDefinition_DevilRoom INSTANCEOF chapterdefinition_t VALUES
-    name: .ASCSTR "Secret Room\0"
+    name: .ASCSTR "Devil Room\0"
     palettes:
         .dl palettes.stage_devil_room_ground
         .dl 0

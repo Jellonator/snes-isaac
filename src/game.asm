@@ -120,11 +120,11 @@ Game.Begin:
     ; Set up tilemap. First, write empty in all slots
     rep #$30 ; 16 bit X, Y, Z
     lda #BG2_TILE_BASE_ADDR
-    sta VMADDR
+    sta.w VMADDR
     lda #deft($08, 2)
     ldx #$0000
 tile_map_loop:
-    sta VMDATA
+    sta.w VMDATA
     inx
     cpx #$0400 ; overwrite entire tile map
     bne tile_map_loop
@@ -132,7 +132,7 @@ tile_map_loop:
     ; now, copy data for room layout
     ; room is 16x12, game is 32x32
     lda #BG2_TILE_BASE_ADDR
-    sta VMADDR
+    sta.w VMADDR
     ldx #$0000 ; rom tile data index
     ldy #$0000 ; vram tile data index
 tile_data_loop:
@@ -147,7 +147,7 @@ tile_data_loop:
 @copyzero:
     lda #deft($08, 2)
 @store:
-    sta VMDATA
+    sta.w VMDATA
     iny
     iny
     cpy #$0300 ; 32 * 12 tiles
@@ -155,40 +155,40 @@ tile_data_loop:
     sep #$30 ; 8 bit X, Y, Z
     ; show sprites and BG2 on main screen
     lda #%00010111
-    sta SCRNDESTM
+    sta.w SCRNDESTM
     ; show BG1 on sub screen
     lda #%11100111
-    sta SCRNDESTS
+    sta.w SCRNDESTS
     ; Setup color math and windowing
     lda #%00000010
-    sta CGWSEL
+    sta.w CGWSEL
     lda #%01110100
-    sta CGADSUB
+    sta.w CGADSUB
     lda #%00010110
-    sta SCRNDESTMW
+    sta.w SCRNDESTMW
     lda #%00011110
-    sta SCRNDESTSW
+    sta.w SCRNDESTSW
     lda #%00100000
-    sta W12SEL
+    sta.w W12SEL
     lda #%00000010
-    sta W34SEL
+    sta.w W34SEL
     lda #%00000010
-    sta WOBJSEL
+    sta.w WOBJSEL
     lda #%00111111
-    sta COLDATA
+    sta.w COLDATA
     ; Set background color
     sep #$20 ; 8 bit A
-    stz CGADDR
+    stz.w CGADDR
     lda #lobyte(CLEAR_COLOR)
-    sta CGDATA
+    sta.w CGDATA
     lda #hibyte(CLEAR_COLOR)
-    sta CGDATA
+    sta.w CGDATA
     lda #$E0
-    sta BG2VOFS
+    sta.w BG2VOFS
     lda #$FF
-    sta BG2VOFS
-    stz BG3VOFS
-    stz BG3VOFS
+    sta.w BG2VOFS
+    stz.w BG3VOFS
+    stz.w BG3VOFS
     rep #$30
     lda #0
     sta.l tickCounter

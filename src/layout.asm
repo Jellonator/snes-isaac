@@ -226,6 +226,7 @@
     vqueueBinData ds $4000
     vqueueOps INSTANCEOF vqueueop_t VQUEUE_MAX_SIZE
     vqueueMiniOps INSTANCEOF vqueueminiop_t 255
+    ; Vqueue regops. Note that 'addr' is 16B, but 'value' is 8B
     vqueueRegOps_Addr dsw 64
     vqueueRegOps_Value dsw 64
 ; Player sprite buffer

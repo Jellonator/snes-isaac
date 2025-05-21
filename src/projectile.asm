@@ -374,7 +374,7 @@ projectile_tick__:
 ; A couple of modifications were made for accuracy
         ; get dx
         tax
-        stz.b $00
+        stz.b tempDP
         lda.w entity_box_x1,X
         clc
         adc.w entity_box_x2,X
@@ -384,37 +384,37 @@ projectile_tick__:
         bcs +
             eor #$FF
         +:
-        tax
-        rol.b $00
+        sta.b tempDP+2
+        rol.b tempDP
         ror
         cmp #40
         bcsl @no_homing
         ; get dy
         lda.w loword(entity_ysort),X
+        sec
         sbc.b PROJECTILE_TMP_POSY
         bcs +
             eor #$FF
         +:
-        pha
-        rol.b $00
+        sta.b tempDP+4
+        rol.b tempDP
         ror
         cmp #40
-        bcc +
-            pla
-            jmp @no_homing
-        +:
+        bcsl @no_homing
         ; calculate log(x) - log(y)
+        ldx.b tempDP+2
         lda.l Log2Mult32Table8,X
-        plx
+        ldx.b tempDP+4
+        sec
         sbc.l Log2Mult32Table8,X
         bcc +
             eor #$FF
         +:
         tax
-        rol.b $00
+        rol.b tempDP
         ; calculate atan
         lda.l AtanLogTable8,X
-        ldx.b $00
+        ldx.b tempDP
         eor.l AtanOctantAdjustTable8,X
         adc #$80
         tax

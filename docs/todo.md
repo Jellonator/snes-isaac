@@ -23,6 +23,18 @@
 ## ITEMS
 
 - [X] Active Items
+- [ ] Proper item pools;
+    Item pools need to add no data to save games. My proposal:
+    Items which are on the current floor will be excluded from the pool.
+    Items which are in the player's inventory, and are not marked as duplicable,
+    will be excluded from the pool.
+    If the pool is empty, then add duplicable items to the pool, regardless of
+    if the player has the item or not.
+    If the pool is still empty, then we give a default item.
+- [ ] Familiars
+    * [ ] Followers - Brother bobby, sister maggy
+    * [ ] Orbiters - Sacrificial dagger, cube of meat
+    * [ ] 'conjoined' transformation. Except now we just merge familiars together.
 
 ## ENEMIES
 

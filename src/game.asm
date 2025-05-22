@@ -348,12 +348,11 @@ _Game.Loop:
         sep #$30
         lda.w joy1press+1
         bit #hibyte(JOY_START)
-        beq @skip_pause
+        beq @skip_paused
             lda #1
             sta.w shouldGamePause
             ; begin pause
             jsr Pause.Begin
-    @skip_pause:
 @skip_paused:
     jsl GroundProcessOps
     jsl Overlay.update
@@ -423,9 +422,31 @@ _UpdateUsables:
 
 .DEFINE PAUSE_NUM_SELECT 3
 
+.DEFINE PAUSE_CHEAT_PAGE 2
+.DEFINE PAUSE_CHEAT_ENTRY_LENGTH 10
+
+.ENUM $0070
+    cheatEntryIndex dw
+    cheatActionSelect dw
+    cheatParameterValue dw
+.ENDE
+
+_cheat_entry:
+    .dw JOY_UP
+    .dw JOY_UP
+    .dw JOY_DOWN
+    .dw JOY_DOWN
+    .dw JOY_LEFT
+    .dw JOY_RIGHT
+    .dw JOY_LEFT
+    .dw JOY_RIGHT
+    .dw JOY_SELECT
+    .dw JOY_START
+
 _pause_pages:
     .dw Pause.PageMap
     .dw Pause.PageStats
+    .dw Pause.PageCheat
 
 _pause_actions:
     .dw Pause.ActionUnpause
@@ -454,6 +475,7 @@ Pause.Begin:
     sta.w pausePage
     sta.w pauseSelect
     rep #$30
+    stz.b cheatEntryIndex
     and #$00FF
     asl
     tax
@@ -834,6 +856,7 @@ Pause.End:
 
 Pause.Update:
     rep #$30
+; Updates which are common to all pages
     ; check page change
     stz.b $00
     lda.w joy1press
@@ -874,6 +897,39 @@ Pause.Update:
         lda #1
         sta.b $00
     +:
+    ; check if we are on cheats page
+    sep #$20
+    lda.w pausePage
+    cmp #PAUSE_CHEAT_PAGE
+    bne +
+        jmp _pause_update_cheats_page
+    +:
+; Updates that only occur on STATS and MAP
+    ; check cheat entry
+    rep #$30
+    lda.b cheatEntryIndex
+    asl
+    tax
+    lda.w joy1press
+    beq @no_cheat_entry
+    cmp.l _cheat_entry,X
+    beq @inc_cheat_entry
+        stz.b cheatEntryIndex
+        jmp @no_cheat_entry
+    @inc_cheat_entry:
+        inc.b cheatEntryIndex
+        lda.b cheatEntryIndex
+        cmp #PAUSE_CHEAT_ENTRY_LENGTH
+        bne @no_cheat_entry
+        ; show cheat page
+        stz.b cheatEntryIndex
+        lda #PAUSE_CHEAT_PAGE
+        sta.w pausePage
+        asl
+        tax
+        jsr (_pause_pages,X)
+        rts
+@no_cheat_entry:
     ; check selection change
     sep #$20
     lda.w pauseSelect
@@ -943,6 +999,475 @@ Pause.Update:
         tax
         jsr (_pause_actions,X)
 @skip_action:
+    rts
+
+.DEFINE NUM_CHEAT_ACTIONS 8
+
+_cheat_action_begin:
+    .dw _cheat_action_begin_floor
+    .dw _cheat_action_begin_room
+    .dw _cheat_action_begin_item_give
+    .dw _cheat_action_begin_item_remove
+    .dw _cheat_action_begin_consumable_set
+    .dw _cheat_action_begin_money
+    .dw _cheat_action_begin_bombs
+    .dw _cheat_action_begin_keys
+
+_cheat_action_tick:
+    .dw _cheat_action_tick_floor
+    .dw _cheat_action_tick_room
+    .dw _cheat_action_tick_item_give
+    .dw _cheat_action_tick_item_remove
+    .dw _cheat_action_tick_consumable_set
+    .dw _cheat_action_tick_money
+    .dw _cheat_action_tick_bombs
+    .dw _cheat_action_tick_keys
+
+Pause.PageCheat:
+; copy tilemap
+    .CopyROMToVQueueBin P_IMM tilemap.pause_cheat (32*32*2)
+    rep #$30
+    .VQueueOpToA
+    tax
+    inc.w vqueueNumOps
+    lda.w vqueueBinOffset
+    sta.l vqueueOps.1.aAddr,X
+    lda #32*32*2
+    sta.l vqueueOps.1.numBytes,X
+    lda #BG1_TILE_BASE_ADDR + $0400
+    sta.l vqueueOps.1.vramAddr,X
+    sep #$20
+    lda #$7F
+    sta.l vqueueOps.1.aAddr+2,X
+    lda #VQUEUE_MODE_VRAM
+    sta.l vqueueOps.1.mode,X
+; set default values
+    rep #$20
+    stz.b cheatActionSelect
+    jsr _cheat_action_begin_floor
+    rts
+
+_pause_update_cheats_page:
+; exit if start is pressed
+    rep #$20
+    lda.w joy1press
+    bit #JOY_START
+    beq +
+        jsr Pause.ActionUnpause
+        rts
+    +:
+; swap actions
+    ; check page change
+    rep #$20
+    lda.b cheatActionSelect
+    sta.b $02
+    stz.b $00
+    lda.w joy1press
+    bit #JOY_UP
+    beq +
+        sep #$20
+        inc.b $00
+        lda.b cheatActionSelect
+        dec A
+        bpl ++
+            lda #NUM_CHEAT_ACTIONS-1
+        ++:
+        sta.b cheatActionSelect
+        rep #$20
+    +:
+    lda.w joy1press
+    bit #JOY_DOWN
+    beq +
+        sep #$20
+        inc.b $00
+        lda.b cheatActionSelect
+        inc A
+        cmp #NUM_CHEAT_ACTIONS
+        bcc ++
+            lda #0
+        ++:
+        sta.b cheatActionSelect
+        rep #$20
+    +:
+    lda.b $00
+    beq +
+        ; put indicator
+        lda.w vqueueNumMiniOps
+        inc.w vqueueNumMiniOps
+        inc.w vqueueNumMiniOps
+        asl
+        asl
+        tax
+        lda.b $02
+        .MultiplyStatic 64
+        clc
+        adc #textpos(3, 40) + BG1_TILE_BASE_ADDR
+        sta.l vqueueMiniOps.1.vramAddr
+        lda #deft($B1, 6)
+        sta.l vqueueMiniOps.1.data
+        lda.b cheatActionSelect
+        and #$00FF
+        .MultiplyStatic 64
+        clc
+        adc #textpos(3, 40) + BG1_TILE_BASE_ADDR
+        sta.l vqueueMiniOps.2.vramAddr
+        lda #deft($AF, 6)
+        sta.l vqueueMiniOps.2.data
+        ; clear display
+        jsr _cheat_clear_display
+        ; begin action
+        lda.b cheatActionSelect
+        and #$00FF
+        asl
+        tax
+        jsr (_cheat_action_begin,X)
+        sep #$20
+        lda #1
+        sta.b $00
+        rts
+        .ACCU 16
+    +:
+    ; update action
+    lda.b cheatActionSelect
+    and #$00FF
+    asl
+    tax
+    jsr (_cheat_action_tick,X)
+; end
+    rts
+
+; write value in 'A' to number display
+_cheat_write_decimal_view:
+    rep #$30
+    sta.b $00
+    ; get vqueue op pointer
+    lda.w vqueueNumMiniOps
+    inc.w vqueueNumMiniOps
+    inc.w vqueueNumMiniOps
+    inc.w vqueueNumMiniOps
+    inc.w vqueueNumMiniOps
+    asl
+    asl
+    tax
+    ; put characters
+    .GetDecimalAsTilePause P_DIR, $00, 0
+    sta.l vqueueMiniOps.1.data,X
+    .GetDecimalAsTilePause P_DIR, $00, 1
+    sta.l vqueueMiniOps.2.data,X
+    .GetDecimalAsTilePause P_DIR, $00, 2
+    sta.l vqueueMiniOps.3.data,X
+    .GetDecimalAsTilePause P_DIR, $00, 3
+    sta.l vqueueMiniOps.4.data,X
+    lda #textpos(18, 40) + BG1_TILE_BASE_ADDR
+    sta.l vqueueMiniOps.4.vramAddr,X
+    inc A
+    sta.l vqueueMiniOps.3.vramAddr,X
+    inc A
+    sta.l vqueueMiniOps.2.vramAddr,X
+    inc A
+    sta.l vqueueMiniOps.1.vramAddr,X
+    rts
+
+; write string in [$00] to string display
+_cheat_write_text_view:
+    rep #$30
+    ; get ops
+    lda.w vqueueBinOffset
+    sec
+    sbc #64
+    sta.w vqueueBinOffset
+    sta.b $04 ; [$04] - bin ptr
+    lda #$7F
+    sta.b $06
+    .VQueueOpToA
+    tax
+    inc.w vqueueNumOps
+    inc.w vqueueNumOps
+    ; put data into vqueue
+    lda #32
+    sta.l vqueueOps.1.numBytes,X
+    sta.l vqueueOps.2.numBytes,X
+    lda.b $04
+    sta.l vqueueOps.1.aAddr,X
+    clc
+    adc #32
+    sta.l vqueueOps.2.aAddr,X
+    lda #textpos(12, 42) + BG1_TILE_BASE_ADDR
+    sta.l vqueueOps.1.vramAddr,X
+    lda #textpos(12, 44) + BG1_TILE_BASE_ADDR
+    sta.l vqueueOps.2.vramAddr,X
+    sep #$20
+    lda #$7F
+    sta.l vqueueOps.1.aAddr+2,X
+    sta.l vqueueOps.2.aAddr+2,X
+    lda #VQUEUE_MODE_VRAM
+    sta.l vqueueOps.1.mode,X
+    sta.l vqueueOps.2.mode,X
+    ; write text to vqueuebin
+    rep #$30
+    lda #32
+    sta.b $08
+    @loop:
+        lda [$00]
+        and #$00FF
+        beq @loop_end
+        ora #deft(0, 6) | T_HIGHP
+        sta [$04]
+        inc.b $00
+        inc.b $04
+        inc.b $04
+        dec.b $08
+        bne @loop
+    @loop_end:
+    ; write empty until full
+    lda #deft($B1, 6) | T_HIGHP
+    @loop_fill:
+        sta [$04]
+        inc.b $04
+        inc.b $04
+        dec.b $08
+        bne @loop_fill
+    rts
+
+_cheat_clear_display:
+    rep #$30
+    ; get ops
+    lda.w vqueueBinOffset
+    sec
+    sbc #32
+    sta.w vqueueBinOffset
+    sta.b $04 ; [$04] - bin ptr
+    lda #$7F
+    sta.b $06
+    .VQueueOpToA
+    tax
+    inc.w vqueueNumOps
+    inc.w vqueueNumOps
+    inc.w vqueueNumOps
+    ; put data into vqueue
+    lda #32
+    sta.l vqueueOps.1.numBytes,X
+    sta.l vqueueOps.2.numBytes,X
+    lda #8
+    sta.l vqueueOps.3.numBytes,X
+    lda.b $04
+    sta.l vqueueOps.1.aAddr,X
+    sta.l vqueueOps.2.aAddr,X
+    sta.l vqueueOps.3.aAddr,X
+    lda #textpos(12, 42) + BG1_TILE_BASE_ADDR
+    sta.l vqueueOps.1.vramAddr,X
+    lda #textpos(12, 44) + BG1_TILE_BASE_ADDR
+    sta.l vqueueOps.2.vramAddr,X
+    lda #textpos(18, 40) + BG1_TILE_BASE_ADDR
+    sta.l vqueueOps.3.vramAddr,X
+    sep #$20
+    lda #$7F
+    sta.l vqueueOps.1.aAddr+2,X
+    sta.l vqueueOps.2.aAddr+2,X
+    sta.l vqueueOps.3.aAddr+2,X
+    lda #VQUEUE_MODE_VRAM
+    sta.l vqueueOps.1.mode,X
+    sta.l vqueueOps.2.mode,X
+    sta.l vqueueOps.3.mode,X
+    ; write text to vqueuebin
+    rep #$30
+    lda #16
+    sta.b $08
+    ; write empty until full
+    lda #deft($B1, 6) | T_HIGHP
+    @loop_fill:
+        sta [$04]
+        inc.b $04
+        inc.b $04
+        dec.b $08
+        bne @loop_fill
+    rts
+
+; FLOOR
+
+_cheat_action_begin_floor:
+    rep #$20
+; get and write current floor index
+    lda.w currentFloorIndex
+    sta.b cheatParameterValue
+    jsl ConvertBinaryToDecimalU16
+    jsr _cheat_write_decimal_view
+; get and write floor name
+    rep #$30
+    lda.b cheatParameterValue
+    asl
+    tax
+    lda.l FloorDefinitions,X
+    clc
+    adc #floordefinition_t.name
+    sta.b $00
+    lda #bankbyte(FLOOR_DEFINITION_BASE)
+    sta.b $02
+    jsr _cheat_write_text_view
+    rts
+
+_cheat_action_tick_floor:
+    rts
+
+; ROOM
+
+_cheat_action_begin_room:
+    rts
+
+_cheat_action_tick_room:
+    rts
+
+; ITEM GIVE
+
+_cheat_action_item_render:
+    rep #$30
+    ldx.b cheatParameterValue
+    lda.w playerData.playerItemStackNumber,X
+    and #$00FF
+    jsl ConvertBinaryToDecimalU16
+    jsr _cheat_write_decimal_view
+    rep #$30
+    lda.b cheatParameterValue
+    asl
+    tax
+    lda.l Item.items,X
+    clc
+    adc #itemdef_t.name
+    sta.b $00
+    lda #bankbyte(Item.items)
+    sta.b $02
+    jsr _cheat_write_text_view
+    rts
+
+_cheat_action_begin_item_give:
+    rep #$30
+    lda #1
+    sta.b cheatParameterValue
+    jsr _cheat_action_item_render
+    rts
+
+_cheat_action_tick_item_give:
+    rep #$30
+    lda.w joy1press
+    bit #JOY_RIGHT
+    beq @no_right
+        lda.b cheatParameterValue
+        inc A
+        cmp #ITEM_COUNT
+        bcc +
+            lda #1
+        +:
+        sta.b cheatParameterValue
+        jsr _cheat_action_item_render
+        rep #$30
+    @no_right:
+    lda.w joy1press
+    bit #JOY_LEFT
+    beq @no_left
+        lda.b cheatParameterValue
+        dec A
+        bne +
+            lda #ITEM_COUNT-1
+        +:
+        sta.b cheatParameterValue
+        jsr _cheat_action_item_render
+        rep #$30
+    @no_left:
+    ; try give or take items
+    lda.w joy1press
+    bit #JOY_A
+    beq @no_give
+        sep #$20
+        ldx.b cheatParameterValue
+        lda.w playerData.playerItemStackNumber,X
+        cmp #PLAYER_MAX_ITEM_COUNT-1
+        bcs @no_give
+        lda.w playerData.playerItemCount
+        cmp #$FF
+        beq @no_give
+        rep #$30
+        lda.b cheatParameterValue
+        asl
+        tax
+        lda.l Item.items,X
+        tax
+        lda.l bankaddr(Item.items) + itemdef_t.flags,X
+        and #ITEMFLAG_ACTIVE
+        beq @passive
+    ; active
+        sep #$30
+        lda.b cheatParameterValue
+        jsl Item.set_active
+        rep #$30
+        lda.b cheatParameterValue
+        asl
+        tax
+        lda.l Item.items,X
+        tax
+        lda.l bankaddr(Item.items) + itemdef_t.charge_init,X
+        sep #$20
+        sta.w playerData.current_active_charge
+        jsl UI.update_charge_display
+        jmp @no_give
+    @passive:
+        sep #$30
+        lda.b cheatParameterValue
+        jsl Item.add
+        jsr _cheat_action_item_render
+    @no_give:
+    rep #$30
+    lda.w joy1press
+    bit #JOY_B
+    beq @no_take
+        sep #$20
+        ldx.b cheatParameterValue
+        lda.w playerData.playerItemStackNumber,X
+        beq @no_take
+        lda.b cheatParameterValue
+        jsl Item.remove
+        jsr _cheat_action_item_render
+        rep #$30
+    @no_take:
+    rts
+
+; ITEM REMOVE
+
+_cheat_action_begin_item_remove:
+    rts
+
+_cheat_action_tick_item_remove:
+    rts
+
+; CONSUMABLE
+
+_cheat_action_begin_consumable_set:
+    rts
+
+_cheat_action_tick_consumable_set:
+    rts
+
+; MONEY
+
+_cheat_action_begin_money:
+    rts
+
+_cheat_action_tick_money:
+    rts
+
+; BOMBS
+
+_cheat_action_begin_bombs:
+    rts
+
+_cheat_action_tick_bombs:
+    rts
+
+; KEYS
+
+_cheat_action_begin_keys:
+    rts
+
+_cheat_action_tick_keys:
     rts
 
 Pause.UpdateScroll:

@@ -40,6 +40,38 @@ Item.add:
     jsr (itemdef_t.on_pickup,X)
     rtl
 
+; Remove item 'A' from player items
+Item.remove:
+    sep #$30
+    ; search and remove from list
+    ldx #PLAYER_MAX_ITEM_COUNT-1
+    @loop:
+        cmp.w playerData.playerItemList,X
+        beq @found
+        dex
+        cpx #$FF
+        bne @loop
+    @fail:
+        rtl
+    @found:
+        xba
+    @loop_copy:
+        lda.w playerData.playerItemList+1,X
+        sta.w playerData.playerItemList,X
+        inx
+        cpx #PLAYER_MAX_ITEM_COUNT
+        bne @loop_copy
+        xba
+    ; decrement stack count
+    tax
+    dec.w playerData.playerItemStackNumber,X
+    dec.w playerData.playerItemCount
+    ; set flags
+    rep #$20
+    lda #PLAYER_FLAG_INVALIDATE_ITEM_CACHE
+    tsb.w playerData.flags
+    rtl
+
 ; Set player's active item to A
 ; This function does NOT modify charge.
 ; The caller is responsible for:

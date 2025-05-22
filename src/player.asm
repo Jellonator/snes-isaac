@@ -421,11 +421,11 @@ PlayerInit:
     .ENDR
     stz.w playerData.brimstone_timer
     stz.w playerData.invuln_timer
-    lda #$99
+    lda #$00
     sta.w playerData.money
-    lda #$99
+    lda #$00
     sta.w playerData.keys
-    lda #$99
+    lda #$00
     sta.w playerData.bombs
     stz.w playerData.current_consumable
     stz.w playerData.current_active_charge

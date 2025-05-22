@@ -448,3 +448,18 @@
     ror
     and #$E000
 .ENDM
+
+.MACRO .GetDecimalAsTilePause ARGS method, data, chari
+    .g_instruction lda, method, (data + floor(chari / 2))
+    .IF (chari#2) == 0
+        and #$000F
+    .ELSE
+        and #$00F0
+        lsr
+        lsr
+        lsr
+        lsr
+    .ENDIF
+    clc
+    adc #TILE_TEXT_FONT_BASE + deft(0, 6) + T_HIGHP
+.ENDM

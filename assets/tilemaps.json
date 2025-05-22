@@ -19,5 +19,12 @@
         "palette": 6,
         "priority": 1,
         "default": 0
+    },
+    {
+        "name": "pause_cheat",
+        "src": "assets/tilemaps/pause_cheat.tmx",
+        "palette": 6,
+        "priority": 1,
+        "default": 0
     }
 ]

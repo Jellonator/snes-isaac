@@ -1285,11 +1285,10 @@ _cheat_clear_display:
 
 ; FLOOR
 
-_cheat_action_begin_floor:
+_cheat_action_floor_render:
     rep #$20
-; get and write current floor index
-    lda.w currentFloorIndex
-    sta.b cheatParameterValue
+; render floor index
+    lda.b cheatParameterValue
     jsl ConvertBinaryToDecimalU16
     jsr _cheat_write_decimal_view
 ; get and write floor name
@@ -1306,7 +1305,49 @@ _cheat_action_begin_floor:
     jsr _cheat_write_text_view
     rts
 
+_cheat_action_begin_floor:
+    rep #$20
+; get and write current floor index
+    lda.w currentFloorIndex
+    sta.b cheatParameterValue
+    jsr _cheat_action_floor_render
+
 _cheat_action_tick_floor:
+    rep #$30
+    lda.w joy1press
+    bit #JOY_RIGHT
+    beq @no_right
+        lda.b cheatParameterValue
+        inc A
+        cmp #FLOOR_COUNT
+        bcc +
+            lda #0
+        +:
+        sta.b cheatParameterValue
+        jsr _cheat_action_floor_render
+        rep #$30
+    @no_right:
+    lda.w joy1press
+    bit #JOY_LEFT
+    beq @no_left
+        lda.b cheatParameterValue
+        dec A
+        bpl +
+            lda #FLOOR_COUNT-1
+        +:
+        sta.b cheatParameterValue
+        jsr _cheat_action_floor_render
+        rep #$30
+    @no_left:
+    lda.w joy1press
+    bit #JOY_A
+    beq @no_change_floor
+        lda.b cheatParameterValue
+        dec A
+        sta.w currentFloorIndex
+        jsl Floor_Next
+        jsr Pause.ActionUnpause
+    @no_change_floor:
     rts
 
 ; ROOM

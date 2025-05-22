@@ -108,10 +108,15 @@
     currentFloorIndex dw
     currentFloorPointer dw
     floorFlags dw
+; Auto-cleared entity data (will be cleared on game start and between floors)
+    entity_data_begin ds 0 ; data from here to entity_data_end will be cleared
+    private_base_entity_combined_type_variant dsw ENTITY_TOTAL_MAX
+    spatial_partition INSTANCEOF spatialpartitionlayer_t SPATIAL_LAYER_COUNT
+    currentRoomEnemyCount dw
+    currentRoomDoSpawnReward db
+    entity_data_end ds 1
 ; Commonly used entity data
     entityExecutionOrder ds ENTITY_TOTAL_MAX
-    entity_data_begin ds 0
-    private_base_entity_combined_type_variant dsw ENTITY_TOTAL_MAX
     private_base_entity_combined_state_timer dsw ENTITY_TOTAL_MAX
     private_base_entity_combined_mask_signal dsw ENTITY_TOTAL_MAX
     private_base_entity_health dsw ENTITY_TOTAL_MAX
@@ -124,11 +129,6 @@
     private_base_entity_velocx dsw ENTITY_TOTAL_MAX
     private_base_entity_velocy dsw ENTITY_TOTAL_MAX
 ; Common entity data
-    currentRoomEnemyCount dw
-    currentRoomDoSpawnReward db
-    ; spatial collision data (for entities)
-    spatial_partition INSTANCEOF spatialpartitionlayer_t SPATIAL_LAYER_COUNT
-    entity_data_end ds 01
     ; pathfinding data
     _pathfind_nearest_enemy_id_reserve ds 256
     _pathfind_player_data_reserve ds 256

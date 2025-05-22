@@ -354,7 +354,7 @@ true_entity_pickup_tick:
         sta.w pickup_prevention_timer,Y
         jmp @skip_pickup
     +:
-    .EntityEasyCheckPlayerCollision_Center @skip_pickup, 8, 10
+    .EntityEasyCheckNoPlayerCollision_Center @skip_pickup, 8, 10
         rep #$30
         lda.w entity_variant,Y
         and #$00FF

@@ -442,7 +442,7 @@ true_item_pedastal_tick_base:
     ; check player position, and potentially change state
     lda.w playerData.anim_wait_timer
     bnel @no_player_col
-    .EntityEasyCheckPlayerCollision_Box @has_player_col
+    .EntityEasyCheckPlayerCollision_Center @has_player_col, 8, 8
     jmp @no_player_col
     @has_player_col:
     lda.w _item_price,Y

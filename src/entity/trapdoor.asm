@@ -32,7 +32,7 @@ true_entity_trapdoor_tick:
     +:
     ; collision detection
     .EntityEasySetBox 16 16
-    .EntityEasyCheckPlayerCollision_Center @no_player_col, 8, 10
+    .EntityEasyCheckNoPlayerCollision_Center @no_player_col, 8, 10
         ; TODO: handle next floor
         jsl Floor_Next
     @no_player_col:

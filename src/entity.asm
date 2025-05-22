@@ -41,13 +41,18 @@ entity_create_and_init:
     lda.w entity_type,Y
     bne @loop
 @end:
-    ; init entity
+    ; clear entity data
+    rep #$20
     lda #0
-    sta.w entity_mask,Y
-    sta.w entity_signal,Y
-    sta.w loword(entity_damageflash),Y
     sta.w loword(entity_flags),Y
-    xba
+    sta.w loword(entity_velocx),Y
+    sta.w loword(entity_velocy),Y
+    sta.w loword(private_base_entity_combined_state_timer-2),Y
+    sta.w loword(private_base_entity_combined_mask_signal-2),Y
+    sta.w loword(entity_health),Y
+    sep #$20
+    sta.w loword(entity_damageflash),Y
+    ; init entity data
     pla
     sta.w entity_variant,Y
     pla
@@ -102,13 +107,18 @@ entity_create:
     lda.w entity_type,Y
     bne @loop
 @end:
-    ; init entity
+    ; clear entity data
+    rep #$20
     lda #0
-    sta.w entity_mask,Y
-    sta.w entity_signal,Y
-    sta.w loword(entity_damageflash),Y
     sta.w loword(entity_flags),Y
-    xba
+    sta.w loword(entity_velocx),Y
+    sta.w loword(entity_velocy),Y
+    sta.w loword(private_base_entity_combined_state_timer-2),Y
+    sta.w loword(private_base_entity_combined_mask_signal-2),Y
+    sta.w loword(entity_health),Y
+    sep #$20
+    sta.w loword(entity_damageflash),Y
+    ; init entity data
     pla
     sta.w entity_variant,Y
     pla

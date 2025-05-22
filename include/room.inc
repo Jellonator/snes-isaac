@@ -91,7 +91,7 @@
     roomSize db
     numObjects db
     chapterOverride db ; overrides chapter for display
-    tileData INSTANCEOF byte_t ROOM_TILE_COUNT
+    tileData ds ROOM_TILE_COUNT
     ; objectDefinitions INSTANCEOF objectdef_t *
 .ENDST
 

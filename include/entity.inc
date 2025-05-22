@@ -291,6 +291,40 @@
     clc
     adc #left
     cmp.w player_box_x2
+    bpl +++++
+
+    lda.w entity_box_x2,Y
+    clc
+    adc #right
+    cmp.w player_box_x1
+    bmi +++++
+
+    lda.w entity_box_y1,Y
+    clc
+    adc #top
+    cmp.w player_box_y2
+    bpl +++++
+
+    lda.w entity_box_y2,Y
+    clc
+    adc #bottom
+    cmp.w player_box_y1
+    bmi +++++
+
+    jmp addr
++++++:
+.ENDM
+
+; Check for collision of entity Y with player, based on box boundaries,
+; offset by provided boundaries
+; If not colliding, jump to 'addr'
+.MACRO .EntityEasyCheckNoPlayerCollision_Rect ARGS addr, left, right, top, bottom
+    sep #$20
+
+    lda.w entity_box_x1,Y
+    clc
+    adc #left
+    cmp.w player_box_x2
     bpl addr
 
     lda.w entity_box_x2,Y
@@ -316,6 +350,32 @@
 ; offset by provided offset
 ; If colliding, jump to 'addr'
 .MACRO .EntityEasyCheckPlayerCollision_Center ARGS addr, offx, offy
+    sep #$20
+
+    lda.w entity_box_x1,Y
+    clc
+    adc #offx
+    cmp.w player_box_x2
+    bpl +++++
+    cmp.w player_box_x1
+    bmi +++++
+
+    lda.w entity_box_y1,Y
+    clc
+    adc #offy
+    cmp.w player_box_y2
+    bpl +++++
+    cmp.w player_box_y1
+    bmi +++++
+
+    jmp addr
++++++:
+.ENDM
+
+; Check for collision of entity Y with player, based on box boundaries,
+; offset by provided offset
+; If not colliding, jump to 'addr'
+.MACRO .EntityEasyCheckNoPlayerCollision_Center ARGS addr, offx, offy
     sep #$20
 
     lda.w entity_box_x1,Y

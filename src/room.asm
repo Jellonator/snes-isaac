@@ -200,6 +200,8 @@ Room_Init:
         jsl Splat.peesplat
     +:
     plp
+; spawn player familiars
+    jsl Familiars.RefreshFamiliars
     rtl
 
 _Room_Open_Doors:

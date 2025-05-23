@@ -163,5 +163,17 @@
         "src": "assets/sprites/enemy/isaac_cube.raw",
         "depth": 16,
         "size": [4, 4]
+    },
+    {
+        "name": "familiar.brother_bobby",
+        "src": "assets/sprites/familiar/brother_bobby.raw",
+        "depth": 16,
+        "size": [2, 2]
+    },
+    {
+        "name": "familiar.sister_maggy",
+        "src": "assets/sprites/familiar/sister_maggy.raw",
+        "depth": 16,
+        "size": [2, 2]
     }
 ]

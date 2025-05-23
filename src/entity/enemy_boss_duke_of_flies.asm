@@ -183,6 +183,9 @@ _duke_endtick:
     clc
     adc.w entity_posy,Y
     sta.w entity_posy,Y
+    lda BOSS_WIDTH + BOSS_HEIGHT * $0100
+    sta.b $00
+    jsl Entity.KeepInOuterBounds
 ; load & set gfx
     sep #$20
     rep #$10

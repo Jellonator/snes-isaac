@@ -19,6 +19,7 @@ SOURCES  := bindata.asm\
 			entity/enemy_cube.asm\
 			entity/enemy_boss_duke_of_flies.asm\
 			entity/enemy_boss_monstro.asm\
+			entity/familiar.asm\
 			entity/item_pedastal.asm\
 			entity/pickup.asm\
 			entity/shopkeeper.asm\

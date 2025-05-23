@@ -436,6 +436,12 @@ _player_tick:
     entity_enemy_cube_free,\
     ENTITY_SPAWNGROUP_ENEMY
 
+._DefineEntity ENTITY_TYPE_FAMILIAR,\
+    entity_familiar_init,\
+    entity_familiar_tick,\
+    entity_familiar_free,\
+    ENTITY_SPAWNGROUP_NEVER
+
 EntityDef_InitFunc:
 .REPT 256 INDEX index
     .IFDEF _Array_EntityDef_InitFunc.{index}
@@ -685,6 +691,81 @@ Entity.Enemy.DirectTargetPlayer:
     sta.b entityTargetFound
     rtl
 
+; Set target direction to angle between [Y] and [X].
+; Credit for method of calculating the angle:
+; https://codebase64.org/doku.php?id=base:8bit_atan2_8-bit_angle
+; A couple of modifications were made for accuracy
+_directtargetentity_x_is_zero:
+    .ACCU 8
+    .INDEX 8
+    lda #64
+    xba
+    lda.w entity_box_y1,Y
+    cmp.w entity_box_y1,X
+    bcc +
+        lda #192
+        xba
+    +:
+    xba
+    sta.b entityTargetAngle
+    rtl
+_directtargetentity_y_is_zero:
+    .ACCU 8
+    .INDEX 8
+    stz.b entityTargetAngle
+    lda.w entity_box_x1,Y
+    cmp.w entity_box_x1,X
+    bcc +
+        lda #128
+        sta.b entityTargetAngle
+    +:
+    rtl
+Entity.Enemy.DirectTargetEntity:
+; get dx
+    sep #$30
+    stz.b $00
+    lda.w entity_box_x1,Y
+    sec
+    sbc.w entity_box_x1,X
+    beq _directtargetentity_x_is_zero
+    bcs +
+        eor #$FF
+        inc A
+    +:
+    sta.b $02
+    rol.b $00
+; get dy
+    lda.w entity_box_y1,Y
+    sec
+    sbc.w entity_box_y1,X
+    beq _directtargetentity_y_is_zero
+    bcs +
+        eor #$FF
+        inc A
+    +:
+    sta.b $01
+    rol.b $00
+; calculate log(dx) - log(dy)
+    ldx.b $02
+    lda.l Log2Mult32Table8,X
+    ldx.b $01
+    sec
+    sbc.l Log2Mult32Table8,X
+    bcc +
+        eor #$FF
+        inc A
+    +:
+    tax
+    rol.b $00
+; calculate atan
+    lda.l AtanLogTable8,X
+    ldx.b $00
+    eor.l AtanOctantAdjustTable8,X
+    sta.b entityTargetAngle
+    lda #1
+    sta.b entityTargetFound
+    rtl
+
 ; Move this entity according to its velocity, and collide with blocks.
 ; This function operates in two phases: horizontal movement, followed by vertical movement.
 ; $00 - width
@@ -905,6 +986,44 @@ Entity.KeepInBounds:
     cmp #ROOM_BOTTOM
     bcc @skip_bottom
         lda #ROOM_BOTTOM
+        sec
+        sbc.b $01
+        sta.w entity_posy,Y
+    @skip_bottom:
+    rtl
+
+; $00 - width
+; $01 - height
+Entity.KeepInOuterBounds:
+    sep #$30
+    lda.w entity_posx,Y
+    cmp #ROOM_LEFT-16
+    bcs @skip_left
+        lda #ROOM_LEFT-16
+        sta.w entity_posx,Y
+        jmp @skip_right
+    @skip_left:
+    clc
+    adc.b $00
+    cmp #ROOM_RIGHT+16
+    bcc @skip_right
+        lda #ROOM_RIGHT+16
+        sec
+        sbc.b $00
+        sta.w entity_posx,Y
+    @skip_right:
+    lda.w entity_posy,Y
+    cmp #ROOM_TOP-16
+    bcs @skip_top
+        lda #ROOM_TOP-16
+        sta.w entity_posy,Y
+        jmp @skip_bottom
+    @skip_top:
+    clc
+    adc.b $01
+    cmp #ROOM_BOTTOM+16
+    bcc @skip_bottom
+        lda #ROOM_BOTTOM+16
         sec
         sbc.b $01
         sta.w entity_posy,Y

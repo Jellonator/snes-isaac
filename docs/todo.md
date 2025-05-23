@@ -44,6 +44,7 @@
 - Pathfinding
     * [X] Diagonal Movement
     * [X] Target player when within player tile
+- Caves Enemies
 
 ## BOSSES
 
@@ -68,6 +69,13 @@
 - [X] Pause menu
     * [X] Show full minimap in pause menu
     * [ ] Show item collection in pause menu
-    * [ ] Cheats in pause menu
+    * [-] Cheats in pause menu
+        - [X] change floor
+        - [ ] change room
+        - [X] give/take item
+        - [ ] give/take coins, bombs, keys
+        - [ ] change pocket item
+        - [ ] change trinket
+        - [ ] spawn entities
     * [X] Show stats in pause menu
     * [X] Save and quit

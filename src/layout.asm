@@ -33,6 +33,7 @@
 ; overwrite mapgenerator values (as they are mostly used for entitites).
     entityTargetAngle db
     entityTargetFound db
+    entityParentChain db
     tempDP ds $80
 .ENDS
 

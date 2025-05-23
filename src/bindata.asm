@@ -189,7 +189,7 @@ Log2Mult32Table8:
 ; Table used for calculating atan using logarithms
 AtanLogTable8:
     .REPT 256 INDEX i
-        .db 64 - atan(2^((256 - i) / 32)) * 128 / 3.1415926535
+        .db 64 - floor(atan(2^((256 - i) / 32)) * 128 / 3.1415926535)
     .ENDR
 
 ; Used to adjust result of atan. Used in various areas.
@@ -203,11 +203,6 @@ AtanOctantAdjustTable8:
     .db %01111111		;; x-,y+,|x|<|y|
     .db %10111111		;; x-,y-,|x|>|y|
     .db %10000000		;; x-,y-,|x|<|y|
-
-Pow2Div32Table8:
-    .REPT 256 INDEX i
-        .db 2^(i / 32)
-    .ENDR
 
 ; Flip nibble
 NibbleFlip8:

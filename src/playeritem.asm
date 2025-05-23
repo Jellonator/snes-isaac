@@ -151,6 +151,8 @@ Item.check_and_recalculate:
     bne + ; flag wasn't set, return
         rtl
     +:
+    ; respawn familiars
+    jsl Familiars.RefreshFamiliars
     ; reset stats to base
     jsl Player.reset_stats
     rep #$20
@@ -405,6 +407,7 @@ Item.pool.item_room:
     .db ITEMID_POLYPHEMUS
     .db ITEMID_SPOON_BENDER
     .db ITEMID_DECK_OF_CARDS
+    .db ITEMID_BROTHER_BOBBY
     @end:
 
 Item.pool.boss:
@@ -421,6 +424,7 @@ Item.pool.shop:
 
 Item.pool.devil:
     .db ITEMID_BRIMSTONE
+    .db ITEMID_BROTHER_BOBBY
     @end:
 
 Item.try_use_active:

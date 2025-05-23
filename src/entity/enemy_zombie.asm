@@ -27,7 +27,7 @@ _entity_zombie_default_init:
     lda.w _zombie_gfxptr.1,Y
     and #$00FF
     tax
-    jsl spriteman_write_sprite_to_raw_slot
+    jsl Spriteman.WriteSpriteToRawSlot
     rep #$20
     pla
     pla
@@ -500,7 +500,7 @@ _zombie_set_walk_frame:
     lda.w _zombie_gfxptr.2,Y
     and #$00FF
     tax
-    jsl spriteman_write_sprite_to_raw_slot
+    jsl Spriteman.WriteSpriteToRawSlot
     rep #$20
     pla
     pla

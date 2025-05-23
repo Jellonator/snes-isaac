@@ -371,7 +371,7 @@ _load_frame:
             lda.b (ARRAY)
             and #$00FF
             tax
-            jsl spriteman_write_sprite_to_raw_slot
+            jsl Spriteman.WriteSpriteToRawSlot
             rep #$30
             clc
             lda $01,S

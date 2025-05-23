@@ -5,10 +5,10 @@
 
 .MakeChainTableStatic loword(spriteTableKey),loword(spriteTablePtr),SPRITE_TABLE_SIZE,SPRITE_TABLE_CELLAR_SIZE,"_sprite"
 
-; Bank needs to be $7E
-spriteman_init:
+Spriteman.Init:
     phb
     .ChangeDataBank $7E
+    ; initialize sprite queue
     sep #$30
     lda #64
     sta.w loword(spiteTableAvailableSlots)
@@ -24,23 +24,41 @@ spriteman_init:
     sta.w loword(spriteQueueTabNext)+SPRITE_LIST_BEGIN
     lda #63
     sta.w loword(spriteQueueTabNext)+SPRITE_LIST_END
+    ; initialize sprite alloc
+    lda #0
+    ldx #SPRITE_ALLOC_NUM_TILES
+@loop_sprite_alloc:
+        stz.w loword(spriteAllocActiveTable),X
+        sta.w loword(spriteAllocSizeTable),X
+        dec A
+        dex
+        cpx #$FF
+        bne @loop_sprite_alloc
+    ; end
     plb
     rtl
 
-spriteman_get_raw_slot:
-    phb
-    .ChangeDataBank $7E
+; Get a sprite slot. a 'raw' sprite slot just refers to a single 16x16px tile
+; in VRAM to which a sprite can be uploaded. This location will always be in
+; the second name table.
+; The actual VRAM location this refers to can be looked up via SpriteSlotMemTable.
+; Add $0100 to get the VRAM location of the second half of the sprite.
+; Assumes data bank is $7E
+; The sprite tile index to write into the object table can be looked up via 
+; SpriteSlotIndexTable.
+Spriteman.GetRawSlot:
     sep #$30
     .spriteman_get_raw_slot_lite
-    plb
     rtl
 
-; write to spritemem X
+; Write character data to a raw sprite slot, allocated with `Spriteman.GetRawSlot`,
+; or `.spriteman_get_raw_slot_lite`.
 ; Args:
 ; sprite_bank           [db] $05
 ; spriteTop_location    [dw] $03
 ; spriteBottom_location [dw] $01
-spriteman_write_sprite_to_raw_slot:
+; Assumes data bank is $7E (though any bank $00-$3F, $80-$CF will also work)
+Spriteman.WriteSpriteToRawSlot:
     phb ; >1
     rep #$30 ; 16 bit AXY
 ; increment vqueueops; just trust that we aren't already in bank $7F
@@ -80,12 +98,11 @@ spriteman_write_sprite_to_raw_slot:
     plb ; <1
     rtl
 
-spriteman_free_raw_slot:
-    phb
-    .ChangeDataBank $7E
+; Frees a sprite slot
+; Assumes data bank is $7E
+Spriteman.FreeRawSlot:
     sep #$30
     .spriteman_free_raw_slot_lite
-    plb
     rtl
 
 SpriteSlotIndexTable:
@@ -104,13 +121,13 @@ SpriteSlotMemTable:
 ; Allocate a 16x16 sprite slot
 ; Loads sprite id stored in A
 ; Sprite ID format: pppsssss ssssssss
-;    where `s` is the Sprite index into SpriteDefs, and `p` is the palette format
-;    palette format is important for swizzling sprite data before upload
-; Returns reference in X
-; Useful for objects which don't need to upload sprites very often
-spriteman_new_sprite_ref:
-    phb
-    .ChangeDataBank $7E
+;    where `s` is the Sprite index into SpriteDefs, and `p` is the palette format.
+;    The palette format is important for swizzling sprite data before upload.
+; Returns reference in X.
+; Useful for objects which don't need to upload sprites very often.
+; To get the raw slot index, lookup via `spriteTableValue + spritetab_t.spritemem`
+; Assumes data bank is $7E
+Spriteman.NewSpriteRef:
     sta.b $02 ; $02 is sprite ID
     ; insert unique sprite; determine if sprite ID already in use
     jsl table_insert_unique_sprite
@@ -120,7 +137,6 @@ spriteman_new_sprite_ref:
     beq @did_insert
     ; value already existed, increment ref and return
     inc.w loword(spriteTableValue.1.count),X
-    plb
     rtl
 @did_insert:
     stx.b $00 ; $00 is 16b sprite table ptr
@@ -213,24 +229,20 @@ spriteman_new_sprite_ref:
     lda.b $06
     sta.l vqueueOps.1.aAddr+2,X
     sta.l vqueueOps.2.aAddr+2,X
-    plb
     ldx.b $00
     rtl
 
-; Increment reference 
-spriteman_incref:
-    phb
-    .ChangeDataBank $7E
+; Increment reference
+; Assumes data bank is $7E
+Spriteman.IncRef:
     .INDEX 16
     sep #$20 ; 8b A
     inc.w loword(spriteTableValue.1.count),X
-    plb
     rtl
 
 ; Decrement reference
-spriteman_unref:
-    phb
-    .ChangeDataBank $7E
+; Assumes data bank is $7E
+Spriteman.Unref:
     .INDEX 16
     sep #$20 ; 8b A
     dec.w loword(spriteTableValue.1.count),X
@@ -248,7 +260,89 @@ spriteman_unref:
     ldx.b $00
     lda.w loword(spriteTableKey),X
     jsl table_remove_sprite
-    plb
+    rtl
+
+_spriteman_allocbuffer_fail:
+    .INDEX 8
+    .ACCU 8
+    ldx #$FF
+    rts
+; allocate sprite memory buffer
+; Allocates `A` tiles
+Spriteman.AllocBuffer:
+    sep #$30
+    ldx #0
+    ; search for free slot with enough space
+    @loop_search:
+        ; if this block is active, then skip
+        ldy.w loword(spriteAllocActiveTable),X
+        bne @search_skip
+        ; check if block has enough space (A <= size)
+        cmp.w loword(spriteAllocSizeTable),X
+        bcc @found
+        beq @found
+    @search_skip:
+        ; increment X by block's size
+        xba
+        txa
+        clc
+        adc.w loword(spriteAllocSizeTable),X
+        bcs _spriteman_allocbuffer_fail ; overflow = fail
+        tax
+        xba
+        jmp @loop_search
+@found:
+    ; indicate that block is allocated, and write its size
+    phx
+    tay
+    @loop_clear:
+        lda #1
+        sta.w loword(spriteAllocActiveTable),X
+        tya
+        sta.w loword(spriteAllocSizeTable),X
+        inx
+        dey
+        bne @loop_clear
+    ; no point in the following code, since a newly allocated block will always
+    ; be after another allocated block (or be at position $00)
+    ; lda 1,S
+    ; tax
+    ; beq @end_decrement
+    ; lda #0
+    ; @loop_decrement:
+    ;     ldy.w loword(spriteAllocActiveTable) - 1,X
+    ;     beq @end_decrement
+    ;     inc A
+    ;     sta.w loword(spriteAllocTable) - 1,X
+    ;     dex
+    ;     bne @loop_decrement
+    ; @end_decrement:
+    plx
+    rtl
+
+; Free sprite memory buffer [X]
+Spriteman.FreeBuffer:
+    sep #$30
+    ldy.w loword(spriteAllocSizeTable),X
+    ; clear active table
+    @loop_clear_active:
+        stz.w loword(spriteAllocActiveTable),X
+        inx
+        dey
+        bne @loop_clear_active
+    ; decrement and write new size to join empty blocks together
+    lda.w loword(spriteAllocSizeTable),X
+    @loop_decrement_write:
+        ; if sprite is active, then end
+        ldy.w loword(spriteAllocActiveTable)-1,X
+        bne @end_decrement_write
+        ; write size
+        sta.w loword(spriteAllocSizeTable)-1,X
+        inc A
+        ; while (--x) > 0
+        dex
+        bne @loop_decrement_write
+    @end_decrement_write:
     rtl
 
 ; Swizzle a sprite that is located in bank 7F according to palette

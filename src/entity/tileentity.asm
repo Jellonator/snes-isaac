@@ -152,7 +152,7 @@ entity_tile_init:
     ; upload sprite
     ora #sprite.tilesprite_fire
     phy
-    jsl spriteman_new_sprite_ref
+    jsl Spriteman.NewSpriteRef
     rep #$30
     ply
     txa
@@ -165,7 +165,7 @@ entity_tile_free:
     phy
     lda.w _entity_spriteptr,Y
     tax
-    jsl spriteman_unref
+    jsl Spriteman.Unref
     rep #$30
     ply
     ldx.w _entity_paletteptr,Y

@@ -98,7 +98,7 @@ true_entity_shopkeeper_init:
         phy
         lda #sprite.shopkeepers.{i}
         ora.b $10
-        jsl spriteman_new_sprite_ref
+        jsl Spriteman.NewSpriteRef
         rep #$30
         ply
         txa
@@ -124,7 +124,7 @@ entity_shopkeeper_free:
     .REPT 4 INDEX i
         phy
         ldx.w loword(entity_custom.{i+1}),Y
-        jsl spriteman_unref
+        jsl Spriteman.Unref
         rep #$30
         ply
     .ENDR

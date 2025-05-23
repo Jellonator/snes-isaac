@@ -23,7 +23,7 @@ entity_basic_fly_init:
     ; load sprite
     lda #sprite.enemy.attack_fly.0
     phy
-    jsl spriteman_new_sprite_ref
+    jsl Spriteman.NewSpriteRef
     rep #$30
     ply
     txa
@@ -31,7 +31,7 @@ entity_basic_fly_init:
     ; load frame 2
     lda #sprite.enemy.attack_fly.1
     phy
-    jsl spriteman_new_sprite_ref
+    jsl Spriteman.NewSpriteRef
     rep #$30
     ply
     txa
@@ -190,12 +190,12 @@ entity_basic_fly_free:
     tax
     phy
     php
-    jsl spriteman_unref
+    jsl Spriteman.Unref
     plp
     ply
     lda.w _fly_fgxptr.2,Y
     tax
-    jsl spriteman_unref
+    jsl Spriteman.Unref
     rts
 
 .ENDS

@@ -76,6 +76,10 @@
         "src": "assets/palettes/item/item_brother_bobby.hex"
     },
     {
+        "name": "item_sister_maggy",
+        "src": "assets/palettes/item/item_sister_maggy.hex"
+    },
+    {
         "name": "item_brimstone",
         "src": "assets/palettes/item/item_brimstone.hex"
     },

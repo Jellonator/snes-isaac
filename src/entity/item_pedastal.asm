@@ -192,7 +192,7 @@ _item_pedastal_alloc_gfx:
     .PaletteIndex_X_ToSpriteDef_A
     ora.b $14
     phy
-    jsl spriteman_new_sprite_ref
+    jsl Spriteman.NewSpriteRef
     rep #$30
     ply
     txa
@@ -200,7 +200,7 @@ _item_pedastal_alloc_gfx:
     ; load sprite for pedastal
     lda #sprite.item_pedastal
     phy
-    jsl spriteman_new_sprite_ref
+    jsl Spriteman.NewSpriteRef
     rep #$30
     ply
     txa
@@ -641,13 +641,13 @@ _item_pedastal_free_gfx:
     phy
     lda.w _item_gfxptr_item,Y
     tax
-    jsl spriteman_unref
+    jsl Spriteman.Unref
     rep #$30
     ply
     lda.w _item_gfxptr_pedastal,Y
     tax
     phy
-    jsl spriteman_unref
+    jsl Spriteman.Unref
     rep #$30
     ply
     ldx.w _item_palette,Y

@@ -299,7 +299,7 @@ entity_boss_duke_of_flies_init:
         .REPT 3 INDEX ix
             ; get slot
             sep #$30
-            jsl spriteman_get_raw_slot
+            jsl Spriteman.GetRawSlot
             rep #$30
             txa
             ldy.b _tmp_entityid
@@ -308,7 +308,7 @@ entity_boss_duke_of_flies_init:
             pea bankbyte(spritedata.boss_duke_of_flies) * $0101 ; >2
             pea loword(spritedata.boss_duke_of_flies) + (64 * ix + 128 * 3 * iy) ; >2
             pea loword(spritedata.boss_duke_of_flies) + (64 * ix + 128 * 3 * iy + 64 * 3) ; >2
-            jsl spriteman_write_sprite_to_raw_slot
+            jsl Spriteman.WriteSpriteToRawSlot
             rep #$30
             pla ; <2
             pla ; <2
@@ -355,7 +355,7 @@ entity_boss_duke_of_flies_free:
         phy
         php
         ldx.w loword(entity_char_custom.{i+1}),Y
-        jsl spriteman_free_raw_slot
+        jsl Spriteman.FreeRawSlot
         plp
         ply
     .ENDR

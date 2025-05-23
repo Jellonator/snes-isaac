@@ -64,7 +64,7 @@ _set_frame:
         .ENDIF
         lda.w _gfxptr.{i+1},Y
         tax
-        jsl spriteman_write_sprite_to_raw_slot
+        jsl Spriteman.WriteSpriteToRawSlot
         ldy.b _tmp_entityid
         rep #$30
     .ENDR
@@ -425,7 +425,7 @@ entity_enemy_cube_free:
     sty.b _tmp_entityid
     .REPT 4 INDEX i
         ldx.w _gfxptr.{i+1},Y
-        jsl spriteman_free_raw_slot
+        jsl Spriteman.FreeRawSlot
         rep #$30
         ldy.b _tmp_entityid
     .ENDR

@@ -43,14 +43,14 @@ entity_boss_monstro_init:
     .REPT 3 INDEX iy
         .REPT 4 INDEX ix
             ; get slot
-            jsl spriteman_get_raw_slot
+            jsl Spriteman.GetRawSlot
             txa
             sta.w loword(entity_char_custom.{iy * 4 + ix + 1}),Y
             ; write to slot
             pea bankbyte(spritedata.boss_monstro) * $0101 ; >2
             pea loword(spritedata.boss_monstro) + (64 * ix + 128 * 4 * iy) ; >2
             pea loword(spritedata.boss_monstro) + (64 * ix + 128 * 4 * iy + 64 * 4) ; >2
-            jsl spriteman_write_sprite_to_raw_slot
+            jsl Spriteman.WriteSpriteToRawSlot
             rep #$30
             pla ; <2
             pla ; <2
@@ -221,7 +221,7 @@ entity_boss_monstro_free:
         phy
         php
         ldx.w loword(entity_char_custom.{i+1}),Y
-        jsl spriteman_free_raw_slot
+        jsl Spriteman.FreeRawSlot
         plp
         ply
     .ENDR

@@ -202,6 +202,12 @@
 ; devil deal flags
     floors_since_devil_deal db
     devil_deal_flags db
+; Sprite allocation table
+    ; 1 if block is active (allocated), 0 otherwise
+    spriteAllocActiveTable ds SPRITE_ALLOC_NUM_TILES+1
+    ; If block is active: number of allocated tiles in this block
+    ; If block is inactive: number of free tiles allocatable in this block
+    spriteAllocSizeTable ds SPRITE_ALLOC_NUM_TILES+1
 ; HDMA buffers
 ; We double-buffer most HDMA buffers, so that we can write to the other buffer
 ; while the screen draws.
@@ -224,7 +230,10 @@
 ; Perhaps will be used for decompressed animated sprites?
 .RAMSECTION "7F" BANK $7F SLOT "FullMemory" ORGA $0000 FORCE
 ; VQueue data
-    vqueueBinData ds $4000
+    ; Making a semi-reasonable assumption that $2000 bytes of vqueue bin data
+    ; is enough for each frame. The most we push to it is about $0800 for a
+    ; single tilemap.
+    vqueueBinData ds $2000
     vqueueOps INSTANCEOF vqueueop_t VQUEUE_MAX_SIZE
     vqueueMiniOps INSTANCEOF vqueueminiop_t 255
     ; Vqueue regops. Note that 'addr' is 16B, but 'value' is 8B
@@ -251,6 +260,10 @@
     groundOpList_endPx ds MAX_GROUND_OPS
     ; temporary tile data buffer
     tempTileData ds $0800
+; Allocatable sprite buffer data
+    ; Sprite buffer. This represents four full pages of sprites.
+    ; This provides a buffer for sprites to be allocated, decompressed, and swizzled.
+    spriteAllocBuffer ds SPRITE_ALLOC_TILE_SIZE * SPRITE_ALLOC_NUM_TILES
 .ENDS
 
 .DEFINE vqueueBinData_End (vqueueBinData + _sizeof_vqueueBinData) EXPORT

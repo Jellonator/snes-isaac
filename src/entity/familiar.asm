@@ -6,12 +6,14 @@
 .DEFINE _gfxptr.1 loword(entity_custom.1)
 .DEFINE _gfxptr.2 loword(entity_custom.1+1)
 .DEFINE _familiar_parent loword(entity_custom.2)
+.DEFINE _palette loword(entity_custom.2+1)
 
 .DEFINE FAMILIAR_FOLLOW_DISTANCE 20
 
 entity_familiar_init:
     .ACCU 16
     .INDEX 16
+    sty.b $10
     ; allocate sprites
     sep #$30
     .spriteman_get_raw_slot_lite
@@ -21,8 +23,6 @@ entity_familiar_init:
     txa
     sta.w _gfxptr.2,Y
     ; set or clear parent, depending on context
-    lda #0
-    sta.w _familiar_parent+1,Y ; clear top byte
     ldx.b entityExecutionContext
     cpx #ENTITY_CONTEXT_FAMILIAR
     bne @skip_get_parent
@@ -31,16 +31,26 @@ entity_familiar_init:
         sty.b entityParentChain
     @skip_get_parent:
     sta.w _familiar_parent,Y
+    ; upload palette
+    rep #$30
+    ldy #loword(palettes.item_brother_bobby)
+    lda #8
+    jsl Palette.find_or_upload_opaque
+    rep #$30
+    ldy.b $10
+    txa
+    sep #$20
+    sta.w _palette,Y
     ; upload head
     rep #$30
-    sty.b $10
+    ldy.b $10
     pea bankbyte(spritedata.familiar.brother_bobby) * $0101
     pea loword(spritedata.familiar.brother_bobby) + 32*4
     pea loword(spritedata.familiar.brother_bobby) + 32*4 + 64
     lda.w _gfxptr.1,Y
     and #$00FF
     tax
-    jsl spriteman_write_sprite_to_raw_slot
+    jsl Spriteman.WriteSpriteToRawSlot
     rep #$30
     pla
     pla
@@ -53,7 +63,7 @@ entity_familiar_init:
     lda.w _gfxptr.2,Y
     and #$00FF
     tax
-    jsl spriteman_write_sprite_to_raw_slot
+    jsl Spriteman.WriteSpriteToRawSlot
     rep #$30
     pla
     pla
@@ -65,7 +75,9 @@ entity_familiar_tick:
     .ACCU 16
     .INDEX 16
     ; handle movement
-    ldx.w _familiar_parent,Y
+    lda.w _familiar_parent,Y
+    and #$00FF
+    tax
     beql @skip_handle_follow
         ; get distance
         lda.w entity_posx,X
@@ -219,6 +231,9 @@ entity_familiar_free:
     .spriteman_free_raw_slot_lite
     ldx.w _gfxptr.2,Y
     .spriteman_free_raw_slot_lite
+    ; free palette
+    ldx.w _palette,Y
+    jsl Palette.free
     ; end
     rts
 

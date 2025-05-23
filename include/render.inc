@@ -108,6 +108,11 @@
 .DEFINE PALETTE_UI.2 $6000 ; base UI 2
 .DEFINE PALETTE_UI.3 $7000 ; consumable slot
 
+; SPRITE ALLOCATION BUFFER
+
+.DEFINE SPRITE_ALLOC_TILE_SIZE $0080
+.DEFINE SPRITE_ALLOC_NUM_TILES 255
+
 ; COLOR FUNCTIONS
 .FUNCTION colorf(red, green, blue) ((round(blue * 31) << 10) + (round(green * 31) << 5) + round(blue * 31))
 .DEFINE CLEAR_COLOR colorf(0, 0, 0)

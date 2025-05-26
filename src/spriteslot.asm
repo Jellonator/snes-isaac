@@ -452,7 +452,7 @@ Spriteman.NewBufferRef:
     lda.w loword(spriteTableValue.1.spritemem)-1,Y
     and #$FF00
     lsr
-    adc #spriteAllocBuffer ; carry should be cleared by lsr
+    adc #loword(spriteAllocBuffer) ; carry should be cleared by lsr
     sta.b $06
     sta.l WMADDL
     ; srcL = sprite_addr
@@ -567,7 +567,12 @@ _Swizzle_B7F_A_A:
 _Swizzle_B7F_B_AB:
     .INDEX 16
     .ACCU 8
-    phd ; we are going to use the D register as a temp register
+; This differs a bit from the other swizzle functions.
+; First, we use the D register as a temp register.
+; Because we have to save the D register, a unique entry is used.
+@entry:
+    phd
+    bra @loop_entry
 @loop:
     rep #$20
     txa
@@ -575,7 +580,7 @@ _Swizzle_B7F_B_AB:
     adc #32
     tax
     sep #$20
-@entry:
+@loop_entry:
     .REPT 8 INDEX i
         lda.l $7F0000+2*i+17,X
         tcd

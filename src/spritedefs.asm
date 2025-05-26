@@ -53,4 +53,6 @@ SpriteDefs:
 
 .DefineSprite "sprite.familiar.brother_bobby", spritedata.familiar.brother_bobby, 5, 1, SPRITEALLOCMODE_SWIZZLE
 
+.DefineSprite "sprite.enemy.isaac_cube", spritedata.enemy.isaac_cube, 24, 1, SPRITEALLOCMODE_SWIZZLE
+
 .ENDS

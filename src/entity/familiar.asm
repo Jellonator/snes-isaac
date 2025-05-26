@@ -60,7 +60,7 @@ entity_familiar_init:
     xba
     lsr
     clc
-    adc #spriteAllocBuffer + 32*4
+    adc #loword(spriteAllocBuffer) + 32*4
     pha
     adc #64
     pha
@@ -82,7 +82,7 @@ entity_familiar_init:
     xba
     lsr
     clc
-    adc #spriteAllocBuffer + 32*16
+    adc #loword(spriteAllocBuffer) + 32*16
     pha
     adc #64
     pha

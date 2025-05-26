@@ -65,3 +65,5 @@
 .DEFINE spriteAllocTabSize (private_spriteAllocTabSize-1)
 .DEFINE spriteAllocTabNext (private_spriteAllocTabNext-1)
 .DEFINE spriteAllocTabPrev (private_spriteAllocTabPrev-1)
+
+.DEFINE spriteAllocBuffer ($7F0000 | (private_spriteAllocBuffer-SPRITE_ALLOC_TILE_SIZE))

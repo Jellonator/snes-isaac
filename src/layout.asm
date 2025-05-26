@@ -271,7 +271,7 @@
 ; Allocatable sprite buffer data
     ; Sprite buffer. This represents four full pages of sprites.
     ; This provides a buffer for sprites to be allocated, decompressed, and swizzled.
-    spriteAllocBuffer ds SPRITE_ALLOC_TILE_SIZE * SPRITE_ALLOC_NUM_TILES
+    private_spriteAllocBuffer ds SPRITE_ALLOC_TILE_SIZE * SPRITE_ALLOC_NUM_TILES
 .ENDS
 
 .DEFINE vqueueBinData_End (vqueueBinData + _sizeof_vqueueBinData) EXPORT

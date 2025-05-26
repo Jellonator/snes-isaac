@@ -15,6 +15,8 @@
 .DEFINE _current_rotation loword(entity_char_custom.7)
 .DEFINE _palette loword(entity_char_custom.8)
 
+.DEFINE _spritebuffer loword(entity_char_custom.9)
+
 .DEFINE _tmp_entityid $10
 
 .DEFINE STATE_IDLE 0
@@ -104,7 +106,14 @@ _set_frame:
         rts
     +:
     sta.w _current_frame,Y
-    pea bankbyte(spritedata.enemy.isaac_cube) * $0101
+    pea $7F7F
+    lda.w _spritebuffer,Y
+    tax
+    lda.w loword(spriteTableValue.1.spritemem)-1,X
+    and #$FF00
+    lsr
+    adc #loword(spriteAllocBuffer)
+    sta.b tempDP
     ; upload sprite
     .REPT 4 INDEX i
         ldx.w _current_frame,Y
@@ -112,7 +121,7 @@ _set_frame:
         and #$FF00
         lsr
         clc
-        adc #loword(spritedata.enemy.isaac_cube)
+        adc.b tempDP
         pha
         clc
         adc #64
@@ -125,8 +134,6 @@ _set_frame:
         pla
         pla
     .ENDR
-    ; pla
-    ; pla
     pla
     rts
 
@@ -160,7 +167,15 @@ entity_enemy_cube_init:
     ldy.b _tmp_entityid
     txa
     sta.w _palette,Y
-    ; TODO: put sprite into shared RAM and swizzle it
+    ; allocate sprite ram
+    rep #$30
+    .PaletteIndex_X_ToSpriteDef_A
+    ora #sprite.enemy.isaac_cube
+    jsl Spriteman.NewBufferRef
+    rep #$30
+    ldy.b _tmp_entityid
+    txa
+    sta.w _spritebuffer,Y
     ; put initial sprite
     rep #$30
     lda #0

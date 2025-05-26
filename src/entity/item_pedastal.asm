@@ -641,13 +641,13 @@ _item_pedastal_free_gfx:
     phy
     lda.w _item_gfxptr_item,Y
     tax
-    jsl Spriteman.Unref
+    jsl Spriteman.UnrefSprite
     rep #$30
     ply
     lda.w _item_gfxptr_pedastal,Y
     tax
     phy
-    jsl Spriteman.Unref
+    jsl Spriteman.UnrefSprite
     rep #$30
     ply
     ldx.w _item_palette,Y

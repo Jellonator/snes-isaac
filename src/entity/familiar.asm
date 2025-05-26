@@ -7,6 +7,7 @@
 .DEFINE _gfxptr.2 loword(entity_custom.1+1)
 .DEFINE _familiar_parent loword(entity_custom.2)
 .DEFINE _palette loword(entity_custom.2+1)
+.DEFINE _spritebuffer loword(entity_custom.3)
 
 .DEFINE FAMILIAR_FOLLOW_DISTANCE 20
 
@@ -14,7 +15,7 @@ entity_familiar_init:
     .ACCU 16
     .INDEX 16
     sty.b $10
-    ; allocate sprites
+    ; allocate sprite slots
     sep #$30
     .spriteman_get_raw_slot_lite
     txa
@@ -41,12 +42,28 @@ entity_familiar_init:
     txa
     sep #$20
     sta.w _palette,Y
-    ; upload head
+    ; upload sprite to buffer
+    rep #$30
+    .PaletteIndex_X_ToSpriteDef_A
+    ora #sprite.familiar.brother_bobby
+    jsl Spriteman.NewBufferRef
     rep #$30
     ldy.b $10
-    pea bankbyte(spritedata.familiar.brother_bobby) * $0101
-    pea loword(spritedata.familiar.brother_bobby) + 32*4
-    pea loword(spritedata.familiar.brother_bobby) + 32*4 + 64
+    txa
+    sta.w _spritebuffer,Y
+    ; upload head
+    pea $7F7F
+    lda.w _spritebuffer,Y
+    tax
+    lda.w loword(spriteTableValue.1.spritemem),X
+    and #$00FF
+    xba
+    lsr
+    clc
+    adc #spriteAllocBuffer + 32*4
+    pha
+    adc #64
+    pha
     lda.w _gfxptr.1,Y
     and #$00FF
     tax
@@ -57,9 +74,18 @@ entity_familiar_init:
     pla
     ; upload body
     ldy.b $10
-    pea bankbyte(spritedata.familiar.brother_bobby) * $0101
-    pea loword(spritedata.familiar.brother_bobby) + 32*16
-    pea loword(spritedata.familiar.brother_bobby) + 32*16 + 64
+    pea $7F7F
+    lda.w _spritebuffer,Y
+    tax
+    lda.w loword(spriteTableValue.1.spritemem),X
+    and #$00FF
+    xba
+    lsr
+    clc
+    adc #spriteAllocBuffer + 32*16
+    pha
+    adc #64
+    pha
     lda.w _gfxptr.2,Y
     and #$00FF
     tax
@@ -231,6 +257,14 @@ entity_familiar_free:
     .spriteman_free_raw_slot_lite
     ldx.w _gfxptr.2,Y
     .spriteman_free_raw_slot_lite
+    ; free buffer
+    rep #$30
+    ldx.w _spritebuffer,Y
+    phy
+    php
+    jsl Spriteman.UnrefBuffer
+    plp
+    ply
     ; free palette
     ldx.w _palette,Y
     jsl Palette.free

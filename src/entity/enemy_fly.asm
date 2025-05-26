@@ -186,16 +186,15 @@ entity_basic_fly_free:
     dec.w currentRoomEnemyCount
     lda #0
     sta.w entity_mask,Y
-    lda.w _fly_fgxptr.1,Y
-    tax
+    ldx.w _fly_fgxptr.1,Y
     phy
     php
-    jsl Spriteman.Unref
+    jsl Spriteman.UnrefSprite
     plp
     ply
     lda.w _fly_fgxptr.2,Y
     tax
-    jsl Spriteman.Unref
+    jsl Spriteman.UnrefSprite
     rts
 
 .ENDS

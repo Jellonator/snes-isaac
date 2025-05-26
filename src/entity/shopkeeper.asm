@@ -124,7 +124,7 @@ entity_shopkeeper_free:
     .REPT 4 INDEX i
         phy
         ldx.w loword(entity_custom.{i+1}),Y
-        jsl Spriteman.Unref
+        jsl Spriteman.UnrefSprite
         rep #$30
         ply
     .ENDR

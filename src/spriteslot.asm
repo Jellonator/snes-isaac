@@ -3,7 +3,8 @@
 .BANK $01 SLOT "ROM"
 .SECTION "SpriteSlotManager"
 
-.MakeChainTableStatic loword(spriteTableKey),loword(spriteTablePtr),SPRITE_TABLE_SIZE,SPRITE_TABLE_CELLAR_SIZE,"_sprite"
+.MakeChainTableStatic loword(spriteTableKey),loword(spriteTablePtr),\
+SPRITE_TABLE_SIZE,SPRITE_TABLE_CELLAR_SIZE,"_sprite"
 
 Spriteman.Init:
     phb
@@ -179,8 +180,11 @@ Spriteman.NewSpriteRef:
     ; get Sprite address
     lda.b $02
     and #SPRITEID_SPRITE
+    sta.b $04
     asl
     asl
+    clc
+    adc.b $04
     phx
     tax
     lda.l SpriteDefs + entityspriteinfo_t.sprite_addr,X
@@ -199,6 +203,7 @@ Spriteman.NewSpriteRef:
     lda.l PaletteAllocNeedSwizzle,X
     and #$00FF
     beq @no_swizzle
+        ; TODO: might be faster to copy ROM to bin during the swizzle step
         ; swizzle step 1: Copy sprite to vqueueBinData
         .CopyROMToVQueueBin P_DIR, $04, 128
         ; swizzle step 2: Swizzle
@@ -239,7 +244,7 @@ Spriteman.IncRef:
 
 ; Decrement reference
 ; Assumes data bank is $7E
-Spriteman.Unref:
+Spriteman.UnrefSprite:
     .INDEX 16
     sep #$20 ; 8b A
     dec.w loword(spriteTableValue.1.count),X
@@ -262,11 +267,12 @@ _spriteman_allocbuffer_fail:
     .INDEX 8
     .ACCU 8
     ldx #$00
-    rts
+    rtl
 ; Allocate [A] tiles of sprite *buffer* in RAM
+; Returns buffer INDEX in [X]
 ; This buffer can be used for any purpose, but is intended for decompressing,
 ; swizzling, or other operations on sprite data that is intended to be uploaded
-; to VRAM on demand. e.g., animated sprites with custom palettes
+; to VRAM on demand. e.g., animated sprites with custom palettes.
 Spriteman.AllocRawBuffer:
     sep #$30
     ldx #1
@@ -298,11 +304,12 @@ Spriteman.AllocRawBuffer:
     cmp.w loword(spriteAllocTabSize),X
     beq @store_and_ret
 ; set block's size and active status
+    ldy.w loword(spriteAllocTabSize),X
+    phy ; push previous_size to stack
     sta.w loword(spriteAllocTabSize),X
     lda #1
     sta.w loword(spriteAllocTabActive),X
 ; split block into two, at `size` boundary
-    pha
     ; NEXT = CURRENT + CURRENT->size
     txa
     clc
@@ -383,6 +390,136 @@ Spriteman.FreeRawBuffer:
         tya
         sta.w loword(spriteAllocTabPrev),X
 @skip_merge_prev:
+    rtl
+
+; Automatically get or allocate a sprite buffer in RAM.
+; This is similar to Spriteman.NewSpriteRef, but for loading animated sprites into RAM.
+; Loads sprite id stored in A
+; Sprite ID format: pppsssss ssssssss
+;    where `s` is the Sprite index into SpriteDefs, and `p` is the palette format.
+;    The palette format is important for swizzling sprite data before upload.
+; Returns reference in X.
+; Assumes data bank is $7E.
+; Unlike NewSpriteRef, the loaded sprite may be multiple tiles in size, and
+; will the appropriate amount of RAM.
+Spriteman.NewBufferRef:
+    sta.b $02 ; $02 is sprite ID
+; insert unique sprite; determine if sprite ID already in use
+    jsl table_insert_unique_sprite
+    .INDEX 16
+    .ACCU 16
+    cpy #0
+    beq @did_insert
+    ; value already existed, increment ref and return
+    inc.w loword(spriteTableValue.1.count),X
+    rtl
+@did_insert:
+    stx.b $00 ; $00 is 16b sprite table ptr
+; get number of tiles
+    lda.b $02
+    and #SPRITEID_SPRITE
+    sta.b $04
+    asl
+    asl
+    clc
+    adc.b $04
+    sta.b $04 ; $04 is sprite def pointer
+    tax
+    lda.l SpriteDefs + entityspriteinfo_t.ntiles,X
+    and #$00FF
+; get sprite buffer index
+    jsl Spriteman.AllocRawBuffer
+    .ACCU 8
+    .INDEX 8
+    txa
+    ; write buffer index to spritemem, and set count to 1
+    rep #$10 ; 16b X, 8b A
+    ldy.b $00
+    sta.w loword(spriteTableValue.1.spritemem),Y
+    lda #1
+    sta.w loword(spriteTableValue.1.count),Y
+; copy sprite data into buffer
+    rep #$30
+    ; size = ntiles * 128
+    ldx.b $04
+    lda.l SpriteDefs + entityspriteinfo_t.ntiles,X
+    and #$00FF
+    sta.b $0A ; $04 is now number of tiles
+    xba
+    lsr
+    sta.l DMA0_SIZE
+    ; WMADDL = index*128 + spriteAllocBuffer
+    lda.w loword(spriteTableValue.1.spritemem)-1,Y
+    and #$FF00
+    sta.b $06
+    lsr
+    adc #spriteAllocBuffer ; carry should be cleared by lsr
+    sta.l WMADDL
+    ; srcL = sprite_addr
+    lda.l SpriteDefs + entityspriteinfo_t.sprite_addr,X
+    sta.l DMA0_SRCL
+    ; srcH = sprite_bank
+    sep #$20 ; 8b A
+    lda.l SpriteDefs + entityspriteinfo_t.sprite_bank,X
+    sta.l DMA0_SRCH
+    ; WMADDH = $7F
+    lda #$7F
+    sta.l WMADDH
+    ; auto increment, from ROM, 1 byte at a time
+    lda #%00000000
+    sta.l DMA0_CTL
+    ; to WRAM
+    lda #$80
+    sta.l DMA0_DEST
+    ; Write
+    lda #$01
+    sta.l MDMAEN
+; now, see if we need to swizzle, by checking 'mode' and 'palette'
+    lda.l SpriteDefs + entityspriteinfo_t.mode,X
+    bit #SPRITEALLOCMODE_SWIZZLE
+    beq @no_swizzle
+        ; check if palette mode needs swizzle
+        rep #$20 ; 16b A
+        lda.b $02
+        rol
+        rol
+        rol
+        rol
+        and #$0007
+        sta.b $08
+        tax
+        lda.l PaletteAllocNeedSwizzle,X
+        and #$00FF
+        beq @no_swizzle
+        ; perform swizzle
+        ldx.b $06
+        lda.b $0A
+        asl
+        asl
+        jsl SpritePaletteSwizzle_B7F
+@no_swizzle:
+    ldx.b $00
+    rtl
+
+; Decrement reference
+; Assumes data bank is $7E
+Spriteman.UnrefBuffer:
+    .INDEX 16
+    sep #$20 ; 8b A
+    dec.w loword(spriteTableValue.1.count),X
+    beq @remove
+        ; --X->count > 0
+        rtl
+@remove:
+    stx.b $00
+    lda.w loword(spriteTableValue.1.spritemem),X
+    tax
+    sep #$30
+    jsl Spriteman.FreeRawBuffer
+    rep #$30 ; 16b AXY
+    ldx.b $00
+    lda.w loword(spriteTableKey),X
+    jsl table_remove_sprite
     rtl
 
 ; Swizzle a sprite that is located in bank 7F according to palette

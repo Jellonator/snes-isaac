@@ -138,13 +138,6 @@
 .ENUMID ENTITY_FAMILIAR_BROTHER_BOBBY
 .ENUMID ENTITY_FAMILIAR_SISTER_MAGGY
 
-; ENTITY SPRITE DEFINITION
-.STRUCT entityspriteinfo_t SIZE 4
-    sprite_addr dw
-    sprite_bank db
-    ntiles db
-.ENDST
-
 ; ENTITY SPAWNGROUPS
 ; used to decide which entities to spawn
 

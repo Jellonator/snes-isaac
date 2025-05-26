@@ -165,7 +165,7 @@ entity_tile_free:
     phy
     lda.w _entity_spriteptr,Y
     tax
-    jsl Spriteman.Unref
+    jsl Spriteman.UnrefSprite
     rep #$30
     ply
     ldx.w _entity_paletteptr,Y

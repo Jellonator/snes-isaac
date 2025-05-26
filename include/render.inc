@@ -81,6 +81,19 @@
     count db ; number of users
 .ENDST
 
+; ENTITY SPRITE DEFINITION
+.STRUCT entityspriteinfo_t SIZE 5
+    sprite_addr dw
+    sprite_bank db
+    ntiles db
+    mode db
+.ENDST
+
+; ENTITY SPRITE DEFINITION MODE
+.DEFINE SPRITEALLOCMODE_DIRECT 0
+.DEFINE SPRITEALLOCMODE_SWIZZLE $01
+.DEFINE SPRITEALLOCMODE_DECOMPRESS $02
+
 ; PALETTE INFO
 
 ; Palette allocation mode
@@ -145,7 +158,7 @@
     sta.l DMA0_SRCH
     lda #$7F
     sta.l WMADDH
-    ; Absolute address, no increment, 1 byte at a time
+    ; Absolute address, auto increment, 1 byte at a time
     lda #%00000000
     sta.l DMA0_CTL
     ; Write to WRAM

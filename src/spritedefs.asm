@@ -10,7 +10,7 @@
 
 .DEFINE currid 1
 SpriteDefs:
-.db 0, 0, 0, 0
+.db 0, 0, 0, 0, 0
 
 ; Define a new sprite.
 ; spritename - the exported name of the sprite
@@ -19,18 +19,25 @@ SpriteDefs:
 ;    nframes - number of frames to export as separate sprites. These additional
 ;              sprites can be accessed as {spritename}.{frameid}, and their
 ;              address will be `baseaddr` + 128*{ntiles}*{frameid}
-.MACRO .DefineSprite ARGS spritename, baseaddr, ntiles, nframes
+.MACRO .DefineSprite ARGS spritename, baseaddr, ntiles, nframes, mode
     .DEFINE {spritename} currid
     .EXPORT {spritename}
+    .IFDEF mode ; workaround because 'IFDEF causes issues inside DSTRUCT'
+        .DEFINE MODE_REAL_NOT_CLICKBAIT mode
+    .ELSE
+        .DEFINE MODE_REAL_NOT_CLICKBAIT 0
+    .ENDIF
     .REPT nframes INDEX i
         .DSTRUCT INSTANCEOF entityspriteinfo_t VALUES
             sprite_addr: .dw loword(baseaddr) + 128*ntiles*i ; 128b per 16x tile
             sprite_bank: .db bankbyte(baseaddr)
             ntiles: .db ntiles
+            mode: .db MODE_REAL_NOT_CLICKBAIT
         .ENDST
         .DEFINE {spritename}.{i} (currid + i)
         .EXPORT {spritename}.{i}
     .ENDR
+    .UNDEFINE MODE_REAL_NOT_CLICKBAIT
     .REDEFINE currid (currid + nframes)
 .ENDM
 
@@ -44,6 +51,6 @@ SpriteDefs:
 
 .DefineSprite "sprite.tilesprite_fire", spritedata.tilesprite_fire, 1, 4
 
-.DefineSprite "sprite.familiar.brother_bobby", spritedata.familiar.brother_bobby, 5, 1
+.DefineSprite "sprite.familiar.brother_bobby", spritedata.familiar.brother_bobby, 5, 1, SPRITEALLOCMODE_SWIZZLE
 
 .ENDS

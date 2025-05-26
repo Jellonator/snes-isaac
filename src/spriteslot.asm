@@ -500,6 +500,7 @@ Spriteman.NewBufferRef:
         lda.b $08
         jsl SpritePaletteSwizzle_B7F
 @no_swizzle:
+    rep #$30
     ldx.b $00
     rtl
 
@@ -566,6 +567,7 @@ _Swizzle_B7F_A_A:
 _Swizzle_B7F_B_AB:
     .INDEX 16
     .ACCU 8
+    phd ; we are going to use the D register as a temp register
 @loop:
     rep #$20
     txa
@@ -576,15 +578,15 @@ _Swizzle_B7F_B_AB:
 @entry:
     .REPT 8 INDEX i
         lda.l $7F0000+2*i+17,X
-        xba
-        lda.l $7F0000+2*i+17,X
+        tcd
         ora.l $7F0000+2*i+16,X
         sta.l $7F0000+2*i+17,X
-        xba
+        tdc
         sta.l $7F0000+2*i+16,X
     .ENDR
     dey
     bnel @loop
+    pld
     rtl
 
 _Swizzle_B7F_AB_B:

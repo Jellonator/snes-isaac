@@ -22,6 +22,78 @@
 .DEFINE STATE_MOVE_MID 4
 .DEFINE STATE_MOVE_END 6
 
+_frame_index_topleft:
+    .db $10
+    .db $10
+    .db $10
+    .db $10
+    .db $12
+    .db $12
+    .db $12
+    .db $12
+    .db $08
+    .db $08
+    .db $08
+    .db $08
+    .db $08
+    .db $09
+    .db $0A
+    .db $0B
+
+_frame_index_topright:
+    .db $11
+    .db $11
+    .db $11
+    .db $11
+    .db $13
+    .db $13
+    .db $13
+    .db $13
+    .db $14
+    .db $14
+    .db $14
+    .db $14
+    .db $14
+    .db $14
+    .db $14
+    .db $14
+
+_frame_index_bottomleft:
+    .db $00
+    .db $01
+    .db $02
+    .db $03
+    .db $04
+    .db $05
+    .db $06
+    .db $07
+    .db $0C
+    .db $0D
+    .db $0E
+    .db $0F
+    .db $0C
+    .db $0C
+    .db $0C
+    .db $0C
+
+_frame_index_bottom_right:
+    .db $15
+    .db $15
+    .db $15
+    .db $15
+    .db $17
+    .db $17
+    .db $17
+    .db $17
+    .db $16
+    .db $16
+    .db $16
+    .db $16
+    .db $16
+    .db $16
+    .db $16
+    .db $16
+
 ; set frame to A
 _set_frame:
     .ACCU 16
@@ -33,43 +105,28 @@ _set_frame:
     +:
     sta.w _current_frame,Y
     pea bankbyte(spritedata.enemy.isaac_cube) * $0101
-    .MultiplyStatic 512
-    clc
-    adc #loword(spritedata.enemy.isaac_cube)
-    pha
-    adc #128
-    pha
     ; upload sprite
     .REPT 4 INDEX i
-        .IF i == 1 || i == 3
-            plx
-            pla
-            clc
-            adc #64
-            pha
-            txa
-            clc
-            adc #64
-            pha
-        .ELIF i == 2
-            plx
-            pla
-            clc
-            adc #192
-            pha
-            txa
-            clc
-            adc #192
-            pha
-        .ENDIF
+        ldx.w _current_frame,Y
+        lda.l _frame_index_topleft + 16*i - 1,X
+        and #$FF00
+        lsr
+        clc
+        adc #loword(spritedata.enemy.isaac_cube)
+        pha
+        clc
+        adc #64
+        pha
         lda.w _gfxptr.{i+1},Y
         tax
         jsl Spriteman.WriteSpriteToRawSlot
         ldy.b _tmp_entityid
         rep #$30
+        pla
+        pla
     .ENDR
-    pla
-    pla
+    ; pla
+    ; pla
     pla
     rts
 
@@ -351,7 +408,7 @@ entity_enemy_cube_tick:
     ; x pos
     lda.w entity_box_x1,Y
     sec
-    sbc #4
+    sbc #3
     sta.w objectData.1.pos_x,X
     sta.w objectData.3.pos_x,X
     clc
@@ -359,7 +416,16 @@ entity_enemy_cube_tick:
     sta.w objectData.2.pos_x,X
     sta.w objectData.4.pos_x,X
     ; y pos
-    lda.w entity_box_y1,Y
+    lda.w _current_frame,Y
+    cmp #8
+    bcc @lower_y
+        lda.w entity_box_y1,Y
+        clc
+        adc #6
+        bra @upper_y
+    @lower_y:
+        lda.w entity_box_y1,Y
+    @upper_y:
     sta.w objectData.3.pos_y,X
     sta.w objectData.4.pos_y,X
     sec

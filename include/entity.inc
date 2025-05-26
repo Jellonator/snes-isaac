@@ -142,7 +142,7 @@
 .STRUCT entityspriteinfo_t SIZE 4
     sprite_addr dw
     sprite_bank db
-    nframes db
+    ntiles db
 .ENDST
 
 ; ENTITY SPAWNGROUPS

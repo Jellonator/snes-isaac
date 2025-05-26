@@ -156,12 +156,26 @@
     mapDoorHorizontal ds MAP_MAX_SIZE ; For index i: Connects room i with room i+1
     private_mapDoorVerticalEmptyBuf ds MAP_MAX_WIDTH
     mapDoorVertical ds MAP_MAX_SIZE ; For index i: Connects room i with room i+MAP_MAX_WIDTH
-; sprite allocation data
+; VRAM sprite allocation data
+    ; managed sprite table keys (sprite id + palette)
     spriteTableKey dsw SPRITE_TABLE_TOTAL_SIZE
+    ; black-box ptr table for the sprite hash table
     spriteTablePtr dsw SPRITE_TABLE_TOTAL_SIZE
+    ; managed sprite table values (VRAM index and reference count)
     spriteTableValue INSTANCEOF spritetab_t SPRITE_TABLE_TOTAL_SIZE
+    ; circular queue used for allocating raw VRAM slots. Used directly for
+    ; animated sprites.
     spriteQueueTabNext ds SPRITE_QUEUE_SIZE+1
     spiteTableAvailableSlots dw
+; RAM sprite allocation data, indexed [1,255] (0 is NULL)
+    ; 1 if block is allocated, 0 otherwise
+    private_spriteAllocTabActive ds SPRITE_ALLOC_NUM_TILES
+    ; Number of allocated tiles (div 128)
+    private_spriteAllocTabSize ds SPRITE_ALLOC_NUM_TILES
+    ; Index of data block following this block
+    private_spriteAllocTabNext ds SPRITE_ALLOC_NUM_TILES
+    ; Index of data block preceding this block
+    private_spriteAllocTabPrev ds SPRITE_ALLOC_NUM_TILES
 ; other display data
     textDisplayTimer dw
     textLines dw
@@ -202,12 +216,6 @@
 ; devil deal flags
     floors_since_devil_deal db
     devil_deal_flags db
-; Sprite allocation table
-    ; 1 if block is active (allocated), 0 otherwise
-    spriteAllocActiveTable ds SPRITE_ALLOC_NUM_TILES+1
-    ; If block is active: number of allocated tiles in this block
-    ; If block is inactive: number of free tiles allocatable in this block
-    spriteAllocSizeTable ds SPRITE_ALLOC_NUM_TILES+1
 ; HDMA buffers
 ; We double-buffer most HDMA buffers, so that we can write to the other buffer
 ; while the screen draws.

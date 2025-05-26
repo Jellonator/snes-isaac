@@ -60,3 +60,8 @@
 .DEFINE tempData_7E $7EFF00
 
 .DEFINE currentRoomInfoAddress currentRoomTileTypeTableAddress
+
+.DEFINE spriteAllocTabActive (private_spriteAllocTabActive-1)
+.DEFINE spriteAllocTabSize (private_spriteAllocTabSize-1)
+.DEFINE spriteAllocTabNext (private_spriteAllocTabNext-1)
+.DEFINE spriteAllocTabPrev (private_spriteAllocTabPrev-1)

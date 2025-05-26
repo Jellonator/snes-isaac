@@ -26,14 +26,11 @@ Spriteman.Init:
     sta.w loword(spriteQueueTabNext)+SPRITE_LIST_END
     ; initialize sprite alloc
     lda #0
-    ldx #SPRITE_ALLOC_NUM_TILES
-@loop_sprite_alloc:
-        stz.w loword(spriteAllocActiveTable),X
-        sta.w loword(spriteAllocSizeTable),X
-        dec A
-        dex
-        cpx #$FF
-        bne @loop_sprite_alloc
+    sta.w loword(spriteAllocTabNext) + 1
+    sta.w loword(spriteAllocTabPrev) + 1
+    sta.w loword(spriteAllocTabActive) + 1
+    lda #255
+    sta.w loword(spriteAllocTabSize) + 1
     ; end
     plb
     rtl
@@ -248,7 +245,6 @@ Spriteman.Unref:
     dec.w loword(spriteTableValue.1.count),X
     beq @remove
         ; --X->count > 0
-        plb
         rtl
 @remove:
     stx.b $00
@@ -265,84 +261,128 @@ Spriteman.Unref:
 _spriteman_allocbuffer_fail:
     .INDEX 8
     .ACCU 8
-    ldx #$FF
+    ldx #$00
     rts
-; allocate sprite memory buffer
-; Allocates `A` tiles
-Spriteman.AllocBuffer:
+; Allocate [A] tiles of sprite *buffer* in RAM
+; This buffer can be used for any purpose, but is intended for decompressing,
+; swizzling, or other operations on sprite data that is intended to be uploaded
+; to VRAM on demand. e.g., animated sprites with custom palettes
+Spriteman.AllocRawBuffer:
     sep #$30
-    ldx #0
-    ; search for free slot with enough space
+    ldx #1
+; search for block with appropriate size
     @loop_search:
         ; if this block is active, then skip
-        ldy.w loword(spriteAllocActiveTable),X
+        ldy.w loword(spriteAllocTabActive),X
         bne @search_skip
-        ; check if block has enough space (A <= size)
-        cmp.w loword(spriteAllocSizeTable),X
-        bcc @found
-        beq @found
-    @search_skip:
-        ; increment X by block's size
+            ; check if block has enough space
+            cmp.w loword(spriteAllocTabSize),X
+            bcc @found
+            beq @found
+        @search_skip:
+        ; set X to next block index
         xba
-        txa
-        clc
-        adc.w loword(spriteAllocSizeTable),X
-        bcs _spriteman_allocbuffer_fail ; overflow = fail
+        lda.w loword(spriteAllocTabNext),X
+        beq _spriteman_allocbuffer_fail ; if NEXT == 0: fail
         tax
         xba
         jmp @loop_search
+@store_and_ret:
+; set block's size and active status without modifying anything else
+    sta.w loword(spriteAllocTabSize),X
+    lda #1
+    sta.w loword(spriteAllocTabActive),X
+    rtl
 @found:
-    ; indicate that block is allocated, and write its size
-    phx
+; if size does not change, then perform shortcut
+    cmp.w loword(spriteAllocTabSize),X
+    beq @store_and_ret
+; set block's size and active status
+    sta.w loword(spriteAllocTabSize),X
+    lda #1
+    sta.w loword(spriteAllocTabActive),X
+; split block into two, at `size` boundary
+    pha
+    ; NEXT = CURRENT + CURRENT->size
+    txa
+    clc
+    adc.w loword(spriteAllocTabSize),X
     tay
-    @loop_clear:
-        lda #1
-        sta.w loword(spriteAllocActiveTable),X
-        tya
-        sta.w loword(spriteAllocSizeTable),X
-        inx
-        dey
-        bne @loop_clear
-    ; no point in the following code, since a newly allocated block will always
-    ; be after another allocated block (or be at position $00)
-    ; lda 1,S
-    ; tax
-    ; beq @end_decrement
-    ; lda #0
-    ; @loop_decrement:
-    ;     ldy.w loword(spriteAllocActiveTable) - 1,X
-    ;     beq @end_decrement
-    ;     inc A
-    ;     sta.w loword(spriteAllocTable) - 1,X
-    ;     dex
-    ;     bne @loop_decrement
-    ; @end_decrement:
-    plx
+    ; NEXT->next = CURRENT->next
+    lda.w loword(spriteAllocTabNext),X
+    sta.w loword(spriteAllocTabNext),Y
+    ; NEXT->prev = CURRENT
+    txa
+    sta.w loword(spriteAllocTabPrev),Y
+    ; CURRENT->next = NEXT
+    tya
+    sta.w loword(spriteAllocTabNext),X
+    ; NEXT->active = 0
+    lda #0
+    sta.w loword(spriteAllocTabActive),Y
+    ; NEXT->size = previous_size - CURRENT->size
+    pla
+    sec
+    sbc.w loword(spriteAllocTabSize),X
+    sta.w loword(spriteAllocTabSize),Y
+    ; if NEXT->next != NULL:
+    lda.w loword(spriteAllocTabNext),Y
+    beq @dont_set_next_prev
+        ; NEXT->next->prev = NEXT
+        tay ; Y = NEXT->next
+        lda.w loword(spriteAllocTabNext),X
+        sta.w loword(spriteAllocTabPrev),Y
+@dont_set_next_prev:
+; end
     rtl
 
 ; Free sprite memory buffer [X]
-Spriteman.FreeBuffer:
+Spriteman.FreeRawBuffer:
     sep #$30
-    ldy.w loword(spriteAllocSizeTable),X
-    ; clear active table
-    @loop_clear_active:
-        stz.w loword(spriteAllocActiveTable),X
-        inx
-        dey
-        bne @loop_clear_active
-    ; decrement and write new size to join empty blocks together
-    lda.w loword(spriteAllocSizeTable),X
-    @loop_decrement_write:
-        ; if sprite is active, then end
-        ldy.w loword(spriteAllocActiveTable)-1,X
-        bne @end_decrement_write
-        ; write size
-        sta.w loword(spriteAllocSizeTable)-1,X
-        inc A
-        ; while (--x) > 0
-        dex
-        bne @loop_decrement_write
-    @end_decrement_write:
+    cpx #0
+    beq @skip_merge_prev
+    ; indicate block is inactive
+    stz.w loword(spriteAllocTabActive),X
+; check if next block is inactive. if so, then merge with this block
+    ; Y = X->next
+    ldy.w loword(spriteAllocTabNext),X
+    beq @skip_merge_next ; skip if X->next == NULL
+    lda.w loword(spriteAllocTabActive),Y
+    bne @skip_merge_next ; skip if X->next->active == true
+        ; X->size = X->size + Y->size
+        lda.w loword(spriteAllocTabSize),X
+        clc
+        adc.w loword(spriteAllocTabSize),Y
+        sta.w loword(spriteAllocTabSize),X
+        ; X->next = Y->next
+        lda.w loword(spriteAllocTabNext),Y
+        sta.w loword(spriteAllocTabNext),X
+        ; Y->next->prev = X
+        tay ; Y = Y->next
+        beq @skip_merge_next ; skip if Y->next == NULL
+        txa
+        sta.w loword(spriteAllocTabPrev),Y
+@skip_merge_next:
+; check if prev block is inactive. if so, then merge into previous block
+    ; Y = X->prev
+    ldy.w loword(spriteAllocTabPrev),X
+    beq @skip_merge_prev ; skip if X->next == NULL
+    lda.w loword(spriteAllocTabNext),Y
+    bne @skip_merge_prev ; skip if X->prev->active == true
+        ; Y->size = X->size + Y->size
+        lda.w loword(spriteAllocTabSize),X
+        clc
+        adc.w loword(spriteAllocTabSize),Y
+        sta.w loword(spriteAllocTabSize),Y
+        ; Y->next = X->next
+        lda.w loword(spriteAllocTabNext),X
+        sta.w loword(spriteAllocTabNext),Y
+        ; X->next->prev = Y
+        tax ; X = X->next
+        beq @skip_merge_prev
+        tya
+        sta.w loword(spriteAllocTabPrev),X
+@skip_merge_prev:
     rtl
 
 ; Swizzle a sprite that is located in bank 7F according to palette

@@ -451,9 +451,9 @@ Spriteman.NewBufferRef:
     ; WMADDL = index*128 + spriteAllocBuffer
     lda.w loword(spriteTableValue.1.spritemem)-1,Y
     and #$FF00
-    sta.b $06
     lsr
     adc #spriteAllocBuffer ; carry should be cleared by lsr
+    sta.b $06
     sta.l WMADDL
     ; srcL = sprite_addr
     lda.l SpriteDefs + entityspriteinfo_t.sprite_addr,X
@@ -496,6 +496,8 @@ Spriteman.NewBufferRef:
         lda.b $0A
         asl
         asl
+        tay
+        lda.b $08
         jsl SpritePaletteSwizzle_B7F
 @no_swizzle:
     ldx.b $00

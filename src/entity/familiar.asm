@@ -220,8 +220,10 @@ entity_familiar_tick:
     sec
     sbc #16
     sta.w objectData.1.pos_y,X
-    lda.b $02
-    lda #%00100001
+    ; flags
+    lda.w _palette,Y
+    .PaletteIndexToPaletteSpriteA
+    ora #%00100001
     sta.w objectData.2.flags,X
     sta.w objectData.1.flags,X
     lda.b $00

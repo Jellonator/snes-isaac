@@ -149,6 +149,7 @@ entity_tile_init:
     txa
     sta.w _entity_paletteptr,Y
     .PaletteIndex_X_ToSpriteDef_A
+    ; TODO: allocate sprite ram
     ; upload sprite
     ora #sprite.tilesprite_fire
     phy

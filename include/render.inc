@@ -109,6 +109,12 @@
 .DEFINE PALLETE_ALLOC_12C %00000101
 .DEFINE PALLETE_ALLOC_16  %00000111
 
+; Palette swizzle mode
+.DEFINE PALETTE_SWIZZLE_NONE %00 ; (A', B') = (A, B)
+.DEFINE PALETTE_SWIZZLE_A_A  %01 ; (A', B') = (A, A)
+.DEFINE PALETTE_SWIZZLE_AB_A %10 ; (A', B') = (A | B, A)
+.DEFINE PALETTE_SWIZZLE_B_AB %11 ; (A', B') = (B, A | B)
+
 ; Tile palette allocation
 .DEFINE PALETTE_TILESET.0 $0000 ; ground palette
 .DEFINE PALETTE_TILESET.1 $4000 ; unused (currently)
@@ -459,12 +465,10 @@
 
 .MACRO .PaletteIndex_X_ToSpriteDef_A
     lda.w paletteAllocMode+1,X
-    ror
-    ror
-    ror
-    ror
-    ror
-    and #$E000
+    and #$00FE
+    tax
+    lda.l PaletteAllocToSpriteSwizzleDef,X
+    and #$C000
 .ENDM
 
 .MACRO .GetDecimalAsTilePause ARGS method, data, chari

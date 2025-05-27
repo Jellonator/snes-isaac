@@ -113,13 +113,13 @@ SpriteSlotMemTable:
         .dw ((((i & $7) * 2) + ((i & $38) * 4)) * 16) + SPRITE2_BASE_ADDR
     .ENDR
 
-.DEFINE SPRITEID_PAL $E000
-.DEFINE SPRITEID_SPRITE $1FFF
+.DEFINE SPRITEID_MASK_PAL $C000
+.DEFINE SPRITEID_MASK_SPRITE $3FFF
 
 ; Allocate a 16x16 sprite slot
 ; Loads sprite id stored in A
-; Sprite ID format: pppsssss ssssssss
-;    where `s` is the Sprite index into SpriteDefs, and `p` is the palette format.
+; Sprite ID format: ppssssss ssssssss
+;    where `s` is the Sprite index into SpriteDefs, and `p` is the palette swizzle.
 ;    The palette format is important for swizzling sprite data before upload.
 ; Returns reference in X.
 ; Useful for objects which don't need to upload sprites very often.
@@ -186,7 +186,7 @@ Spriteman.NewSpriteRef:
     sta.l vqueueOps.2.numBytes,X
     ; get Sprite address
     lda.b SPRITE_ID
-    and #SPRITEID_SPRITE
+    and #SPRITEID_MASK_SPRITE
     sta.b TEMP
     asl
     asl
@@ -207,13 +207,9 @@ Spriteman.NewSpriteRef:
     rol
     rol
     rol
-    rol
-    and #$0007
-    sta.b TEMP ; $08 = palette
-    tax
-    lda.l PaletteAllocNeedSwizzle,X
+    and #$0003
+    sta.b TEMP ; $08 = palette swizzle
     ora.b SPRITE_MODE
-    and #$00FF
     beq @no_swizzle
         ; TODO: might be faster to copy ROM to bin during the swizzle step
         ; swizzle step 1: Copy sprite to vqueueBinData
@@ -474,7 +470,7 @@ Spriteman.NewBufferRef:
     stx.b SPRITE_TABLE_INDEX
 ; get number of tiles
     lda.b SPRITE_ID
-    and #SPRITEID_SPRITE
+    and #SPRITEID_MASK_SPRITE
     sta.b SPRITE_DEF_PTR
     asl
     asl
@@ -515,12 +511,8 @@ Spriteman.NewBufferRef:
         rol
         rol
         rol
-        rol
-        and #$0007
+        and #$0003
         sta.b TEMP
-        tax
-        lda.l PaletteAllocNeedSwizzle,X
-        and #$00FF
         beq @no_swizzle
         ; perform swizzle
         ldx.b DEST_ADDR
@@ -641,13 +633,11 @@ SpritePaletteSwizzle_B7F:
     .INDEX 16
     .ACCU 16
     sep #$20
-    cmp #PALLETE_ALLOC_8B
+    cmp #PALETTE_SWIZZLE_B_AB
     beql _Swizzle_B7F_B_AB@entry
-    cmp #PALLETE_ALLOC_12B
-    beql _Swizzle_B7F_B_AB@entry
-    cmp #PALLETE_ALLOC_8C
+    cmp #PALETTE_SWIZZLE_A_A
     beql _Swizzle_B7F_A_A@entry
-    cmp #PALLETE_ALLOC_12C
+    cmp #PALETTE_SWIZZLE_AB_A
     beql _Swizzle_B7F_AB_B@entry
     rtl
 

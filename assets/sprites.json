@@ -3,7 +3,8 @@
         "name": "isaac_head",
         "src": "assets/sprites/isaac_head.raw",
         "depth": 16,
-        "size": 2
+        "size": 2,
+        "compression": "lz4"
     },
     {
         "name": "basement",
@@ -28,7 +29,8 @@
     {
         "name": "isaac_tear",
         "src": "assets/sprites/tear_8px.raw",
-        "depth": 16
+        "depth": 16,
+        "compression": "lz4"
     },
     {
         "name": "UI",
@@ -39,7 +41,8 @@
         "name": "enemy_attack_fly",
         "src": "assets/sprites/enemy/attack_fly.raw",
         "depth": 16,
-        "size": 2
+        "size": 2,
+        "compression": "lz4"
     },
     {
         "name": "enemy_zombie",
@@ -60,7 +63,8 @@
     {
         "name": "default_sprites",
         "src": "assets/sprites/default_sprites.raw",
-        "depth": 16
+        "depth": 16,
+        "compression": "lz4"
     },
     {
         "name": "basement_ground_base",
@@ -122,58 +126,68 @@
         "name": "shopkeepers",
         "src": "assets/sprites/shopkeepers.raw",
         "depth": 16,
-        "size": [2, 2]
+        "size": [2, 2],
+        "compression": "lz4"
     },
     {
         "name": "tarot_cards_big",
         "src": "assets/sprites/tarot_cards_big.raw",
         "depth": 16,
-        "size": [4, 4]
+        "size": [4, 4],
+        "compression": "lz4"
     },
     {
         "name": "tilesprite_fire",
         "src": "assets/sprites/tilesprite_fire.raw",
         "depth": 16,
-        "size": [2, 2]
+        "size": [2, 2],
+        "compression": "lz4"
     },
     {
         "name": "menu.mainmenu",
         "src": "assets/sprites/mainmenu.raw",
-        "depth": 16
+        "depth": 16,
+        "compression": "lz4"
     },
     {
         "name": "menu.background",
         "src": "assets/sprites/menu_bg.raw",
-        "depth": 4
+        "depth": 4,
+        "compression": "lz4"
     },
     {
         "name": "menu.logo",
         "src": "assets/sprites/menu_logo.raw",
         "depth": 16,
-        "size": [16, 2]
+        "size": [16, 2],
+        "compression": "lz4"
     },
     {
         "name": "menu.ui",
         "src": "assets/sprites/menu_ui.raw",
         "depth": 16,
-        "size": [16, 2]
+        "size": [16, 2],
+        "compression": "lz4"
     },
     {
         "name": "enemy.isaac_cube",
         "src": "assets/sprites/enemy/isaac_cube.raw",
         "depth": 16,
-        "size": [2, 2]
+        "size": [2, 2],
+        "compression": "lz4"
     },
     {
         "name": "familiar.brother_bobby",
         "src": "assets/sprites/familiar/brother_bobby.raw",
         "depth": 16,
-        "size": [2, 2]
+        "size": [2, 2],
+        "compression": "lz4"
     },
     {
         "name": "familiar.sister_maggy",
         "src": "assets/sprites/familiar/sister_maggy.raw",
         "depth": 16,
-        "size": [2, 2]
+        "size": [2, 2],
+        "compression": "lz4"
     }
 ]

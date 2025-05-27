@@ -41,18 +41,30 @@ SpriteDefs:
     .REDEFINE currid (currid + nframes)
 .ENDM
 
-.DefineSprite "sprite.enemy.attack_fly", spritedata.enemy_attack_fly, 1, 2
+.DefineSprite "sprite.enemy.attack_fly",\
+    spritedata.enemy_attack_fly, 1, 2,\
+    SPRITEALLOCMODE_COMPRESSED_LZ4
 
-.DefineSprite "sprite.item", spritedata.items, 1, 255
+.DefineSprite "sprite.item",\
+    spritedata.items, 1, 255
 
-.DefineSprite "sprite.item_pedastal", spritedata.item_pedastal, 1, 1
+.DefineSprite "sprite.item_pedastal",\
+    spritedata.item_pedastal, 1, 1
 
-.DefineSprite "sprite.shopkeepers", spritedata.shopkeepers, 1, 8
+.DefineSprite "sprite.shopkeepers",\
+    spritedata.shopkeepers, 1, 8,\
+    SPRITEALLOCMODE_COMPRESSED_LZ4
 
-.DefineSprite "sprite.tilesprite_fire", spritedata.tilesprite_fire, 1, 4
+.DefineSprite "sprite.tilesprite_fire",\
+    spritedata.tilesprite_fire, 1, 4,\
+    SPRITEALLOCMODE_COMPRESSED_LZ4
 
-.DefineSprite "sprite.familiar.brother_bobby", spritedata.familiar.brother_bobby, 5, 1, SPRITEALLOCMODE_SWIZZLE
+.DefineSprite "sprite.familiar.brother_bobby",\
+    spritedata.familiar.brother_bobby, 5, 1,\
+    SPRITEALLOCMODE_SWIZZLE | SPRITEALLOCMODE_COMPRESSED_LZ4
 
-.DefineSprite "sprite.enemy.isaac_cube", spritedata.enemy.isaac_cube, 24, 1, SPRITEALLOCMODE_SWIZZLE
+.DefineSprite "sprite.enemy.isaac_cube",\
+    spritedata.enemy.isaac_cube, 24, 1,\
+    SPRITEALLOCMODE_SWIZZLE | SPRITEALLOCMODE_COMPRESSED_LZ4
 
 .ENDS

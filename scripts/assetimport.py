@@ -3,6 +3,9 @@
 import json
 import struct
 import os
+import io
+import lz4.frame
+import lz4.block
 
 SPRITE_PATH = "include/sprites"
 PALETTE_PATH = "include/palettes"
@@ -85,6 +88,71 @@ def write_image_tile(bin, imageindices, depth, tilex, tiley, width, mask_mode):
 # out_inc.write("sprites:\n")
 sprite_number = 1
 
+def debug_print_lz4_blocks_bin(data):
+    block_index = 0
+    calc_file_size = 0
+    while True:
+        # Read TOKEN
+        token = data.read(1)
+        # Get literal size
+        literal_size = (token[0] & 0xF0) >> 4
+        if literal_size == 0x0F:
+            read_size = 0xFF
+            while read_size == 0xFF:
+                read_size = data.read(1)[0]
+                literal_size += read_size
+        # Read and print literal data
+        calc_file_size += literal_size
+        literal_data = b''
+        if literal_size != 0:
+            literal_data = data.read(literal_size)
+        print("L{}: ".format(block_index), ' '.join('{:02X}'.format(x) for x in literal_data))
+        # Get match data. If none, then end
+        match_data = data.read(2)
+        if len(match_data) == 0:
+            print("Calc size is", calc_file_size)
+            return
+        # Get match size
+        match_size = (token[0] & 0x0F)
+        if match_size == 0x0F:
+            read_size = 0xFF
+            while read_size == 0xFF:
+                read_size = data.read(1)[0]
+                match_size += read_size
+        match_size += 4
+        calc_file_size += match_size
+        print("M{}: ".format(block_index), struct.unpack("<H", match_data)[0], match_size)
+        block_index += 1
+
+def calc_num_lz4_blocks(data):
+    block_index = 0
+    while True:
+        # Read TOKEN
+        token = data.read(1)
+        # Get literal size
+        literal_size = (token[0] & 0xF0) >> 4
+        if literal_size == 0x0F:
+            read_size = 0xFF
+            while read_size == 0xFF:
+                read_size = data.read(1)[0]
+                literal_size += read_size
+        # Read and discard literal data
+        if literal_size != 0:
+            data.read(literal_size)
+        # Get match data. If none, then end
+        match_data = data.read(2)
+        if len(match_data) == 0:
+            return block_index+1
+        # Get and discard match size
+        match_size = (token[0] & 0x0F)
+        if match_size == 0x0F:
+            read_size = 0xFF
+            while read_size == 0xFF:
+                read_size = data.read(1)[0]
+        block_index
+
+total_bytes_saved = 0
+
 for sprite in json_sprites:
     name = sprite["name"]
     imagefh = open(sprite["src"], 'rb')
@@ -123,7 +191,7 @@ for sprite in json_sprites:
     # section output
     out_inc.write(".ENDS\n")
     # Write to binary file
-    spritebin = open(sprite_out_path, 'wb')
+    spritebin = io.BytesIO()
     # get size
     size_x = 1
     size_y = 1
@@ -141,6 +209,26 @@ for sprite in json_sprites:
             for ty2 in range(ty, ty+size_y, 1):
                 for tx2 in range(tx, tx+size_x, 1):
                     write_image_tile(spritebin, imagedata, sprite["depth"], tx2, ty2, width, mask_mode)
+    # determine how to write binary data
+    compression_format = "none"
+    if "compression" in sprite:
+        compression_format = sprite["compression"]
+    spritebin.flush()
+    spritebin_out_file = open(sprite_out_path, 'wb')
+    if compression_format == "none":
+        spritebin_out_file.write(spritebin.getvalue())
+    elif compression_format == "lz4":
+        compressedbin = lz4.block.compress(spritebin.getvalue(), mode='high_compression', store_size=False)
+        spritebin_out_file.write(struct.pack("<H", calc_num_lz4_blocks(io.BytesIO(compressedbin))))
+        spritebin_out_file.write(compressedbin)
+        base_len = len(spritebin.getvalue())
+        new_len = len(compressedbin)
+        print("Compressed {} to \t{}B ({:.2f}%)".format(sprite["name"], new_len, (new_len * 100.0 / base_len)))
+        total_bytes_saved += (base_len - new_len)
+    else:
+        raise RuntimeError("Invalid compression \"{}\" for {}".format(compression_format, sprite["src"]))
+
+print("Saved a total of {}B".format(total_bytes_saved))
 
 splat_number = 1
 

@@ -15,7 +15,7 @@ VBlank2:
     rep #$30 ; 16 bit AXY
     pha
     .ChangeDataBank $80
-    lda.w isGameUpdateRunning
+    lda.w blockVQueueMutex
     beq @continuevblank
     phx
     jsl Render.UpdateHDMA
@@ -26,7 +26,9 @@ VBlank2:
     rti
 @continuevblank:
     pla ; compensate for earlier pha
-    inc.w isGameUpdateRunning
+    inc.w blockVQueueMutex
+    ; Process HDMA
+    jsl Render.UpdateHDMA
     ; Since VBlank only actually executes while the game isn't updating, we
     ; don't have to worry about storing previous state here
     sep #$20 ; 8 bit A
@@ -72,7 +74,6 @@ VBlank2:
 ; Process vqueue
     jsl ProcessVQueue
 ; Process HDMA
-    jsl Render.UpdateHDMA
     .ACCU 8
     lda.l hdmaWindowMainPositionActiveBufferId
     eor #1
@@ -86,7 +87,7 @@ VBlank2:
     lda.w roomBrightness
     sta INIDISP
     jsr ReadInput
-    stz.w isGameUpdateRunning
+    stz.w blockVQueueMutex
     cli ; enable interrupts
     rti
 

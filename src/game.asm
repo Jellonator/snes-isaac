@@ -229,7 +229,7 @@ tile_data_loop:
     lda #-32
     sta.w gameRoomScrollY
     lda #1
-    sta.w isGameUpdateRunning
+    sta.w blockVQueueMutex
     ; clear entity table
     jsl EntityInfoInitialize
     ; clear pathfinding data
@@ -282,7 +282,7 @@ tile_data_loop:
     jsl Render.ClearHDMA
     ; re-enable rendering
     rep #$20
-    stz.w isGameUpdateRunning
+    stz.w blockVQueueMutex
     sep #$20
     lda #$00
     sta.w roomBrightness
@@ -297,7 +297,7 @@ tile_data_loop:
 _Game.Loop:
     ; update counter
     rep #$30 ; 16 bit AXY
-    inc.w isGameUpdateRunning
+    inc.w blockVQueueMutex
     sep #$20
     stz.w didPlayerJustEnterRoom
     lda.w isGamePaused
@@ -392,7 +392,7 @@ _Game.Loop:
     +:
     ; End update code
     rep #$30 ; 16 bit AXY
-    stz.w isGameUpdateRunning
+    stz.w blockVQueueMutex
     wai
     jmp _Game.Loop
 

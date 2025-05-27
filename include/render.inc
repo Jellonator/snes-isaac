@@ -97,7 +97,7 @@
 ; PALETTE INFO
 
 ; Palette allocation mode
-; bit 1 indicates that [X] is allocated (almost always true)
+; bit 1 indicates that [X+0] is allocated
 ; bit 2 indicates that [X+1] is allocated
 ; bit 3 indicates that [X+2] is allocated
 .DEFINE PALLETE_ALLOC_NONE 0

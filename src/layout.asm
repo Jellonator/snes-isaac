@@ -19,10 +19,8 @@
     ; quick access to current room's RNG
     currentRoomRngAddress_Low dl
     currentRoomRngAddress_High dl
-    ; ... used for a variety of purposes I guess. Just treat them as temp vars
-    currentConsideredTileX dw
-    currentConsideredTileY dw
     ; Indicates in what context the entity's code is being executed.
+    ; See `ENTITY_CONTEXT_` enum for more info.
     entityExecutionContext dw
 ; long pointers to current room's doors
     mapDoorNorth dl
@@ -31,9 +29,14 @@
     mapDoorWest dl
 ; temp values; these are placed later, since they are guaranteed not to
 ; overwrite mapgenerator values (as they are mostly used for entitites).
+    ; current entity's target angle
     entityTargetAngle db
+    ; true if an Entity Target function found a valid target.
     entityTargetFound db
+    ; During familiar spawning, used to indicate what this familiar's parent
+    ; should be.
     entityParentChain db
+    ; 128 bytes of temporary data for code to make use of.
     tempDP ds $80
 .ENDS
 
@@ -45,19 +48,32 @@
     joy1press dw
     joy1held dw
 ; flags
-    isGameUpdateRunning dw
+    ; If true, then the vqueue will not process during NMI. This also blocks
+    ; sprites from being uploaded.
+    blockVQueueMutex dw
+    ; Number of frames since game starts. May wrap, so don't depend on it being continuous.
     tickCounter dw
+    ; Indicates which save slot we should load from/save to
     currentSaveSlot dw
+    ; If true, then Game.Begin will load from a save state.
     loadFromSaveState db
+    ; Set to true after the player just entered a new room. 
     didPlayerJustEnterRoom db
     ; Indicates if room is transitioning. Top bit also indicates if
     ; restored backup palette data is currently in use.
     isRoomTransitioning db
 ; pause menu
+    ; True if the pause screen is currently shown.
     isGamePaused db
+    ; True if the pause screen should be shown. If true, then the pause screen
+    ; will be scrolled into view. if false, then the pause screen will be
+    ; scrolled out of view.
     shouldGamePause db
+    ; How much the pause screen is scrolled into view.
     gamePauseTimer db
+    ; Current pause page (stats, map, etc.)
     pausePage db
+    ; Current pause action (continue, quit, etc.)
     pauseSelect db
 ; RNG state
     ; seed used for entire game
@@ -66,6 +82,7 @@
     gameSeedStored INSTANCEOF rng_t
     ; seed used to generate stage
     stageSeed INSTANCEOF rng_t
+    ; current index into the quick rand table
     quickrandIndex dw
 ; map data
     ; set to $FF to update entire map.
@@ -95,39 +112,78 @@
 ; VQueue data
     vqueueNumOps dw
     vqueueNumMiniOps dw
-    vqueueBinOffset dw
     vqueueNumRegOps dw
+    ; offset into `vqueueBinData`, starting at the END.
+    vqueueBinOffset dw
 ; Room scroll data
+    ; Where room tiles should be written to in BG2's tile data
     gameRoomBG2Offset dw ; % 000000y0 000x0000
     gameRoomScrollX dw
     gameRoomScrollY dw
 ; Current room data
+    ; ground character data long pointer
     currentRoomGroundData dl
+    ; ground palette tile index, to be OR'd with tile ID
     currentRoomGroundPalette dw
+    ; room brightness, for INIDISP
     roomBrightness db
 ; Floor data
+    ; Index of the current floor
     currentFloorIndex dw
+    ; Abs pointer to the current floor's definition
     currentFloorPointer dw
+    ; Flags indicating handling of current floor. See `FLOOR_FLAG_` for more info
     floorFlags dw
 ; Auto-cleared entity data (will be cleared on game start and between floors)
+; Most `entity_` fields are declared private here, then offset by `2` in their definitions.
+; Since `0` indicates null, entity IDs begin at `2`.
     entity_data_begin ds 0 ; data from here to entity_data_end will be cleared
+    ; entity_type - The 'type' of the entity. Refer to the `ENTITY_TYPE_` enum.
+    ; This value is serialized to room and save data.
+    ; entity_variant - The 'variant' of the entity. Exact meaning depends on type.
+    ; This value is serialized to room and save data.
     private_base_entity_combined_type_variant dsw ENTITY_TOTAL_MAX
+    ; Spatial partition used for faster entity collision lookups.
+    ; Arranged as 4 layers of 16x16 tiles. Each layer can hold one entity.
     spatial_partition INSTANCEOF spatialpartitionlayer_t SPATIAL_LAYER_COUNT
+    ; Number of enemies in the current room.
     currentRoomEnemyCount dw
+    ; Set to 'true' on room load if it spawns entities, indicating that this room
+    ; should spawn a reward when it is completed.
     currentRoomDoSpawnReward db
     entity_data_end ds 1
 ; Commonly used entity data
+    ; List of entity IDs in the order that they should execute. This listed is
+    ; sorted back-to-front, so that placed objects will appear to be in order.
     entityExecutionOrder ds ENTITY_TOTAL_MAX
+    ; entity_state - The 'state' of the entity, exact meaning depending on the type/variant.
+    ; This value is serialized to room and save data.
+    ; entity_timer - The 'timer' of the entity, exact meaning depending on the type/variant.
+    ; This value is serialized to room and save data.
     private_base_entity_combined_state_timer dsw ENTITY_TOTAL_MAX
+    ; entity_mask - Set by entities to determine what sources may interact with it.
+    ; See the `ENTITY_MASK_` flags for more info.
+    ; entity_signal - Signals sent to the entity for them to handle.
+    ; See the `ENTITY_SIGNAL_` flags for more info.
     private_base_entity_combined_mask_signal dsw ENTITY_TOTAL_MAX
+    ; The current health of the entity.
     private_base_entity_health dsw ENTITY_TOTAL_MAX
     ; position
+    ; The entity's X position, in Q8.8 format
+    ; This value is serialized to room and save data.
+    ; entity_box_x1 refers to the top byte of this data.
     private_base_entity_posx dsw ENTITY_TOTAL_MAX
+    ; The entity's Y position, in Q8.8 format
+    ; This value is serialized to room and save data.
+    ; entity_box_y1 refers to the top byte of this data.
     private_base_entity_posy dsw ENTITY_TOTAL_MAX
-    ; size
+    ; entity_box_x2 - The ending coordinate of this entity's X position.
+    ; entity_box_y2 - The ending coordinate of this entity's Y position.
     private_base_entity_combined_box_x2y2 dsw ENTITY_TOTAL_MAX
     ; velocity
+    ; This entity's X velocity, in Q8.8 format
     private_base_entity_velocx dsw ENTITY_TOTAL_MAX
+    ; This entity's Y velocity, in Q8.8 format
     private_base_entity_velocy dsw ENTITY_TOTAL_MAX
 ; Common entity data
     ; pathfinding data
@@ -203,8 +259,11 @@
     ; stored max health for characters
     private_entity_char_maximum_health dsw ENTITY_CHARACTER_MAX
 ; boss health bar data
+    ; If 1, then boss bar will be re-rendered
     boss_health_need_rerender db
+    ; Number of contributors to the boss bar
     boss_contributor_count db
+    ; List of entity IDs contributing to the boss bar
     boss_contributor_array ds ENTITY_CHARACTER_MAX
 ; room locations
     roomslot_star db
@@ -242,7 +301,9 @@
     ; is enough for each frame. The most we push to it is about $0800 for a
     ; single tilemap.
     vqueueBinData ds $2000
+    ; List of vqueueOps - These are direct uploads of multiple bytes to VRAM or CGRAM
     vqueueOps INSTANCEOF vqueueop_t VQUEUE_MAX_SIZE
+    ; List of vqueueMiniOps - These are direct uploads of single words to VRAM
     vqueueMiniOps INSTANCEOF vqueueminiop_t 255
     ; Vqueue regops. Note that 'addr' is 16B, but 'value' is 8B
     vqueueRegOps_Addr dsw 64

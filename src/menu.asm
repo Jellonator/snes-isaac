@@ -444,7 +444,7 @@ Menu.Begin:
     jsl Render.ClearHDMA
     ; re-enable rendering
     rep #$20
-    stz.w isGameUpdateRunning
+    stz.w blockVQueueMutex
     sep #$20
     lda #$0F
     sta.w roomBrightness
@@ -455,7 +455,7 @@ Menu.Begin:
 _Menu.Loop:
     ; update counter
     rep #$30 ; 16 bit AXY
-    inc.w isGameUpdateRunning
+    inc.w blockVQueueMutex
     inc.w tickCounter
     ; clear data
     jsl ClearSpriteTable
@@ -474,7 +474,7 @@ _Menu.Loop:
     +:
     ; End update code
     rep #$30 ; 16 bit AXY
-    stz.w isGameUpdateRunning
+    stz.w blockVQueueMutex
     wai
     jmp _Menu.Loop
 

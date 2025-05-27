@@ -29,14 +29,14 @@ Decompress.Lz4FromROM:
     sta.l DMA0_SRCH ; SRCH = source bank
     xba
     sta.l WMADDH ; WMADDH = dest bank
-    sta.l tempData_7E+1 ; mvn source bank is dest (this is for dest -> dest copy)
-    sta.l tempData_7E+2 ; mvn dest bank is dest
+    sta.l tempWritableCode+1 ; mvn source bank is dest (this is for dest -> dest copy)
+    sta.l tempWritableCode+2 ; mvn dest bank is dest
     lda #$54 ; mvn src,dest
-    sta.l tempData_7E+0
+    sta.l tempWritableCode+0
     lda #$5C ; jmp long
-    sta.l tempData_7E+3
+    sta.l tempWritableCode+3
     lda #bankbyte(Decompress.Lz4FromROM@match_copy_end)
-    sta.l tempData_7E+6
+    sta.l tempWritableCode+6
     ; continue setting registers
     rep #$30
     tya
@@ -45,7 +45,7 @@ Decompress.Lz4FromROM:
     lda #$8000 ; auto increment, 1B at a time, dest=WM
     sta.l DMA0_CTL
     lda #loword(Decompress.Lz4FromROM@match_copy_end)
-    sta.l tempData_7E+4
+    sta.l tempWritableCode+4
 ; Read header
     lda.w $0000,X ; first two bytes are the number of blocks
     sta.b NUM_BLOCKS
@@ -138,7 +138,7 @@ Decompress.Lz4FromROM:
     ldy.b DEST_ADDR
     ldx.b DEST_OFFSET
     dec A
-    jml tempData_7E
+    jml tempWritableCode
 @match_copy_end:
     plb ; bank was changed to DEST, but bank needs to be SRC
     plx
@@ -152,8 +152,10 @@ Decompress.Lz4FromROM:
 @end:
     plb
     rtl
-@size:
-
-.PRINT "Lz4 decompress size: ", Decompress.Lz4FromROM@size - Decompress.Lz4FromROM, "\n"
+    .UNDEFINE NUM_BLOCKS
+    .UNDEFINE LEN_LITERAL
+    .UNDEFINE LEN_MATCH
+    .UNDEFINE DEST_ADDR
+    .UNDEFINE DEST_OFFSET
 
 .ENDS

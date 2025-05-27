@@ -289,6 +289,7 @@
     hdmaWindowSubPositionBuffer2 ds 512
     hdmaWindowSubPositionActiveBufferId db
 ; reserved data
+    tempWritableCode ds 32
     _extraneous_data_buffer2 ds 256
 .ENDS
 

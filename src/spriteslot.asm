@@ -403,7 +403,13 @@ Spriteman.FreeRawBuffer:
 ; Unlike NewSpriteRef, the loaded sprite may be multiple tiles in size, and
 ; will the appropriate amount of RAM.
 Spriteman.NewBufferRef:
-    sta.b $02 ; $02 is sprite ID
+    .DEFINE SPRITE_TABLE_INDEX $20
+    .DEFINE SPRITE_ID $22
+    .DEFINE SPRITE_DEF_PTR $24
+    .DEFINE NUM_TILES $26
+    .DEFINE TEMP $28
+    .DEFINE DEST_ADDR $2A
+    sta.b SPRITE_ID
 ; insert unique sprite; determine if sprite ID already in use
     jsl table_insert_unique_sprite
     .INDEX 16
@@ -414,16 +420,16 @@ Spriteman.NewBufferRef:
     inc.w loword(spriteTableValue.1.count),X
     rtl
 @did_insert:
-    stx.b $00 ; $00 is 16b sprite table ptr
+    stx.b SPRITE_TABLE_INDEX
 ; get number of tiles
-    lda.b $02
+    lda.b SPRITE_ID
     and #SPRITEID_SPRITE
-    sta.b $04
+    sta.b SPRITE_DEF_PTR
     asl
     asl
     clc
-    adc.b $04
-    sta.b $04 ; $04 is sprite def pointer
+    adc.b SPRITE_DEF_PTR
+    sta.b SPRITE_DEF_PTR
     tax
     lda.l SpriteDefs + entityspriteinfo_t.ntiles,X
     and #$00FF
@@ -434,17 +440,62 @@ Spriteman.NewBufferRef:
     txa
     ; write buffer index to spritemem, and set count to 1
     rep #$10 ; 16b X, 8b A
-    ldy.b $00
+    ldy.b SPRITE_TABLE_INDEX
     sta.w loword(spriteTableValue.1.spritemem),Y
     lda #1
     sta.w loword(spriteTableValue.1.count),Y
-; copy sprite data into buffer
+; copy sprite data into buffer.
     rep #$30
+    ldx.b SPRITE_DEF_PTR
+    lda.l SpriteDefs + entityspriteinfo_t.mode,X
+    and #$000F
+    asl
+    tax
+    jsr (_sprite_upload_methods,X)
+; now, see if we need to swizzle, by checking 'mode' and 'palette'
+    rep #$30
+    ldx.b SPRITE_DEF_PTR
+    lda.l SpriteDefs + entityspriteinfo_t.mode,X
+    bit #SPRITEALLOCMODE_SWIZZLE
+    beq @no_swizzle
+        ; check if palette mode needs swizzle
+        rep #$20 ; 16b A
+        lda.b SPRITE_ID
+        rol
+        rol
+        rol
+        rol
+        and #$0007
+        sta.b TEMP
+        tax
+        lda.l PaletteAllocNeedSwizzle,X
+        and #$00FF
+        beq @no_swizzle
+        ; perform swizzle
+        ldx.b DEST_ADDR
+        lda.b NUM_TILES
+        asl
+        asl
+        tay
+        lda.b TEMP
+        jsl SpritePaletteSwizzle_B7F
+@no_swizzle:
+    rep #$30
+    ldx.b SPRITE_TABLE_INDEX
+    rtl
+
+_sprite_upload_methods:
+    .dw _sprite_upload_direct
+    .dw _sprite_upload_lz4
+
+_sprite_upload_direct:
+    .ACCU 16
+    .INDEX 16
+    ldx.b SPRITE_DEF_PTR
     ; size = ntiles * 128
-    ldx.b $04
     lda.l SpriteDefs + entityspriteinfo_t.ntiles,X
     and #$00FF
-    sta.b $0A ; $04 is now number of tiles
+    sta.b NUM_TILES
     xba
     lsr
     sta.l DMA0_SIZE
@@ -453,7 +504,7 @@ Spriteman.NewBufferRef:
     and #$FF00
     lsr
     adc #loword(spriteAllocBuffer) ; carry should be cleared by lsr
-    sta.b $06
+    sta.b DEST_ADDR
     sta.l WMADDL
     ; srcL = sprite_addr
     lda.l SpriteDefs + entityspriteinfo_t.sprite_addr,X
@@ -474,35 +525,39 @@ Spriteman.NewBufferRef:
     ; Write
     lda #$01
     sta.l MDMAEN
-; now, see if we need to swizzle, by checking 'mode' and 'palette'
-    lda.l SpriteDefs + entityspriteinfo_t.mode,X
-    bit #SPRITEALLOCMODE_SWIZZLE
-    beq @no_swizzle
-        ; check if palette mode needs swizzle
-        rep #$20 ; 16b A
-        lda.b $02
-        rol
-        rol
-        rol
-        rol
-        and #$0007
-        sta.b $08
-        tax
-        lda.l PaletteAllocNeedSwizzle,X
-        and #$00FF
-        beq @no_swizzle
-        ; perform swizzle
-        ldx.b $06
-        lda.b $0A
-        asl
-        asl
-        tay
-        lda.b $08
-        jsl SpritePaletteSwizzle_B7F
-@no_swizzle:
-    rep #$30
-    ldx.b $00
-    rtl
+    rts
+
+_sprite_upload_lz4:
+    .ACCU 16
+    .INDEX 16
+    ldx.b SPRITE_DEF_PTR
+    lda.l SpriteDefs + entityspriteinfo_t.ntiles,X
+    and #$00FF
+    sta.b NUM_TILES
+    ; dest
+    lda.w loword(spriteTableValue.1.spritemem)-1,Y
+    and #$FF00
+    lsr
+    adc #loword(spriteAllocBuffer) ; carry should be cleared by lsr
+    sta.b DEST_ADDR
+    tay
+    ; source
+    lda.l SpriteDefs + entityspriteinfo_t.sprite_addr,X
+    pha
+    ; banks
+    lda.l SpriteDefs + entityspriteinfo_t.sprite_addr+2,X
+    and #$00FF
+    ora #$7F00
+    plx
+    jsl Decompress.Lz4FromROM
+    rts
+
+.UNDEFINE SPRITE_TABLE_INDEX
+.UNDEFINE SPRITE_ID
+.UNDEFINE SPRITE_DEF_PTR
+.UNDEFINE NUM_TILES
+.UNDEFINE TEMP
+.UNDEFINE DEST_ADDR
 
 ; Decrement reference
 ; Assumes data bank is $7E

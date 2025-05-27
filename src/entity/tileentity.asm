@@ -3,9 +3,12 @@
 .BANK $02 SLOT "ROM"
 .SECTION "Entity Tile" SUPERFREE
 
-.define _entity_spriteptr loword(entity_custom.1)
-.define _entity_hits loword(entity_custom.2)
-.define _entity_paletteptr loword(entity_custom.3)
+.DEFINE _entity_spriteptr loword(entity_custom.1)
+.DEFINE _entity_hits loword(entity_custom.2)
+.DEFINE _entity_paletteptr loword(entity_custom.3)
+.DEFINE _entity_bufferptr loword(entity_custom.4)
+
+.DEFINE _entityid $10
 
 true_entity_tile_tick:
     .ACCU 16
@@ -127,6 +130,35 @@ true_entity_tile_tick:
 @no_col:
     rtl
 
+entity_tile_set_frame:
+    .ACCU 16
+    .INDEX 16
+    pea $7F7F
+    sta.b $00
+    lda.w _entity_bufferptr,Y
+    tax
+    lda.w loword(spriteTableValue.1.spritemem)-1,X
+    and #$FF00
+    lsr
+    adc #loword(spriteAllocBuffer)
+    clc
+    adc.b $00
+    pha
+    clc
+    adc #64
+    pha
+    ldx.w _entity_spriteptr,Y
+    lda.w loword(spriteTableValue.1.spritemem),X
+    and #$00FF
+    tax
+    jsl Spriteman.WriteSpriteToRawSlot
+    ldy.b _entityid
+    rep #$30
+    pla
+    pla
+    pla
+    rtl
+
 .ENDS
 
 .BANK ROMBANK_ENTITYCODE SLOT "ROM"
@@ -135,42 +167,63 @@ true_entity_tile_tick:
 entity_tile_init:
     .ACCU 16
     .INDEX 16
+    sty.b _entityid
     lda #$7FFF
     sta.w entity_health,Y
     lda #3
     sta.w _entity_hits,Y
     ; upload palette
-    phy
     ldy #loword(palettes.tilesprite_fire_normal)
     lda #8
     jsl Palette.find_or_upload_transparent
     rep #$30
-    ply
+    ldy.b _entityid
     txa
     sta.w _entity_paletteptr,Y
     .PaletteIndex_X_ToSpriteDef_A
-    ; TODO: allocate sprite ram
-    ; upload sprite
+    sta.b tempDP
+    ; allocate sprite ram
     ora #sprite.tilesprite_fire
-    phy
-    jsl Spriteman.NewSpriteRef
+    jsl Spriteman.NewBufferRef
     rep #$30
-    ply
+    ldy.b _entityid
+    txa
+    sta.w _entity_bufferptr,Y
+    ; allocate sprite tile
+    lda.b tempDP
+    ora #sprite.tilesprite_fire_dummy
+    jsl Spriteman.NewSpriteRefEmpty
+    rep #$30
+    ldy.b _entityid
+    sta.b tempDP+2
     txa
     sta.w _entity_spriteptr,Y
+    ; If this is the first allocation, then upload sprite frame
+    lda.b tempDP+2
+    beq @dont_upload_sprite
+        lda #0
+        jsl entity_tile_set_frame
+@dont_upload_sprite:
     rts
 
 entity_tile_free:
     .ACCU 16
     .INDEX 16
-    phy
+    sty.b _entityid
+    ; Free sprite tile
     lda.w _entity_spriteptr,Y
     tax
     jsl Spriteman.UnrefSprite
+    ; free palette
     rep #$30
-    ply
+    ldy.b _entityid
     ldx.w _entity_paletteptr,Y
     jsl Palette.free
+    ; free buffer
+    rep #$30
+    ldy.b _entityid
+    ldx.w _entity_bufferptr,Y
+    jsl Spriteman.UnrefBuffer
     rts
 
 entity_tile_tick:

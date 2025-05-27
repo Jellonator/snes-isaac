@@ -9,6 +9,7 @@
 .SECTION "SpriteDefs" BANK ROMBANK_BASE SLOT "ROM" ORGA $8000 SEMIFREE
 
 .DEFINE currid 1
+.DEFINE curr_end_id $3FFF
 SpriteDefs:
 .db 0, 0, 0, 0, 0
 
@@ -60,6 +61,12 @@ SpriteDefs:
     .REDEFINE currid (currid + nframes)
 .ENDM
 
+; Define a 'dummy' sprite with no actual data
+.MACRO .DefineSpriteDummy ARGS spritename
+    .DEFINE {spritename} curr_end_id EXPORT
+    .REDEFINE curr_end_id (curr_end_id - 1)
+.ENDM
+
 .DefineSpriteSplit "sprite.enemy.attack_fly",\
     "spritedata.enemy_attack_fly", 1, 2,\
     SPRITEALLOCMODE_COMPRESSED_LZ4
@@ -77,6 +84,7 @@ SpriteDefs:
 .DefineSprite "sprite.tilesprite_fire",\
     spritedata.tilesprite_fire, 1, 4,\
     SPRITEALLOCMODE_COMPRESSED_LZ4
+.DefineSpriteDummy "sprite.tilesprite_fire_dummy"
 
 .DefineSprite "sprite.familiar.brother_bobby",\
     spritedata.familiar.brother_bobby, 5, 1,\

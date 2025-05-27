@@ -245,6 +245,40 @@ Spriteman.NewSpriteRef:
     ldx.b SPRITE_TABLE_INDEX
     rtl
 
+; Allocate a 16x16 sprite slot, without writing to it
+; Uses unique key stored in A
+; Returns reference in X.
+; Useful for sharing a sprite between identically animated objects.
+; Also returns A=1 if this slot was just allocated, 0 otherwise
+; To get the raw slot index, lookup via `spriteTableValue + spritetab_t.spritemem`
+; Assumes data bank is $7E
+Spriteman.NewSpriteRefEmpty:
+    ; insert unique sprite; determine if sprite ID already in use
+    jsl table_insert_unique_sprite
+    .INDEX 16
+    .ACCU 16
+    cpy #0
+    beq @did_insert
+    ; value already existed, increment ref and return
+    inc.w loword(spriteTableValue.1.count),X
+    lda #0
+    rtl
+@did_insert:
+    stx.b SPRITE_TABLE_INDEX
+    ; get sprite slot
+    sep #$30
+    .spriteman_get_raw_slot_lite
+    ; update sprite table
+    txa
+    rep #$10 ; 16b X, 8b A
+    ldx.b SPRITE_TABLE_INDEX
+    sta.w loword(spriteTableValue.1.spritemem),X
+    lda.b #1
+    sta.w loword(spriteTableValue.1.count),X
+    rep #$30
+    lda #1
+    rtl
+
 _newspriteref_upload_modes:
     .dw _newspriteref_upload_direct
     .dw _newspriteref_upload_lz4
@@ -442,8 +476,8 @@ Spriteman.FreeRawBuffer:
 ; Automatically get or allocate a sprite buffer in RAM.
 ; This is similar to Spriteman.NewSpriteRef, but for loading animated sprites into RAM.
 ; Loads sprite id stored in A
-; Sprite ID format: pppsssss ssssssss
-;    where `s` is the Sprite index into SpriteDefs, and `p` is the palette format.
+; Sprite ID format: ppssssss ssssssss
+;    where `s` is the Sprite index into SpriteDefs, and `p` is the palette swizzle.
 ;    The palette format is important for swizzling sprite data before upload.
 ; Returns reference in X.
 ; Assumes data bank is $7E.

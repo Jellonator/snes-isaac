@@ -43,6 +43,12 @@ true_entity_tile_tick:
         lda #%00101111
         sta.b $02
     +:
+    lda.w tickCounter
+    bit #$20
+    beq +
+        lda #%01000000
+        tsb.b $02
+    +:
     lda.b $02
     sta.w objectData.1.flags,X
     rep #$30

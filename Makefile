@@ -9,6 +9,7 @@ ALDFLAGS := -S -v
 PY       := python3
 
 SOURCES  := bindata.asm\
+			compression.asm\
 			consumables.asm\
 			costume.asm\
 			entity.asm\

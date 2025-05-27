@@ -347,39 +347,59 @@ Menu.Begin:
     ; init vqueue
     jsl ClearVQueue
     ; Upload background
+    rep #$30
+    ldx #loword(spritedata.menu.background)
+    ldy #loword(spriteAllocBuffer)
+    lda #bankbyte(spritedata.menu.background) | $7F00
+    jsl Decompress.Lz4FromROM
     pea $0000
     pea 16*16/2
     sep #$20
-    lda #bankbyte(spritedata.menu.background)
+    lda #$7F
     pha
-    pea loword(spritedata.menu.background)
+    pea loword(spriteAllocBuffer)
     jsl CopySprite
     .POPN 7
     ; Upload UI
+    rep #$30
+    ldx #loword(spritedata.menu.mainmenu)
+    ldy #loword(spriteAllocBuffer)
+    lda #bankbyte(spritedata.menu.mainmenu) | $7F00
+    jsl Decompress.Lz4FromROM
     pea BG2_CHARACTER_BASE_ADDR
     pea 16*16
     sep #$20
-    lda #bankbyte(spritedata.menu.mainmenu)
+    lda #$7F
     pha
-    pea loword(spritedata.menu.mainmenu)
+    pea loword(spriteAllocBuffer)
     jsl CopySprite
     .POPN 7
     ; Upload logo
+    rep #$30
+    ldx #loword(spritedata.menu.logo)
+    ldy #loword(spriteAllocBuffer)
+    lda #bankbyte(spritedata.menu.logo) | $7F00
+    jsl Decompress.Lz4FromROM
     pea BG2_CHARACTER_BASE_ADDR + $1000
     pea 16*16
     sep #$20
-    lda #bankbyte(spritedata.menu.logo)
+    lda #$7F
     pha
-    pea loword(spritedata.menu.logo)
+    pea loword(spriteAllocBuffer)
     jsl CopySprite
     .POPN 7
-    ; Upload logo
+    ; Decompress and upload UI
+    rep #$30
+    ldx #loword(spritedata.menu.ui)
+    ldy #loword(spriteAllocBuffer)
+    lda #bankbyte(spritedata.menu.ui) | $7F00
+    jsl Decompress.Lz4FromROM
     pea BG1_CHARACTER_BASE_ADDR
     pea 16*16
     sep #$20
-    lda #bankbyte(spritedata.menu.ui)
+    lda #$7F
     pha
-    pea loword(spritedata.menu.ui)
+    pea loword(spriteAllocBuffer)
     jsl CopySprite
     .POPN 7
     ; Upload background tiles

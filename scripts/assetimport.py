@@ -106,7 +106,7 @@ def debug_print_lz4_blocks_bin(data):
         literal_data = b''
         if literal_size != 0:
             literal_data = data.read(literal_size)
-        print("L{}: ".format(block_index), ' '.join('{:02X}'.format(x) for x in literal_data))
+        print("L{}: ".format(block_index), len(literal_data))#' '.join('{:02X}'.format(x) for x in literal_data))
         # Get match data. If none, then end
         match_data = data.read(2)
         if len(match_data) == 0:
@@ -121,7 +121,7 @@ def debug_print_lz4_blocks_bin(data):
                 match_size += read_size
         match_size += 4
         calc_file_size += match_size
-        print("M{}: ".format(block_index), struct.unpack("<H", match_data)[0], match_size)
+        print("M{}: {}B @-{}".format(block_index, match_size, struct.unpack("<H", match_data)[0]))
         block_index += 1
 
 def calc_num_lz4_blocks(data):
@@ -149,7 +149,7 @@ def calc_num_lz4_blocks(data):
             read_size = 0xFF
             while read_size == 0xFF:
                 read_size = data.read(1)[0]
-        block_index
+        block_index += 1
 
 total_bytes_saved = 0
 
@@ -218,10 +218,10 @@ for sprite in json_sprites:
     if compression_format == "none":
         spritebin_out_file.write(spritebin.getvalue())
     elif compression_format == "lz4":
+        base_len = len(spritebin.getvalue())
         compressedbin = lz4.block.compress(spritebin.getvalue(), mode='high_compression', store_size=False)
         spritebin_out_file.write(struct.pack("<H", calc_num_lz4_blocks(io.BytesIO(compressedbin))))
         spritebin_out_file.write(compressedbin)
-        base_len = len(spritebin.getvalue())
         new_len = len(compressedbin)
         print("Compressed {} to \t{}B ({:.2f}%)".format(sprite["name"], new_len, (new_len * 100.0 / base_len)))
         total_bytes_saved += (base_len - new_len)

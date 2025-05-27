@@ -82,7 +82,7 @@ SpriteDefs:
     SPRITEALLOCMODE_COMPRESSED_LZ4
 
 .DefineSprite "sprite.tilesprite_fire",\
-    spritedata.tilesprite_fire, 1, 4,\
+    spritedata.tilesprite_fire, 4, 1,\
     SPRITEALLOCMODE_COMPRESSED_LZ4
 .DefineSpriteDummy "sprite.tilesprite_fire_dummy"
 

@@ -13,7 +13,7 @@
 true_entity_tile_tick:
     .ACCU 16
     .INDEX 16
-    sty.b $00
+    sty.b _entityid
     lda #0
     sep #$20
     ; tile ID 2
@@ -48,7 +48,7 @@ true_entity_tile_tick:
     rep #$30
     .SetCurrentObjectS_Inc
     ; set box and mask
-    ldy.b $00
+    ldy.b _entityid
     .EntityEasySetBox 16 14
     sep #$20
     lda #ENTITY_MASK_TEAR | ENTITY_MASK_BOMBABLE
@@ -94,7 +94,7 @@ true_entity_tile_tick:
         bit #ENTITY_MASK_BURNABLE
         beq +
         ; check position
-        ldx.b $00
+        ldx.b _entityid
         lda.w entity_box_x1,Y
         clc
         adc.w entity_box_x2,Y
@@ -128,15 +128,42 @@ true_entity_tile_tick:
         +:
     .ENDR
 @no_col:
+; update frame, maybe
+    ; Set X to a pointer to memory shared between sprite owners
+    ; Since the allocated buffer is at least two tiles, we can use unused
+    ; data in spriteAllocTabActive
+    rep #$30
+    ldy.b _entityid
+    ldx.w _entity_bufferptr,Y
+    lda.w loword(spriteTableValue.1.spritemem),X
+    and #$00FF
+    tax
+    inx
+    lda #0
+    sep #$20
+    ; get frame index
+    lda.w tickCounter
+    lsr
+    lsr
+    lsr
+    and #$03
+    ; skip if frame is current
+    cmp.w loword(spriteAllocTabActive),X
+    beq @skip_upload
+        sta.w loword(spriteAllocTabActive),X
+        rep #$30
+        jsl entity_tile_set_frame
+@skip_upload:
     rtl
 
 entity_tile_set_frame:
     .ACCU 16
     .INDEX 16
     pea $7F7F
+    xba
+    lsr
     sta.b $00
-    lda.w _entity_bufferptr,Y
-    tax
+    ldx.w _entity_bufferptr,Y
     lda.w loword(spriteTableValue.1.spritemem)-1,X
     and #$FF00
     lsr

@@ -70,8 +70,8 @@ SpriteDefs:
 .DefineSprite "sprite.item_pedastal",\
     spritedata.item_pedastal, 1, 1
 
-.DefineSprite "sprite.shopkeepers",\
-    spritedata.shopkeepers, 1, 8,\
+.DefineSpriteSplit "sprite.shopkeepers",\
+    "spritedata.shopkeepers", 1, 8,\
     SPRITEALLOCMODE_COMPRESSED_LZ4
 
 .DefineSprite "sprite.tilesprite_fire",\

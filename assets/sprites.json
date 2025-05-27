@@ -127,7 +127,8 @@
         "src": "assets/sprites/shopkeepers.raw",
         "depth": 16,
         "size": [2, 2],
-        "compression": "lz4"
+        "compression": "lz4",
+        "splitframes": true
     },
     {
         "name": "tarot_cards_big",

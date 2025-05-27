@@ -78,13 +78,19 @@ Game.Begin:
     pla
     pla
     ; copy tear to VRAM
+    rep #$30
+    ldx #loword(spritedata.isaac_tear)
+    ldy #loword(private_spriteAllocBuffer)
+    lda #bankbyte(spritedata.isaac_tear) | $7F00
+    jsl Decompress.Lz4FromROM
+    rep #$30
     .REPT 6 INDEX i
         pea SPRITE1_BASE_ADDR + 16*32 + 256*i ; VRAM address
         pea 8 ; num tiles
         sep #$20 ; 8 bit A
-        lda #bankbyte(spritedata.isaac_tear)
+        lda #$7F
         pha
-        pea spritedata.isaac_tear + 8*i*32 ; address
+        pea loword(private_spriteAllocBuffer) + 8*i*32 ; address
         jsl CopySprite
         sep #$20 ; 8 bit A
         pla
@@ -94,12 +100,17 @@ Game.Begin:
         pla
     .ENDR
     ; copy default sprites to VRAM
-    pea SPRITE1_BASE_ADDR + 64*32 ; VRAM address
+    rep #$30
+    ldx #loword(spritedata.default_sprites)
+    ldy #loword(private_spriteAllocBuffer)
+    lda #bankbyte(spritedata.default_sprites) | $7F00
+    jsl Decompress.Lz4FromROM
+    pea SPRITE1_BASE_ADDR + 64*32
     pea 128
-    sep #$20 ; 8 bit A
-    lda #bankbyte(spritedata.default_sprites)
+    sep #$20
+    lda #$7F
     pha
-    pea spritedata.default_sprites ; address
+    pea loword(private_spriteAllocBuffer)
     jsl CopySprite
     sep #$20 ; 8 bit A
     pla

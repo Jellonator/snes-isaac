@@ -151,13 +151,39 @@ def calc_num_lz4_blocks(data):
                 read_size = data.read(1)[0]
         block_index += 1
 
-total_bytes_saved = 0
+# total_bytes_saved = 0
+
+def write_sprite_bin(sprite_out_path, spritebin, compression_format, sprite):
+    # global total_bytes_saved
+    spritebin.flush()
+    spritebin_out_file = open(sprite_out_path, 'wb')
+    if compression_format == "none":
+        spritebin_out_file.write(spritebin.getvalue())
+    elif compression_format == "lz4":
+        base_len = len(spritebin.getvalue())
+        compressedbin = lz4.block.compress(spritebin.getvalue(), mode='high_compression', store_size=False)
+        spritebin_out_file.write(struct.pack("<H", calc_num_lz4_blocks(io.BytesIO(compressedbin))))
+        spritebin_out_file.write(compressedbin)
+        new_len = len(compressedbin)
+        # print("Compressed {} to \t{}B ({:.2f}%)".format(sprite["name"], new_len, (new_len * 100.0 / base_len)))
+        # total_bytes_saved += (base_len - new_len)
+    else:
+        raise RuntimeError("Invalid compression \"{}\" for {}".format(compression_format, sprite["src"]))
 
 for sprite in json_sprites:
     name = sprite["name"]
     imagefh = open(sprite["src"], 'rb')
     width, height = struct.unpack("<II", imagefh.read(8))
     imagedata = imagefh.read()
+    split_frames = False
+    current_frame = 0
+    sprite_out_path = os.path.join(SPRITE_PATH, "{}.bin".format(name))
+    # Determine parameters
+    compression_format = "none"
+    if "compression" in sprite:
+        compression_format = sprite["compression"]
+    if "splitframes" in sprite:
+        split_frames = sprite["splitframes"]
     if "crop" in sprite:
         x = sprite["crop"][0]
         y = sprite["crop"][1]
@@ -174,22 +200,21 @@ for sprite in json_sprites:
         raise RuntimeError("Invalid image size {}x{} in {}".format(width, height, sprite["src"]))
     if sprite["depth"] not in [4, 16]:
         raise RuntimeError("Invalid depth {} for {}".format(sprite["depth"], sprite["src"]))
-    sprite_out_path = os.path.join(SPRITE_PATH, "{}.bin".format(name))
     mask_mode = ""
     if "mask" in sprite:
         mask_mode = sprite["mask"]
         if not mask_mode in [MASK_MODE_INTERLACE]:
             raise RuntimeError("Invalid mask mode \"{}\" for {}".format(mask_mode, sprite["src"]))
-    # section header
-    out_inc.write(".BANK {} SLOT \"ROM\"\n".format(minbank))
-    out_inc.write(".SECTION \"IMPORTED_SPRITE_{}\" SEMISUPERFREE BANKS {}-{}\n".format(sprite_number,maxbank,minbank))
-    sprite_number += 1
-    # section data
-    out_inc.write("spritedata.{}:\n".format(name))
-    out_inc.write("\t.incbin \"sprites/{}.bin\"\n".format(name))
-    # out_inc.write("\t@end:\n")
-    # section output
-    out_inc.write(".ENDS\n")
+    if not split_frames:
+        # section header
+        out_inc.write(".BANK {} SLOT \"ROM\"\n".format(minbank))
+        out_inc.write(".SECTION \"IMPORTED_SPRITE_{}\" SEMISUPERFREE BANKS {}-{}\n".format(sprite_number,maxbank,minbank))
+        sprite_number += 1
+        # section data
+        out_inc.write("spritedata.{}:\n".format(name))
+        out_inc.write("\t.incbin \"sprites/{}.bin\"\n".format(name))
+        # section output
+        out_inc.write(".ENDS\n")
     # Write to binary file
     spritebin = io.BytesIO()
     # get size
@@ -206,29 +231,29 @@ for sprite in json_sprites:
     ntilesy = height // 8
     for ty in range(0, ntilesy, size_y):
         for tx in range(0, ntilesx, size_x):
+            if split_frames:
+                spritebin = io.BytesIO()
             for ty2 in range(ty, ty+size_y, 1):
                 for tx2 in range(tx, tx+size_x, 1):
                     write_image_tile(spritebin, imagedata, sprite["depth"], tx2, ty2, width, mask_mode)
-    # determine how to write binary data
-    compression_format = "none"
-    if "compression" in sprite:
-        compression_format = sprite["compression"]
-    spritebin.flush()
-    spritebin_out_file = open(sprite_out_path, 'wb')
-    if compression_format == "none":
-        spritebin_out_file.write(spritebin.getvalue())
-    elif compression_format == "lz4":
-        base_len = len(spritebin.getvalue())
-        compressedbin = lz4.block.compress(spritebin.getvalue(), mode='high_compression', store_size=False)
-        spritebin_out_file.write(struct.pack("<H", calc_num_lz4_blocks(io.BytesIO(compressedbin))))
-        spritebin_out_file.write(compressedbin)
-        new_len = len(compressedbin)
-        print("Compressed {} to \t{}B ({:.2f}%)".format(sprite["name"], new_len, (new_len * 100.0 / base_len)))
-        total_bytes_saved += (base_len - new_len)
-    else:
-        raise RuntimeError("Invalid compression \"{}\" for {}".format(compression_format, sprite["src"]))
+            if split_frames:
+                # write bin
+                subsprite_out_path = os.path.join(SPRITE_PATH, "{}.{}.bin".format(name, current_frame))
+                write_sprite_bin(subsprite_out_path, spritebin, compression_format, sprite)
+                # section header
+                out_inc.write(".BANK {} SLOT \"ROM\"\n".format(minbank))
+                out_inc.write(".SECTION \"IMPORTED_SPRITE_{}\" SEMISUPERFREE BANKS {}-{}\n".format(sprite_number,maxbank,minbank))
+                sprite_number += 1
+                # section data
+                out_inc.write("spritedata.{}.{}:\n".format(name, current_frame))
+                out_inc.write("\t.incbin \"sprites/{}.{}.bin\"\n".format(name, current_frame))
+                # section output
+                out_inc.write(".ENDS\n")
+            current_frame += 1
+    if not split_frames:
+        write_sprite_bin(sprite_out_path, spritebin, compression_format, sprite)
 
-print("Saved a total of {}B".format(total_bytes_saved))
+# print("Saved a total of {}B".format(total_bytes_saved))
 
 splat_number = 1
 

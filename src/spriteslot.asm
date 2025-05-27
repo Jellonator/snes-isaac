@@ -126,7 +126,14 @@ SpriteSlotMemTable:
 ; To get the raw slot index, lookup via `spriteTableValue + spritetab_t.spritemem`
 ; Assumes data bank is $7E
 Spriteman.NewSpriteRef:
-    sta.b $02 ; $02 is sprite ID
+    .DEFINE SPRITE_TABLE_INDEX $20
+    .DEFINE SPRITE_ID $22
+    .DEFINE SPRITE_DEF_PTR $24
+    .DEFINE SPRITE_ADDR $2A
+    .DEFINE SPRITE_BANK $2C
+    .DEFINE SPRITE_MODE $2E
+    .DEFINE TEMP $26
+    sta.b SPRITE_ID
     ; insert unique sprite; determine if sprite ID already in use
     jsl table_insert_unique_sprite
     .INDEX 16
@@ -137,14 +144,14 @@ Spriteman.NewSpriteRef:
     inc.w loword(spriteTableValue.1.count),X
     rtl
 @did_insert:
-    stx.b $00 ; $00 is 16b sprite table ptr
+    stx.b SPRITE_TABLE_INDEX
     ; get sprite slot
     sep #$30
     .spriteman_get_raw_slot_lite
     ; update sprite table
     txa
     rep #$10 ; 16b X, 8b A
-    ldy.b $00
+    ldy.b SPRITE_TABLE_INDEX
     sta.w loword(spriteTableValue.1.spritemem),Y
     lda.b #1
     sta.w loword(spriteTableValue.1.count),Y
@@ -178,61 +185,105 @@ Spriteman.NewSpriteRef:
     sta.l vqueueOps.1.numBytes,X
     sta.l vqueueOps.2.numBytes,X
     ; get Sprite address
-    lda.b $02
+    lda.b SPRITE_ID
     and #SPRITEID_SPRITE
-    sta.b $04
+    sta.b TEMP
     asl
     asl
     clc
-    adc.b $04
+    adc.b TEMP
     phx
     tax
+    stx.b SPRITE_DEF_PTR
     lda.l SpriteDefs + entityspriteinfo_t.sprite_addr,X
-    sta.b $04
+    sta.b SPRITE_ADDR
     lda.l SpriteDefs + entityspriteinfo_t.sprite_bank,X
-    sta.b $06
-    ; interlude: determine swizzle
-    lda.b $02
+    sta.b SPRITE_BANK
+    lda.l SpriteDefs + entityspriteinfo_t.mode,X
+    and #$7F
+    sta.b SPRITE_MODE
+    ; interlude: determine if we need to swizzle, or if we need to decompress
+    lda.b SPRITE_ID
     rol
     rol
     rol
     rol
     and #$0007
-    sta.b $08
+    sta.b TEMP ; $08 = palette
     tax
     lda.l PaletteAllocNeedSwizzle,X
+    ora.b SPRITE_MODE
     and #$00FF
     beq @no_swizzle
         ; TODO: might be faster to copy ROM to bin during the swizzle step
         ; swizzle step 1: Copy sprite to vqueueBinData
-        .CopyROMToVQueueBin P_DIR, $04, 128
+        lda.b SPRITE_MODE
+        asl
+        tax
+        jsr (_newspriteref_upload_modes, X)
         ; swizzle step 2: Swizzle
         rep #$30
         ldx.w vqueueBinOffset
-        lda.b $08
+        lda.b TEMP
         ldy #4
         jsl SpritePaletteSwizzle_B7F
         ; step 3: set new address
         sep #$20
         lda #$7F
-        sta.b $06
+        sta.b SPRITE_BANK
         rep #$20
         lda.w vqueueBinOffset
-        sta.b $04
+        sta.b SPRITE_ADDR
 @no_swizzle:
     ; aAddr = SpriteDefs[spriteId].addr
     plx
-    lda.b $04
+    lda.b SPRITE_ADDR
     sta.l vqueueOps.1.aAddr,X
     clc
     adc #64
     sta.l vqueueOps.2.aAddr,X
     sep #$20
-    lda.b $06
+    lda.b SPRITE_BANK
     sta.l vqueueOps.1.aAddr+2,X
     sta.l vqueueOps.2.aAddr+2,X
-    ldx.b $00
+    ldx.b SPRITE_TABLE_INDEX
     rtl
+
+_newspriteref_upload_modes:
+    .dw _newspriteref_upload_direct
+    .dw _newspriteref_upload_lz4
+
+_newspriteref_upload_direct:
+    .ACCU 16
+    .INDEX 16
+    .CopyROMToVQueueBin P_DIR, SPRITE_ADDR, 128
+    rts
+
+_newspriteref_upload_lz4:
+    .ACCU 16
+    .INDEX 16
+    ; destination
+    lda.w vqueueBinOffset
+    sec
+    sbc #128
+    sta.w vqueueBinOffset
+    tay
+    ; source
+    ldx.b SPRITE_ADDR
+    ; bank
+    lda.b SPRITE_BANK
+    and #$00FF
+    ora #$7F00
+    jsl Decompress.Lz4FromROM
+    rts
+
+.UNDEFINE SPRITE_TABLE_INDEX
+.UNDEFINE SPRITE_ID
+.UNDEFINE SPRITE_DEF_PTR
+.UNDEFINE SPRITE_ADDR
+.UNDEFINE SPRITE_BANK
+.UNDEFINE SPRITE_MODE
+.UNDEFINE TEMP
 
 ; Increment reference
 ; Assumes data bank is $7E
@@ -451,7 +502,7 @@ Spriteman.NewBufferRef:
     and #$000F
     asl
     tax
-    jsr (_sprite_upload_methods,X)
+    jsr (_newbufferref_upload_methods,X)
 ; now, see if we need to swizzle, by checking 'mode' and 'palette'
     rep #$30
     ldx.b SPRITE_DEF_PTR
@@ -484,11 +535,11 @@ Spriteman.NewBufferRef:
     ldx.b SPRITE_TABLE_INDEX
     rtl
 
-_sprite_upload_methods:
-    .dw _sprite_upload_direct
-    .dw _sprite_upload_lz4
+_newbufferref_upload_methods:
+    .dw _newbufferref_upload_direct
+    .dw _newbufferref_upload_lz4
 
-_sprite_upload_direct:
+_newbufferref_upload_direct:
     .ACCU 16
     .INDEX 16
     ldx.b SPRITE_DEF_PTR
@@ -527,7 +578,7 @@ _sprite_upload_direct:
     sta.l MDMAEN
     rts
 
-_sprite_upload_lz4:
+_newbufferref_upload_lz4:
     .ACCU 16
     .INDEX 16
     ldx.b SPRITE_DEF_PTR

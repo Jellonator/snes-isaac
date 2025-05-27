@@ -3,8 +3,7 @@
         "name": "isaac_head",
         "src": "assets/sprites/isaac_head.raw",
         "depth": 16,
-        "size": 2,
-        "compression": "lz4"
+        "size": 2
     },
     {
         "name": "basement",
@@ -42,7 +41,8 @@
         "src": "assets/sprites/enemy/attack_fly.raw",
         "depth": 16,
         "size": 2,
-        "compression": "lz4"
+        "compression": "lz4",
+        "splitframes": true
     },
     {
         "name": "enemy_zombie",

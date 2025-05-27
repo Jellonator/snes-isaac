@@ -20,8 +20,7 @@ SpriteDefs:
 ;              sprites can be accessed as {spritename}.{frameid}, and their
 ;              address will be `baseaddr` + 128*{ntiles}*{frameid}
 .MACRO .DefineSprite ARGS spritename, baseaddr, ntiles, nframes, mode
-    .DEFINE {spritename} currid
-    .EXPORT {spritename}
+    .DEFINE {spritename} currid EXPORT
     .IFDEF mode ; workaround because 'IFDEF causes issues inside DSTRUCT'
         .DEFINE MODE_REAL_NOT_CLICKBAIT mode
     .ELSE
@@ -34,15 +33,35 @@ SpriteDefs:
             ntiles: .db ntiles
             mode: .db MODE_REAL_NOT_CLICKBAIT
         .ENDST
-        .DEFINE {spritename}.{i} (currid + i)
-        .EXPORT {spritename}.{i}
+        .DEFINE {spritename}.{i} (currid + i) EXPORT
     .ENDR
     .UNDEFINE MODE_REAL_NOT_CLICKBAIT
     .REDEFINE currid (currid + nframes)
 .ENDM
 
-.DefineSprite "sprite.enemy.attack_fly",\
-    spritedata.enemy_attack_fly, 1, 2,\
+; Define a new sprite from a split frames sprite
+.MACRO .DefineSpriteSplit ARGS spritename, dataname, ntiles, nframes, mode
+    .DEFINE {spritename} currid EXPORT
+    .IFDEF mode ; workaround because 'IFDEF causes issues inside DSTRUCT'
+        .DEFINE MODE_REAL_NOT_CLICKBAIT mode
+    .ELSE
+        .DEFINE MODE_REAL_NOT_CLICKBAIT 0
+    .ENDIF
+    .REPT nframes INDEX i
+        .DSTRUCT INSTANCEOF entityspriteinfo_t VALUES
+            sprite_addr: .dw loword({dataname}.{i})
+            sprite_bank: .db bankbyte({dataname}.{i})
+            ntiles: .db ntiles
+            mode: .db MODE_REAL_NOT_CLICKBAIT
+        .ENDST
+        .DEFINE {spritename}.{i} (currid + i) EXPORT
+    .ENDR
+    .UNDEFINE MODE_REAL_NOT_CLICKBAIT
+    .REDEFINE currid (currid + nframes)
+.ENDM
+
+.DefineSpriteSplit "sprite.enemy.attack_fly",\
+    "spritedata.enemy_attack_fly", 1, 2,\
     SPRITEALLOCMODE_COMPRESSED_LZ4
 
 .DefineSprite "sprite.item",\

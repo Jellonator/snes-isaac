@@ -8,8 +8,14 @@
 .DEFINE _familiar_parent loword(entity_custom.2)
 .DEFINE _palette loword(entity_custom.2+1)
 .DEFINE _spritebuffer loword(entity_custom.3)
+.DEFINE _shoot_timer entity_timer
 
 .DEFINE FAMILIAR_FOLLOW_DISTANCE 20
+
+.DEFINE BROTHER_BOBBY_FIRE_TIME 32
+.DEFINE BROTHER_BOBBY_TEAR_LIFETIME 60
+.DEFINE BROTHER_BOBBY_TEAR_DAMAGE 8
+.DEFINE BROTHER_BOBBY_TEAR_SPEED $0100
 
 entity_familiar_init:
     .ACCU 16
@@ -247,6 +253,118 @@ entity_familiar_tick:
     clc
     adc #8
     sta.w loword(entity_ysort),Y
+    ; Maybe create projectile
+    sep #$30
+    lda.w entity_timer,Y
+    inc A
+    cmp #BROTHER_BOBBY_FIRE_TIME
+    bccl @dont_fire_tear
+    ; check input
+        rep #$20
+        lda.w joy1held
+        bit #(JOY_A|JOY_B|JOY_Y|JOY_X)
+        beql @end_fire_tear
+    ; create entity
+        lda #ENTITY_TYPE_PROJECTILE
+        phy
+        jsl entity_create_and_init
+        sep #$30
+        tyx
+        ply ; Y = this, X = projectile
+        rep #$20
+        ; life
+        lda #BROTHER_BOBBY_TEAR_LIFETIME
+        sta.w projectile_lifetime,X
+        ; flags
+        lda #0
+        sta.w loword(projectile_flags),X
+        ; height
+        lda #$0800
+        sta.w loword(projectile_height),X
+        ; damage
+        lda #BROTHER_BOBBY_TEAR_DAMAGE
+        sta.w projectile_damage,X
+        ; size
+        sep #$20
+        lda #3
+        sta.w loword(projectile_size),X
+        ; type
+        lda #PROJECTILE_TYPE_PLAYER_BASIC
+        sta.w projectile_type,X
+    ; position
+        rep #$20
+        lda.w entity_posx,Y
+        clc
+        adc #256*4
+        sta.w entity_posx,X
+        lda.w entity_posy,Y
+        clc
+        adc #256*4
+        sta.w entity_posy,X
+    ; velocity - check direction
+        lda.w joy1held
+        bit #JOY_Y
+        beq +
+            brl @tear_left
+        +
+        bit #JOY_A
+        beq +
+            brl @tear_right
+        +
+        bit #JOY_B
+        beq +
+            brl @tear_down
+        +
+    ;tear_up:
+        lda.w entity_velocx,Y
+        sta.w entity_velocx,X
+        lda.w entity_velocy,Y
+        .ShiftRight_SIGN 1, FALSE
+        .AMIN P_IMM, $0100 * 0.25
+        .AMAX P_IMM, -$0100
+        sec
+        sbc.w playerData.stat_tear_speed
+        sta.w entity_velocy,X
+        jmp @tear_end
+    @tear_left:
+        lda.w entity_velocy,Y
+        sta.w entity_velocy,X
+        lda.w entity_velocx,Y
+        .ShiftRight_SIGN 1, FALSE
+        .AMIN P_IMM, $0100 * 0.25
+        .AMAX P_IMM, -$0100
+        sec
+        sbc.w playerData.stat_tear_speed
+        sta.w entity_velocx,X
+        jmp @tear_end
+    @tear_right:
+        lda.w entity_velocy,Y
+        sta.w entity_velocy,X
+        lda.w entity_velocx,Y
+        .ShiftRight_SIGN 1, FALSE
+        .AMAX P_IMM, -$0100 * 0.25
+        .AMIN P_IMM, $0100
+        clc
+        adc.w playerData.stat_tear_speed
+        sta.w entity_velocx,X
+        jmp @tear_end
+    @tear_down:
+        lda.w entity_velocx,Y
+        sta.w entity_velocx,X
+        lda.w entity_velocy,Y
+        .ShiftRight_SIGN 1, FALSE
+        .AMAX P_IMM, -$0100 * 0.25
+        .AMIN P_IMM, $0100
+        clc
+        adc.w playerData.stat_tear_speed
+        sta.w entity_velocy,X
+    ; set timer to 0
+    @tear_end:
+        sep #$20
+        lda #0
+@dont_fire_tear:
+    sta.w entity_timer,Y
+@end_fire_tear:
     ; end
     rts
 

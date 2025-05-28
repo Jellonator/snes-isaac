@@ -2274,9 +2274,10 @@ PlayerShootTear:
     ; life
     lda.w playerData.stat_tear_lifetime
     sta.w projectile_lifetime,X
-    ; size
+    ; flags
     lda.w playerData.tearflags
     sta.l projectile_flags,X
+    ; size
     sep #$20
     lda #3
     sta.l projectile_size,X

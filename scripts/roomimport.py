@@ -6,6 +6,10 @@ from typing import Tuple
 import pytiled_parser
 from pathlib import Path
 
+BASE_ROOM_DEFINITION_SIZE = 100
+ENTITY_DEFINITION_SIZE = 4
+total_room_data_size = 0
+
 MAX_POOL_SIZE = 255
 
 tiledIdsToGameIds = {
@@ -128,6 +132,9 @@ for room in rooms:
             out_inc.write("\t\t\tx: .db {}\n\t\t\ty: .db {}\n".format(x, y))
             out_inc.write("\t\t\tobjectType: .dw {}\n".format(tiledIdsToObjectIds[tileid]))
             out_inc.write("\t\t.ENDST\n")
+        else:
+            raise RuntimeError("Invalid object in object layer in {}".format(room))
+    total_room_data_size += BASE_ROOM_DEFINITION_SIZE + len(objects)
 out_inc.write(".ENDS\n")
 
 out_inc.write(".BANK $02 SLOT \"ROM\"\n")
@@ -143,3 +150,7 @@ for pool in json_roompools:
     for room in pool["rooms"]:
         out_inc.write("\t\t.dl {}\n".format(roomPathToId[room]))
 out_inc.write(".ENDS\n")
+
+print("Finished importing rooms")
+print("{}B room data".format(total_room_data_size))
+print()

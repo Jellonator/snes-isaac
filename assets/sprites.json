@@ -8,7 +8,8 @@
     {
         "name": "stage.basement",
         "src": "assets/sprites/stage/basement.raw",
-        "depth": 16
+        "depth": 16,
+        "compression": "lz4"
     },
     {
         "name": "stage.basement_ground_base",
@@ -23,7 +24,8 @@
     {
         "name": "stage.caves",
         "src": "assets/sprites/stage/caves.raw",
-        "depth": 16
+        "depth": 16,
+        "compression": "lz4"
     },
     {
         "name": "stage.caves_ground",
@@ -33,7 +35,8 @@
     {
         "name": "stage.secret_room",
         "src": "assets/sprites/stage/secret_room.raw",
-        "depth": 16
+        "depth": 16,
+        "compression": "lz4"
     },
     {
         "name": "isaac_tear",

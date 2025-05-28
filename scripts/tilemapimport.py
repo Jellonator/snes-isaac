@@ -33,6 +33,7 @@ for json_tilemap in json_tilemaps:
     tilemap = pytiled_parser.parser.parse_map(Path(map_path))
     tilelayers = [x for x in tilemap.layers if isinstance(x, pytiled_parser.TileLayer)]
     objectlayers = [x for x in tilemap.layers if isinstance(x, pytiled_parser.ObjectLayer)]
+    data_size = 0
     if len(objectlayers) != 0:
         print("Warning: too many object layers in {}".format(map_path))
     if len(tilelayers) > 1:
@@ -55,7 +56,10 @@ for json_tilemap in json_tilemaps:
                         cell_id = map_default
                 value = cell_id | cell_flipx | cell_flipy | map_palette | map_priority
                 out.write(struct.pack("<H", value))
+                data_size += 2
     out_inc.write("tilemap.{}:\n".format(name))
     out_inc.write("\t.incbin \"tilemaps/{}.bin\"\n".format(name))
+    print(map_path)
+    print("Size: {}B".format(data_size))
 
 out_inc.write(".ENDS\n")

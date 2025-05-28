@@ -160,6 +160,7 @@ LoadRoomSlotIntoLevel:
     ; * floor begin - don't need to split, screen is black
     ; * teleported to room - need to split
     ; * room transition - need to split
+    jsr _room_decompress_tilemap
     sep #$20
     lda $05,S
     cmp #ROOM_LOAD_CONTEXT_GAMELOAD
@@ -174,47 +175,11 @@ LoadRoomSlotIntoLevel:
     @upload_full_and_wait:
         wai
         .DisableRENDER
-            rep #$30
-            ldx.b tempDP
-            lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.tiledata,X
-            sta.w DMA0_SRCL
-            lda #$4000
-            sta.w DMA0_SIZE
-            lda #BG2_CHARACTER_BASE_ADDR
-            sta.w VMADDR
-            sep #$20
-            lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.tiledata + 2,X
-            sta.w DMA0_SRCH
-            lda #$18
-            sta.w DMA0_DEST
-            lda #%00000001
-            sta.w DMA0_CTL
-            lda #$80
-            sta.w VMAIN
-            lda #1
-            sta.w MDMAEN
+            jsr _room_upload_tilemap
         .EnableRENDER
         jmp @upload_end
     @upload_full_direct:
-        rep #$30
-        ldx.b tempDP
-        lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.tiledata,X
-        sta.w DMA0_SRCL
-        lda #$4000
-        sta.w DMA0_SIZE
-        lda #BG2_CHARACTER_BASE_ADDR
-        sta.w VMADDR
-        sep #$20
-        lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.tiledata + 2,X
-        sta.w DMA0_SRCH
-        lda #$18
-        sta.w DMA0_DEST
-        lda #%00000001
-        sta.w DMA0_CTL
-        lda #$80
-        sta.w VMAIN
-        lda #1
-        sta.w MDMAEN
+            jsr _room_upload_tilemap
         jmp @upload_end
     @upload_split_and_wait:
     .REPT 3 INDEX i
@@ -222,7 +187,7 @@ LoadRoomSlotIntoLevel:
         .DisableRENDER
             rep #$30
             ldx.b tempDP
-            lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.tiledata,X
+            lda #loword(private_spriteAllocBuffer)
             .IF i > 0
                 clc
                 adc #$1600*i
@@ -233,7 +198,7 @@ LoadRoomSlotIntoLevel:
             lda #BG2_CHARACTER_BASE_ADDR + $0B00*i
             sta.w VMADDR
             sep #$20
-            lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.tiledata + 2,X
+            lda #bankbyte(private_spriteAllocBuffer)
             sta.w DMA0_SRCH
             lda #$18
             sta.w DMA0_DEST
@@ -464,6 +429,40 @@ LoadRoomSlotIntoLevel:
     jsl UpdateDoorTileWest
     plp
     rtl
+
+_room_decompress_tilemap:
+    rep #$30
+    ldx.b tempDP
+    lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.tiledata,X
+    pha
+    ldy #private_spriteAllocBuffer
+    lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.tiledata + 2,X
+    and #$00FF
+    ora #$7F00
+    plx
+    jsl Decompress.Lz4FromROM
+    rts
+
+_room_upload_tilemap:
+    rep #$30
+    lda #loword(private_spriteAllocBuffer)
+    sta.w DMA0_SRCL
+    lda #$4000
+    sta.w DMA0_SIZE
+    lda #BG2_CHARACTER_BASE_ADDR
+    sta.w VMADDR
+    sep #$20
+    lda #bankbyte(private_spriteAllocBuffer)
+    sta.w DMA0_SRCH
+    lda #$18
+    sta.w DMA0_DEST
+    lda #%00000001
+    sta.w DMA0_CTL
+    lda #$80
+    sta.w VMAIN
+    lda #1
+    sta.w MDMAEN
+    rts
 
 ; Push order:
 ;   room load context       [db] $05
@@ -1477,33 +1476,44 @@ TransitionRoomIndex:
         dex
         dex
         bpl @loop
+    ; get floor pointer
+    rep #$30
+    ldx.w currentRoomDefinition
+    lda.l ROOM_DEFINITION_BASE + roomdefinition_t.chapterOverride,X
+    and #$00FF
+    bne +
+        ldx.w currentFloorPointer
+        lda.l FLOOR_DEFINITION_BASE + floordefinition_t.chapter,X
+        and #$00FF
+    +:
+    asl
+    tax
+    lda.l ChapterDefinitions,X
+    tax
+    stx.b TEMP
+    ; decompress tile data
+    lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.tiledata,X
+    pha
+    ldy #private_spriteAllocBuffer
+    lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.tiledata + 2,X
+    and #$00FF
+    ora #$7F00
+    plx
+    jsl Decompress.Lz4FromROM
     wai
     .DisableRENDER
         jsl Render.HDMAEffect.Clear
         jsl ProcessVQueue
         ; copy character data page 1 (8K)
         rep #$30
-        ldx.w currentRoomDefinition
-        lda.l ROOM_DEFINITION_BASE + roomdefinition_t.chapterOverride,X
-        and #$00FF
-        bne +
-            ldx.w currentFloorPointer
-            lda.l FLOOR_DEFINITION_BASE + floordefinition_t.chapter,X
-            and #$00FF
-        +:
-        asl
-        tax
-        lda.l ChapterDefinitions,X
-        tax
-        stx.b TEMP
-        lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.tiledata,X
+        lda #loword(private_spriteAllocBuffer)
         sta.w DMA0_SRCL
         lda #$2000
         sta.w DMA0_SIZE
         lda #BG1_CHARACTER_BASE_ADDR
         sta.w VMADDR
         sep #$20
-        lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.tiledata + 2,X
+        lda #bankbyte(private_spriteAllocBuffer)
         sta.w DMA0_SRCH
         lda #$18
         sta.w DMA0_DEST
@@ -1527,16 +1537,14 @@ TransitionRoomIndex:
         ; copy character data page 2 (8K)
         rep #$30
         ldx.b TEMP
-        lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.tiledata,X
-        clc
-        adc #$2000
+        lda #loword(private_spriteAllocBuffer) + $2000
         sta.w DMA0_SRCL
         lda #$2000
         sta.w DMA0_SIZE
         lda #BG1_CHARACTER_BASE_ADDR + $1000
         sta.w VMADDR
         sep #$20
-        lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.tiledata + 2,X
+        lda #bankbyte(private_spriteAllocBuffer)
         sta.w DMA0_SRCH
         lda #$18
         sta.w DMA0_DEST

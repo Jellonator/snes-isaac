@@ -189,22 +189,7 @@ _Floor_Update_Graphics:
         pla
         ldx.b $00
     .ENDR
-    ; upload tiles
-    pea BG2_CHARACTER_BASE_ADDR
-    pea 512
-    sep #$20
-    lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.tiledata + 2,X
-    pha
-    rep #$20
-    lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.tiledata,X
-    pha
-    jsl CopySprite
-    sep #$20
-    pla
-    rep #$30
-    pla
-    pla
-    pla
+    ; don't need to upload tiles here, this is performed by room
     ; set clear color
     sep #$20 ; 8 bit A
     stz CGADDR

@@ -151,10 +151,7 @@ def calc_num_lz4_blocks(data):
                 read_size = data.read(1)[0]
         block_index += 1
 
-# total_bytes_saved = 0
-
 def write_sprite_bin(sprite_out_path, spritebin, compression_format, sprite):
-    # global total_bytes_saved
     spritebin.flush()
     spritebin_out_file = open(sprite_out_path, 'wb')
     if compression_format == "none":
@@ -166,11 +163,12 @@ def write_sprite_bin(sprite_out_path, spritebin, compression_format, sprite):
         spritebin_out_file.write(struct.pack("<H", calc_num_lz4_blocks(io.BytesIO(compressedbin))))
         spritebin_out_file.write(compressedbin)
         new_len = len(compressedbin)
-        # print("Compressed {} to \t{}B ({:.2f}%)".format(sprite["name"], new_len, (new_len * 100.0 / base_len)))
-        # total_bytes_saved += (base_len - new_len)
         return len(compressedbin) + 2
     else:
         raise RuntimeError("Invalid compression \"{}\" for {}".format(compression_format, sprite["src"]))
+
+total_output_size = 0
+total_uncompressed_size = 0
 
 for sprite in json_sprites:
     name = sprite["name"]
@@ -207,6 +205,18 @@ for sprite in json_sprites:
         mask_mode = sprite["mask"]
         if not mask_mode in [MASK_MODE_INTERLACE]:
             raise RuntimeError("Invalid mask mode \"{}\" for {}".format(mask_mode, sprite["src"]))
+    size_x = 1
+    size_y = 1
+    if "size" in sprite:
+        if isinstance(sprite["size"], int):
+            size_x = sprite["size"]
+            size_y = sprite["size"]
+        else:
+            size_x = sprite["size"][0]
+            size_y = sprite["size"][1]
+    ntilesx = width // 8
+    ntilesy = height // 8
+    # Write header, if not splitting frames
     if not split_frames:
         # section header
         out_inc.write(".BANK {} SLOT \"ROM\"\n".format(minbank))
@@ -219,20 +229,9 @@ for sprite in json_sprites:
         out_inc.write(".ENDS\n")
     # Write to binary file
     spritebin = io.BytesIO()
-    # get size
-    size_x = 1
-    size_y = 1
-    if "size" in sprite:
-        if isinstance(sprite["size"], int):
-            size_x = sprite["size"]
-            size_y = sprite["size"]
-        else:
-            size_x = sprite["size"][0]
-            size_y = sprite["size"][1]
-    ntilesx = width // 8
-    ntilesy = height // 8
     uncompressed_size = 0
     output_size = 0
+    num_frames_larger = 0
     # write tiles
     for ty in range(0, ntilesy, size_y):
         for tx in range(0, ntilesx, size_x):
@@ -245,8 +244,12 @@ for sprite in json_sprites:
             if split_frames:
                 # write bin
                 subsprite_out_path = os.path.join(SPRITE_PATH, "{}.{}.bin".format(name, current_frame))
-                output_size += write_sprite_bin(subsprite_out_path, spritebin, compression_format, sprite)
-                uncompressed_size += len(spritebin.getvalue())
+                frame_output_size = write_sprite_bin(subsprite_out_path, spritebin, compression_format, sprite)
+                frame_uncompressed_size = len(spritebin.getvalue())
+                output_size += frame_output_size
+                uncompressed_size += frame_uncompressed_size
+                if frame_uncompressed_size < frame_output_size:
+                    num_frames_larger += 1
                 # section header
                 out_inc.write(".BANK {} SLOT \"ROM\"\n".format(minbank))
                 out_inc.write(".SECTION \"IMPORTED_SPRITE_{}\" SEMISUPERFREE BANKS {}-{}\n".format(sprite_number,maxbank,minbank))
@@ -261,16 +264,24 @@ for sprite in json_sprites:
     if not split_frames:
         output_size = write_sprite_bin(sprite_out_path, spritebin, compression_format, sprite)
         uncompressed_size = len(spritebin.getvalue())
+    total_output_size += output_size
+    total_uncompressed_size += uncompressed_size
     # Print info
     print(sprite["src"])
     if compression_format == "none":
         print("Size: {}B uncompressed".format(uncompressed_size))
     else:
         print("Size: {}B ({:.2f}% of original size)".format(output_size, output_size * 100 / uncompressed_size))
+        if output_size > uncompressed_size:
+            print("Warning: compressed size is larger than uncompressed size.")
+        if split_frames and num_frames_larger > 0:
+            print("{} frames (out of {}) were larger when compressed.".format(num_frames_larger, current_frame))
     print()
     
-
-# print("Saved a total of {}B".format(total_bytes_saved))
+print("Total Size: {}B".format(total_output_size))
+total_bytes_saved = total_uncompressed_size - total_output_size
+print("Saved {}B ({:.2f}%) with compression".format(total_bytes_saved, total_bytes_saved * 100 / total_uncompressed_size))
+print()
 
 splat_number = 1
 

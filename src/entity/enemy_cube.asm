@@ -513,6 +513,11 @@ entity_enemy_cube_free:
     ; free palette
     ldx.w _palette,Y
     jsl Palette.free
+    ; free buffer
+    rep #$30
+    ldy.b _tmp_entityid
+    ldx.w _spritebuffer,Y
+    jsl Spriteman.UnrefBuffer
     rts
 
 .ENDS

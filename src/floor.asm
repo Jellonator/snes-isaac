@@ -228,8 +228,8 @@ _Floor_Update_Graphics:
         .dl 0
         .dl palettes.basement
         .dl palettes.basement2
-    tiledata: .dl spritedata.basement
-    ground: .dl spritedata.basement_ground_base
+    tiledata: .dl spritedata.stage.basement
+    ground: .dl spritedata.stage.basement_ground_base
     groundPalette: .dw 2 * $0400
 .ENDST
 
@@ -241,8 +241,8 @@ _Floor_Update_Graphics:
         .dl 0
         .dl palettes.stage_caves1
         .dl palettes.stage_caves2
-    tiledata: .dl spritedata.stage_caves
-    ground: .dl spritedata.stage_caves_ground
+    tiledata: .dl spritedata.stage.caves
+    ground: .dl spritedata.stage.caves_ground
     groundPalette: .dw 2 * $0400
 .ENDST
 
@@ -253,8 +253,8 @@ _Floor_Update_Graphics:
         .dl 0
         .dl palettes.stage_secret_room1
         .dl palettes.stage_secret_room2
-    tiledata: .dl spritedata.stage_secret_room
-    ground: .dl spritedata.basement_ground_base
+    tiledata: .dl spritedata.stage.secret_room
+    ground: .dl spritedata.stage.basement_ground_base
     groundPalette: .dw 2 * $0400
 .ENDST
 
@@ -265,8 +265,8 @@ _Floor_Update_Graphics:
         .dl 0
         .dl palettes.stage_devil_room1
         .dl palettes.stage_devil_room2
-    tiledata: .dl spritedata.stage_secret_room
-    ground: .dl spritedata.basement_ground_base
+    tiledata: .dl spritedata.stage.secret_room
+    ground: .dl spritedata.stage.basement_ground_base
     groundPalette: .dw 2 * $0400
 .ENDST
 

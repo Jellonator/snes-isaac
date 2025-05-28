@@ -133,7 +133,7 @@ LoadRoomSlotIntoLevel:
     @ground_start:
         lda.w currentFloorIndex
         bne @ground_default
-        .CopyGroundAddr spritedata.basement_ground_starting_room
+        .CopyGroundAddr spritedata.stage.basement_ground_starting_room
         jmp @ground_end
     @ground_default:
         rep #$30

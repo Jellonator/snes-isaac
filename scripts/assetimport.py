@@ -159,6 +159,7 @@ def write_sprite_bin(sprite_out_path, spritebin, compression_format, sprite):
     spritebin_out_file = open(sprite_out_path, 'wb')
     if compression_format == "none":
         spritebin_out_file.write(spritebin.getvalue())
+        return len(spritebin.getvalue())
     elif compression_format == "lz4":
         base_len = len(spritebin.getvalue())
         compressedbin = lz4.block.compress(spritebin.getvalue(), mode='high_compression', store_size=False)
@@ -167,6 +168,7 @@ def write_sprite_bin(sprite_out_path, spritebin, compression_format, sprite):
         new_len = len(compressedbin)
         # print("Compressed {} to \t{}B ({:.2f}%)".format(sprite["name"], new_len, (new_len * 100.0 / base_len)))
         # total_bytes_saved += (base_len - new_len)
+        return len(compressedbin) + 2
     else:
         raise RuntimeError("Invalid compression \"{}\" for {}".format(compression_format, sprite["src"]))
 
@@ -229,6 +231,9 @@ for sprite in json_sprites:
             size_y = sprite["size"][1]
     ntilesx = width // 8
     ntilesy = height // 8
+    uncompressed_size = 0
+    output_size = 0
+    # write tiles
     for ty in range(0, ntilesy, size_y):
         for tx in range(0, ntilesx, size_x):
             if split_frames:
@@ -236,10 +241,12 @@ for sprite in json_sprites:
             for ty2 in range(ty, ty+size_y, 1):
                 for tx2 in range(tx, tx+size_x, 1):
                     write_image_tile(spritebin, imagedata, sprite["depth"], tx2, ty2, width, mask_mode)
+            # Write split frames
             if split_frames:
                 # write bin
                 subsprite_out_path = os.path.join(SPRITE_PATH, "{}.{}.bin".format(name, current_frame))
-                write_sprite_bin(subsprite_out_path, spritebin, compression_format, sprite)
+                output_size += write_sprite_bin(subsprite_out_path, spritebin, compression_format, sprite)
+                uncompressed_size += len(spritebin.getvalue())
                 # section header
                 out_inc.write(".BANK {} SLOT \"ROM\"\n".format(minbank))
                 out_inc.write(".SECTION \"IMPORTED_SPRITE_{}\" SEMISUPERFREE BANKS {}-{}\n".format(sprite_number,maxbank,minbank))
@@ -250,8 +257,18 @@ for sprite in json_sprites:
                 # section output
                 out_inc.write(".ENDS\n")
             current_frame += 1
+    # Write sprite, if not splitting frames
     if not split_frames:
-        write_sprite_bin(sprite_out_path, spritebin, compression_format, sprite)
+        output_size = write_sprite_bin(sprite_out_path, spritebin, compression_format, sprite)
+        uncompressed_size = len(spritebin.getvalue())
+    # Print info
+    print(sprite["src"])
+    if compression_format == "none":
+        print("Size: {}B uncompressed".format(uncompressed_size))
+    else:
+        print("Size: {}B ({:.2f}% of original size)".format(output_size, output_size * 100 / uncompressed_size))
+    print()
+    
 
 # print("Saved a total of {}B".format(total_bytes_saved))
 

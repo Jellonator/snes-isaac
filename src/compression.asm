@@ -3,9 +3,6 @@
 .BANK $01 SLOT "ROM"
 .SECTION "Player" FREE
 
-Decompress.Init:
-    rtl
-
 ; Decompress LZ4 data from ROM to RAM
 ; X: source addr [16b]
 ; Y:   dest addr [16b]

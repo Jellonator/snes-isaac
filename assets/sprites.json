@@ -6,23 +6,33 @@
         "size": 2
     },
     {
-        "name": "basement",
-        "src": "assets/sprites/basement.raw",
+        "name": "stage.basement",
+        "src": "assets/sprites/stage/basement.raw",
         "depth": 16
     },
     {
-        "name": "stage_caves",
-        "src": "assets/sprites/stage_caves.raw",
-        "depth": 16
-    },
-    {
-        "name": "stage_caves_ground",
-        "src": "assets/sprites/stage_caves_ground.raw",
+        "name": "stage.basement_ground_base",
+        "src": "assets/sprites/stage/basement_ground_base.raw",
         "depth": 4
     },
     {
-        "name": "stage_secret_room",
-        "src": "assets/sprites/stage_secret_room.raw",
+        "name": "stage.basement_ground_starting_room",
+        "src": "assets/sprites/stage/basement_ground_starting_room.raw",
+        "depth": 4
+    },
+    {
+        "name": "stage.caves",
+        "src": "assets/sprites/stage/caves.raw",
+        "depth": 16
+    },
+    {
+        "name": "stage.caves_ground",
+        "src": "assets/sprites/stage/caves_ground.raw",
+        "depth": 4
+    },
+    {
+        "name": "stage.secret_room",
+        "src": "assets/sprites/stage/secret_room.raw",
         "depth": 16
     },
     {
@@ -65,16 +75,6 @@
         "src": "assets/sprites/default_sprites.raw",
         "depth": 16,
         "compression": "lz4"
-    },
-    {
-        "name": "basement_ground_base",
-        "src": "assets/sprites/basement_ground_base.raw",
-        "depth": 4
-    },
-    {
-        "name": "basement_ground_starting_room",
-        "src": "assets/sprites/basement_ground_starting_room.raw",
-        "depth": 4
     },
     {
         "name": "items",
@@ -134,7 +134,9 @@
         "name": "tarot_cards_big",
         "src": "assets/sprites/tarot_cards_big.raw",
         "depth": 16,
-        "size": [4, 4]
+        "size": [4, 4],
+        "compression": "lz4",
+        "splitframes": true
     },
     {
         "name": "tilesprite_fire",

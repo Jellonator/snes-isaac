@@ -14,12 +14,14 @@
     {
         "name": "stage.basement_ground_base",
         "src": "assets/sprites/stage/basement_ground_base.raw",
-        "depth": 4
+        "depth": 4,
+        "compression": "lz4"
     },
     {
         "name": "stage.basement_ground_starting_room",
         "src": "assets/sprites/stage/basement_ground_starting_room.raw",
-        "depth": 4
+        "depth": 4,
+        "compression": "lz4"
     },
     {
         "name": "stage.caves",
@@ -30,7 +32,8 @@
     {
         "name": "stage.caves_ground",
         "src": "assets/sprites/stage/caves_ground.raw",
-        "depth": 4
+        "depth": 4,
+        "compression": "lz4"
     },
     {
         "name": "stage.secret_room",

@@ -220,6 +220,7 @@ _empty_use:
 
 ; Teleport to room at location A
 TeleportToRoom:
+; TODO: better transition
     .INDEX 8
     .ACCU 8
     pha
@@ -247,6 +248,7 @@ TeleportToRoom:
         sta.w player_posy
         lda #PLAYER_START_SOUTH_X
         sta.w player_posx
+        jmp @finish
         rtl
     +:
     lda.b [mapDoorNorth]
@@ -256,6 +258,7 @@ TeleportToRoom:
         sta.w player_posy
         lda #PLAYER_START_NORTH_X
         sta.w player_posx
+        jmp @finish
         rtl
     +:
     lda.b [mapDoorEast]
@@ -265,6 +268,7 @@ TeleportToRoom:
         sta.w player_posx
         lda #PLAYER_START_EAST_Y
         sta.w player_posy
+        jmp @finish
         rtl
     +:
     lda.b [mapDoorWest]
@@ -274,6 +278,7 @@ TeleportToRoom:
         sta.w player_posx
         lda #PLAYER_START_WEST_Y
         sta.w player_posy
+        jmp @finish
         rtl
     +:
     ; failsafe: spawn at south
@@ -282,6 +287,19 @@ TeleportToRoom:
     sta.w player_posy
     lda #PLAYER_START_SOUTH_X
     sta.w player_posx
+@finish:
+    ; update x2,y2
+    sep #$20
+    lda.w player_box_x1
+    clc
+    adc #16
+    sta.w player_box_x2
+    lda.w player_box_y1
+    clc
+    adc #16
+    sta.w player_box_y2
+    ; update familiars to player position
+    jsl Familiars.MoveFamiliarsToPlayer
     rtl
 
 _tarot_fool:

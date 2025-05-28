@@ -54,6 +54,8 @@ VBlank2:
     sta DMA0_DEST
     lda #$01
     sta MDMAEN
+; Process vqueue
+    jsl ProcessVQueue
 ; Force-load VRAM sections
     ; check if ground needs reloading
     sep #$20 ; 8 bit A
@@ -71,8 +73,6 @@ VBlank2:
         stz.w numTilesToUpdate
         jsr UpdateEntireMinimap
 @skipUpdateAllTiles:
-; Process vqueue
-    jsl ProcessVQueue
 ; Process HDMA
     .ACCU 8
     lda.l hdmaWindowMainPositionActiveBufferId
@@ -1364,16 +1364,16 @@ InitializeUI:
     rtl
 
 InitializeBackground:
-    ; write character data
-    rep #$20 ; 16 bit A
+    ; update character data
+    rep #$30 ; 16 bit A
     lda #24 * 16 * 8 * 2
     sta.w DMA0_SIZE ; number of bytes
-    lda.l currentRoomGroundData
+    lda #groundCharacterData
     sta.w DMA0_SRCL ; source address
     lda #BG3_CHARACTER_BASE_ADDR
     sta.w VMADDR ; VRAM address
     sep #$20 ; 8 bit A
-    lda.l currentRoomGroundData+2
+    lda #bankbyte(groundCharacterData)
     sta.w DMA0_SRCH ; source bank
     lda #$80
     sta.w VMAIN ; VRAM address increment flags

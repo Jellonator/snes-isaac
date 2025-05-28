@@ -356,4 +356,30 @@ Familiars.RefreshFamiliars:
     plb
     rtl
 
+Familiars.MoveFamiliarsToPlayer:
+    rep #$20
+    sep #$10
+    ldx.w numEntities
+    beq @end_loop_entities
+    @loop_entities:
+        ; get entity at [X]
+        ldy.w entityExecutionOrder-1,X
+        ; check if entity.type == FAMILIAR, skip otherwise
+        lda.w entity_type,Y
+        and #$00FF
+        cmp #ENTITY_TYPE_FAMILIAR
+        bne @skip_entity
+        ; set position
+        lda.w player_posx
+        sta.w entity_posx,Y
+        lda.w player_posy
+        sta.w entity_posy,Y
+        lda.w player_box_x1
+        sta.w entity_box_x1,Y
+    @skip_entity:
+        dex
+        bne @loop_entities
+    @end_loop_entities:
+    rtl
+
 .ENDS

@@ -126,8 +126,6 @@ Game.Begin:
     pla
     pla
     jsl InitializeUI
-    ; setup BG3 (background)
-    jsl InitializeBackground
     ; Set up tilemap. First, write empty in all slots
     rep #$30 ; 16 bit X, Y, Z
     lda #BG2_TILE_BASE_ADDR
@@ -245,8 +243,6 @@ tile_data_loop:
     jsl EntityInfoInitialize
     ; clear pathfinding data
     jsl Pathing.Initialize
-    ; clear ground data
-    jsl GroundOpClear
     ; init player
     jsr PlayerInit
     ; init floor

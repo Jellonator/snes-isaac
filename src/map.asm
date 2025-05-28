@@ -966,17 +966,17 @@ _transition_ground_horizontal:
         sta.l vqueueOps.{i+1}.vramAddr,X
         adc #$00C0 ; assume carry to be clear
     .ENDR
-    ; aAddr[i] = currentRoomGroundData + i * $0180 + COLUMN * $10
+    ; aAddr[i] = #groundCharacterData + i * $0180 + COLUMN * $10
     lda.b COLUMN
     .MultiplyStatic $10
     clc
-    adc.w currentRoomGroundData
+    adc #loword(groundCharacterData)
     .REPT 16 INDEX i
         sta.l vqueueOps.{i+1}.aAddr,X
         adc #$0180 ; assume carry to be clear
     .ENDR
     sep #$20
-    lda.w currentRoomGroundData+2
+    lda #bankbyte(groundCharacterData)
     .REPT 16 INDEX i
         sta.l vqueueOps.{i+1}.aAddr+2,X
     .ENDR
@@ -1059,14 +1059,14 @@ _transition_ground_vertical:
     clc
     adc #BG3_CHARACTER_BASE_ADDR
     sta.l vqueueOps.1.vramAddr,X
-    ; aAddr = currentRoomGroundData + ROW * $0180 (= 3 * $80)
+    ; aAddr = #groundCharacterData + ROW * $0180 (= 3 * $80)
     pla
     asl
     clc
-    adc.w currentRoomGroundData
+    adc #loword(groundCharacterData)
     sta.l vqueueOps.1.aAddr,X
     sep #$20
-    lda.w currentRoomGroundData+2
+    lda #bankbyte(groundCharacterData)
     sta.l vqueueOps.1.aAddr+2,X
     ; mode = VQUEUE_MODE_VRAM
     lda #VQUEUE_MODE_VRAM

@@ -51,32 +51,21 @@ GroundReset:
     ; jmp GroundOpClear
 
 GroundOpClear:
-    rep #$20
+    rep #$30
     lda #0
     sta.l groundOpListStart
     sta.l groundOpListEnd
     .REPT 32*2 INDEX i
         sta.l groundTilesInList + i * 2
     .ENDR
-    ; write character data
-    rep #$20 ; 16 bit A
-    lda #24 * 16 * 8 * 2
-    sta DMA0_SIZE ; number of bytes
-    lda.w currentRoomGroundData
-    sta DMA0_SRCL ; source address
-    lda #groundCharacterData
-    sta WMADDL
-    sep #$20 ; 8 bit A
-    lda.w currentRoomGroundData+2
-    sta DMA0_SRCH ; source bank
-    lda #$7F
-    sta WMADDH
-    lda #%00000000
-    sta DMA0_CTL ; auto increment, 1 byte at a time
-    lda #$80
-    sta DMA0_DEST ; Write to WRAM
-    lda #$01
-    sta MDMAEN ; begin transfer
+    ; decompress character data
+    lda.l currentRoomGroundData
+    tax
+    ldy #groundCharacterData
+    lda.l currentRoomGroundData+2
+    and #$00FF
+    ora #$0100 * bankbyte(groundCharacterData)
+    jsl Decompress.Lz4FromROM
     rtl
 
 _BitTbl:

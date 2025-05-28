@@ -481,24 +481,46 @@ UI.update_charge_display:
     rep #$20
     lda.l bankaddr(Item.items) | itemdef_t.sprite_index,X
     and #$00FF
-    .MultiplyStatic 32*4
     ldy.b IS_FULL
     beq @not_charge
     @has_charge:
         clc
-        adc #loword(spritedata.items_active)
+        adc #sprite.item_active.1 - 1
         sta.b $02
-        lda #bankbyte(spritedata.items_active)
+        asl
+        asl
+        adc.b $02
+        tax
+        lda.l SpriteDefs + entityspriteinfo_t.sprite_addr,X
+        sta.b $02
+        lda.l SpriteDefs + entityspriteinfo_t.sprite_addr + 2,X
         sta.b $04
         jmp @end_charge
     @not_charge:
         clc
-        adc #loword(spritedata.items)
+        adc #sprite.item.1 - 1
         sta.b $02
-        lda #bankbyte(spritedata.items)
+        asl
+        asl
+        adc.b $02
+        tax
+        lda.l SpriteDefs + entityspriteinfo_t.sprite_addr,X
+        sta.b $02
+        lda.l SpriteDefs + entityspriteinfo_t.sprite_addr + 2,X
         sta.b $04
     @end_charge:
-    .CopyROMToVQueueBin P_DIR, $02, 128
+    ; decompress sprite into vqueueBin
+    ldx.b $02
+    lda.w vqueueBinOffset
+    sec
+    sbc #$80
+    sta.w vqueueBinOffset
+    tay
+    lda.b $04
+    and #$00FF
+    ora #$7F00
+    jsl Decompress.Lz4FromROM
+    ; queue sprite upload
     ldx.w vqueueBinOffset
     phx
     ldy #4

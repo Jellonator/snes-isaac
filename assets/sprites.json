@@ -86,13 +86,17 @@
         "name": "items",
         "src": "assets/sprites/items0.raw",
         "depth": 16,
-        "size": 2
+        "size": 2,
+        "compression": "lz4",
+        "splitframes": true
     },
     {
         "name": "items_active",
         "src": "assets/sprites/items_active.raw",
         "depth": 16,
-        "size": 2
+        "size": 2,
+        "compression": "lz4",
+        "splitframes": true
     },
     {
         "name": "item_pedastal",

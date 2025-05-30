@@ -106,6 +106,13 @@ entity_familiar_init:
 entity_familiar_tick:
     .ACCU 16
     .INDEX 16
+    ; friction
+    lda.w entity_velocx,Y
+    .ShiftRight_SIGN 1, 0
+    sta.w entity_velocx,Y
+    lda.w entity_velocy,Y
+    .ShiftRight_SIGN 1, 0
+    sta.w entity_velocy,Y
     ; handle movement
     lda.w _familiar_parent,Y
     and #$00FF
@@ -181,13 +188,6 @@ entity_familiar_tick:
     clc
     adc.w entity_posy,Y
     sta.w entity_posy,Y
-    ; friction
-    lda.w entity_velocx,Y
-    .ShiftRight_SIGN 1, 0
-    sta.w entity_velocx,Y
-    lda.w entity_velocy,Y
-    .ShiftRight_SIGN 1, 0
-    sta.w entity_velocy,Y
     ; clear X if small enough
     lda.w entity_velocx,Y
     .ABS_A16_POSTLOAD
@@ -283,7 +283,7 @@ entity_familiar_tick:
         jsl Projectile.AddInputVelocity
         ; size
         sep #$20
-        lda #3
+        lda #2
         sta.w loword(projectile_size),X
         ; type
         lda #PROJECTILE_TYPE_PLAYER_BASIC

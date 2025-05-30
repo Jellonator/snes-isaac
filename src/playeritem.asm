@@ -174,8 +174,8 @@ Item.check_and_recalculate:
     sta.w playerData.stat_tear_rate
 ; DAMAGE
     lda.w playerData.stat_damage
-    .ADDMULTITEM ITEMID_GROWTH_HORMONES, P_IMM, 3
-    .ADDMULTITEM ITEMID_POLYPHEMUS, P_IMM, 4
+    .ADDMULTITEM ITEMID_GROWTH_HORMONES, P_IMM, 5
+    .ADDMULTITEM ITEMID_POLYPHEMUS, P_IMM, 6
     .AMAX P_IMM 1 ; always at least 1 damage
     sta.b $00
     .ADDMULTITEM ITEMID_POLYPHEMUS, P_DIR, $00

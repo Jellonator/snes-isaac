@@ -1259,7 +1259,7 @@ _player_handle_shoot_standard:
     bit #(JOY_A|JOY_B|JOY_Y|JOY_X)
     beq @player_did_not_fire
     jsr PlayerShootTear
-    jsl Tear.set_size_from_damage
+    jsl Projectile.SetSizeFromDamage
     rep #$20
     lda.w playerData.tear_timer
     sec
@@ -1349,7 +1349,7 @@ _player_handle_shoot_chocolate_milk:
     adc.w DIVU_QUOTIENT
     .AMAXU P_IMM 1
     sta.w projectile_damage,X
-    jsl Tear.set_size_from_damage
+    jsl Projectile.SetSizeFromDamage
     ; DAMAGE = projectile_damage * timer / $3C00
     rts
 @end:

@@ -306,8 +306,8 @@ _entity_zombie_headless_free:
 ; TABLES
 
 EntityZombie.HealthTable:
-    .dw 20 ; base
-    .dw 12 ; headless
+    .dw 36 ; base
+    .dw 24 ; headless
 
 EntityZombie.NextVariantTable:
     .db ENTITY_ZOMBIE_HEADLESS

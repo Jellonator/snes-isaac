@@ -3,7 +3,7 @@
 .BANK ROMBANK_ENTITYCODE SLOT "ROM"
 .SECTION "Entity Enemy Cube" FREE
 
-.DEFINE BASE_HEALTH 64
+.DEFINE BASE_HEALTH 72
 
 .DEFINE _gfxptr.1 loword(entity_char_custom.1)
 .DEFINE _gfxptr.2 loword(entity_char_custom.2)

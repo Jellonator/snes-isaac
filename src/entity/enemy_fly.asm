@@ -6,7 +6,7 @@
 .DEFINE _fly_fgxptr.1 loword(entity_char_custom.1)
 .DEFINE _fly_fgxptr.2 loword(entity_char_custom.2)
 
-.DEFINE BASE_HEALTH 12
+.DEFINE BASE_HEALTH 24
 
 entity_basic_fly_init:
     .ACCU 16

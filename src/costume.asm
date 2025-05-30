@@ -4,16 +4,11 @@
 .SECTION "Player Costume" FREE
 
 .MACRO .put_sprite ARGS spriteaddr, ntiles, spriteoffs, bufferoffs
-    php
-    phb
     .ChangeDataBank bankbyte(spriteaddr)
     ldy #loword(spriteaddr) + (spriteoffs * 48 * 4)
     ldx #loword(playerSpriteBuffer) + (bufferoffs * 32 * 4)
     lda #ntiles * 4
     jsl Costume.blit_tiles_with_interlaced_mask
-    sep #$20
-    plb
-    plp
 .ENDM
 
 Costume.player_reset:
@@ -31,37 +26,45 @@ Costume.player_recalculate:
     jsl Costume.player_reset
     phb
     sep #$20
-    rep #$10
     ; POLYPHEMUS
     lda.l playerData.playerItemStackNumber + ITEMID_POLYPHEMUS
     beq +
+        rep #$30
         .put_sprite spritedata.costume_polyphemus, 8, 0, 0
         .put_sprite spritedata.costume_polyphemus, 8, 0, 8
+        sep #$20
     +:
     ; WIRE COAT HANGER
     lda.l playerData.playerItemStackNumber + ITEMID_WIRE_COAT_HANGER
     beq +
+        rep #$30
         .put_sprite spritedata.costume_wire_coat_hanger, 4, 0, 0
         .put_sprite spritedata.costume_wire_coat_hanger, 4, 0, 4
         .put_sprite spritedata.costume_wire_coat_hanger, 4, 0, 8
         .put_sprite spritedata.costume_wire_coat_hanger, 4, 0, 12
+        sep #$20
     +:
     ; SPOON BENDER
     lda.l playerData.playerItemStackNumber + ITEMID_SPOON_BENDER
     beq +
+        rep #$30
         .put_sprite spritedata.costume_spoon_bender, 4, 0, 0
         .put_sprite spritedata.costume_spoon_bender, 4, 0, 4
         .put_sprite spritedata.costume_spoon_bender, 4, 0, 8
         .put_sprite spritedata.costume_spoon_bender, 4, 0, 12
+        sep #$20
     +:
     ; end
     plb
     rtl
 
-; Blit A tiles from DB,Y into $7E0000,X
+; Blit A tiles from DB,Y into $7E0000,
+; The mask is calculated from character data; transparent pixels will not
+; replace existing data.
 Costume.blit_tiles_no_mask:
+    .ACCU 16
+    .INDEX 16
     sta.b $00
-    rep #$30
 @loop:
     ; note: we have 4bpp, with four bitplanes
     ; 0,Y: abcdefgh 1,Y: abcdefgh ... 16,Y: abcdefgh, 17,Y: abcdefgh
@@ -140,41 +143,37 @@ Costume.blit_tiles_no_mask:
 
 ; Copy A tiles from DB,Y into $7E0000,X
 ; Tiles blitted using this routine must include an interlaced mask.
-; The mask indicates which values in the copied are opaque.
+; The mask indicates which values in the copied characters are opaque.
 ; Character data will be stored in the following order:
 ;   16B: bitplanes 1 and 2
 ;   16B: bitplanes 3 and 4
 ;   16B: mask - each bit corresponds to a bit in each bitplane
 Costume.blit_tiles_with_interlaced_mask:
+    .ACCU 16
+    .INDEX 16
     sta.b $00
-    rep #$30
 @loop:
-    .REPT 8
+    .REPT 8 INDEX i
         ; WRITE COLOR
-        lda.l $7F0000,X
-        eor.w $0000,Y
-        and.w $0020,Y
-        eor.l $7F0000,X
-        sta.l $7F0000,X
-        lda.l $7F0010,X
-        eor.w $0010,Y
-        and.w $0020,Y
-        eor.l $7F0010,X
-        sta.l $7F0010,X
-        ; inc
-        inx
-        inx
-        iny
-        iny
+        lda.l $7F0000 + 2*i,X
+        eor.w   $0000 + 2*i,Y
+        and.w   $0020 + 2*i,Y
+        eor.l $7F0000 + 2*i,X
+        sta.l $7F0000 + 2*i,X
+        lda.l $7F0010 + 2*i,X
+        eor.w   $0010 + 2*i,Y
+        and.w   $0020 + 2*i,Y
+        eor.l $7F0010 + 2*i,X
+        sta.l $7F0010 + 2*i,X
     .ENDR
     ; while (--count)
     txa
     clc
-    adc #16
+    adc #32
     tax
     tya
     clc
-    adc #48 - 16
+    adc #48
     tay
     dec.b $00
     bnel @loop

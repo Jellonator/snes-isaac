@@ -51,7 +51,7 @@ _big_projectile_update_sprite:
     .ACCU 8
     asl
     clc
-    adc #$40 - 12
+    adc #$30 - 16
     sta.w objectData.1.tileid,Y
     lda.w entity_posx+1,X
     sbc #3 ; we know that carry should always be clear, so just substract 3
@@ -110,7 +110,7 @@ _projectile_update_sprite:
     tyx
     ldy.w objectIndex
     lda.w loword(projectile_size),X
-    cmp #6
+    cmp #8
     bcc +
         jmp _big_projectile_update_sprite
     +:
@@ -286,20 +286,22 @@ _projectile_delete:
     .ACCU 16
 .ENDM
 
-Tear.set_size_from_damage:
+Projectile.SetSizeFromDamage:
     rep #$30
     lda.w projectile_damage,X
-    ._tear_size_damage_macro 0, 1
-    ._tear_size_damage_macro 1, 3
-    ._tear_size_damage_macro 2, 6
-    ._tear_size_damage_macro 3, 10
-    ._tear_size_damage_macro 4, 15
-    ._tear_size_damage_macro 5, 21
-    ._tear_size_damage_macro 6, 28
-    ._tear_size_damage_macro 7, 36
-    ._tear_size_damage_macro 8, 45
+    ._tear_size_damage_macro  0,  1 ;   2x2
+    ._tear_size_damage_macro  1,  2 ;   3x3
+    ._tear_size_damage_macro  2,  4 ;   4x4
+    ._tear_size_damage_macro  3,  7 ;   5x5
+    ._tear_size_damage_macro  4, 12 ;   6x6
+    ._tear_size_damage_macro  5, 16 ;   7x7
+    ._tear_size_damage_macro  6, 24 ;   8x8
+    ._tear_size_damage_macro  7, 36 ;   9x9 (technically 8x8 but more filled out)
+    ._tear_size_damage_macro  8, 52 ; 10x10
+    ._tear_size_damage_macro  9, 72 ; 12x12
+    ._tear_size_damage_macro 10, 96 ; 14x14
     sep #$20
-    lda #9
+    lda #11
     sta.l projectile_size,X
     rtl
 
@@ -537,7 +539,7 @@ projectile_tick__:
         sec
         sbc.b $00
         sta.w projectile_damage,X
-        jsl Tear.set_size_from_damage
+        jsl Projectile.SetSizeFromDamage
         jmp @skipCollisionHandler
     @hit_and_kill:
         jmp _projectile_delete
@@ -585,8 +587,8 @@ Projectile.CreateAndInheritVelocity:
     sec
     sbc #5
     sta.w entity_box_y1,X
-    rep #$20
 ; projectile->velocity = this->velocity
+    rep #$20
     lda.w entity_velocx,Y
     sta.w entity_velocx,X
     lda.w entity_velocy,Y
@@ -690,7 +692,5 @@ Projectile.AddAngleVelocity:
     sta.w entity_velocx,Y
 ; end
     rtl
-
-
 
 .ENDS

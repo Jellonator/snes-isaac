@@ -31,7 +31,7 @@ projectile_entity_init:
     sta.w loword(projectile_flags),Y
     sta.w loword(projectile_velocz),Y
     lda #$0800
-    sta.w loword(projectile_height)
+    sta.w loword(projectile_height),Y
     rts
 
 projectile_entity_tick:
@@ -45,11 +45,6 @@ projectile_entity_free:
 
 .BANK $01 SLOT "ROM"
 .SECTION "Projectilecode" FREE
-
-; Remove the tear at the index X
-; AXY must be 16bit
-projectile_slot_free:
-    rtl
 
 _big_projectile_update_sprite:
     .INDEX 16
@@ -562,5 +557,140 @@ projectile_tick__:
     sta.w entity_box_y2,Y
     jsr _projectile_update_sprite
     rtl
+
+; Create a new projectile, whose position and velocity inherits from entity [Y]
+; Returns projectile ID in [X]
+; Make sure to set `lifetime`, `flags`, `damage`, `size`, and `type` afterwards.
+Projectile.CreateAndInheritVelocity:
+; Create
+    rep #$20
+    sep #$10
+    lda #ENTITY_TYPE_PROJECTILE
+    phy
+    jsl entity_create_and_init
+    sep #$30
+    tyx
+    ply ; Y = this, X = projectile
+; projectile->position = this->center - vec2(2, 2)
+    ; X coordinate
+    lda.w entity_box_x1,Y
+    clc
+    adc.w entity_box_x2,Y
+    ror
+    sec
+    sbc #4
+    sta.w entity_box_x1,X
+    ; Y coordinate
+    lda.w loword(entity_ysort),Y
+    sec
+    sbc #5
+    sta.w entity_box_y1,X
+    rep #$20
+; projectile->velocity = this->velocity
+    lda.w entity_velocx,Y
+    sta.w entity_velocx,X
+    lda.w entity_velocy,Y
+    sta.w entity_velocy,X
+    rtl
+
+; Updates projectile in [X] to add velocity based on input.
+; $00: u16 - SPEED
+Projectile.AddInputVelocity:
+    .ACCU 16
+; velocity - check direction
+    lda.w joy1held
+    bit #JOY_Y
+    bne @tear_left
+    bit #JOY_A
+    bne @tear_right
+    bit #JOY_B
+    bnel @tear_down
+;tear_up:
+    lda.w entity_velocy,X
+    .ShiftRight_SIGN 1, FALSE
+    .AMIN P_IMM, $0100 * 0.25
+    .AMAX P_IMM, -$0100
+    sec
+    sbc.b $00
+    sta.w entity_velocy,X
+    jmp @tear_velocity_end
+@tear_left:
+    lda.w entity_velocx,X
+    .ShiftRight_SIGN 1, FALSE
+    .AMIN P_IMM, $0100 * 0.25
+    .AMAX P_IMM, -$0100
+    sec
+    sbc.b $00
+    sta.w entity_velocx,X
+    jmp @tear_velocity_end
+@tear_right:
+    lda.w entity_velocx,X
+    .ShiftRight_SIGN 1, FALSE
+    .AMAX P_IMM, -$0100 * 0.25
+    .AMIN P_IMM, $0100
+    clc
+    adc.b $00
+    sta.w entity_velocx,X
+    jmp @tear_velocity_end
+@tear_down:
+    lda.w entity_velocy,X
+    .ShiftRight_SIGN 1, FALSE
+    .AMAX P_IMM, -$0100 * 0.25
+    .AMIN P_IMM, $0100
+    clc
+    adc.b $00
+    sta.w entity_velocy,X
+@tear_velocity_end:
+    rtl
+
+; Updates projectile in [Y] to add velocity based on target direction.
+; $00: u8 - SPEED (Q7.1)
+; entityTargetAngle: u8 - ANGLE
+Projectile.AddAngleVelocity:
+    .ACCU 16
+    .INDEX 8
+    ldx.b entityTargetAngle
+    stz.b $30
+    sep #$20
+; A = LENGTH
+    lda.b $00
+    sta.l MULTU_A
+; B = sin(θ)
+    lda.l SinTable8,X
+    bpl +
+        sta.b $30 ; $30: sin(θ)
+        .NEG_A8
+    +:
+    sta.l MULTU_B
+    nop ; 2 cycles
+; veloc.y = sign(sin(θ)) * length·sin(θ)
+    rep #$20 ; 3 cycles
+    lda.l MULTU_RESULT ; 4 cycles before load
+    bit.b $30-1
+    bpl +
+        .NEG_A16
+    +:
+    sta.w entity_velocy,Y
+; B = cos(θ)
+    sep #$20
+    lda.l CosTable8,X
+    bpl +
+        sta.b $31 ; $31: cos(θ)
+        .NEG_A8
+    +:
+    sta.l MULTU_B
+    nop ; 2 cycles
+; veloc.x = sign(cos(θ)) * cos(θ)
+    rep #$20 ; 3 cycles
+    lda.l MULTU_RESULT ; 4 cycles before load
+    bit.b $31-1
+    bpl +
+        .NEG_A16
+    +:
+    sta.w entity_velocx,Y
+; end
+    rtl
+
+
 
 .ENDS

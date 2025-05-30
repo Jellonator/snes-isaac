@@ -2353,6 +2353,8 @@ PlayerShootTear:
     bit #PLAYER_FLAG_EYE
     bne @vertical_skip
     lda.w player_posx
+    clc
+    adc #256*1
     sta.w entity_posx,X
     lda.w player_posy
     clc
@@ -2362,7 +2364,7 @@ PlayerShootTear:
 @vertical_skip:
     lda.w player_posx
     clc
-    adc #256*8
+    adc #256*7
     sta.w entity_posx,X
     lda.w player_posy
     clc
@@ -2378,8 +2380,8 @@ PlayerShootTear:
     adc #256*4
     sta.w entity_posx,X
     lda.w player_posy
-    ; sec
-    ; sbc.w #256*1
+    clc
+    adc.w #256*1
     sta.w entity_posy,X
     rts
 @horizontal_skip:

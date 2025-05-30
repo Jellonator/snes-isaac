@@ -32,7 +32,7 @@
     if the player has the item or not.
     If the pool is still empty, then we give a default item.
 - [ ] Familiars
-    * [ ] Followers - Brother bobby, sister maggy
+    * [X] Followers - Brother bobby, sister maggy
     * [ ] Orbiters - Sacrificial dagger, cube of meat
     * [ ] 'conjoined' transformation. Except now we just merge familiars together.
 

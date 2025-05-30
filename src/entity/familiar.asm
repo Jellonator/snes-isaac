@@ -265,25 +265,22 @@ entity_familiar_tick:
         bit #(JOY_A|JOY_B|JOY_Y|JOY_X)
         beql @end_fire_tear
     ; create entity
-        lda #ENTITY_TYPE_PROJECTILE
-        phy
-        jsl entity_create_and_init
-        sep #$30
-        tyx
-        ply ; Y = this, X = projectile
-        rep #$20
+        jsl Projectile.CreateAndInheritVelocity
+        .ACCU 16
+        .INDEX 8
         ; life
         lda #BROTHER_BOBBY_TEAR_LIFETIME
         sta.w projectile_lifetime,X
         ; flags
         lda #0
         sta.w loword(projectile_flags),X
-        ; height
-        lda #$0800
-        sta.w loword(projectile_height),X
         ; damage
         lda #BROTHER_BOBBY_TEAR_DAMAGE
         sta.w projectile_damage,X
+        ; velocity
+        lda #BROTHER_BOBBY_TEAR_SPEED
+        sta.b $00
+        jsl Projectile.AddInputVelocity
         ; size
         sep #$20
         lda #3
@@ -291,75 +288,7 @@ entity_familiar_tick:
         ; type
         lda #PROJECTILE_TYPE_PLAYER_BASIC
         sta.w projectile_type,X
-    ; position
-        rep #$20
-        lda.w entity_posx,Y
-        clc
-        adc #256*4
-        sta.w entity_posx,X
-        lda.w entity_posy,Y
-        clc
-        adc #256*4
-        sta.w entity_posy,X
-    ; velocity - check direction
-        lda.w joy1held
-        bit #JOY_Y
-        beq +
-            brl @tear_left
-        +
-        bit #JOY_A
-        beq +
-            brl @tear_right
-        +
-        bit #JOY_B
-        beq +
-            brl @tear_down
-        +
-    ;tear_up:
-        lda.w entity_velocx,Y
-        sta.w entity_velocx,X
-        lda.w entity_velocy,Y
-        .ShiftRight_SIGN 1, FALSE
-        .AMIN P_IMM, $0100 * 0.25
-        .AMAX P_IMM, -$0100
-        sec
-        sbc.w playerData.stat_tear_speed
-        sta.w entity_velocy,X
-        jmp @tear_end
-    @tear_left:
-        lda.w entity_velocy,Y
-        sta.w entity_velocy,X
-        lda.w entity_velocx,Y
-        .ShiftRight_SIGN 1, FALSE
-        .AMIN P_IMM, $0100 * 0.25
-        .AMAX P_IMM, -$0100
-        sec
-        sbc.w playerData.stat_tear_speed
-        sta.w entity_velocx,X
-        jmp @tear_end
-    @tear_right:
-        lda.w entity_velocy,Y
-        sta.w entity_velocy,X
-        lda.w entity_velocx,Y
-        .ShiftRight_SIGN 1, FALSE
-        .AMAX P_IMM, -$0100 * 0.25
-        .AMIN P_IMM, $0100
-        clc
-        adc.w playerData.stat_tear_speed
-        sta.w entity_velocx,X
-        jmp @tear_end
-    @tear_down:
-        lda.w entity_velocx,Y
-        sta.w entity_velocx,X
-        lda.w entity_velocy,Y
-        .ShiftRight_SIGN 1, FALSE
-        .AMAX P_IMM, -$0100 * 0.25
-        .AMIN P_IMM, $0100
-        clc
-        adc.w playerData.stat_tear_speed
-        sta.w entity_velocy,X
     ; set timer to 0
-    @tear_end:
         sep #$20
         lda #0
 @dont_fire_tear:

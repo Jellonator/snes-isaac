@@ -100,4 +100,9 @@
     ; Number of each individual item that the player owns.
     ; Allows for stat upgrades to stack
     playerItemStackNumber ds 256
+; trinkets
+    ; current trinket slots (up to two with purse)
+    trinketslot ds 2
+    ; currently active trinket effects (may be desynced with 'trinkets' after swallowing)
+    trinketeffects ds 32
 .ENDST

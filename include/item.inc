@@ -36,3 +36,20 @@
     name ds 32
     tagline ds 32
 .ENDST
+
+; TRINKET DEFINITION
+.STRUCT trinketdef_t
+    sprite_index db
+    palette_ptr dw
+    palette_depth db
+    flags db
+    on_pickup dw
+    name ds 32
+    tagline ds 32
+.ENDST
+
+
+; TRINKET VARIANTS
+.ENUMID 0
+.ENUMID TRINKET_NULL
+.ENUMID TRINKET_PENNY_ON_A_STRING

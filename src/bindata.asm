@@ -463,6 +463,16 @@ Path_TileOffset:
     .db $11 ; PATH_DIR_DOWNRIGHT
     .db $00 ; PATH_DIR_NONE
 
+ShiftLeftTable8:
+    .REPT 8 INDEX i
+        .db (1 << i)
+    .ENDR
+
+ShiftLeftTable16:
+    .REPT 16 INDEX i
+        .dw (1 << i)
+    .ENDR
+
 .ENDS
 
 .bank $20

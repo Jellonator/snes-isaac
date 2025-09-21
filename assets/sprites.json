@@ -99,6 +99,14 @@
         "splitframes": true
     },
     {
+        "name": "trinkets_small",
+        "src": "assets/sprites/trinkets/trinkets_small.raw",
+        "depth": 16,
+        "size": 2,
+        "compression": "lz4",
+        "splitframes": true
+    },
+    {
         "name": "item_pedastal",
         "src": "assets/sprites/item_pedastal.raw",
         "depth": 16,

@@ -26,6 +26,7 @@ SOURCES  := bindata.asm\
 			entity/shopkeeper.asm\
 			entity/tileentity.asm\
 			entity/trapdoor.asm\
+			entity/trinket.asm\
 			init.asm\
 			floor.asm\
 			game.asm\

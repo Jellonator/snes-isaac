@@ -194,5 +194,9 @@
     {
         "name": "enemy.isaac_cube",
         "src": "assets/palettes/enemy/enemy_isaac_cube.hex"
+    },
+    {
+        "name": "trinket.penny_on_a_string",
+        "src": "assets/palettes/trinket/trinket_penny_on_a_string.hex"
     }
 ]

@@ -491,9 +491,9 @@ UI.update_charge_display:
         asl
         adc.b $02
         tax
-        lda.l SpriteDefs + spritedefinition_t.sprite_addr,X
+        lda.l SpriteDefs + entityspriteinfo_t.sprite_addr,X
         sta.b $02
-        lda.l SpriteDefs + spritedefinition_t.sprite_addr + 2,X
+        lda.l SpriteDefs + entityspriteinfo_t.sprite_addr + 2,X
         sta.b $04
         jmp @end_charge
     @not_charge:
@@ -504,9 +504,9 @@ UI.update_charge_display:
         asl
         adc.b $02
         tax
-        lda.l SpriteDefs + spritedefinition_t.sprite_addr,X
+        lda.l SpriteDefs + entityspriteinfo_t.sprite_addr,X
         sta.b $02
-        lda.l SpriteDefs + spritedefinition_t.sprite_addr + 2,X
+        lda.l SpriteDefs + entityspriteinfo_t.sprite_addr + 2,X
         sta.b $04
     @end_charge:
     ; decompress sprite into vqueueBin

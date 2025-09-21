@@ -444,6 +444,7 @@ PlayerInit:
     sta.w playerData.healthSlots.3
     jsl UI.update_all_hearts
     jsl Item.reset_items
+    jsl Trinket.Init
     jsl Player.reset_stats
     sep #$30
     stz.w playerData.walk_frame

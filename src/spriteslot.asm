@@ -195,11 +195,11 @@ Spriteman.NewSpriteRef:
     phx
     tax
     stx.b SPRITE_DEF_PTR
-    lda.l SpriteDefs + spritedefinition_t.sprite_addr,X
+    lda.l SpriteDefs + entityspriteinfo_t.sprite_addr,X
     sta.b SPRITE_ADDR
-    lda.l SpriteDefs + spritedefinition_t.sprite_bank,X
+    lda.l SpriteDefs + entityspriteinfo_t.sprite_bank,X
     sta.b SPRITE_BANK
-    lda.l SpriteDefs + spritedefinition_t.mode,X
+    lda.l SpriteDefs + entityspriteinfo_t.mode,X
     and #$7F
     sta.b SPRITE_MODE
     ; interlude: determine if we need to swizzle, or if we need to decompress
@@ -512,7 +512,7 @@ Spriteman.NewBufferRef:
     adc.b SPRITE_DEF_PTR
     sta.b SPRITE_DEF_PTR
     tax
-    lda.l SpriteDefs + spritedefinition_t.ntiles,X
+    lda.l SpriteDefs + entityspriteinfo_t.ntiles,X
     and #$00FF
 ; get sprite buffer index
     jsl Spriteman.AllocRawBuffer
@@ -528,7 +528,7 @@ Spriteman.NewBufferRef:
 ; copy sprite data into buffer.
     rep #$30
     ldx.b SPRITE_DEF_PTR
-    lda.l SpriteDefs + spritedefinition_t.mode,X
+    lda.l SpriteDefs + entityspriteinfo_t.mode,X
     and #$000F
     asl
     tax
@@ -536,7 +536,7 @@ Spriteman.NewBufferRef:
 ; now, see if we need to swizzle, by checking 'mode' and 'palette'
     rep #$30
     ldx.b SPRITE_DEF_PTR
-    lda.l SpriteDefs + spritedefinition_t.mode,X
+    lda.l SpriteDefs + entityspriteinfo_t.mode,X
     bit #SPRITEALLOCMODE_SWIZZLE
     beq @no_swizzle
         ; check if palette mode needs swizzle
@@ -570,7 +570,7 @@ _newbufferref_upload_direct:
     .INDEX 16
     ldx.b SPRITE_DEF_PTR
     ; size = ntiles * 128
-    lda.l SpriteDefs + spritedefinition_t.ntiles,X
+    lda.l SpriteDefs + entityspriteinfo_t.ntiles,X
     and #$00FF
     sta.b NUM_TILES
     xba
@@ -584,11 +584,11 @@ _newbufferref_upload_direct:
     sta.b DEST_ADDR
     sta.l WMADDL
     ; srcL = sprite_addr
-    lda.l SpriteDefs + spritedefinition_t.sprite_addr,X
+    lda.l SpriteDefs + entityspriteinfo_t.sprite_addr,X
     sta.l DMA0_SRCL
     ; srcH = sprite_bank
     sep #$20 ; 8b A
-    lda.l SpriteDefs + spritedefinition_t.sprite_bank,X
+    lda.l SpriteDefs + entityspriteinfo_t.sprite_bank,X
     sta.l DMA0_SRCH
     ; WMADDH = $7F
     lda #$7F
@@ -608,7 +608,7 @@ _newbufferref_upload_lz4:
     .ACCU 16
     .INDEX 16
     ldx.b SPRITE_DEF_PTR
-    lda.l SpriteDefs + spritedefinition_t.ntiles,X
+    lda.l SpriteDefs + entityspriteinfo_t.ntiles,X
     and #$00FF
     sta.b NUM_TILES
     ; dest
@@ -619,10 +619,10 @@ _newbufferref_upload_lz4:
     sta.b DEST_ADDR
     tay
     ; source
-    lda.l SpriteDefs + spritedefinition_t.sprite_addr,X
+    lda.l SpriteDefs + entityspriteinfo_t.sprite_addr,X
     pha
     ; banks
-    lda.l SpriteDefs + spritedefinition_t.sprite_addr+2,X
+    lda.l SpriteDefs + entityspriteinfo_t.sprite_addr+2,X
     and #$00FF
     ora #$7F00
     plx

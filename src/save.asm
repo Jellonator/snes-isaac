@@ -145,6 +145,16 @@ Save.WriteSaveState:
     sta.w savestate.0.seed_stage.low
     lda.l stageSeed.high
     sta.w savestate.0.seed_stage.high
+; copy player trinkets
+    lda.l playerData.trinketslot
+    sta.w savestate.0.player_trinketslot
+    ldx #32-2
+    @loop_copy_trinket:
+        lda.l playerData.trinketeffects,X
+        sta.w savestate.0.player_trinketeffects,X
+        dex
+        dex
+        bpl @loop_copy_trinket
 ; copy player data
     sep #$20
     lda.l playerData.money
@@ -415,6 +425,16 @@ Save.ReadSaveState:
     sta.l stageSeed.low
     lda.w savestate.0.seed_stage.high
     sta.l stageSeed.high
+; copy player trinkets
+    lda.w savestate.0.player_trinketslot
+    sta.l playerData.trinketslot
+    ldx #32-2
+    @loop_copy_trinket:
+        lda.w savestate.0.player_trinketeffects,X
+        sta.l playerData.trinketeffects,X
+        dex
+        dex
+        bpl @loop_copy_trinket
 ; copy player data
     sep #$20
     lda.w savestate.0.player_money

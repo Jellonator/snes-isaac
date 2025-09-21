@@ -50,6 +50,8 @@
     player_item_list ds 256
     player_posx db
     player_posy db
+    player_trinketslot ds 2
+    player_trinketeffects ds 32
     ; devil deal info
     floors_since_devil_deal db
     devil_deal_flags db

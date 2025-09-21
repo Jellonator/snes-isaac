@@ -3,6 +3,9 @@
 .BANK $01 SLOT "ROM"
 .SECTION "RoomCode" FREE
 
+.DEFINE ENTITY_INDEX (coreDP+0)
+.DEFINE TEMP (coreDP+2)
+
 ; Spawn entities for room
 ; Args:
 ;   spawngroup [db] $03
@@ -72,16 +75,16 @@ _room_spawn_entities:
 ; deserialize entities
     lda #ENTITY_CONTEXT_INIT_DESERIALIZE
     sta.b entityExecutionContext
-    stz.b $30
+    stz.b ENTITY_INDEX
     @loop_deserialize:
-        lda.b $30
+        lda.b ENTITY_INDEX
         cmp #ENTITY_STORE_COUNT
         beq @end_deserialize
         asl
-        sta.b $32
+        sta.b TEMP
         asl
         clc
-        adc.b $32
+        adc.b TEMP
         clc
         adc currentRoomInfoAddress
         tax
@@ -106,7 +109,7 @@ _room_spawn_entities:
         jsl entity_init
         plp
         plx
-        inc.b $30
+        inc.b ENTITY_INDEX
         jmp @loop_deserialize
 @end_deserialize:
     lda #ENTITY_CONTEXT_STANDARD
@@ -422,7 +425,7 @@ _Room_Serialize_Entities:
     ; jsl SortEntityExecutionOrder
     rep #$30 ; 16B AXY
     lda #0
-    sta.b $00
+    sta.b ENTITY_INDEX
     ldx.w numEntities
     beq @end
     @loop:
@@ -439,16 +442,16 @@ _Room_Serialize_Entities:
         lda.w loword(entity_flags),Y ; skip serialization if entity forbids it
         and #ENTITY_FLAGS_DONT_SERIALIZE
         bne +
-            lda.b $00
+            lda.b ENTITY_INDEX
             ; skip serialization if full
             cmp #24
             beq +
             ; serialization step
             asl
-            sta.b $32
+            sta.b TEMP
             asl
             clc
-            adc.b $32
+            adc.b TEMP
             clc
             adc.b currentRoomInfoAddress
             tax
@@ -460,7 +463,7 @@ _Room_Serialize_Entities:
             sta.w roominfo_t.entityStoreTable + entitystore_t.type,X
             lda.w entity_state,Y  ; entity_state and entity_timer are combined
             sta.w roominfo_t.entityStoreTable + entitystore_t.state,X
-            inc.b $00
+            inc.b ENTITY_INDEX
         +:
         ; plp
         plx
@@ -469,19 +472,19 @@ _Room_Serialize_Entities:
 @end:
     ; clear rest
 @loop2:
-    lda.b $00
+    lda.b ENTITY_INDEX
     cmp #24
     beq @end2
     asl
-    sta.b $32
+    sta.b TEMP
     asl
     clc
-    adc.b $32
+    adc.b TEMP
     clc
     adc.b currentRoomInfoAddress
     tax
     stz.w roominfo_t.entityStoreTable + entitystore_t.type,X
-    inc.b $00
+    inc.b ENTITY_INDEX
     jmp @loop2
 @end2:
     plb

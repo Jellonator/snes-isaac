@@ -36,8 +36,10 @@
     ; During familiar spawning, used to indicate what this familiar's parent
     ; should be.
     entityParentChain db
-    ; 128 bytes of temporary data for code to make use of.
-    tempDP ds $80
+    ; 96 bytes of temporary data for code to make use of.
+    tempDP ds $60
+    ; 32 bytes of temporary data for core engine usage (NOT ENTITIES)
+    coreDP ds $20
 .ENDS
 
 ; Bank used for somewhat commonly used variables that need to be in bank 0

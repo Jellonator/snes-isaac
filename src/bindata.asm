@@ -89,7 +89,29 @@ DefaultUiData:
     .dsw 32*15, 0
     ; row 24-27
     .REPT 4 INDEX iy
-        .dsw 27, 0
+        .dw 0
+        .IF iy == 0
+            .dw deft($C4, 7) | T_HIGHP
+            .dw deft($C5, 7) | T_HIGHP
+            .dw 0
+            .dw 0
+        .ELIF iy == 1
+            .dw deft($D4, 7) | T_HIGHP
+            .dw deft($D5, 7) | T_HIGHP
+            .dw 0
+            .dw 0
+        .ELIF iy == 2
+            .dw 0
+            .dw 0
+            .dw deft($C6, 7) | T_HIGHP
+            .dw deft($C7, 7) | T_HIGHP
+        .ELIF iy == 3
+            .dw 0
+            .dw 0
+            .dw deft($D6, 7) | T_HIGHP
+            .dw deft($D7, 7) | T_HIGHP
+        .ENDIF
+        .dsw 22, 0
         .REPT 4 INDEX ix
             .dw deft($C0 + ix + iy*16, 7) | T_HIGHP
         .ENDR

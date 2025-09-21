@@ -247,7 +247,7 @@ Trinket.update_display:
     ora #$7F00
     jsl Decompress.Lz4FromROM
     ; queue sprite upload
-    pea BG1_CHARACTER_BASE_ADDR + $0E60
+    pea BG1_CHARACTER_BASE_ADDR + $0C60
     pea 2
     sep #$20
     lda #$7F

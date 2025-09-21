@@ -187,6 +187,11 @@ Item.check_and_recalculate:
     asl
     asl
     sta.w playerData.stat_speed
+    .PlayerHasTrinketEffect TRINKET_ROLLER_SKATES
+    beq +
+        asl.w playerData.stat_speed
+        lsr.w playerData.stat_accel
+    +:
 ; tear flags
     lda #0
     ldx.w playerData.playerItemStackNumber + ITEMID_POLYPHEMUS

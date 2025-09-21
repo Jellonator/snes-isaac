@@ -6,6 +6,7 @@
 .include "floor.inc"
 .include "ground.inc"
 .include "item.inc"
+.include "trinket.inc"
 .include "map.inc"
 .include "room.inc"
 .include "player.inc"

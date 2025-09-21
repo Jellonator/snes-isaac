@@ -341,8 +341,12 @@ Consumable.pickup:
     lda.w playerData.current_consumable
     beq @skip_drop
         rep #$30
+        lda.b entityExecutionContext
+        pha
+        lda #ENTITY_CONTEXT_INIT_DROP
+        sta.b entityExecutionContext
         lda #entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_CONSUMABLE)
-        jsl entity_create_and_init
+        jsl entity_create
         sep #$30
         lda.w playerData.current_consumable
         sta.w entity_timer,Y
@@ -351,6 +355,10 @@ Consumable.pickup:
         sta.w entity_posx,Y
         lda.w player_posy
         sta.w entity_posy,Y
+        jsl entity_init
+        rep #$30
+        pla
+        sta.b entityExecutionContext
 @skip_drop:
     ; set current consumable
     sep #$30

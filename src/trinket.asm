@@ -23,9 +23,20 @@
     tagline: .ASCSTR "Money back guarantee", 0
 .ENDST
 
+.DSTRUCT Trinket.definitions.roller_skates INSTANCEOF trinketdef_t VALUES
+    sprite_index: .db 2
+    palette_ptr: .dw loword(palettes.trinket.roller_skates)
+    palette_depth: .db 8
+    flags: .db 0
+    on_pickup: .dw _pickup_empty
+    name: .ASCSTR "Roller Skates", 0
+    tagline: .ASCSTR "Wee!!!", 0
+.ENDST
+
 Trinket.trinkets:
     .dw Trinket.definitions.null
     .dw Trinket.definitions.penny_on_a_string
+    .dw Trinket.definitions.roller_skates
 
 _pickup_empty:
     rts
@@ -129,8 +140,12 @@ Trinket.Pickup:
         jsl Trinket.RemoveEffect
         ; spawn pickup
         rep #$30
+        lda.b entityExecutionContext
+        pha
+        lda #ENTITY_CONTEXT_INIT_DROP
+        sta.b entityExecutionContext
         lda #entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_TRINKET)
-        jsl entity_create_and_init
+        jsl entity_create
         sep #$30
         lda.w playerData.trinketslot+0
         sta.w entity_timer,Y
@@ -139,6 +154,10 @@ Trinket.Pickup:
         sta.w entity_posx,Y
         lda.w player_posy
         sta.w entity_posy,Y
+        jsl entity_init
+        rep #$30
+        pla
+        sta.b entityExecutionContext
 @skip_drop:
     ; set current trinket
     sep #$30

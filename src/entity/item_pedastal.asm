@@ -148,6 +148,8 @@ true_item_pedastal_init:
     lda.b entityExecutionContext
     cmp #ENTITY_CONTEXT_INIT_DESERIALIZE
     beq @skip_get_pool
+    cmp #ENTITY_CONTEXT_INIT_DROP
+    beq @skip_get_pool
         ; get item from pool if not deserializing
         phy
         php

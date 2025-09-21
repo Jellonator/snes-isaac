@@ -48,6 +48,8 @@
 .DEFINE ENTITY_CONTEXT_TRANSITION 3
 ; used for spawning familiars, the standard way
 .DEFINE ENTITY_CONTEXT_FAMILIAR 4
+; Used for when the player drops an item (similar to deserialize)
+.DEFINE ENTITY_CONTEXT_INIT_DROP 5
 
 ; ENTITY TYPES
 .DEFINE ENTITY_TYPE_PLAYER 1

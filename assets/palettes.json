@@ -198,5 +198,9 @@
     {
         "name": "trinket.penny_on_a_string",
         "src": "assets/palettes/trinket/trinket_penny_on_a_string.hex"
+    },
+    {
+        "name": "trinket.roller_skates",
+        "src": "assets/palettes/trinket/trinket_roller_skates.hex"
     }
 ]

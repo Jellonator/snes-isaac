@@ -640,6 +640,8 @@ true_entity_pickup_init:
     lda.b entityExecutionContext
     cmp #ENTITY_CONTEXT_INIT_DESERIALIZE
     beq @deserialized
+    cmp #ENTITY_CONTEXT_INIT_DROP
+    beq @deserialized
         jsl true_entity_pickup_init_spawn
 @deserialized:
     sep #$20

@@ -436,6 +436,7 @@ PlayerInit:
     jsl UI.update_key_display
     jsl UI.update_money_display
     jsl Consumable.update_display_no_overlay
+    jsl Trinket.update_display
     sep #$30
     stz.w player_signal
     lda #HEALTH_REDHEART_FULL

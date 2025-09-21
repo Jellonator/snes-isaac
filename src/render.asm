@@ -122,13 +122,44 @@ Render.UpdateHDMA:
     sta.w DMA6_SRCH
     sta.w DMA5_SRCH
 ; HDMA ENABLE
-    lda #%11100000
-    sta.w HDMAEN
+    lda.w enableHDMA
+    beq @skip_hdma
+        lda #%11100000
+        sta.w HDMAEN
+    rtl
+@skip_hdma:
+        lda #0
+        sta.w HDMAEN
+    rtl
+
+Render.EnableHDMA:
+    sep #$20
+    lda #1
+    sta.l enableHDMA
+    rtl
+
+Render.DisableHDMA:
+    sep #$20
+    lda #0
+    sta.l enableHDMA
+    rtl
+
+Render.DisablePaletteHDMA:
+    sep #$20
+    lda #0
+    sta.l hdmaPaletteBuffer_trinket1 + hdmapalettebufferentry_t.lines
+    rtl
+
+Render.EnablePaletteHDMA:
+    sep #$20
+    lda #1
+    sta.l hdmaPaletteBuffer_trinket1 + hdmapalettebufferentry_t.lines
     rtl
 
 Render.ClearHDMA:
     sep #$30
     lda #0
+    sta.l enableHDMA
     sta.l hdmaWindowMainPositionActiveBufferId
     sta.l hdmaWindowSubPositionActiveBufferId
     lda #1

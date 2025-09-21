@@ -62,6 +62,8 @@
     ; Indicates if room is transitioning. Top bit also indicates if
     ; restored backup palette data is currently in use.
     isRoomTransitioning db
+    ; set to TRUE to enable HDMA
+    enableHDMA db
 ; pause menu
     ; True if the pause screen is currently shown.
     isGamePaused db

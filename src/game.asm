@@ -286,6 +286,7 @@ tile_data_loop:
     stz.w didPlayerJustEnterRoom
     ; Clear HDMA table
     jsl Render.ClearHDMA
+    jsl Render.EnableHDMA
     ; re-enable rendering
     rep #$20
     stz.w blockVQueueMutex

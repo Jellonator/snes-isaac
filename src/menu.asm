@@ -462,6 +462,7 @@ Menu.Begin:
     sta.l numTilesToUpdate
     ; Clear HDMA table
     jsl Render.ClearHDMA
+    jsl Render.DisableHDMA
     ; re-enable rendering
     rep #$20
     stz.w blockVQueueMutex

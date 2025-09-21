@@ -1501,6 +1501,8 @@ TransitionRoomIndex:
     plx
     jsl Decompress.Lz4FromROM
     wai
+    ; disable HDMA
+    jsl Render.DisableHDMA
     .DisableRENDER
         jsl Render.HDMAEffect.Clear
         jsl ProcessVQueue
@@ -1887,6 +1889,8 @@ TransitionRoomIndex:
     sta.l vqueueRegOps_Value+2,X
     lda #SCRNDESTS
     sta.l vqueueRegOps_Addr+2,X
+; re-enable HDMA
+    jsl Render.EnableHDMA
 ; end
     sep #$20
     lda #0

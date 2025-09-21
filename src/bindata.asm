@@ -11,13 +11,6 @@ EmptyBackgroundTile:
     .dw deft($08, 2)
 TransparentBackgroundTile:
     .dw deft($20, 2)
-EmptySpriteData:
-    .REPT 128
-        .db $00 $F0 $00 $00
-    .ENDR
-    .REPT 32
-        .db %00000000
-    .ENDR
 DefaultUiData:
     ; row 1
     .dsw 32, 0

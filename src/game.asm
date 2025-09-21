@@ -186,7 +186,6 @@ tile_data_loop:
     lda #%00111111
     sta.w COLDATA
     ; Set background color
-    sep #$20 ; 8 bit A
     stz.w CGADDR
     lda #lobyte(CLEAR_COLOR)
     sta.w CGDATA

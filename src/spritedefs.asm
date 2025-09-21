@@ -28,7 +28,7 @@ SpriteDefs:
         .DEFINE MODE_REAL_NOT_CLICKBAIT 0
     .ENDIF
     .REPT nframes INDEX i
-        .DSTRUCT {spritename}.{i}.direct INSTANCEOF entityspriteinfo_t VALUES
+        .DSTRUCT {spritename}.{i}.direct INSTANCEOF spritedefinition_t VALUES
             sprite_addr: .dw loword(baseaddr) + 128*ntiles*i ; 128b per 16x tile
             sprite_bank: .db bankbyte(baseaddr)
             ntiles: .db ntiles
@@ -49,7 +49,7 @@ SpriteDefs:
         .DEFINE MODE_REAL_NOT_CLICKBAIT 0
     .ENDIF
     .REPT nframes INDEX i
-        .DSTRUCT {spritename}.{i}.direct INSTANCEOF entityspriteinfo_t VALUES
+        .DSTRUCT {spritename}.{i}.direct INSTANCEOF spritedefinition_t VALUES
             sprite_addr: .dw loword({dataname}.{i})
             sprite_bank: .db bankbyte({dataname}.{i})
             ntiles: .db ntiles

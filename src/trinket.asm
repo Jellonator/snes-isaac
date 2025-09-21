@@ -275,6 +275,34 @@ Trinket.update_display:
     pla
     sep #$20
     pla
+; copy palettes into hdma buffers
+    ; trinket 1
+    rep #$30
+    lda.w playerData.trinketslot+0
+    and #$00FF
+    asl
+    tax
+    lda.l Trinket.trinkets,X
+    tax
+    lda.l bankaddr(Trinket.trinkets) | trinketdef_t.palette_ptr,X
+    tax
+    .REPT 16 INDEX i
+        lda.l bankaddr(palettes.default) + i*2,X
+        sta.l hdmaPaletteBuffer_trinket1.l + i*5 + hdmapalettebufferentry_t.color
+    .ENDR
+    ; trinket 2
+    lda.w playerData.trinketslot+1
+    and #$00FF
+    asl
+    tax
+    lda.l Trinket.trinkets,X
+    tax
+    lda.l bankaddr(Trinket.trinkets) | trinketdef_t.palette_ptr,X
+    tax
+    .REPT 16 INDEX i
+        lda.l bankaddr(palettes.default) + i*2,X
+        sta.l hdmaPaletteBuffer_trinket2.l + i*5 + hdmapalettebufferentry_t.color
+    .ENDR
     rtl
 
 .ENDS

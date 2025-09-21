@@ -1841,13 +1841,13 @@ TransitionRoomIndex:
         jsl InitializeUI ; upload UI (2KB)
         ; upload palettes
         pea 32
-        PEA $5000 + bankbyte(palettes.ui_light.w)
+        PEA PALETTE_UI.1 + bankbyte(palettes.ui_light.w)
         PEA palettes.ui_light.w
         jsl CopyPalette
         rep #$20 ; 16 bit A
         PLA
         PLA
-        PEA $6000 + bankbyte(palettes.ui_gold.w)
+        PEA PALETTE_UI.2 + bankbyte(palettes.ui_gold.w)
         PEA palettes.ui_gold.w
         jsl CopyPalette
         rep #$20 ; 16 bit A

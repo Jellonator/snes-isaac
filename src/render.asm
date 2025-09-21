@@ -93,10 +93,14 @@ VBlank2:
 
 Render.UpdateHDMA:
     rep #$30
+; HDMA CTL
     lda #%00000001 + ($0100*lobyte(WH0))
     sta.w DMA7_CTL
     lda #%00000001 + ($0100*lobyte(WH2))
     sta.w DMA6_CTL
+    lda #%00000011 + ($0100*lobyte(CGADDR))
+    sta.w DMA5_CTL
+; HDMA WINDOW BUFFER ADDRESS
     sep #$20
     ldx #loword(hdmaWindowMainPositionBuffer1)
     lda.l hdmaWindowMainPositionActiveBufferId
@@ -110,10 +114,15 @@ Render.UpdateHDMA:
         ldx #loword(hdmaWindowSubPositionBuffer2)
     +:
     stx.w DMA6_SRCL
+    ldx #loword(hdmaPaletteBuffer)
+    stx.w DMA5_SRCL
+; HDMA BUFFER ADDRESS BANK
     lda #$7E
     sta.w DMA7_SRCH
     sta.w DMA6_SRCH
-    lda #%11000000
+    sta.w DMA5_SRCH
+; HDMA ENABLE
+    lda #%11100000
     sta.w HDMAEN
     rtl
 
@@ -142,6 +151,54 @@ Render.ClearHDMA:
     sta.l hdmaWindowMainPositionBuffer2+3
     sta.l hdmaWindowSubPositionBuffer1+3
     sta.l hdmaWindowSubPositionBuffer2+3
+; set up palette HDMA buffer
+;  8 lines [  1,  8] buffer[ 0, 7]: last 8 colors of BG1
+    .REPT 8 INDEX i
+        lda #(PALETTE_UI.1 >> 8) + i + 8
+        sta.l hdmaPaletteBuffer.{i + 0}.cgaddr
+    .ENDR
+; 16 lines [ 88,104] buffer[ 8,23]: trinket palettes 1
+    .REPT 16 INDEX i
+        lda #(PALETTE_UI.0 >> 8) + i
+        sta.l hdmaPaletteBuffer.{i + 8}.cgaddr
+    .ENDR
+; 16 lines [105,120] buffer[24,39]: tinket palette 2
+    .REPT 16 INDEX i
+        lda #(PALETTE_UI.1 >> 8) + i
+        sta.l hdmaPaletteBuffer.{i + 24}.cgaddr
+    .ENDR
+; 16 lines [201,216] buffer[40,55]: item palette
+    .REPT 16 INDEX i
+        lda #(PALETTE_UI.0 >> 8) + i
+        sta.l hdmaPaletteBuffer.{i + 40}.cgaddr
+    .ENDR
+;  8 lines [217,224] buffer[56,63]: first 8 colors of BG 1
+    .REPT 16 INDEX i
+        lda #(PALETTE_UI.1 >> 8) + i
+        sta.l hdmaPaletteBuffer.{i + 56}.cgaddr
+    .ENDR
+; set line counts for buffer[8,63]
+    lda #1
+    .REPT 64 INDEX i
+        sta.l hdmaPaletteBuffer.{i}.lines
+    .ENDR
+    lda #82
+    sta.l hdmaPaletteBuffer.7.lines
+    lda #80
+    sta.l hdmaPaletteBuffer.39.lines
+; copy BG1 palette into buffer
+    rep #$20
+    .REPT 8 INDEX i
+        lda.l palettes.ui_light + i*2
+        sta.l hdmaPaletteBuffer.{i + 56}.color
+    .ENDR
+    .REPT 8 INDEX i
+        lda.l palettes.ui_light + (i+8)*2
+        sta.l hdmaPaletteBuffer.{i + 0}.color
+    .ENDR
+    ; end table
+    lda #0
+    sta.l hdmaPaletteBuffer.64.lines
     rtl
 
 Render.HDMAEffect.Clear:

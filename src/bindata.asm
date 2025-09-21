@@ -91,25 +91,25 @@ DefaultUiData:
     .REPT 4 INDEX iy
         .dw 0
         .IF iy == 0
-            .dw deft($C4, 7) | T_HIGHP
-            .dw deft($C5, 7) | T_HIGHP
+            .dw deft($C4, 1) | T_HIGHP
+            .dw deft($C5, 1) | T_HIGHP
             .dw 0
             .dw 0
         .ELIF iy == 1
-            .dw deft($D4, 7) | T_HIGHP
-            .dw deft($D5, 7) | T_HIGHP
+            .dw deft($D4, 1) | T_HIGHP
+            .dw deft($D5, 1) | T_HIGHP
             .dw 0
             .dw 0
         .ELIF iy == 2
             .dw 0
             .dw 0
-            .dw deft($C6, 7) | T_HIGHP
-            .dw deft($C7, 7) | T_HIGHP
+            .dw deft($C6, 5) | T_HIGHP
+            .dw deft($C7, 5) | T_HIGHP
         .ELIF iy == 3
             .dw 0
             .dw 0
-            .dw deft($D6, 7) | T_HIGHP
-            .dw deft($D7, 7) | T_HIGHP
+            .dw deft($D6, 5) | T_HIGHP
+            .dw deft($D7, 5) | T_HIGHP
         .ENDIF
         .dsw 22, 0
         .REPT 4 INDEX ix

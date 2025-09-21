@@ -127,6 +127,13 @@
 .DEFINE PALETTE_UI.2 $6000 ; base UI 2
 .DEFINE PALETTE_UI.3 $7000 ; consumable slot
 
+.STRUCT hdmapalettebufferentry_t
+    lines db
+    ignored db
+    cgaddr db
+    color dw
+.ENDST
+
 ; SPRITE ALLOCATION BUFFER
 
 .DEFINE SPRITE_ALLOC_TILE_SIZE $0080

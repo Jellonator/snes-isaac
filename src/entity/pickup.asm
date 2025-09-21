@@ -142,6 +142,7 @@ PickupTable_RoomReward:
     ; .ChanceTableDW  10, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_BATTERY)
     ; .ChanceTableDW  14, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_CONSUMABLE)
     ; .ChanceTableDW   7, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_TRINKET)
+    .ChanceTableDW  127, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_CONSUMABLE)
     .ChanceTableRestDW entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_TRINKET)
     .ChanceTableEnd
 

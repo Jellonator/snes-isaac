@@ -288,6 +288,8 @@
     hdmaWindowSubPositionBuffer1 ds 512
     hdmaWindowSubPositionBuffer2 ds 512
     hdmaWindowSubPositionActiveBufferId db
+    ; palette HDMA buffer; written to CGRAM
+    hdmaPaletteBuffer INSTANCEOF hdmapalettebufferentry_t 80 STARTFROM 0
 ; reserved data
     tempWritableCode ds 32
     _extraneous_data_buffer2 ds 256

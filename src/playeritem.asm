@@ -98,17 +98,12 @@ Item.update_active_palette:
     ; Battery charge handler will upload sprite instead.
     ; upload palette
     rep #$30
-    pea 24
-    pea PALETTE_UI.0 + $0400 | bankbyte(palettes.palette0.w)
     lda.l bankaddr(Item.items) | itemdef_t.palette_ptr,X
-    clc
-    adc #8
-    pha
-    jsl CopyPaletteVQueue
-    rep #$30
-    pla
-    pla
-    pla
+    tax
+    .REPT 16 INDEX i
+        lda.l bankaddr(palettes.default) + i*2,X
+        sta.l hdmaPaletteBuffer_item.l + i*5 + hdmapalettebufferentry_t.color
+    .ENDR
     rtl
 
 ; simple multiplication routine somewhat optimized for small multiplicands

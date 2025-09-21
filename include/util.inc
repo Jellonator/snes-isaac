@@ -510,6 +510,8 @@
 
 .FUNCTION bankaddr(addr) (bankbyte(addr) * $10000)
 
+.FUNCTION longaddr(addr) (bankaddr(addr) + loword(addr))
+
 ; Pathing
 
 .MACRO .DefinePathSpeedTable ARGS tblName, speed, is_wide

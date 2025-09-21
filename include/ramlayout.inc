@@ -67,3 +67,10 @@
 .DEFINE spriteAllocTabPrev (private_spriteAllocTabPrev-1)
 
 .DEFINE spriteAllocBuffer ($7F0000 | (private_spriteAllocBuffer-SPRITE_ALLOC_TILE_SIZE))
+
+; palette buffer pointers
+.DEFINE hdmaPaletteBuffer_bg1_half1 longaddr(hdmaPaletteBuffer.56)
+.DEFINE hdmaPaletteBuffer_bg1_half2 longaddr(hdmaPaletteBuffer.0)
+.DEFINE hdmaPaletteBuffer_trinket1 longaddr(hdmaPaletteBuffer.8)
+.DEFINE hdmaPaletteBuffer_trinket2 longaddr(hdmaPaletteBuffer.24)
+.DEFINE hdmaPaletteBuffer_item longaddr(hdmaPaletteBuffer.40)

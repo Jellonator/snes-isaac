@@ -119,6 +119,7 @@ Trinket.Pickup:
     jsl Trinket.Contains
     cmp #0
     beq +
+        pla
         rtl
     +:
     ; drop current trinket, if applicable
@@ -174,7 +175,7 @@ Trinket.update_display:
     ldx.b $02
     lda.w vqueueBinOffset
     sec
-    sbc #$20
+    sbc #$80
     sta.w vqueueBinOffset
     tay ; decompress into vqueueBin
     lda.b $04
@@ -238,7 +239,7 @@ Trinket.update_display:
     ldx.b $02
     lda.w vqueueBinOffset
     sec
-    sbc #$20
+    sbc #$80
     sta.w vqueueBinOffset
     tay ; decompress into vqueueBin
     lda.b $04

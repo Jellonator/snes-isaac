@@ -1870,6 +1870,7 @@ TransitionRoomIndex:
     sep #$20
     lda #$FF
     sta.w numTilesToUpdate
+    jsl Trinket.update_display
     jsl UI.update_charge_display
     jsl Consumable.update_display_no_overlay
     rep #$30

@@ -6,6 +6,9 @@
 .define has_put_text loword(entity_custom.1)
 .define pickup_prevention_timer loword(entity_custom.2)
 .define anim_timer loword(entity_custom.3)
+.define loaded_sprite loword(entity_custom.4)
+.define loaded_palette loword(entity_custom.4 + 1)
+.define sprite_tile entity_health
 
 .BANK $02 SLOT "ROM"
 .SECTION "Entity Pickup" SUPERFREE
@@ -21,6 +24,7 @@ _variant_sprite_tileflag:
     .dw $20AA ; 7 - heart
     .dw $20AC ; 8 - soul heart
     .dw $20A6 ; 9 - consumable (TODO: unique sprites for pills)
+    .dw $00A0 ; A - trinket (ignored)
 
 _variant_handlers:
     .dw _handle_null       ; 0 - null
@@ -33,6 +37,33 @@ _variant_handlers:
     .dw _handle_heart      ; 7 - heart
     .dw _handle_soul_heart ; 8 - soul heart
     .dw _handle_consumable ; 9 - consumable
+    .dw _handle_trinket    ; A - trinket
+
+_variant_init:
+    .dw _handle_null     ; 0 - null
+    .dw _handle_null     ; 1 - penny
+    .dw _handle_null     ; 2 - nickle
+    .dw _handle_null     ; 3 - dime
+    .dw _handle_null     ; 4 - bomb
+    .dw _handle_null     ; 5 - key
+    .dw _handle_null     ; 6 - battery
+    .dw _handle_null     ; 7 - heart
+    .dw _handle_null     ; 8 - soul heart
+    .dw _init_consumable ; 9 - consumable
+    .dw _init_trinket    ; A - trinket
+
+_variant_free:
+    .dw _handle_null     ; 0 - null
+    .dw _handle_null     ; 1 - penny
+    .dw _handle_null     ; 2 - nickle
+    .dw _handle_null     ; 3 - dime
+    .dw _handle_null     ; 4 - bomb
+    .dw _handle_null     ; 5 - key
+    .dw _handle_null     ; 6 - battery
+    .dw _handle_null     ; 7 - heart
+    .dw _handle_null     ; 8 - soul heart
+    .dw _free_consumable ; 9 - consumable
+    .dw _free_trinket    ; A - trinket
 
 .DEFINE SPAWN_ANIM_FRAMES 14
 
@@ -51,6 +82,7 @@ PickupVariantPrices:
     .db $03 ; 7 - heart
     .db $05 ; 8 - soul heart
     .db $05 ; 9 - tarot card
+    .db $05 ; A - trinket
 
 PickupRandomizerTables:
     .dw PickupTable_Shop
@@ -60,12 +92,13 @@ PickupRandomizerTables:
 
 PickupTable_Shop:
     .ChanceTableBegin 256
-    .ChanceTableDW  40, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_BOMB)
-    .ChanceTableDW  40, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_KEY)
-    .ChanceTableDW  40, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_HEART_FULL)
-    .ChanceTableDW  40, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_HEART_SOUL)
-    .ChanceTableDW  40, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_BATTERY)
-    .ChanceTableDW  40, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_CONSUMABLE)
+    .ChanceTableDW  $20, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_BOMB)
+    .ChanceTableDW  $20, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_KEY)
+    .ChanceTableDW  $20, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_HEART_FULL)
+    .ChanceTableDW  $20, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_HEART_SOUL)
+    .ChanceTableDW  $20, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_BATTERY)
+    .ChanceTableDW  $20, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_CONSUMABLE)
+    .ChanceTableDW  $20, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_TRINKET)
     .ChanceTableRestDW  entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_HEART_FULL)
     .ChanceTableEnd
 
@@ -92,21 +125,24 @@ PickupTable_Any:
     .ChanceTableDW  38, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_HEART_FULL)
     .ChanceTableDW   5, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_HEART_SOUL)
     .ChanceTableDW  10, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_BATTERY)
-    .ChanceTableDW  15, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_CONSUMABLE)
+    .ChanceTableDW  14, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_CONSUMABLE)
+    .ChanceTableDW   7, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_TRINKET)
     .ChanceTableRestDW  entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_PENNY)
     .ChanceTableEnd
 
 PickupTable_RoomReward:
     .ChanceTableBegin 256
-    .ChanceTableDW  48, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_PENNY)
-    .ChanceTableDW   3, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_NICKEL)
-    .ChanceTableDW   1, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_DIME)
-    .ChanceTableDW  50, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_BOMB)
-    .ChanceTableDW  50, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_KEY)
-    .ChanceTableDW  38, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_HEART_FULL)
-    .ChanceTableDW   5, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_HEART_SOUL)
-    .ChanceTableDW  10, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_BATTERY)
-    .ChanceTableRestDW 0
+    ; .ChanceTableDW  48, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_PENNY)
+    ; .ChanceTableDW   3, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_NICKEL)
+    ; .ChanceTableDW   1, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_DIME)
+    ; .ChanceTableDW  50, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_BOMB)
+    ; .ChanceTableDW  50, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_KEY)
+    ; .ChanceTableDW  38, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_HEART_FULL)
+    ; .ChanceTableDW   5, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_HEART_SOUL)
+    ; .ChanceTableDW  10, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_BATTERY)
+    ; .ChanceTableDW  14, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_CONSUMABLE)
+    ; .ChanceTableDW   7, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_TRINKET)
+    .ChanceTableRestDW entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_TRINKET)
     .ChanceTableEnd
 
 _subtract_money:
@@ -125,6 +161,8 @@ _subtract_money:
     ply
     rts
 
+_init_consumable:
+_free_consumable:
 _handle_null:
     rts
 
@@ -308,6 +346,86 @@ _handle_consumable:
     jsl entity_free
     rts
 
+_handle_trinket:
+    jsr _subtract_money
+    sep #$30
+    phy
+    php
+    lda.w consumable_type,Y
+    jsl Trinket.Pickup
+    plp
+    ply
+    jsl entity_free
+    rts
+
+_init_trinket:
+    ; get item definition for trinket
+    rep #$30
+    lda.w consumable_type,Y
+    and #$00FF
+    asl
+    tax
+    lda.l Trinket.trinkets,X
+    tax
+    lda.l bankaddr(Trinket.trinkets) | trinketdef_t.palette_depth,X
+    and #$00FF
+    sta.b $10
+    lda.l bankaddr(Trinket.trinkets) | trinketdef_t.palette_ptr,X
+    sta.b $12
+    lda.l bankaddr(Trinket.trinkets) | trinketdef_t.sprite_index,X
+    and #$00FF
+    clc
+    adc #sprite.trinkets_small.0
+    sta.b $14
+    ; load palette for trinket
+    phy
+    lda.b $10
+    ldy.b $12
+    jsl Palette.find_or_upload_opaque
+    rep #$30
+    ply
+    txa
+    sep #$20
+    sta.w loaded_palette,Y
+    ; load sprite for trinket
+    rep #$30
+    .PaletteIndex_X_ToSpriteDef_A
+    ora.b $14
+    phy
+    jsl Spriteman.NewSpriteRef
+    rep #$30
+    ply
+    txa
+    sep #$20
+    sta.w loaded_sprite,Y
+    ; set tile
+    lda.w loword(spriteTableValue + spritetab_t.spritemem),X
+    tax
+    lda.l SpriteSlotIndexTable,X
+    sta.w sprite_tile,Y
+    ; set flags
+    lda.w loaded_palette,Y
+    .PaletteIndexToPaletteSpriteA
+    ora #%00100001
+    sta.w sprite_tile+1,Y
+    rts
+
+_free_trinket:
+    rep #$30
+    phy
+    lda.w loaded_sprite,Y
+    and #$00FF
+    tax
+    jsl Spriteman.UnrefSprite
+    rep #$30
+    ply
+    lda.w loaded_palette,Y
+    phy
+    jsl Palette.free
+    rep #$30
+    ply
+    rts
+
 true_entity_pickup_tick:
     rep #$30
     phy
@@ -321,12 +439,7 @@ true_entity_pickup_tick:
     lda.l _spawn_anim_y,X
     sta.b $00
     ; tile ID
-    lda.w entity_variant,Y
-    and #$00FF
-    asl
-    tax
-    lda.l _variant_sprite_tileflag,X
-    ora #%00100000 * $0100
+    lda.w sprite_tile,Y
     ldx.w objectIndex
     sta.w objectData.1.tileid,X
     ; X position
@@ -490,6 +603,24 @@ true_entity_pickup_init_spawn:
         inc A
         sta.w consumable_type,Y
 @dont_set_consumable_type:
+    ; choose trinket type if this is a trinket
+    lda.w entity_variant,Y
+    cmp #ENTITY_PICKUP_VARIANT_TRINKET
+    bne @dont_set_trinket_type
+        jsl RoomRand_Update8
+        .ACCU 16
+        sta.l DIVU_DIVIDEND
+        sep #$30
+        lda #TRINKET_COUNT-1
+        sta.l DIVU_DIVISOR
+        .REPT 8
+            nop
+        .ENDR
+        lda.l DIVU_REMAINDER
+        inc A
+        sta.w consumable_type,Y
+@dont_set_trinket_type:
+; initialize animation and timers for spawned pickup
     rep #$30
     lda #30
     sta.w pickup_prevention_timer,Y
@@ -523,11 +654,34 @@ true_entity_pickup_init:
         lda #0
     +:
     sta.w anim_timer,Y
+    ; set default tile
+    rep #$30
+    lda.w entity_variant,Y
+    and #$00FF
+    asl
+    tax
+    lda.l _variant_sprite_tileflag,X
+    ora #%00100000 * $0100
+    sta.w sprite_tile,Y
+    ; initialize pickup by type
+    rep #$30
+    lda.w entity_variant,Y
+    and #$00FF
+    asl
+    tax
+    jsr (_variant_init,X)
     rtl
 
 true_entity_pickup_free:
     .ACCU 16
     .INDEX 16
+    ; free pickup by type
+    rep #$30
+    lda.w entity_variant,Y
+    and #$00FF
+    asl
+    tax
+    jsr (_variant_free,X)
     ; maybe erase text
     sep #$30
     lda.b entityExecutionContext

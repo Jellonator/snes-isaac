@@ -473,6 +473,11 @@ true_item_pedastal_tick_base:
             sec
             sbc.w _item_price,Y
             sta.w playerData.money
+            rep #$08
+            .PlayerHasTrinketEffect TRINKET_PENNY_ON_A_STRING
+            beq +
+                inc.w playerData.money
+            +:
             jsl UI.update_money_display
         @dont_subtract_money:
         rep #$08

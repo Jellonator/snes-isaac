@@ -85,33 +85,37 @@ DefaultUiData:
     .dsw 5, deft($43, 6) | T_HIGHP | T_FLIPV
     .dw deft($42, 6) | T_FLIPH | T_HIGHP | T_FLIPV
     .dw 0
-    ; row 6-23
-    .dsw 32*15, 0
+    ; row 6-22
+    .dsw 32*14, 0
+    ; row 23
+    .dw 0
+    .dw 0
+    .dw deft($C4, 1) | T_HIGHP
+    .dw deft($C5, 1) | T_HIGHP
+    .dsw 28,0
     ; row 24-27
     .REPT 4 INDEX iy
         .dw 0
+        .dw 0
         .IF iy == 0
-            .dw deft($C4, 1) | T_HIGHP
-            .dw deft($C5, 1) | T_HIGHP
-            .dw 0
-            .dw 0
-        .ELIF iy == 1
             .dw deft($D4, 1) | T_HIGHP
             .dw deft($D5, 1) | T_HIGHP
             .dw 0
             .dw 0
-        .ELIF iy == 2
+        .ELIF iy == 1
             .dw 0
             .dw 0
             .dw deft($C6, 5) | T_HIGHP
             .dw deft($C7, 5) | T_HIGHP
-        .ELIF iy == 3
+        .ELIF iy == 2
             .dw 0
             .dw 0
             .dw deft($D6, 5) | T_HIGHP
             .dw deft($D7, 5) | T_HIGHP
+        .ELSE
+            .dsw 4, 0
         .ENDIF
-        .dsw 22, 0
+        .dsw 21, 0
         .REPT 4 INDEX ix
             .dw deft($C0 + ix + iy*16, 7) | T_HIGHP
         .ENDR

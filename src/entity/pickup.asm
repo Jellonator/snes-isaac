@@ -4,7 +4,7 @@
 .define pickup_price entity_state
 .define consumable_type entity_timer
 .define has_put_text loword(entity_custom.1)
-.define pickup_prevention_timer loword(entity_custom.2)
+.define pickup_prevention_timer loword(entity_custom.2) ; top byte is pickup prevention flag
 .define anim_timer loword(entity_custom.3)
 .define loaded_sprite loword(entity_custom.4)
 .define loaded_palette loword(entity_custom.4 + 1)
@@ -461,27 +461,37 @@ true_entity_pickup_tick:
     rep #$30
     .SetCurrentObjectS_Inc
     ply
-    ; collision detection
+; collision detection
     .EntityEasySetBox 16 16
+    ; decrement pickup prevention timer
     sep #$20
-    lda.w playerData.money
-    cmp.w pickup_price,Y
-    bcc @skip_pickup
     lda.w pickup_prevention_timer,Y
     beq +
         dec a
         sta.w pickup_prevention_timer,Y
-        jmp @skip_pickup
     +:
-    .EntityEasyCheckNoPlayerCollision_Center @skip_pickup, 8, 10
+    ; check money
+    lda.w playerData.money
+    cmp.w pickup_price,Y
+    bcc @not_standing_on_pickup
+    ; check hitbox
+    .EntityEasyCheckNoPlayerCollision_Center @not_standing_on_pickup, 8, 10
         rep #$30
+        lda.w pickup_prevention_timer,Y ; timer must be 0 and player must have stepped off
+        bne @skip_pickup
         lda.w entity_variant,Y
         and #$00FF
         asl
         tax
         jsr (_variant_handlers,X)
+        jmp @skip_pickup
+    @not_standing_on_pickup:
+        ; disable pickup prevention flag
+        sep #$20
+        lda #0
+        sta.w pickup_prevention_timer+1,Y
     @skip_pickup:
-    ; maybe put text
+; maybe put text
     sep #$30
     lda.b entityExecutionContext
     cmp #ENTITY_CONTEXT_STANDARD
@@ -626,17 +636,6 @@ true_entity_pickup_init_spawn:
         inc A
         sta.w consumable_type,Y
 @dont_set_trinket_type:
-; initialize animation and timers for spawned pickup
-    rep #$30
-    lda #30
-    sta.w pickup_prevention_timer,Y
-    lda #SPAWN_ANIM_FRAMES-1
-    ldx.b entityExecutionContext
-    cpx #ENTITY_CONTEXT_STANDARD
-    bne +
-        lda #0
-    +:
-    sta.w anim_timer,Y
     rtl
 
 true_entity_pickup_init:
@@ -651,10 +650,18 @@ true_entity_pickup_init:
 @deserialized:
     sep #$20
     lda #0
+    sta.w pickup_prevention_timer+1,Y
     sta.w has_put_text,Y
-    rep #$30
+    lda.b entityExecutionContext
+    cmp #ENTITY_CONTEXT_INIT_DROP
+    bne +
+        ; indicate that player must step off of drop before they can pick it up again
+        lda #1
+        sta.w pickup_prevention_timer+1,Y
+    +:
     lda #30
     sta.w pickup_prevention_timer,Y
+    rep #$30
     lda #SPAWN_ANIM_FRAMES-1
     ldx.b entityExecutionContext
     cpx #ENTITY_CONTEXT_STANDARD

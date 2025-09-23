@@ -442,6 +442,12 @@ _player_tick:
     entity_familiar_free,\
     ENTITY_SPAWNGROUP_NEVER
 
+._DefineEntity ENTITY_TYPE_HELPER_FLY,\
+    entity_helper_fly_init,\
+    entity_helper_fly_tick,\
+    entity_helper_fly_free,\
+    ENTITY_SPAWNGROUP_NEVER
+
 EntityDef_InitFunc:
 .REPT 256 INDEX index
     .IFDEF _Array_EntityDef_InitFunc.{index}

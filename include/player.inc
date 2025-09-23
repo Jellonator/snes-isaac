@@ -105,4 +105,7 @@
     trinketslot ds 2
     ; currently active trinket effects (may be desynced with 'trinkets' after swallowing)
     trinketeffects ds 32
+; helpers
+    helperFlyBufferCount db
+    helperFlyActiveCount db
 .ENDST

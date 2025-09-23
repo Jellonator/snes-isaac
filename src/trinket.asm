@@ -33,10 +33,21 @@
     tagline: .ASCSTR "Wee!!!", 0
 .ENDST
 
+.DSTRUCT Trinket.definitions.fish_head INSTANCEOF trinketdef_t VALUES
+    sprite_index: .db 3
+    palette_ptr: .dw loword(palettes.trinket.fish_head)
+    palette_depth: .db 8
+    flags: .db 0
+    on_pickup: .dw _pickup_empty
+    name: .ASCSTR "Fish Head", 0
+    tagline: .ASCSTR "It Stinks", 0
+.ENDST
+
 Trinket.trinkets:
     .dw Trinket.definitions.null
     .dw Trinket.definitions.penny_on_a_string
     .dw Trinket.definitions.roller_skates
+    .dw Trinket.definitions.fish_head
 
 _pickup_empty:
     rts

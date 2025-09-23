@@ -298,6 +298,7 @@ _PlayerHandleDamaged:
         beq ++
             jsl _PlayerTakeHealth
         ++:
+        jsl Hook.PlayerDamage
     +:
     rtl
 
@@ -429,6 +430,8 @@ PlayerInit:
     sta.w playerData.bombs
     stz.w playerData.current_consumable
     stz.w playerData.current_active_charge
+    stz.w playerData.helperFlyBufferCount
+    stz.w playerData.helperFlyActiveCount
     lda #0
     jsl Item.set_active
     jsl UI.update_charge_display

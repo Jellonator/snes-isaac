@@ -21,6 +21,7 @@ SOURCES  := bindata.asm\
 			entity/enemy_boss_duke_of_flies.asm\
 			entity/enemy_boss_monstro.asm\
 			entity/familiar.asm\
+			entity/helper_fly.asm\
 			entity/item_pedastal.asm\
 			entity/pickup.asm\
 			entity/shopkeeper.asm\
@@ -30,6 +31,7 @@ SOURCES  := bindata.asm\
 			floor.asm\
 			game.asm\
 			ground.asm\
+			hooks.asm\
 			layout.asm\
 			main.asm\
 			math.asm\

@@ -202,5 +202,9 @@
     {
         "name": "trinket.roller_skates",
         "src": "assets/palettes/trinket/trinket_roller_skates.hex"
+    },
+    {
+        "name": "trinket.fish_head",
+        "src": "assets/palettes/trinket/trinket_fish_head.hex"
     }
 ]

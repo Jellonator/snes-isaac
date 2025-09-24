@@ -131,6 +131,43 @@ Trinket.Contains:
     and.w playerData.trinketeffects,Y
     rtl
 
+_drop_trinket_x:
+    sep #$30
+    lda.w playerData.trinketslot,X
+    beq @skip_drop
+        phx
+        ; remove trinket from effect table
+        jsl Trinket.RemoveEffect
+        sep #$30
+        ; set context
+        lda.b entityExecutionContext
+        plx
+        pha
+        phx
+        lda #ENTITY_CONTEXT_INIT_DROP
+        sta.b entityExecutionContext
+        ; spawn pickup
+        rep #$30
+        lda #entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_TRINKET)
+        jsl entity_create
+        sep #$30
+        plx
+        lda.w playerData.trinketslot,X
+        sta.w entity_timer,Y
+        lda #0
+        sta.w playerData.trinketslot,X
+        rep #$30
+        lda.w player_posx
+        sta.w entity_posx,Y
+        lda.w player_posy
+        sta.w entity_posy,Y
+        jsl entity_init
+        sep #$30
+        pla
+        sta.b entityExecutionContext
+@skip_drop:
+    rts
+
 ; Pick up a trinket of type 'A'
 Trinket.Pickup:
     ; for now, only one trinket slot. We'll worry about purse later.
@@ -145,33 +182,17 @@ Trinket.Pickup:
         rtl
     +:
     ; drop current trinket, if applicable
-    lda.w playerData.trinketslot+0
-    beq @skip_drop
-        ; remove trinket from effect table
-        jsl Trinket.RemoveEffect
-        ; spawn pickup
-        rep #$30
-        lda.b entityExecutionContext
-        pha
-        lda #ENTITY_CONTEXT_INIT_DROP
-        sta.b entityExecutionContext
-        lda #entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_TRINKET)
-        jsl entity_create
-        sep #$30
-        lda.w playerData.trinketslot+0
-        sta.w entity_timer,Y
-        rep #$30
-        lda.w player_posx
-        sta.w entity_posx,Y
-        lda.w player_posy
-        sta.w entity_posy,Y
-        jsl entity_init
-        rep #$30
-        pla
-        sta.b entityExecutionContext
-@skip_drop:
+    ldx #0
+    lda.w playerData.playerItemStackNumber + ITEMID_PURSE
+    beq +
+
+        ldx #1
+    +:
+    jsr _drop_trinket_x
     ; set current trinket
     sep #$30
+    lda.w playerData.trinketslot+0
+    sta.w playerData.trinketslot+1
     pla
     sta.w playerData.trinketslot+0
     ; Add trinket to effect table

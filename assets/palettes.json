@@ -84,6 +84,10 @@
         "src": "assets/palettes/item/item_brimstone.hex"
     },
     {
+        "name": "item_purse",
+        "src": "assets/palettes/item/item_purse.hex"
+    },
+    {
         "name": "stage_caves1",
         "src": "assets/palettes/stage_caves1.hex"
     },

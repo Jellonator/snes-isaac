@@ -379,6 +379,18 @@ _pickup_map:
     tagline: .ASCSTR "Bloody Laser Blast", 0
 .ENDST
 
+.DSTRUCT Item.definitions.purse INSTANCEOF itemdef_t VALUES
+    sprite_index: .db 12
+    palette_ptr: .dw palettes.item_purse
+    palette_depth: .db 12
+    flags: .db 0
+    on_pickup: .dw _pickup_empty
+    on_use: .dw _use_empty
+    shop_price: .db $15
+    name: .ASCSTR "Mom's Purse", 0
+    tagline: .ASCSTR "Extra Trinket Slot", 0
+.ENDST
+
 Item.items:
     .dw Item.definitions.null
     .dw Item.definitions.sad_onion
@@ -393,6 +405,7 @@ Item.items:
     .dw Item.definitions.compass
     .dw Item.definitions.deck_of_cards
     .dw Item.definitions.brimstone
+    .dw Item.definitions.purse
     .REPT 256-11
         .dw Item.definitions.null
     .ENDR
@@ -420,6 +433,7 @@ Item.pool.shop:
     .db ITEMID_MAP
     .db ITEMID_COMPASS
     .db ITEMID_DECK_OF_CARDS
+    .db ITEMID_PURSE
     @end:
 
 Item.pool.devil:

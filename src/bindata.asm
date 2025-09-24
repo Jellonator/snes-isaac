@@ -105,13 +105,13 @@ DefaultUiData:
         .ELIF iy == 1
             .dw 0
             .dw 0
-            .dw deft($C6, 5) | T_HIGHP
-            .dw deft($C7, 5) | T_HIGHP
+            .dw deft($C6, 6) | T_HIGHP
+            .dw deft($C7, 6) | T_HIGHP
         .ELIF iy == 2
             .dw 0
             .dw 0
-            .dw deft($D6, 5) | T_HIGHP
-            .dw deft($D7, 5) | T_HIGHP
+            .dw deft($D6, 6) | T_HIGHP
+            .dw deft($D7, 6) | T_HIGHP
         .ELSE
             .dsw 4, 0
         .ENDIF

@@ -121,7 +121,39 @@ Render.UpdateHDMA:
     sta.w DMA7_SRCH
     sta.w DMA6_SRCH
     sta.w DMA5_SRCH
+; PALETTE BUFFER SCROLL
+    lda.w gamePauseTimer
+    cmp #$14
+    bcc @trinket_screen_normal
+    cmp #$18
+    bcc @trinket_screen_top
+        ldx #loword(hdmaPaletteBuffer_bg1_half1)
+        stx.w DMA5_SRCL
+        jmp @continue_hdma
+    @trinket_screen_top:
+        lda #1
+        sta.l hdmaPaletteBuffer.7.lines
+        sta.l hdmaPaletteBuffer.39.lines
+        ldx #loword(hdmaPaletteBuffer_trinket1)
+        stx.w DMA5_SRCL
+        jmp @continue_hdma
+    @trinket_screen_normal:
+    asl
+    asl
+    asl
+    sta.b coreDP+$1E
+    lda #162
+    sec
+    sbc.b coreDP+$1E
+    sta.b coreDP+$1E
+    lsr
+    sta.l hdmaPaletteBuffer.7.lines
+    lda.b coreDP+$1E
+    inc A
+    lsr
+    sta.l hdmaPaletteBuffer.39.lines
 ; HDMA ENABLE
+@continue_hdma:
     lda.w enableHDMA
     beq @skip_hdma
         lda #%11100000
@@ -185,7 +217,7 @@ Render.ClearHDMA:
 ; set up palette HDMA buffer
 ;  8 lines [  1,  8] buffer[ 0, 7]: last 8 colors of BG1
     .REPT 8 INDEX i
-        lda #(PALETTE_UI.1 >> 8) + i + 8
+        lda #(PALETTE_UI.2 >> 8) + i + 8
         sta.l hdmaPaletteBuffer.{i + 0}.cgaddr
     .ENDR
 ; 16 lines [ 88,104] buffer[ 8,23]: trinket palettes 1
@@ -195,7 +227,7 @@ Render.ClearHDMA:
     .ENDR
 ; 16 lines [105,120] buffer[24,39]: tinket palette 2
     .REPT 16 INDEX i
-        lda #(PALETTE_UI.1 >> 8) + i
+        lda #(PALETTE_UI.2 >> 8) + i
         sta.l hdmaPaletteBuffer.{i + 24}.cgaddr
     .ENDR
 ; 16 lines [201,216] buffer[40,55]: item palette
@@ -203,14 +235,14 @@ Render.ClearHDMA:
         lda #(PALETTE_UI.0 >> 8) + i
         sta.l hdmaPaletteBuffer.{i + 40}.cgaddr
     .ENDR
-;  8 lines [217,224] buffer[56,63]: first 8 colors of BG 1
+;  16 lines [217,232] buffer[56,71]: BG1
     .REPT 16 INDEX i
-        lda #(PALETTE_UI.1 >> 8) + i
+        lda #(PALETTE_UI.2 >> 8) + i
         sta.l hdmaPaletteBuffer.{i + 56}.cgaddr
     .ENDR
-; set line counts for buffer[8,63]
+; set line counts for buffer[8,71]
     lda #1
-    .REPT 64 INDEX i
+    .REPT 71 INDEX i
         sta.l hdmaPaletteBuffer.{i}.lines
     .ENDR
     lda #82
@@ -219,17 +251,17 @@ Render.ClearHDMA:
     sta.l hdmaPaletteBuffer.39.lines
 ; copy BG1 palette into buffer
     rep #$20
-    .REPT 8 INDEX i
-        lda.l palettes.ui_light + i*2
+    .REPT 16 INDEX i
+        lda.l palettes.ui_gold + i*2
         sta.l hdmaPaletteBuffer.{i + 56}.color
     .ENDR
     .REPT 8 INDEX i
-        lda.l palettes.ui_light + (i+8)*2
+        lda.l palettes.ui_gold + (i+8)*2
         sta.l hdmaPaletteBuffer.{i + 0}.color
     .ENDR
     ; end table
     lda #0
-    sta.l hdmaPaletteBuffer.64.lines
+    sta.l hdmaPaletteBuffer.72.lines
     rtl
 
 Render.HDMAEffect.Clear:

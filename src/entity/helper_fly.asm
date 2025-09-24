@@ -11,7 +11,7 @@
 
 .DEFINE TARGET_DISTANCE 40*$0100
 
-.DEFINE D_LENGTH 12*$100
+.DEFINE D_LENGTH 14*$100
 
 _target_player_offset_x:
     .dw cos((0.0 / 8.0) * TAU) * D_LENGTH + 8*$100
@@ -24,14 +24,14 @@ _target_player_offset_x:
     .dw cos((7.0 / 8.0) * TAU) * D_LENGTH + 8*$100
 
 _target_player_offset_y:
-    .dw sin((0.0 / 8.0) * TAU) * D_LENGTH
-    .dw sin((4.0 / 8.0) * TAU) * D_LENGTH
-    .dw sin((2.0 / 8.0) * TAU) * D_LENGTH
-    .dw sin((6.0 / 8.0) * TAU) * D_LENGTH
-    .dw sin((1.0 / 8.0) * TAU) * D_LENGTH
-    .dw sin((5.0 / 8.0) * TAU) * D_LENGTH
-    .dw sin((3.0 / 8.0) * TAU) * D_LENGTH
-    .dw sin((7.0 / 8.0) * TAU) * D_LENGTH
+    .dw sin((0.0 / 8.0) * TAU) * D_LENGTH + 8*$100
+    .dw sin((4.0 / 8.0) * TAU) * D_LENGTH + 8*$100
+    .dw sin((2.0 / 8.0) * TAU) * D_LENGTH + 8*$100
+    .dw sin((6.0 / 8.0) * TAU) * D_LENGTH + 8*$100
+    .dw sin((1.0 / 8.0) * TAU) * D_LENGTH + 8*$100
+    .dw sin((5.0 / 8.0) * TAU) * D_LENGTH + 8*$100
+    .dw sin((3.0 / 8.0) * TAU) * D_LENGTH + 8*$100
+    .dw sin((7.0 / 8.0) * TAU) * D_LENGTH + 8*$100
 
 entity_helper_fly_init:
     .ACCU 16
@@ -268,7 +268,7 @@ entity_helper_fly_tick:
     clc
     adc.w entity_posy+1,Y
     sta.w loword(entity_ysort),Y
-    sbc #4
+    sbc #12
     sta.w objectData.1.pos_y,X
     inx
     inx

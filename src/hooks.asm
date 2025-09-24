@@ -7,7 +7,6 @@ Hook.PlayerDamage:
     sep #$30
     ; fish head
     .PlayerHasTrinketEffect TRINKET_FISH_HEAD
-    lda #1
     beq +
         lda #2
         jsl HelperFly.Add

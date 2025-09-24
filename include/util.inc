@@ -240,6 +240,9 @@
 
 ; MATH
 
+.DEFINE PI 3.1415925535
+.DEFINE TAU (2 * PI)
+
 ; Generic signed MAXIMUM
 .MACRO .AMAX ARGS method arg
     sec

@@ -432,6 +432,7 @@ PlayerInit:
     stz.w playerData.current_active_charge
     stz.w playerData.helperFlyBufferCount
     stz.w playerData.helperFlyActiveCount
+    stz.w playerData.helperFlyPositionMask
     lda #0
     jsl Item.set_active
     jsl UI.update_charge_display

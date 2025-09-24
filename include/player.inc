@@ -108,4 +108,5 @@
 ; helpers
     helperFlyBufferCount db
     helperFlyActiveCount db
+    helperFlyPositionMask db
 .ENDST

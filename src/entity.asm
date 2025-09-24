@@ -704,27 +704,27 @@ Entity.Enemy.DirectTargetPlayer:
 _directtargetentity_x_is_zero:
     .ACCU 8
     .INDEX 8
-    lda #64
-    xba
     lda.w entity_box_y1,Y
     cmp.w entity_box_y1,X
     bcc +
         lda #192
-        xba
+        sta.b entityTargetAngle
+        rtl
     +:
-    xba
+    lda #64
     sta.b entityTargetAngle
     rtl
 _directtargetentity_y_is_zero:
     .ACCU 8
     .INDEX 8
-    stz.b entityTargetAngle
     lda.w entity_box_x1,Y
     cmp.w entity_box_x1,X
     bcc +
         lda #128
         sta.b entityTargetAngle
+        rtl
     +:
+    stz.b entityTargetAngle
     rtl
 Entity.Enemy.DirectTargetEntity:
 ; get dx
@@ -745,6 +745,79 @@ Entity.Enemy.DirectTargetEntity:
     sec
     sbc.w entity_box_y1,X
     beq _directtargetentity_y_is_zero
+    bcs +
+        eor #$FF
+        inc A
+    +:
+    sta.b $01
+    rol.b $00
+; calculate log(dx) - log(dy)
+    ldx.b $02
+    lda.l Log2Mult32Table8,X
+    ldx.b $01
+    sec
+    sbc.l Log2Mult32Table8,X
+    bcc +
+        eor #$FF
+        inc A
+    +:
+    tax
+    rol.b $00
+; calculate atan
+    lda.l AtanLogTable8,X
+    ldx.b $00
+    eor.l AtanOctantAdjustTable8,X
+    sta.b entityTargetAngle
+    lda #1
+    sta.b entityTargetFound
+    rtl
+
+; Set target direction to angle between [Y] and given position.
+; Position is x=[tempDP+$00]: uint16, y=[tempDP+$02]: uint16
+_directtargetposition_x_is_zero:
+    .ACCU 8
+    .INDEX 8
+    lda.w entity_box_y1,Y
+    cmp.b tempDP+$03
+    bcc +
+        lda #192
+        sta.b entityTargetAngle
+        rtl
+    +:
+    lda #64
+    sta.b entityTargetAngle
+    rtl
+_directtargetposition_y_is_zero:
+    .ACCU 8
+    .INDEX 8
+    lda.w entity_box_x1,Y
+    cmp.b tempDP+$01
+    bcc +
+        lda #128
+        sta.b entityTargetAngle
+        rtl
+    +:
+    stz.b entityTargetAngle
+    rtl
+Entity.Enemy.DirectTargetPosition:
+; get dx
+    sep #$30
+    stz.b $00
+    lda.w entity_box_x1,Y
+    sec
+    sbc.b tempDP+$01
+    beq _directtargetposition_x_is_zero
+    bcs +
+        eor #$FF
+        inc A
+    +:
+    sta.b $02
+    rol.b $00
+; get dy
+    lda.w entity_box_y1,Y
+    sec
+    sbc.b tempDP+$03
+    beq _directtargetposition_y_is_zero
     bcs +
         eor #$FF
         inc A

@@ -20,6 +20,8 @@ entity_basic_fly_init:
     rep #$20
     lda #BASE_HEALTH
     sta.w entity_health,Y
+    lda #ENTITY_FLAGS_NEAREST_ENEMY_TARGET
+    sta.w loword(entity_flags),Y
     ; load sprite
     lda #sprite.enemy.attack_fly.0
     phy

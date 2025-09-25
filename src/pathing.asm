@@ -378,8 +378,8 @@ Pathing.UpdateEnemyNearest:
 @loop_entities:
         ldx.b tile
         ldy.w entityExecutionOrder-1,X
-        lda.w entity_mask,Y
-        and #ENTITY_MASK_TEAR
+        lda.w loword(entity_flags),Y
+        and #ENTITY_FLAGS_NEAREST_ENEMY_TARGET
         beq @skip_entity
         ; get index
         lda.w entity_box_x1,Y

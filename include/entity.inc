@@ -195,6 +195,8 @@
 .DEFINE ENTITY_FLAGS_DONT_SERIALIZE $0001
 ; Indicates that this entity blocks other entities from entering this tile
 .DEFINE ENTITY_FLAGS_BLOCKING $0002
+; Indicates that this entity should appear as a homing projectile pathfinding target
+.DEFINE ENTITY_FLAGS_NEAREST_ENEMY_TARGET $0004
 
 ; COLLISION
 

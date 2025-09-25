@@ -284,9 +284,11 @@ entity_boss_duke_of_flies_init:
     lda #BASE_HP
     sta.w entity_health,Y
     sta.w loword(entity_char_max_health),Y
+    lda #ENTITY_FLAGS_NEAREST_ENEMY_TARGET
+    sta.w loword(entity_flags),Y
+    sep #$20
     lda #10
     sta.w entity_timer,Y
-    sep #$20
     lda #0
     sta.w entity_signal,Y
     sta.w entity_mask,Y

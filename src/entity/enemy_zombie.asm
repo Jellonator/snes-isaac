@@ -544,6 +544,8 @@ entity_zombie_init:
     sta.w _zombie_gfxptr.2,Y
     ; call init function
     rep #$30
+    lda #ENTITY_FLAGS_NEAREST_ENEMY_TARGET
+    sta.w loword(entity_flags),Y
     jsl EntityZombie.init
     rts
 

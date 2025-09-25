@@ -123,7 +123,7 @@ Render.UpdateHDMA:
     sta.w DMA5_SRCH
 ; PALETTE BUFFER SCROLL
     lda.w gamePauseTimer
-    cmp #$14
+    cmp #$13
     bcc @trinket_screen_normal
     cmp #$18
     bcc @trinket_screen_top

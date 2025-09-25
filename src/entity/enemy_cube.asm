@@ -188,7 +188,7 @@ entity_enemy_cube_init:
     sta.w entity_state,Y
     sta.w _current_rotation,Y
     rep #$20
-    lda #ENTITY_FLAGS_BLOCKING
+    lda #ENTITY_FLAGS_BLOCKING | ENTITY_FLAGS_NEAREST_ENEMY_TARGET
     sta.w loword(entity_flags),Y
     ; end
     rts

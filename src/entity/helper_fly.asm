@@ -13,25 +13,15 @@
 
 .DEFINE D_LENGTH 14*$100
 
-_target_player_offset_x:
-    .dw cos((0.0 / 8.0) * TAU) * D_LENGTH + 8*$100
-    .dw cos((4.0 / 8.0) * TAU) * D_LENGTH + 8*$100
-    .dw cos((2.0 / 8.0) * TAU) * D_LENGTH + 8*$100
-    .dw cos((6.0 / 8.0) * TAU) * D_LENGTH + 8*$100
-    .dw cos((1.0 / 8.0) * TAU) * D_LENGTH + 8*$100
-    .dw cos((5.0 / 8.0) * TAU) * D_LENGTH + 8*$100
-    .dw cos((3.0 / 8.0) * TAU) * D_LENGTH + 8*$100
-    .dw cos((7.0 / 8.0) * TAU) * D_LENGTH + 8*$100
-
-_target_player_offset_y:
-    .dw sin((0.0 / 8.0) * TAU) * D_LENGTH + 8*$100
-    .dw sin((4.0 / 8.0) * TAU) * D_LENGTH + 8*$100
-    .dw sin((2.0 / 8.0) * TAU) * D_LENGTH + 8*$100
-    .dw sin((6.0 / 8.0) * TAU) * D_LENGTH + 8*$100
-    .dw sin((1.0 / 8.0) * TAU) * D_LENGTH + 8*$100
-    .dw sin((5.0 / 8.0) * TAU) * D_LENGTH + 8*$100
-    .dw sin((3.0 / 8.0) * TAU) * D_LENGTH + 8*$100
-    .dw sin((7.0 / 8.0) * TAU) * D_LENGTH + 8*$100
+_target_player_base_angle:
+    .db 7*(256 / 8)
+    .db 3*(256 / 8)
+    .db 5*(256 / 8)
+    .db 1*(256 / 8)
+    .db 6*(256 / 8)
+    .db 2*(256 / 8)
+    .db 4*(256 / 8)
+    .db 0*(256 / 8)
 
 entity_helper_fly_init:
     .ACCU 16
@@ -124,15 +114,20 @@ entity_helper_fly_tick:
     @no_target_entity:
         .ACCU 16
         .INDEX 8
-        lda.w _position_angle_index,Y
-        asl
-        tax
-        lda.w player_posx
+        ldx.w _position_angle_index,Y
+        lda.l _target_player_base_angle,X
         clc
-        adc.l _target_player_offset_x,X
+        adc.w tickCounter
+        tax
+        lda.l CosTable8-1,X
+        .ShiftRight_SIGN 3, 0
+        adc.w player_posx
+        adc #8*$0100
         sta.b tempDP+$00
-        lda.w player_posy
-        adc.l _target_player_offset_y,X
+        lda.l SinTable8-1,X
+        .ShiftRight_SIGN 3, 0
+        adc.w player_posy
+        adc #8*$0100
         sta.b tempDP+$02
     ; check for target in range
         ; get nearest enemy ID
@@ -193,6 +188,7 @@ entity_helper_fly_tick:
     lda.l Log2Table8,X
     xba
     lsr
+    lsr
     plp
     bcs +
         .NEG_A16
@@ -218,6 +214,7 @@ entity_helper_fly_tick:
     tax
     lda.l Log2Table8,X
     xba
+    lsr
     lsr
     plp
     bcs +
@@ -338,8 +335,10 @@ HelperFly.Tick:
     lda.w player_velocy
     sta.w entity_velocy,Y
     lda.w player_posx
+    adc #8*$0100
     sta.w entity_posx,Y
     lda.w player_posy
+    adc #8*$0100
     sta.w entity_posy,Y
     rtl
 

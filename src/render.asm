@@ -242,7 +242,7 @@ Render.ClearHDMA:
     .ENDR
 ; set line counts for buffer[8,71]
     lda #1
-    .REPT 71 INDEX i
+    .REPT 72 INDEX i
         sta.l hdmaPaletteBuffer.{i}.lines
     .ENDR
     lda #82

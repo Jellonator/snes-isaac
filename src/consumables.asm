@@ -119,7 +119,7 @@
     name: .ASCSTR "Death", 0
     tagline: .ASCSTR "Lay waste to your opponents", 0
     sprite_ptr: .dl spritedata.tarot_cards_big.13
-    sprite_palette: .dw loword(palettes.tarot_cards1)
+    sprite_palette: .dw loword(palettes.tarot_cards_death)
     on_use: .dl _empty_use
 .ENDST
 

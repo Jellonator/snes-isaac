@@ -1489,10 +1489,65 @@ _cheat_action_tick_item_remove:
 
 ; CONSUMABLE
 
+_cheat_action_consumable_render:
+    rep #$30
+    lda.l playerData.current_consumable
+    and #$00FF
+    jsl ConvertBinaryToDecimalU16
+    jsr _cheat_write_decimal_view
+    rep #$30
+    lda.l playerData.current_consumable
+    and #$00FF
+    asl
+    tax
+    lda.l Consumable.consumables,X
+    clc
+    adc #consumable_t.name
+    sta.b $00
+    lda #bankbyte(Consumable.consumables)
+    sta.b $02
+    jsr _cheat_write_text_view
+    rts
+
 _cheat_action_begin_consumable_set:
+    rep #$30
+    jsr _cheat_action_consumable_render
     rts
 
 _cheat_action_tick_consumable_set:
+    rep #$30
+    lda.w joy1press
+    bit #JOY_RIGHT
+    beq @no_right
+        sep #$20
+        lda.l playerData.current_consumable
+        inc A
+        cmp #CONSUMABLE_COUNT
+        bcc +
+            lda #0
+        +:
+        sta.l playerData.current_consumable
+        jsr _cheat_action_consumable_render
+        jsl Consumable.update_display_no_overlay
+        rep #$30
+    @no_right:
+    .ACCU 16
+    lda.w joy1press
+    bit #JOY_LEFT
+    beq @no_left
+        sep #$20
+        lda.l playerData.current_consumable
+        dec A
+        cmp #CONSUMABLE_COUNT
+        bcc +
+            lda #CONSUMABLE_COUNT-1
+        +:
+        sta.l playerData.current_consumable
+        jsr _cheat_action_consumable_render
+        jsl Consumable.update_display_no_overlay
+        rep #$30
+    @no_left:
+    .ACCU 16
     rts
 
 ; MONEY

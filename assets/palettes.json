@@ -172,6 +172,10 @@
         "src": "assets/palettes/consumable/tarot_cards_hermit.hex"
     },
     {
+        "name": "tarot_cards_death",
+        "src": "assets/palettes/consumable/tarot_cards_death.hex"
+    },
+    {
         "name": "tilesprite_fire_normal",
         "src": "assets/palettes/tilesprite_fire_normal.hex"
     },

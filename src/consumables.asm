@@ -55,7 +55,7 @@
     name: .ASCSTR "The Hierophant", 0
     tagline: .ASCSTR "Two prayers for the lost", 0
     sprite_ptr: .dl spritedata.tarot_cards_big.5
-    sprite_palette: .dw loword(palettes.tarot_cards1)
+    sprite_palette: .dw loword(palettes.tarot_cards_hierophant)
     on_use: .dl _empty_use
 .ENDST
 
@@ -71,7 +71,7 @@
     name: .ASCSTR "The Chariot", 0
     tagline: .ASCSTR "May nothing stand before you", 0
     sprite_ptr: .dl spritedata.tarot_cards_big.7
-    sprite_palette: .dw loword(palettes.tarot_cards1)
+    sprite_palette: .dw loword(palettes.tarot_cards_chariot)
     on_use: .dl _empty_use
 .ENDST
 
@@ -79,7 +79,7 @@
     name: .ASCSTR "Strength", 0
     tagline: .ASCSTR "May your power bring rage", 0
     sprite_ptr: .dl spritedata.tarot_cards_big.8
-    sprite_palette: .dw loword(palettes.tarot_cards1)
+    sprite_palette: .dw loword(palettes.tarot_cards_strength)
     on_use: .dl _empty_use
 .ENDST
 
@@ -135,7 +135,7 @@
     name: .ASCSTR "The Devil", 0
     tagline: .ASCSTR "Revel in dark power", 0
     sprite_ptr: .dl spritedata.tarot_cards_big.15
-    sprite_palette: .dw loword(palettes.tarot_cards1)
+    sprite_palette: .dw loword(palettes.tarot_cards_devil)
     on_use: .dl _empty_use
 .ENDST
 
@@ -143,7 +143,7 @@
     name: .ASCSTR "The Tower", 0
     tagline: .ASCSTR "Destruction brings creation", 0
     sprite_ptr: .dl spritedata.tarot_cards_big.16
-    sprite_palette: .dw loword(palettes.tarot_cards1)
+    sprite_palette: .dw loword(palettes.tarot_cards_tower)
     on_use: .dl _empty_use
 .ENDST
 
@@ -183,7 +183,7 @@
     name: .ASCSTR "The World", 0
     tagline: .ASCSTR "May you find your way", 0
     sprite_ptr: .dl spritedata.tarot_cards_big.21
-    sprite_palette: .dw loword(palettes.tarot_cards1)
+    sprite_palette: .dw loword(palettes.tarot_cards_world)
     on_use: .dl _empty_use
 .ENDST
 

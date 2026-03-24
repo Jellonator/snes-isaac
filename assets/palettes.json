@@ -164,6 +164,14 @@
         "src": "assets/palettes/consumable/tarot_cards_star.hex"
     },
     {
+        "name": "tarot_cards_moon",
+        "src": "assets/palettes/consumable/tarot_cards_moon.hex"
+    },
+    {
+        "name": "tarot_cards_hanged_man",
+        "src": "assets/palettes/consumable/tarot_cards_hanged_man.hex"
+    },
+    {
         "name": "tarot_cards_wheel_of_fortune",
         "src": "assets/palettes/consumable/tarot_cards_wheel_of_fortune.hex"
     },
@@ -198,6 +206,10 @@
     {
         "name": "tarot_cards_chariot",
         "src": "assets/palettes/consumable/tarot_cards_chariot.hex"
+    },
+    {
+        "name": "tarot_cards_justice",
+        "src": "assets/palettes/consumable/tarot_cards_justice.hex"
     },
     {
         "name": "tilesprite_fire_normal",

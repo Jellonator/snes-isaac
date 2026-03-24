@@ -103,7 +103,7 @@
     name: .ASCSTR "Justice", 0
     tagline: .ASCSTR "May your future be balanced", 0
     sprite_ptr: .dl spritedata.tarot_cards_big.11
-    sprite_palette: .dw loword(palettes.tarot_cards1)
+    sprite_palette: .dw loword(palettes.tarot_cards_justice)
     on_use: .dl _empty_use
 .ENDST
 
@@ -159,7 +159,7 @@
     name: .ASCSTR "The Moon", 0
     tagline: .ASCSTR "May you find what you lost", 0
     sprite_ptr: .dl spritedata.tarot_cards_big.18
-    sprite_palette: .dw loword(palettes.tarot_cards1)
+    sprite_palette: .dw loword(palettes.tarot_cards_moon)
     on_use: .dl _tarot_moon
 .ENDST
 

@@ -12,6 +12,7 @@
     mapgenAvailableTiles INSTANCEOF maptilepos_t MAX_MAP_SLOTS
     mapgenUsedTiles INSTANCEOF maptilepos_t MAX_MAP_SLOTS
     currentRoomPoolBase dl
+    chapterDefPtr dw
 .ENDE
 
 .DEFINE TempDoorMask $20
@@ -660,19 +661,21 @@ MapGen.SetupRoomX:
     @room_normal:
         ; normal room type
         sep #$30
-        lda #bankbyte(RoomPoolDefinitions@floor_basement)
+        lda #bankbyte(RoomPoolDefinitions)
         sta.b currentRoomPoolBase+2
         rep #$30 ; 16b AXY
-        lda #loword(RoomPoolDefinitions@floor_basement)
+        ldx.b chapterDefPtr
+        lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.roompoolMain,X
         sta.b currentRoomPoolBase
         bra @end
     @room_boss:
         ; normal room type
         sep #$30
-        lda #bankbyte(RoomPoolDefinitions@boss_basement)
+        lda #bankbyte(RoomPoolDefinitions)
         sta.b currentRoomPoolBase+2
         rep #$30 ; 16b AXY
-        lda #loword(RoomPoolDefinitions@boss_basement)
+        ldx.b chapterDefPtr
+        lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.roompoolBoss,X
         sta.b currentRoomPoolBase
         bra @end
     @room_item:
@@ -881,18 +884,6 @@ BeginMapGeneration:
     and #$03
     clc
     adc #6 ; X: [6-9]
-    ; sta.b start_pos
-    ; jsl StageRand_Update4
-    ; sep #$30 ; 8 bit AXY
-    ; and #$01
-    ; clc
-    ; adc #2 ; Y: [2-3]
-    ; asl
-    ; asl
-    ; asl
-    ; asl
-    ; clc
-    ; adc.b start_pos
     lda #(8 + 8*16)
     sta.b start_pos
     sta.w loadedRoomIndex
@@ -905,6 +896,17 @@ BeginMapGeneration:
     lda.b start_pos
     jsr _PushAdjacentEmptyTilesA
     rep #$30
+    ; get chapter definition pointer
+    lda.l currentFloorPointer
+    tax
+    lda.l FLOOR_DEFINITION_BASE + floordefinition_t.chapter,X
+    and #$00FF
+    asl
+    tax
+    lda.l ChapterDefinitions,X
+    sta.b chapterDefPtr
+
+    ; determine number of rooms to generate
     lda.l currentFloorPointer
     tax
     lda.l FLOOR_DEFINITION_BASE + floordefinition_t.size,X

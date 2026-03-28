@@ -206,6 +206,8 @@ _Floor_Update_Graphics:
 
 ; DATA
 
+; TRUE 'CHAPTER' DEFINITIONS
+
 ; Basement
 .DSTRUCT ChapterDefinition_Basement INSTANCEOF chapterdefinition_t VALUES
     name: .ASCSTR "The Basement\0"
@@ -217,6 +219,8 @@ _Floor_Update_Graphics:
     tiledata: .dl spritedata.stage.basement
     ground: .dl spritedata.stage.basement_ground_base
     groundPalette: .dw 2 * $0400
+    roompoolMain: .dw RoomPoolDefinitions@floor_basement
+    roompoolBoss: .dw RoomPoolDefinitions@boss_basement
 .ENDST
 
 ; Caves
@@ -230,7 +234,11 @@ _Floor_Update_Graphics:
     tiledata: .dl spritedata.stage.caves
     ground: .dl spritedata.stage.caves_ground
     groundPalette: .dw 2 * $0400
+    roompoolMain: .dw RoomPoolDefinitions@floor_basement
+    roompoolBoss: .dw RoomPoolDefinitions@boss_basement
 .ENDST
+
+; PER-ROOM CHAPTERS (only used to define gfx for specific rooms)
 
 .DSTRUCT ChapterDefinition_SecretRoom INSTANCEOF chapterdefinition_t VALUES
     name: .ASCSTR "Secret Room\0"
@@ -258,10 +266,14 @@ _Floor_Update_Graphics:
 
 ChapterDefinitions:
     .dw ChapterDefinition_Basement ; null chapter
+    ; true chapters
     .dw ChapterDefinition_Basement
     .dw ChapterDefinition_Caves
+    ; fake chapters
     .dw ChapterDefinition_SecretRoom
     .dw ChapterDefinition_DevilRoom
+
+; FLOOR DEFINITIONS
 
 ; Basement I
 .DSTRUCT FloorDefinition_Basement1 INSTANCEOF floordefinition_t VALUES

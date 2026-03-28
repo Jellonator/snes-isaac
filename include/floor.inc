@@ -23,6 +23,8 @@
     tiledata dl
     ground dl
     groundPalette dw
+    roompoolMain dw
+    roompoolBoss dw
 .ENDST
 
 ; ROOMGEN FLOOR

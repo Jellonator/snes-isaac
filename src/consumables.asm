@@ -111,7 +111,7 @@
     name: .ASCSTR "The Hanged Man", 0
     tagline: .ASCSTR "May you find enlightenment", 0
     sprite_ptr: .dl spritedata.tarot_cards_big.12
-    sprite_palette: .dw loword(palettes.tarot_cards1)
+    sprite_palette: .dw loword(palettes.tarot_cards_hanged_man)
     on_use: .dl _empty_use
 .ENDST
 

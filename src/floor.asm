@@ -29,6 +29,7 @@ _Floor_Begin:
     ; init player
     jsl PlayerEnterFloor
     ; put overlay
+    jsl Overlay.clear
     rep #$30
     lda.l currentFloorIndex
     asl

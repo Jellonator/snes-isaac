@@ -908,8 +908,8 @@ BeginMapGeneration:
     lda.l currentFloorPointer
     tax
     lda.l FLOOR_DEFINITION_BASE + floordefinition_t.size,X
-    ; SANITY CHECK: limit size
-    .AMAXU P_IMM (MAX_MAP_SLOTS-4)
+    ; SANITY CHECK: limit size. Only generate up to 24 normal rooms, leaving 8 slots for special rooms.
+    .AMAXU P_IMM (MAX_MAP_SLOTS-8)
     dec A
     tay
     sep #$30

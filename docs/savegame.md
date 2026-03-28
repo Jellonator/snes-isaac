@@ -87,6 +87,11 @@ We can encode a termination value with T=0, r=0
 With this, we'd be able to have three save slots on 32KB SRAM, but we'd run some risks.
 I'd hate for the trapdoor to next floor to not be serialized. Maybe we need a priority system?
 
+## Saving differences
+
+Rooms are most likely to be exactly the same as when they were generated.
+We could try storing the *differences* in tile types.
+
 ## Reducing limits
 
 Base isaac generates up to 25 rooms, assuming:

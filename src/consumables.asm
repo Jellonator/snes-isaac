@@ -429,6 +429,9 @@ Consumable.update_display:
     and #$00FF
     beq @no_put_text
         phb
+        php
+        jsl Overlay.clear
+        plp
         .ChangeDataBank bankbyte(Consumable.consumables)
         lda $02,S
         clc

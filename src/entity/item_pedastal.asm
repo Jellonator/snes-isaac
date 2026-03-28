@@ -536,6 +536,7 @@ _do_item_pickup:
     lda #30
     jsl Player.set_body_frame
     ; display pickup text
+    jsl Overlay.clear
     rep #$30
     lda $02,S
     and #$00FF

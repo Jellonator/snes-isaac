@@ -42,6 +42,10 @@ String.len:
 
 Overlay.clear:
     rep #$30
+    lda.l textLines
+    bne +
+        rtl
+    +:
     ; get vqueue ptr
     lda.l vqueueNumOps
     inc A

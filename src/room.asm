@@ -14,62 +14,63 @@ _room_spawn_entities:
     rep #$30 ; 16B AXY
     lda #ENTITY_CONTEXT_INIT_ROOMLOAD
     sta.b entityExecutionContext
-    lda.b currentRoomDefinition
-    tax
-    lda.l ROOM_DEFINITION_BASE + roomdefinition_t.numObjects,X
+    ldy #roomdefinition_t.numObjects
+    lda [currentRoomDefinition],Y
     and #$00FF
-    tay ; Y = num entities
+    tax ; X = num entities
     beq @end
-    txa
-    clc
-    adc #_sizeof_roomdefinition_t
-    tax
+    ldy #_sizeof_roomdefinition_t ; Y = entity definition pointer
 @loop:
     ; Get and create entity
-    phy ; >2
     phx ; >2
-    lda ROOM_DEFINITION_BASE + objectdef_t.objectType,X
+    phy ; >2
+    lda [currentRoomDefinition],Y ; get object type
     and #$00FF
-    ; .MultiplyStatic 2
     tax
     sep #$20
     lda.l EntityDef_SpawnGroup,X
     cmp $03 + 4,S
     rep #$20
     bcc @no_spawn
-        plx ; <2
-        lda.l ROOM_DEFINITION_BASE + objectdef_t.objectType,X
-        phx ; >2
+        ply ; <2
+        lda [currentRoomDefinition],Y ; get object type, again
+        phy ; >2
         jsl entity_create
         rep #$30
-        plx ; <2
-        ; clear some base info
+        tyx ; put entity ID into X
+        ply ; <2 - put entity definition into Y
+        phy ; >2
+        ; clear lower byte of X,Y positions
         lda #0
-        sta.w entity_posx,Y
-        sta.w entity_posy,Y
+        sta.w entity_posx,X
+        sta.w entity_posy,X
         ; set X,Y
         sep #$20 ; 8B A
-        lda ROOM_DEFINITION_BASE + objectdef_t.x,X ; X coord
+        iny
+        iny
+        lda [currentRoomDefinition],Y ; X coord
         clc
         adc #ROOM_LEFT
-        sta.w entity_posx+1,Y
-        lda ROOM_DEFINITION_BASE + objectdef_t.y,X ; Y coord
+        sta.w entity_posx+1,X
+        iny
+        lda [currentRoomDefinition],Y ; Y coord
         clc
         adc #ROOM_TOP
-        sta.w entity_posy+1,Y
+        sta.w entity_posy+1,X
         rep #$30
-        phx ; >2
+        ; put entity ID back into Y, and init
+        txy
         jsl entity_init
         rep #$30
     @no_spawn:
-    plx ; <2
     ply ; <2
-    dey
+    plx ; <2
+    dex
     beq @end
-    inx
-    inx
-    inx
-    inx
+    iny
+    iny
+    iny
+    iny
     bra @loop
 @end:
 ; deserialize entities

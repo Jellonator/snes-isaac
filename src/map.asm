@@ -27,6 +27,8 @@ InitializeRoomSlot:
     tax
     lda $04,s
     sta.l roomSlotTiles.1.roomDefinition,X
+    lda $05,s
+    sta.l roomSlotTiles.1.roomDefinition+1,X
     sep #$20 ; 8 bit A, 16 bit XY
     ; write tile position
     lda $08,s
@@ -96,6 +98,8 @@ LoadRoomSlotIntoLevel:
     tax
     lda.l roomSlotTiles.1.roomDefinition,X
     sta.b currentRoomDefinition ; $0A: roomDefinition
+    lda.l roomSlotTiles.1.roomDefinition+1,X
+    sta.b currentRoomDefinition+1
     txa
     clc
     adc #loword(roomSlotTiles) + roominfo_t.tileTypeTable
@@ -111,8 +115,8 @@ LoadRoomSlotIntoLevel:
     sta.b currentRoomRngAddress_High
     ; determine current ground data
     rep #$30
-    ldx.w currentRoomDefinition
-    lda.l ROOM_DEFINITION_BASE + roomdefinition_t.chapterOverride,X
+    ldy #roomdefinition_t.chapterOverride
+    lda [currentRoomDefinition],Y
     and #$00FF
     bne +
         ldx.w currentFloorPointer
@@ -1478,8 +1482,8 @@ TransitionRoomIndex:
         bpl @loop
     ; get floor pointer
     rep #$30
-    ldx.w currentRoomDefinition
-    lda.l ROOM_DEFINITION_BASE + roomdefinition_t.chapterOverride,X
+    ldy #roomdefinition_t.chapterOverride
+    lda [currentRoomDefinition],Y
     and #$00FF
     bne +
         ldx.w currentFloorPointer

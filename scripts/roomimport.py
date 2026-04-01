@@ -129,8 +129,8 @@ for room in rooms:
             x = int(obj.coordinates.x)
             y = int(obj.coordinates.y - obj.size.height)
             out_inc.write("\t\t.DSTRUCT INSTANCEOF objectdef_t VALUES\n")
-            out_inc.write("\t\t\tx: .db {}\n\t\t\ty: .db {}\n".format(x, y))
             out_inc.write("\t\t\tobjectType: .dw {}\n".format(tiledIdsToObjectIds[tileid]))
+            out_inc.write("\t\t\tx: .db {}\n\t\t\ty: .db {}\n".format(x, y))
             out_inc.write("\t\t.ENDST\n")
         else:
             raise RuntimeError("Invalid object in object layer in {}".format(room))

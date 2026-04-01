@@ -55,7 +55,7 @@
     ; tile[97] is a solid block
     tileTypeTable INSTANCEOF byte_t ROOM_TILE_COUNT + 2
     tileVariantTable INSTANCEOF byte_t ROOM_TILE_COUNT + 2
-    roomDefinition dw
+    roomDefinition dl
     entityStoreTable INSTANCEOF entitystore_t ENTITY_STORE_COUNT
     rng INSTANCEOF rng_t
 .ENDST
@@ -79,9 +79,9 @@
 ; ROOMGEN OBJECT DEFINITION
 ; Structure which defines object spawning rules
 .STRUCT objectdef_t
+    objectType dw
     x db
     y db
-    objectType dw
 .ENDST
 
 ; ROOMGEN ROOM DEFINITION

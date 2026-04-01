@@ -287,6 +287,8 @@ Save.WriteRoom:
 ; room def
     lda.l roomSlotTiles.1.roomDefinition,X
     sta.w savestate.0.rooms.1.definition,Y
+    lda.l roomSlotTiles.1.roomDefinition+1,X
+    sta.w savestate.0.rooms.1.definition+1,Y
 ; RNG
     lda.l roomSlotTiles.1.rng.low,X
     sta.w savestate.0.rooms.1.rng.low,Y
@@ -631,6 +633,8 @@ Save.ReadRoom:
 ; room def
     lda.w savestate.0.rooms.1.definition,Y
     sta.l roomSlotTiles.1.roomDefinition,X
+    lda.w savestate.0.rooms.1.definition+1,Y
+    sta.l roomSlotTiles.1.roomDefinition+1,X
 ; RNG
     lda.w savestate.0.rooms.1.rng.low,Y
     sta.l roomSlotTiles.1.rng.low,X

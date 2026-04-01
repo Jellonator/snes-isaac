@@ -74,7 +74,7 @@
         - [ ] change room
         - [X] give/take item
         - [ ] give/take coins, bombs, keys
-        - [ ] change pocket item
+        - [X] change pocket item
         - [ ] change trinket
         - [ ] spawn entities
     * [X] Show stats in pause menu

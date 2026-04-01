@@ -1,7 +1,7 @@
 .STRUCT savestate_room_t
     roomtype db
     rng INSTANCEOF rng_t
-    definition dw
+    definition dl
     ; map data
     maptile_pos INSTANCEOF maptilepos_t
     maptile_type db

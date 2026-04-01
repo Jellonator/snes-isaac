@@ -715,7 +715,7 @@ MapGen.SetupRoomX:
         sta.b currentRoomPoolBase
         bra @end
     @room_empty:
-        ; empty room type
+        ; empty room type (starting room)
         sep #$30
         lda #bankbyte(RoomPoolDefinitions@type_start)
         sta.b currentRoomPoolBase+2

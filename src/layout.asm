@@ -11,7 +11,7 @@
     ; map position of the currently loaded room
     loadedRoomIndex INSTANCEOF maptilepos_t
     ; Definition for current room
-    currentRoomDefinition dw
+    currentRoomDefinition dl
     ; quick-read table for the current room's tile types
     currentRoomTileTypeTableAddress dl
     ; quick-read table for the current room's tile variants

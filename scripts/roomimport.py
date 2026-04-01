@@ -59,9 +59,8 @@ for pool in json_roompools:
     for room in pool["rooms"]:
         rooms.add(room)
 
-out_inc.write(".BANK $02 SLOT \"ROM\"\n")
-out_inc.write(".SECTION \"RoomDefinitions\" FREE\n")
-out_inc.write("RoomDefinitions:\n")
+maxbank="31"
+minbank="02"
 
 roomPathToId = {}
 
@@ -72,12 +71,14 @@ def getTilesetForGid(map: pytiled_parser.TiledMap, gid: int) -> Tuple[pytiled_pa
     raise RuntimeError("Invalid GID ${:02X} in map".format(gid))
 
 for room in rooms:
-    # could probably improve this heehoo
     room_id = room.replace('.tmx', '').replace('/', '_')
-    roomPathToId[room] = "RoomDefinitions@{}".format(room_id)
+    out_inc.write(".BANK {} SLOT \"ROM\"\n".format(minbank))
+    out_inc.write(".SECTION \"IMPORTED_ROOM_{}\" SEMISUPERFREE BANKS {}-{}\n".format(room_id,maxbank,minbank))
+    room_ref = "RoomDefinition.{}".format(room_id)
+    roomPathToId[room] = room_ref
     room_path = os.path.join("assets/rooms", room)
     tilemap = pytiled_parser.parser.parse_map(Path(room_path))
-    out_inc.write("\t.DSTRUCT @{} INSTANCEOF roomdefinition_t VALUES\n".format(room_id))
+    out_inc.write("\t.DSTRUCT {} INSTANCEOF roomdefinition_t VALUES\n".format(room_ref))
     dirls = []
     if tilemap.properties["up"]:
         dirls.append("DOOR_DEF_UP")
@@ -101,7 +102,6 @@ for room in rooms:
     if len(objectlayers) > 1:
         print("Warning: too many object layers in {}".format(room_path))
     elif len(objectlayers) == 0:
-        # print("Warning: no object layers in {}".format(room_path))
         pass
     else:
         objects = objectlayers[0].tiled_objects
@@ -128,24 +128,21 @@ for room in rooms:
             _tileset, tileid = getTilesetForGid(tilemap, obj.gid)
             x = int(obj.coordinates.x)
             y = int(obj.coordinates.y - obj.size.height)
-            out_inc.write("\t\t.DSTRUCT INSTANCEOF objectdef_t VALUES\n")
-            out_inc.write("\t\t\tobjectType: .dw {}\n".format(tiledIdsToObjectIds[tileid]))
-            out_inc.write("\t\t\tx: .db {}\n\t\t\ty: .db {}\n".format(x, y))
-            out_inc.write("\t\t.ENDST\n")
+            out_inc.write("\t.DSTRUCT INSTANCEOF objectdef_t VALUES\n")
+            out_inc.write("\t\tobjectType: .dw {}\n".format(tiledIdsToObjectIds[tileid]))
+            out_inc.write("\t\tx: .db {}\n\t\t\ty: .db {}\n".format(x, y))
+            out_inc.write("\t.ENDST\n")
         else:
             raise RuntimeError("Invalid object in object layer in {}".format(room))
+    out_inc.write(".ENDS\n")
     total_room_data_size += BASE_ROOM_DEFINITION_SIZE + len(objects)
-out_inc.write(".ENDS\n")
 
 out_inc.write(".BANK $02 SLOT \"ROM\"\n")
 out_inc.write(".SECTION \"RoomPoolDefinitions\" SUPERFREE\n")
 out_inc.write("RoomPoolDefinitions:\n")
 for pool in json_roompools:
     out_inc.write("\t.DSTRUCT @{} INSTANCEOF roompooldef_t VALUES\n".format(pool["id"]))
-    # out_inc.write("\t@{}:\n".format(pool["id"]))
     out_inc.write("\t\tnumRooms: .db {}\n".format(len(pool["rooms"])))
-    # out_inc.write("\t\t\t.db {}\n".format(len(pool["rooms"])))
-    # out_inc.write("\t\t@@rooms:\n")
     out_inc.write("\t.ENDST\n")
     for room in pool["rooms"]:
         out_inc.write("\t\t.dl {}\n".format(roomPathToId[room]))

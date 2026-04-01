@@ -141,14 +141,14 @@ Render.UpdateHDMA:
     asl
     asl
     asl
-    sta.b coreDP+$1E
+    sta.b renderDP+$1E
     lda #162
     sec
-    sbc.b coreDP+$1E
-    sta.b coreDP+$1E
+    sbc.b renderDP+$1E
+    sta.b renderDP+$1E
     lsr
     sta.l hdmaPaletteBuffer.7.lines
-    lda.b coreDP+$1E
+    lda.b renderDP+$1E
     inc A
     lsr
     sta.l hdmaPaletteBuffer.39.lines

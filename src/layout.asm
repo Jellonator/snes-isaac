@@ -2,7 +2,9 @@
 
 .BASE $00
 
-; $00-$3F is reserved for temporary variables
+; $00-$3F is reserved for temporary variables.
+; IN GENERAL, $00-$0F are the most volatile memory locations. The only
+; guarantee is that interrupts will not affect them.
 ; $40 should mostly be used for commonly used variables,
 ; or long pointers for use with [DIRECT],Y addressing
 .RAMSECTION "ZP" BANK 0 SLOT "ZeroMemory" ORGA $0040 FORCE
@@ -38,8 +40,10 @@
     entityParentChain db
     ; 96 bytes of temporary data for code to make use of.
     tempDP ds $60
-    ; 32 bytes of temporary data for core engine usage (NOT ENTITIES)
-    coreDP ds $20
+    ; temporary data for core engine usage
+    coreDP ds $10
+    ; temporary data for rendering usage
+    renderDP ds $10
 .ENDS
 
 ; Bank used for somewhat commonly used variables that need to be in bank 0

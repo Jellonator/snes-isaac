@@ -13,7 +13,7 @@
 .endproc
 
 .InvalidateFlags
-.procheaderl "BeginMapGeneration"
+.procheaderl "MapGen.GenerateMap"
     .SetAX 8, 8
     .SetBank $7E
     .InvalidateFlags

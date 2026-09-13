@@ -7,7 +7,7 @@
 ; Args:
 ; $03,S room load context
 _Floor_Begin:
-    jsl BeginMapGeneration
+    jsl MapGen.GenerateMap
     sep #$30 ; 8 bit AXY
     ; reset ground
     lda #1

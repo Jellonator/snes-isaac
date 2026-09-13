@@ -60,7 +60,7 @@ _item_pedastal_get_variant_from_pool:
     pha
     phy
     php
-    jsl RoomRand_Update16
+    jsl Random.Room.Update16
     sta.l DIVU_DIVIDEND
     plp
     ply

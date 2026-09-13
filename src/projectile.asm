@@ -204,7 +204,8 @@ _projectile_tile_poop:
     php
     jsl Splat.poop1
     ; maybe spawn a pickup
-    jsl RoomRand_Update8
+    rep #$30
+    jsl Random.Room.Update8
     sep #$30
     cmp #26
     bcs @no_spawn

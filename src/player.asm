@@ -1582,7 +1582,8 @@ _player_handle_brimstone_damage_tick:
         sta.b WIDTH
         @loop_x:
             ; handle tile
-            jsl QuickRand16
+            rep #$30
+            jsl Random.Quick16
             sep #$30
             cmp #100
             bcs @skip_tile2

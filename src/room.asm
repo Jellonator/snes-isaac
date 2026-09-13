@@ -251,7 +251,7 @@ _Room_Close_Devil_Doors:
 
 _Room_Spawn_Reward:
     rep #$30
-    jsl RoomRand_Update8
+    jsl Random.Room.Update8
     and #$00FF
     asl
     tax
@@ -301,7 +301,8 @@ _Room_Spawn_Devildoor:
 ; check if devil door can spawn
     ; get random number first, and always get random number so that room seed is
     ; always polled.
-    jsl StageRand_Update8
+    rep #$30
+    jsl Random.Stage.Update8
     sep #$30
     sta.b $30
     jsl GetDevilDealChance

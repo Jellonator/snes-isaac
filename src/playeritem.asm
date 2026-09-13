@@ -564,7 +564,8 @@ Item.add_charge_battery:
     rtl
 
 _use_deck_of_cards:
-    jsl RoomRand_Update8
+    rep #$30
+    jsl Random.Room.Update8
     .ACCU 16
     sta.l DIVU_DIVIDEND
     sep #$30

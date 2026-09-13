@@ -1,5 +1,6 @@
 .include "base.inc"
 .include "mapgenerator.inc"
+.include "rng.inc"
 
 .BANK $01 SLOT "ROM"
 .SECTION "MapGeneratorCode" FREE
@@ -708,7 +709,7 @@ _CmpRoomsByAvailableEndpointTiles:
 .procdefines "_PushRandomRoomFromPool"
     .SetAX 16, 16
 ; Get RNG value
-    jsl StageRand_Update8
+    .call "Random.Stage.Update8"
     sta.l DIVU_DIVIDEND
 ; Put pointer in Y
 ; For efficiency, Y starts at size*3
@@ -1028,15 +1029,16 @@ _CmpRoomsByAvailableEndpointTiles:
 .endproc
 
 .InvalidateFlags
-.procimpll "BeginMapGeneration"
+.procimpll "MapGen.GenerateMap"
     phb ; push Databank
     .SetAX 8, 8
     .SetBank $7E
 @retry:
     .call "MapGen.ClearAll"
     ; First, choose starting tile
-    jsl StageRand_Update4
-    .ForceSetAX 8, 8
+    .SetAX 16, 16
+    .call "Random.Stage.Update4"
+    .SetAX 8, 8
     and #$03
     clc
     adc #6 ; X: [6-9]
@@ -1087,11 +1089,11 @@ _CmpRoomsByAvailableEndpointTiles:
             .call "_CalculateAvailableStartingRoomEndpointTiles"
     @skip_adjacent_to_start:
         ; First, get random tile
-        jsl StageRand_Update8
-        .SoftSetA 16
+        .SetAX 16, 16
+        .call "Random.Stage.Update8"
             ; .ChangeDataBank $80
             sta.l DIVU_DIVIDEND
-            .ForceSetAX 8, 8
+            .SetAX 8, 8
             lda.b mapgenNumAvailableEndpointTiles
             bne @dontUseAllTiles
             lda.b mapgenNumAvailableTiles

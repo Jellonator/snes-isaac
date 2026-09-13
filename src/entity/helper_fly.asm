@@ -32,7 +32,8 @@ entity_helper_fly_init:
     lda #0
     sta.w entity_state,Y
     ; random timer
-    jsl QuickRand16
+    rep #$30
+    jsl Random.Quick16
     sep #$30
     sta.w entity_timer,Y
     ; get position mask and angle
@@ -225,7 +226,8 @@ entity_helper_fly_tick:
     sta.w entity_posy,Y
 @end_move_y:
 ; animate
-    jsl QuickRand16
+    rep #$30
+    jsl Random.Quick16
     sep #$30
     and #$01
     adc.w entity_timer,Y

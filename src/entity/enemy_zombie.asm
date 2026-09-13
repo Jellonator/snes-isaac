@@ -182,7 +182,8 @@ _entity_zombie_headless_tick:
     lda.w _zombie_headless_timer,Y
     dec A
     bpl +
-        jsl QuickRand16
+        rep #$30
+        jsl Random.Quick16
         sep #$30
         sta.w _zombie_headless_target_angle,Y
         xba

@@ -64,7 +64,8 @@ InitializeRoomSlot:
         sta.l roomSlotTiles.1.entityStoreTable.{i+1}.type,X
     .ENDR
     ; set room rng
-    jsl StageRand_Update32
+    rep #$30
+    jsl Random.Stage.Update32
     sta.l roomSlotTiles.1.rng,X
     tya
     sta.l roomSlotTiles.1.rng+2,X

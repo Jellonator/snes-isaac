@@ -4,9 +4,9 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-pytiled-parser = "*"
-lz4 = "*"
-pillow = "*"
+pytiled-parser = "2.2.9"
+lz4 = "4.4.5"
+pillow = "12.3.0"
 
 [dev-packages]
 

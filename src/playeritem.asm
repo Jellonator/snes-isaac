@@ -422,12 +422,14 @@ Item.pool.item_room:
     .db ITEMID_DECK_OF_CARDS
     .db ITEMID_BROTHER_BOBBY
     @end:
+    .db 0
 
 Item.pool.boss:
     .db ITEMID_GROWTH_HORMONES
     .db ITEMID_WIRE_COAT_HANGER
     .db ITEMID_DINNER
     @end:
+    .db 0
 
 Item.pool.shop:
     .db ITEMID_MAP
@@ -435,11 +437,25 @@ Item.pool.shop:
     .db ITEMID_DECK_OF_CARDS
     .db ITEMID_PURSE
     @end:
+    .db 0
 
 Item.pool.devil:
     .db ITEMID_BRIMSTONE
     .db ITEMID_BROTHER_BOBBY
     @end:
+    .db 0
+
+Item.pools:
+    .dw Item.pool.item_room
+    .dw Item.pool.boss
+    .dw Item.pool.shop
+    .dw Item.pool.devil
+
+Item.poolsize:
+    .dw Item.pool.item_room@end - Item.pool.item_room
+    .dw Item.pool.boss@end - Item.pool.boss
+    .dw Item.pool.shop@end - Item.pool.shop
+    .dw Item.pool.devil@end - Item.pool.devil
 
 Item.try_use_active:
     rep #$30
@@ -563,5 +579,149 @@ _use_deck_of_cards:
     jsl Consumable.pickup
     jsl UI.update_charge_display
     rts
+
+; Choose a random item from pool ID 'A'
+Item.PickItemFromPool:
+    .DEFINE POOLPTR $00
+    .DEFINE POOLSIZE $03
+    .DEFINE TOTALWEIGHT $05
+    phb
+    sep #$30
+    ldy #$7E
+    phy
+    plb ; BANK = $7E
+    ldy #bankbyte(Item.pools)
+    sty.b POOLPTR+2
+    tax
+    lda.l Item.poolsize,X
+    sta.b POOLSIZE
+    rep #$30
+    txa
+    asl
+    tax
+    lda.l Item.pools,X
+    sta.b POOLPTR
+; copy item count to buffer
+    ldx #$FE
+    @loop_init_counts:
+        lda.w playerData.playerItemStackNumber,X
+        sta.w loword(tempData_7E),X
+        dex
+        dex
+        bpl @loop_init_counts
+; search for items serialized to other rooms, and add to count
+    .DEFINE ROOMCOUNT $07
+    .DEFINE ROOMPTR $09
+    lda.w numUsedMapSlots
+    and #$00FF
+    sta.b ROOMCOUNT
+    lda #roomSlotTiles
+    sta.b ROOMPTR
+    @loop_iterate_room:
+        lda.b ROOMPTR
+        cmp.b currentRoomTileTypeTableAddress ; tile type address is first member of roominfo_t
+        beq @end_iterate_room ; skip current room
+        ldy #roominfo_t.entityStoreTable
+        @loop_iterate_room_entity:
+            lda (ROOMPTR),Y
+            and #$00FF
+            beq @end_iterate_room ; encountered null item, end
+            cmp #ENTITY_TYPE_ITEM_PEDASTAL
+            beq @end_iterate_room_entity ; not an item pedastal, end
+            lda (ROOMPTR),Y
+            and #$FF00
+            xba
+            tax
+            inc.w loword(tempData_7E),X ; assume we won't ever overflow to the next item
+        @end_iterate_room_entity:
+        iny
+        iny
+        iny
+        iny
+        iny
+        iny
+        cpy #roominfo_t.entityStoreTable + (_sizeof_entitystore_t * ENTITY_STORE_COUNT)
+        blsu @loop_iterate_room_entity
+    @end_iterate_room:
+        lda.b ROOMPTR
+        adc #_sizeof_roominfo_t
+        sta.b ROOMPTR
+        dec.b ROOMCOUNT
+        bpl @loop_iterate_room
+    .UNDEFINE ROOMCOUNT
+    .UNDEFINE ROOMPTR
+; search current room's entities and add to count
+    ldx.w numEntities
+    beq @end_iterate_entities
+    @loop_iterate_entities:
+        lda.w entityExecutionOrder-1,X
+        and #$00FF
+        tay
+        lda.w entity_type,Y
+        and #$00FF
+        cmp #ENTITY_TYPE_ITEM_PEDASTAL
+        bne @skip_iterate_entity
+        phx
+        lda.w entity_variant,Y
+        and #$00FF
+        tax
+        inc.w loword(tempData_7E),X
+        plx
+    @skip_iterate_entity:
+        dex
+        bne @loop_iterate_entities
+    @end_iterate_entities:
+; determine item pool and weights
+    .DEFINE ITEMWEIGHTS $07
+    lda #$7F
+    sta.b ITEMWEIGHTS + 2
+    lda #tempTileData
+    sta.b ITEMWEIGHTS
+
+    sep #$20
+    ldy #0
+    @loop_determine_weight:
+        lda [POOLPTR],Y
+        tax ; X = item id
+        lda.w loword(tempData_7E),X
+
+
+        sta [ITEMWEIGHTS],Y
+        iny
+        cpy.b POOLSIZE
+        bleu @loop_determine_weight
+
+; ; write weight 0 for all items
+;     lda #0
+;     ldx #$FF*2
+;     @loop_clear_weights:
+;         sta.w loword(tempData_7E),X
+;         dex
+;         dex
+;         bne @loop_clear_weights
+; ; add weight for all items in pool
+;     ldx.b POOLPTR
+;     @loop_gather_items
+;         lda.l bankaddr(Item.pools),X
+;         and #$00FF
+;         beq @end_gather_items
+;         asl
+;         tay
+;         lda #$10
+;         sta.w loword(tempData_7E),Y
+;     @end_gather_items:
+; ; sum weights
+;     ldx #$FF*2
+;     clc
+;     lda #0
+;     @loop_sum_item_weights:
+;         adc.w loword(tempData_7E),X
+;         dex
+;         dex
+;         bne @loop_sum_item_weights
+;     sta.b TOTALWEIGHT
+; ; end
+    plb
+    rtl
 
 .ENDS

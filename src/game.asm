@@ -1,11 +1,12 @@
 .include "base.inc"
+.include "mapgenerator.inc"
 
 .BANK $01 SLOT "ROM"
 .SECTION "GAME" FREE
 
 ; Enter game
 Game.Begin:
-    .ChangeDataBank $80
+    .ForceSetBank $80
     ; Disable rendering temporarily
     .DisableINT
     ; Disable interrupts
@@ -208,7 +209,7 @@ tile_data_loop:
     jsl Overlay.init
     ; init hashtables
     phb
-    .ChangeDataBank bankbyte(spriteTableKey)
+    .ForceSetBank bankbyte(spriteTableKey)
     jsl table_clear_sprite
     jsl Spriteman.Init
     plb
@@ -245,11 +246,12 @@ tile_data_loop:
     ; init player
     jsr PlayerInit
     ; init floor
+    .ForceSetBank $80
     sep #$20
     lda.w loadFromSaveState
     beq @normal_load
     ; load save
-        jsl MapGen.ClearAll
+        .call "MapGen.ClearAll"
         sep #$20
         lda.w currentSaveSlot
         jsl Save.ReadSaveState

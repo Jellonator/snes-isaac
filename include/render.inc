@@ -211,14 +211,14 @@
 ; Slightly faster
 ; Included in render.inc since it is similar to other methods here
 .MACRO .ClearWRam_ZP ARGS ADDRL, NBYTES
-    rep #$20 ; 16 bit A
+    .SetA 16
     lda #NBYTES
     sta.b <DMA0_SIZE
     lda #loword(EmptyData)
     sta.b <DMA0_SRCL
     lda #loword(ADDRL)
     sta.l WMADDL
-    sep #$20 ; 8 bit A
+    .SetA 8
     lda #bankbyte(EmptyData)
     sta.b <DMA0_SRCH
     lda #bankbyte(ADDRL)

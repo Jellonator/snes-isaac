@@ -1,3 +1,4 @@
+.include "context.inc"
 .include "header.inc"
 .include "defines.inc"
 .include "structs.inc"

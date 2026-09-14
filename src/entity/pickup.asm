@@ -191,7 +191,7 @@ _handle_penny:
     plp
     ply
     ; KILL
-    jsl entity_free
+    jsl Entity.Free
     rts
 
 _handle_nickle:
@@ -213,7 +213,7 @@ _handle_nickle:
     plp
     ply
     ; KILL
-    jsl entity_free
+    jsl Entity.Free
     rts
 
 _handle_dime:
@@ -235,7 +235,7 @@ _handle_dime:
     plp
     ply
     ; KILL
-    jsl entity_free
+    jsl Entity.Free
     rts
 
 _handle_bomb:
@@ -256,7 +256,7 @@ _handle_bomb:
     ply
     jsr _subtract_money
     ; KILL
-    jsl entity_free
+    jsl Entity.Free
     rts
 
 _handle_key:
@@ -277,7 +277,7 @@ _handle_key:
     ply
     jsr _subtract_money
     ; KILL
-    jsl entity_free
+    jsl Entity.Free
     rts
 
 _handle_battery:
@@ -293,7 +293,7 @@ _handle_battery:
     ply
     jsr _subtract_money
     ; KILL
-    jsl entity_free
+    jsl Entity.Free
     rts
 @skip:
     plp
@@ -313,7 +313,7 @@ _handle_heart:
         plp
         ply
         jsr _subtract_money
-        jsl entity_free
+        jsl Entity.Free
         rts
     +:
     plp
@@ -333,7 +333,7 @@ _handle_soul_heart:
         plp
         ply
         jsr _subtract_money
-        jsl entity_free
+        jsl Entity.Free
         rts
     +:
     plp
@@ -349,7 +349,7 @@ _handle_consumable:
     jsl Consumable.pickup
     plp
     ply
-    jsl entity_free
+    jsl Entity.Free
     rts
 
 _handle_trinket:
@@ -361,7 +361,7 @@ _handle_trinket:
     jsl Trinket.Pickup
     plp
     ply
-    jsl entity_free
+    jsl Entity.Free
     rts
 
 _init_trinket:

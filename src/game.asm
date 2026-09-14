@@ -240,7 +240,7 @@ tile_data_loop:
     lda #1
     sta.w blockVQueueMutex
     ; clear entity table
-    jsl EntityInfoInitialize
+    jsl Entity.InitializeEntityTable
     ; clear pathfinding data
     jsl Pathing.Initialize
     ; init player
@@ -266,11 +266,11 @@ tile_data_loop:
         jsl LoadAndInitRoomSlotIntoLevel
         rep #$20
         pla
-        jsl Floor_Init_PostLoad
+        jsl Floor.InitPostLoad
         jmp @end_load
     @normal_load:
     ; new game
-        jsl Floor_Init
+        jsl Floor.Init
     @end_load:
     ; Clear sprites
     rep #$30
@@ -315,7 +315,7 @@ _Game.Loop:
         inc.w tickCounter
         ; clear data
         jsl ClearSpriteTable
-        jsl entity_clear_hitboxes
+        jsl Entity.ClearSpatialPartition
         jsl Render.HDMAEffect.Clear
         ; run one of the slow update functions, depending on current tick.
         ; We spread these out over multiple frames to reduce their frame impact.
@@ -343,11 +343,11 @@ _Game.Loop:
             jsl Pathing.UpdateEnemyNearest
         @end:
         ; run all update hooks
-        jsl entity_refresh_hitboxes
+        jsl Entity.RefreshHitboxes
         jsr PlayerUpdate
-        jsl entity_tick_all
+        jsl Entity.TickAll
         jsl Room_Tick
-        jsl Floor_Tick
+        jsl Floor.Tick
         jsr _UpdateUsables
         ; Finally, check if room should be changed
         jsr PlayerCheckEnterRoom
@@ -1355,7 +1355,7 @@ _cheat_action_tick_floor:
         lda.b cheatParameterValue
         dec A
         sta.w currentFloorIndex
-        jsl Floor_Next
+        jsl Floor.Next
         jsr Pause.ActionUnpause
     @no_change_floor:
     rts

@@ -296,7 +296,7 @@ true_entity_effect_tick:
         bne @no_kill
             ; kill
             rep #$30
-            jsl entity_free
+            jsl Entity.Free
             rtl
     @no_kill:
         rep #$20

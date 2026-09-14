@@ -142,6 +142,7 @@
 
 ; Clear RNG with known values
 .IgnoreFlags
+.InvalidateA
 .SoftSetBank D_BANK_MIRROR_LOWRAM
 .procimpll "Random.Clear"
     .SetA 16
@@ -157,6 +158,7 @@
 .endproc
 
 .IgnoreFlags
+.InvalidateA
 .SoftSetBank D_BANK_MIRROR_LOWRAM
 .procimpll "Random.InitFromTimer"
     .SetA 16

@@ -50,8 +50,8 @@ entity_basic_fly_tick:
     and.w entity_signal,Y
     beq +
         ; We have perished
-        jsl EntityPutSplatter
-        jsl entity_free
+        jsl Entity.PutSplatter
+        jsl Entity.Free
         rts
     +:
 ; move
@@ -174,7 +174,7 @@ entity_basic_fly_tick:
     inx
     stx.w objectIndex
     pea $0404
-    jsl EntityPutShadow
+    jsl Entity.Shadow.PutSmall
     plx
     ; Check collision with player
     jsl Entity.Enemy.TickContactDamage

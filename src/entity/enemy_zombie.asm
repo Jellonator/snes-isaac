@@ -562,7 +562,7 @@ entity_zombie_tick:
     beq @not_kill
         ; put blood splatter
         phy
-        jsl EntityPutSplatter
+        jsl Entity.PutSplatter
         sep #$30
         ply
         ; check variant ($FF indicates true kill)
@@ -571,14 +571,14 @@ entity_zombie_tick:
         cmp #$FF
         bne @not_headless
             ; We have perished
-            jsl entity_free
+            jsl Entity.Free
             rts
         @not_headless:
         ; replace with new variant
         xba
         lda #ENTITY_TYPE_ENEMY_ZOMBIE
         rep #$30
-        jsl entity_replace
+        jsl Entity.Replace
     @not_kill:
     ; set box
     sep #$30
@@ -607,7 +607,7 @@ entity_zombie_tick:
     inx
     stx.w objectIndex
     pea $0405
-    jsl EntityPutShadow
+    jsl Entity.Shadow.PutSmall
     plx
     ; Check collision with player
     jsl Entity.Enemy.TickContactDamage

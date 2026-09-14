@@ -659,7 +659,7 @@ _menu_main_actions:
 _menu_main_action_newrun:
     sep #$20
     stz.w loadFromSaveState
-    jsl Floor.Transition_In
+    jsl Floor.Transition.In
     jml Game.Begin
 
 _menu_main_action_continue:
@@ -671,7 +671,7 @@ _menu_main_action_continue:
         sep #$20
         lda #1
         sta.w loadFromSaveState
-        jsl Floor.Transition_In
+        jsl Floor.Transition.In
         jml Game.Begin
 @no_continue:
     rts

@@ -78,6 +78,8 @@ Player.CanHeal:
     lda #1
     rtl
 
+.PushContext
+
 ; Heals player for [A] half-hearts
 ; Returns [A] as remaining health to heal
 Player.Heal:
@@ -918,7 +920,7 @@ PlayerUpdate:
         beq @end_place_bomb
         ; create bomb at position
         lda #entityvariant(ENTITY_TYPE_BOMB, 0)
-        jsl entity_create_and_init
+        jsl Entity.CreateAndInit
         rep #$30
         lda.w player_posx
         sta.w entity_posx,Y
@@ -2259,7 +2261,7 @@ PlayerRender:
     rep #$10
     ldy #ENTITY_INDEX_PLAYER
     pea $0405
-    jsl EntityPutShadow
+    jsl Entity.Shadow.PutSmall
     plx
     rtl
 
@@ -2268,7 +2270,7 @@ PlayerShootTear:
     lda #0
     xba
     lda #ENTITY_TYPE_PROJECTILE
-    jsl entity_create_and_init
+    jsl Entity.CreateAndInit
     rep #$30 ; 16 bit AXY
     sty.b TempTearIdx
     tyx

@@ -243,7 +243,7 @@ entity_familiar_tick:
     ; put shadow
     sep #$20
     pea $0405
-    jsl EntityPutShadow
+    jsl Entity.Shadow.PutSmall
     rep #$30
     pla
     ; set box and flags
@@ -363,7 +363,7 @@ Familiars.RefreshFamiliars:
         ; if resulting count is less than 0, then free this entity
         ; the previous entity will now be in [X], so we don't need any shenanigans
         php
-        jsl entity_free
+        jsl Entity.Free
         plp
     @skip_entity_plx:
         plx
@@ -384,12 +384,12 @@ Familiars.RefreshFamiliars:
         txa
         xba
         ora #ENTITY_TYPE_FAMILIAR
-        jsl entity_create
+        jsl Entity.Create
         lda.w player_posx
         sta.w entity_posx,Y
         lda.w player_posy
         sta.w entity_posy,Y
-        jsl entity_init
+        jsl Entity.Init
         plp
         plx
         jmp @loop_spawn

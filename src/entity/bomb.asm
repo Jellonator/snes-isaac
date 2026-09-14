@@ -296,7 +296,7 @@ true_entity_bomb_tick:
         lda.w entity_posy,Y
         pha
         lda #entityvariant(ENTITY_TYPE_EFFECT, ENTITY_EFFECT_EXPLOSION)
-        jsl entity_create_and_init
+        jsl Entity.CreateAndInit
         rep #$30
         pla
         clc
@@ -308,7 +308,7 @@ true_entity_bomb_tick:
         sta.w entity_posx,Y
         rep #$30
         ldy.b Y_STORE
-        jsl entity_free
+        jsl Entity.Free
         rtl
     @timer_continue:
     ;

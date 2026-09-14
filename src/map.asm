@@ -86,7 +86,7 @@ InitializeRoomSlot:
 ;   room slot index         [db] $04
 LoadRoomSlotIntoLevel:
     ; first, clear existing level
-    jsl entity_free_all
+    jsl Entity.FreeAll
     jsl Palette.init_data
     ; Turn slot index into slot address in X
     sep #$30
@@ -1773,11 +1773,11 @@ TransitionRoomIndex:
     jsl InitLoadedRoomslot
     rep #$30
     jsl ClearSpriteTable
-    jsl entity_clear_hitboxes
+    jsl Entity.ClearSpatialPartition
     sep #$20
     lda #ENTITY_CONTEXT_TRANSITION
     sta.b entityExecutionContext
-    jsl entity_tick_all
+    jsl Entity.TickAll
     sep #$20
     lda #ENTITY_CONTEXT_STANDARD
     sta.b entityExecutionContext

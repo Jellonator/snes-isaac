@@ -34,7 +34,7 @@ true_entity_trapdoor_tick:
     .EntityEasySetBox 16 16
     .EntityEasyCheckNoPlayerCollision_Center @no_player_col, 8, 10
         ; TODO: handle next floor
-        jsl Floor_Next
+        jsl Floor.Next
     @no_player_col:
     rtl
 

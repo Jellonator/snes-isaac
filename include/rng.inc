@@ -74,6 +74,7 @@
 
 ; Clear RNG with known values
 .IgnoreFlags
+.InvalidateA
 .SoftSetBank D_BANK_MIRROR_LOWRAM
 .procheaderl "Random.Clear"
     .SoftSetA 16
@@ -81,6 +82,7 @@
 
 ; Initialize RNG from global timer
 .IgnoreFlags
+.InvalidateA
 .SoftSetBank D_BANK_MIRROR_LOWRAM
 .procheaderl "Random.InitFromTimer"
     .SoftSetA 16

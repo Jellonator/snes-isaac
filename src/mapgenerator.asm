@@ -706,8 +706,8 @@ _CmpRoomsByAvailableEndpointTiles:
 .InvalidateFlags
 .SoftSetBank $7E
 .IgnoreDirect
+.SoftSetAX 16, 16
 .procdefines "_PushRandomRoomFromPool"
-    .SetAX 16, 16
 ; Get RNG value
     .call "Random.Stage.Update8"
     sta.l DIVU_DIVIDEND

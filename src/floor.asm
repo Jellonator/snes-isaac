@@ -45,7 +45,7 @@ _Floor_Begin:
     rts
 
 ; Initialize floor data when beginning a new game
-Floor_Init:
+Floor.Init:
     sep #$20
     ; clear devil deal flags (base devil chance should be 100%)
     lda #3
@@ -72,7 +72,7 @@ Floor_Init:
     rtl
 
 ; Initialize floor data when loading from a save file
-Floor_Init_PostLoad:
+Floor.InitPostLoad:
     rep #$30
     lda #0
     sta.w floorFlags
@@ -83,13 +83,13 @@ Floor_Init_PostLoad:
     jsl PlayerInitPostLoad
     rtl
 
-Floor_Next:
+Floor.Next:
     rep #$30
     lda #FLOOR_FLAG_NEXT
     tsb.w floorFlags
     rtl
 
-Floor.Transition_In:
+Floor.Transition.In:
     sep #$30
     wai
     .REPT 16 INDEX  i
@@ -104,7 +104,7 @@ Floor.Transition_In:
     .ENDR
     rtl
 
-Floor.Transition_Out:
+Floor.Transition.Out:
     sep #$30
     wai
     .REPT 16 INDEX  i
@@ -119,12 +119,12 @@ Floor.Transition_Out:
     .ENDR
     rtl
 
-Floor_Tick:
+Floor.Tick:
     rep #$30
     lda #FLOOR_FLAG_FADEIN2
     trb.w floorFlags
     beq @no_fadein2
-        jsl Floor.Transition_Out
+        jsl Floor.Transition.Out
 @no_fadein2:
     rep #$30
     lda #FLOOR_FLAG_FADEIN
@@ -138,7 +138,7 @@ Floor_Tick:
     lda #FLOOR_FLAG_NEXT
     trb.w floorFlags
     beq @no_level_transition
-        jsl Floor.Transition_In
+        jsl Floor.Transition.In
         rep #$30
         lda.w currentFloorIndex
         inc A

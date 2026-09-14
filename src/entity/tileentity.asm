@@ -71,7 +71,7 @@ true_entity_tile_tick:
         sta.w _entity_hits,Y
         jmp @not_damaged
     @destroy:
-        jsl entity_free
+        jsl Entity.Free
         rtl
     @not_damaged:
     lda #0

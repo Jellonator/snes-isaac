@@ -75,7 +75,7 @@ entity_boss_monstro_tick:
     lda #ENTITY_SIGNAL_KILL
     and.w entity_signal,Y
     beq @not_kill
-        jsl entity_free
+        jsl Entity.Free
         rts
     @not_kill:
     lda #ENTITY_SIGNAL_DAMAGE
@@ -150,7 +150,7 @@ entity_boss_monstro_tick:
     .ENDR
     ldy $08
     pea (MONSTRO_HEIGHT - 14) + ($100*10)
-    jsl EntityPutBigShadow
+    jsl Entity.Shadow.PutBig
     plx
     
 ; add to partition

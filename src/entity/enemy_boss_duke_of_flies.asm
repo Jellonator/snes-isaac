@@ -67,7 +67,7 @@ _duke_spawn_fly:
         phy
         php
         lda #ENTITY_TYPE_ENEMY_ATTACK_FLY
-        jsl entity_create_and_init
+        jsl Entity.CreateAndInit
         tyx
         plp
         ply
@@ -96,7 +96,7 @@ _duke_releaseflies:
 _duke_death:
     rep #$30
     phy
-    jsl entity_free
+    jsl Entity.Free
     rep #$30
     ply
     rts
@@ -253,7 +253,7 @@ _duke_endtick:
     .ENDR
     ldy _tmp_entityid
     pea (BOSS_HEIGHT - 8) + ($100*0)
-    jsl EntityPutMediumShadow
+    jsl Entity.Shadow.PutMedium
     plx
 ; set some flags
     sep #$20

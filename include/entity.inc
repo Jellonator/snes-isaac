@@ -184,7 +184,7 @@
 ; Number of objects that may be collided with per 16x16 square
 .DEFINE SPATIAL_LAYER_COUNT 4
 
-; Returns entity+variant value, for use with entity_create
+; Returns entity+variant value, for use with Entity.Create
 .FUNCTION entityvariant(e, v) (e | (v * $0100))
 
 ; Other standard entity definitions

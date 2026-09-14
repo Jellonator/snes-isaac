@@ -17,7 +17,7 @@ _e_null:
 ; Create and initialize an entity of type+variant A
 ; lower byte is type, upper byte is variant
 ; Returns reference as Y
-entity_create_and_init:
+Entity.CreateAndInit:
     rep #$10 ; 16B XY
     sep #$20 ; 8B A
     phb
@@ -80,10 +80,10 @@ entity_create_and_init:
 ; Create an entity of type+variant A
 ; lower byte is type, upper byte is variant
 ; Returns reference as Y
-; Make sure to call entity_init afterwards; use this function instead of
-; entity_create_and_init if you want to set some variables (e.g. entity_state,
+; Make sure to call Entity.Init afterwards; use this function instead of
+; Entity.CreateAndInit if you want to set some variables (e.g. entity_state,
 ; entity_timer) before running its init function
-entity_create:
+Entity.Create:
     rep #$10 ; 16B XY
     sep #$20 ; 8B A
     phb
@@ -137,8 +137,8 @@ entity_create:
     rtl
 
 ; Initialize entity in Y
-; call after entity_create
-entity_init:
+; call after Entity.Create
+Entity.Init:
     rep #$30
     phb
     .ChangeDataBank $7E
@@ -157,7 +157,7 @@ entity_init:
     rtl
 
 ; Free the given entity in reference Y
-entity_free:
+Entity.Free:
     rep #$30 ; 16B AXY
     phb
     .ChangeDataBank $7E
@@ -209,13 +209,13 @@ entity_free:
     rtl
 
 ; Replace this entity slot with a different type.
-; This is a bit more efficient than calling `entity_free` followed by
-; `entity_create`, with the added benefit that stored values are kept (though
+; This is a bit more efficient than calling `Entity.Free` followed by
+; `Entity.Create`, with the added benefit that stored values are kept (though
 ; they might be replaced by the init function).
 ; Do note that this will never change the entity ID. This means that non-character
 ; entities may NOT be replaced with character entities, lest you introduce
 ; hard-to-diagnose bugs.
-entity_replace:
+Entity.Replace:
     rep #$30
     phb
     .ChangeDataBank $7E
@@ -256,7 +256,7 @@ entity_replace:
 ; this entity. ONLY USE THIS IF YOU KNOW WHAT YOU ARE DOING!!!
 ; This is mostly only useful for swapping out variants. Though, if you want to
 ; do that, you should just `sta.w entity_variant,Y` anyways.
-entity_change_type:
+Entity.ChangeType:
     sep #$20
     phb
     .ChangeDataBank $7E
@@ -267,7 +267,7 @@ entity_change_type:
     rtl
 
 ; Free all entities
-entity_free_all:
+Entity.FreeAll:
     rep #$30 ; 16B AXY
     phb
     .ChangeDataBank $7E
@@ -294,14 +294,14 @@ entity_free_all:
     bne @loop
 @end:
     plb
-    jsl EntityInfoInitialize
+    jsl Entity.InitializeEntityTable
     rtl
 
 ; Tick all entities
-entity_tick_all:
+Entity.TickAll:
     phb
     .ChangeDataBank $7E
-    jsl SortEntityExecutionOrder
+    jsl Entity.SortExecutionOrder
     rep #$30 ; 16B AXY
     ldx.w numEntities
     beq @end
@@ -500,7 +500,7 @@ EntityDef_Flags:
 .ORG 0
 .SECTION "EntityExtCode"
 
-SortEntityExecutionOrder:
+Entity.SortExecutionOrder:
     sep #$30
     lda.w numEntities
     cmp #2
@@ -560,7 +560,7 @@ SortEntityExecutionOrder:
 @noSort:
     rtl
 
-EntityInfoInitialize:
+Entity.InitializeEntityTable:
     rep #$20
     ; save player info
     lda.w player_posx
@@ -594,11 +594,11 @@ EntityInfoInitialize:
     sta.b entityExecutionContext
     rtl
 
-SpatialPartitionClear:
+Entity.ClearSpatialPartition:
     phd
     pea $4300
     pld
-    .ClearWRam_ZP spatial_partition, _sizeof_spatial_partition
+    .ClearWRam_ZP spatial_partition, 256*SPATIAL_LAYER_COUNT
     pld
     rtl
 
@@ -1114,7 +1114,7 @@ Entity.KeepInOuterBounds:
 ; $01: X
 ; $02: Y
 ; Return: Y as entity ID
-GetEntityCollisionAt:
+Entity.GetCollisionAt:
     .INDEX 8
     .ACCU 8
     lda.b $02
@@ -1161,7 +1161,7 @@ GetEntityCollisionAt:
 ; Parameters:
 ;   offs x [db] $05
 ;   offs y [db] $04
-EntityPutShadow:
+Entity.Shadow.PutSmall:
     .INDEX 16
     .ACCU 8
     ldx.w objectIndexShadow
@@ -1193,7 +1193,7 @@ EntityPutShadow:
 ; Parameters:
 ;   offs x [db] $05
 ;   offs y [db] $04
-EntityPutMediumShadow:
+Entity.Shadow.PutMedium:
     rep #$30
     lda.w objectIndexShadow
     sec
@@ -1261,7 +1261,7 @@ EntityPutMediumShadow:
 ; Parameters:
 ;   offs x [db] $05
 ;   offs y [db] $04
-EntityPutBigShadow:
+Entity.Shadow.PutBig:
     rep #$30
     lda.w objectIndexShadow
     sec
@@ -1332,7 +1332,7 @@ EntityPutBigShadow:
     @skipShadow:
     rtl
 
-EntityPutSplatter:
+Entity.PutSplatter:
     rep #$10
     sep #$20
     lda.w loword(entity_ysort),Y
@@ -1375,15 +1375,7 @@ EntityPutSplatter:
     rep #$30
     rtl
 
-entity_clear_hitboxes:
-    phd
-    pea $4300
-    pld
-    .ClearWRam_ZP spatial_partition, 256*SPATIAL_LAYER_COUNT
-    pld
-    rtl
-
-entity_refresh_hitboxes:
+Entity.RefreshHitboxes:
     ; clear data
     .DEFINE ENTITY_INDEX $00
     .DEFINE ENTITY_ID $0C

@@ -214,7 +214,7 @@ _projectile_tile_poop:
     ;spawn_coin:
         rep #$30
         lda #entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_RANDOM_COIN)
-        jsl entity_create ; Y = entity ID
+        jsl Entity.Create ; Y = entity ID
         sep #$30
         lda $02,S
         tax
@@ -228,12 +228,12 @@ _projectile_tile_poop:
         clc
         adc #ROOM_TOP
         sta.w entity_box_y1,Y
-        jsl entity_init
+        jsl Entity.Init
         jmp @no_spawn
     @spawn_heart:
         rep #$30
         lda #entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_RANDOM_HEART)
-        jsl entity_create ; Y = entity ID
+        jsl Entity.Create ; Y = entity ID
         sep #$30
         lda $02,S
         tax
@@ -247,7 +247,7 @@ _projectile_tile_poop:
         clc
         adc #ROOM_TOP
         sta.w entity_box_y1,Y
-        jsl entity_init
+        jsl Entity.Init
 @no_spawn:
     plp
     ply
@@ -273,7 +273,7 @@ ProjectileTileHandleTrampoline:
 _projectile_delete:
     rep #$30
     ldy.b PROJECTILE_TMP_IDX
-    jml entity_free ; tail call optimization
+    jml Entity.Free ; tail call optimization
 
 .MACRO ._tear_size_damage_macro ARGS size, damage
     .ACCU 16
@@ -486,7 +486,7 @@ projectile_tick__:
         lda #ENTITY_MASK_PROJECTILE
         sta.b $00
     +:
-    jsl GetEntityCollisionAt ; Y = new entity
+    jsl Entity.GetCollisionAt ; Y = new entity
     cpy #0
     beq @skipCollisionHandler
         ; found object:
@@ -570,7 +570,7 @@ Projectile.CreateAndInheritVelocity:
     sep #$10
     lda #ENTITY_TYPE_PROJECTILE
     phy
-    jsl entity_create_and_init
+    jsl Entity.CreateAndInit
     sep #$30
     tyx
     ply ; Y = this, X = projectile

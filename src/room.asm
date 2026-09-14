@@ -35,7 +35,7 @@ _room_spawn_entities:
         ply ; <2
         lda [currentRoomDefinition],Y ; get object type, again
         phy ; >2
-        jsl entity_create
+        jsl Entity.Create
         rep #$30
         tyx ; put entity ID into X
         ply ; <2 - put entity definition into Y
@@ -60,7 +60,7 @@ _room_spawn_entities:
         rep #$30
         ; put entity ID back into Y, and init
         txy
-        jsl entity_init
+        jsl Entity.Init
         rep #$30
     @no_spawn:
     ply ; <2
@@ -96,7 +96,7 @@ _room_spawn_entities:
         ; create entity
         phx
         php
-        jsl entity_create
+        jsl Entity.Create
         plp
         plx
         lda.l $7E0000 + roominfo_t.entityStoreTable + entitystore_t.posx-1,X
@@ -107,7 +107,7 @@ _room_spawn_entities:
         sta.w entity_state,Y ; entity_state and entity_timer are combined
         phx
         php
-        jsl entity_init
+        jsl Entity.Init
         plp
         plx
         inc.b ENTITY_INDEX
@@ -258,7 +258,7 @@ _Room_Spawn_Reward:
     lda.l PickupTable_RoomReward,X
     beq @no_spawn
     php
-    jsl entity_create_and_init
+    jsl Entity.CreateAndInit
     plp
     lda #120 * $0100
     sta.w entity_posx,Y
@@ -270,7 +270,7 @@ _Room_Spawn_Boss_Reward:
     rep #$30
     lda #ENTITY_TYPE_ITEM_PEDASTAL | ($0100 * ENTITY_ITEMPEDASTAL_POOL_BOSS)
     php
-    jsl entity_create_and_init
+    jsl Entity.CreateAndInit
     plp
     lda #120 * $0100
     sta.w entity_posx,Y
@@ -282,7 +282,7 @@ _Room_Spawn_Trapdoor:
     rep #$30
     lda #ENTITY_TYPE_TRAPDOOR
     php
-    jsl entity_create_and_init
+    jsl Entity.CreateAndInit
     plp
     lda #120 * $0100
     sta.w entity_posx,Y
@@ -424,7 +424,7 @@ Room_Tick:
 _Room_Serialize_Entities:
     phb
     .ChangeDataBank $7E
-    ; jsl SortEntityExecutionOrder
+    ; jsl Entity.SortExecutionOrder
     rep #$30 ; 16B AXY
     lda #0
     sta.b ENTITY_INDEX

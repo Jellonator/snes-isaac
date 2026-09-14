@@ -18,7 +18,7 @@ true_entity_shopkeeper_tick:
         lda.l devil_deal_flags
         ora #DEVILFLAG_BOMBED_SHOPKEEPER
         sta.l devil_deal_flags
-        jsl entity_free
+        jsl Entity.Free
         rtl
     +:
 ; draw

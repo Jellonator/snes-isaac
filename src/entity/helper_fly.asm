@@ -108,7 +108,7 @@ entity_helper_fly_tick:
             +:
             sta.w entity_signal,X
             ; alright, now we do damage and unalive self
-            jsl entity_free
+            jsl Entity.Free
             rts
         @end_collision_check:
         jmp @end_targetting
@@ -329,7 +329,7 @@ HelperFly.Tick:
     dec.w playerData.helperFlyBufferCount
     rep #$30
     lda #entityvariant(ENTITY_TYPE_HELPER_FLY, 0)
-    jsl entity_create_and_init
+    jsl Entity.CreateAndInit
     ; set position and velocity
     rep #$30
     lda.w player_velocx

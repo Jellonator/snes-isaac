@@ -149,7 +149,7 @@ _drop_trinket_x:
         ; spawn pickup
         rep #$30
         lda #entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_TRINKET)
-        jsl entity_create
+        jsl Entity.Create
         sep #$30
         plx
         lda.w playerData.trinketslot,X
@@ -161,7 +161,7 @@ _drop_trinket_x:
         sta.w entity_posx,Y
         lda.w player_posy
         sta.w entity_posy,Y
-        jsl entity_init
+        jsl Entity.Init
         sep #$30
         pla
         sta.b entityExecutionContext

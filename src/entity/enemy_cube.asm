@@ -402,8 +402,8 @@ entity_enemy_cube_tick:
         clc
         adc #12
         sta.w entity_box_y1,Y
-        jsl EntityPutSplatter
-        jsl entity_free
+        jsl Entity.PutSplatter
+        jsl Entity.Free
         rts
     +:
 ; AI

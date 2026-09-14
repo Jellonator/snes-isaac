@@ -343,6 +343,7 @@ _Game.Loop:
             jsl Pathing.UpdateEnemyNearest
         @end:
         ; run all update hooks
+        sep #$30
         jsl Entity.RefreshHitboxes
         jsr PlayerUpdate
         jsl Entity.TickAll

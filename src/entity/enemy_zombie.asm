@@ -40,8 +40,8 @@ _entity_zombie_default_tick:
     .ACCU 16
     .INDEX 16
 ; get movement target
-    jsl Entity.Enemy.PathfindTargetPlayer
     sep #$30
+    jsl Entity.Enemy.PathfindTargetPlayer
     lda.b entityTargetFound
     beq @no_target
         ldx.b entityTargetAngle
@@ -252,6 +252,7 @@ _entity_zombie_headless_tick:
     rep #$20
     lda #8 + 8*$0100
     sta.b $00
+    sep #$30
     jsl Entity.MoveAndCollide
     sep #$20
     sec
@@ -610,6 +611,7 @@ entity_zombie_tick:
     jsl Entity.Shadow.PutSmall
     plx
     ; Check collision with player
+    sep #$20
     jsl Entity.Enemy.TickContactDamage
     ; end
     rts

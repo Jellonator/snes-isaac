@@ -604,8 +604,11 @@ Entity.ClearSpatialPartition:
 
 ; COMMON ENTITY FUNCTIONS
 
-Entity.Enemy.TickContactDamage:
-    sep #$20
+.SoftSetA 8
+.IgnoreX
+.SoftSetBank D_BANK_MIRROR_LOWRAM
+.IgnoreDirect
+.procimpll "Entity.Enemy.TickContactDamage"
     lda.w player_box_x1
     clc
     adc #8 ; ACC = player center x
@@ -620,16 +623,20 @@ Entity.Enemy.TickContactDamage:
     bmi @no_player_col
     cmp.w entity_box_y2,Y
     bpl @no_player_col
-    rep #$20
+    .SetA 16
     dec.w player_damageflag
 @no_player_col:
+    .InvalidateA
     rtl
+.endproc
 
 ; Set target direction based on pathfinding table.
 ; This will generally allow this entity to pathfind towards the player.
-Entity.Enemy.PathfindTargetPlayer:
+.SoftSetAX 8, 8
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procimpll "Entity.Enemy.PathfindTargetPlayer"
 ; first: check pathfind data
-    sep #$30
     lda.w entity_box_x1,Y
     clc
     adc.w entity_box_x2,Y
@@ -651,14 +658,17 @@ Entity.Enemy.PathfindTargetPlayer:
     lda.l Path_Angle,X
     sta.b entityTargetAngle
     rtl
+.endproc
 
 ; Set target direction to face directly towards the player.
 ; Credit for method of calculating the angle:
 ; https://codebase64.org/doku.php?id=base:8bit_atan2_8-bit_angle
 ; A couple of modifications were made for accuracy
-Entity.Enemy.DirectTargetPlayer:
+.SoftSetAX 8, 8
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procimpll "Entity.Enemy.DirectTargetPlayer"
 ; get dx
-    sep #$30
     stz.b $00
     lda.w entity_box_x1,Y
     clc
@@ -696,6 +706,7 @@ Entity.Enemy.DirectTargetPlayer:
     lda #1
     sta.b entityTargetFound
     rtl
+.endproc
 
 ; Set target direction to angle between [Y] and [X].
 ; Credit for method of calculating the angle:
@@ -726,9 +737,11 @@ _directtargetentity_y_is_zero:
     +:
     stz.b entityTargetAngle
     rtl
-Entity.Enemy.DirectTargetEntity:
+.SoftSetAX 8, 8
+.SoftSetBank D_BANK_MIRROR_LOWRAM
+.SoftSetDirect $0000
+.procimpll "Entity.DirectTargetEntity"
 ; get dx
-    sep #$30
     stz.b $00
     lda.w entity_box_x1,Y
     sec
@@ -771,9 +784,8 @@ Entity.Enemy.DirectTargetEntity:
     lda #1
     sta.b entityTargetFound
     rtl
+.endproc
 
-; Set target direction to angle between [Y] and given position.
-; Position is x=[tempDP+$00]: uint16, y=[tempDP+$02]: uint16
 _directtargetposition_x_is_zero:
     .ACCU 8
     .INDEX 8
@@ -799,9 +811,11 @@ _directtargetposition_y_is_zero:
     +:
     stz.b entityTargetAngle
     rtl
-Entity.Enemy.DirectTargetPosition:
+.SoftSetAX 8, 8
+.SoftSetBank D_BANK_MIRROR_LOWRAM
+.SoftSetDirect $0000
+.procimpll "Entity.DirectTargetPosition"
 ; get dx
-    sep #$30
     stz.b $00
     lda.w entity_box_x1,Y
     sec
@@ -844,6 +858,7 @@ Entity.Enemy.DirectTargetPosition:
     lda #1
     sta.b entityTargetFound
     rtl
+.endproc
 
 ; Move this entity according to its velocity, and collide with blocks.
 ; This function operates in two phases: horizontal movement, followed by vertical movement.
@@ -854,8 +869,10 @@ Entity.Enemy.DirectTargetPosition:
 .DEFINE ENTITYID (tempDP)
 .DEFINE TILES_X (tempDP+$02)
 .DEFINE TILES_Y (tempDP+$04)
-Entity.MoveAndCollide:
-    sep #$30
+.SoftSetAX 8, 8
+.SoftSetBank D_BANK_MIRROR_LOWRAM
+.SoftSetDirect $0000
+.procimpll "Entity.MoveAndCollide"
     sty.b ENTITYID
 ; get number of tiles (height_tiles) to check when moving in X direction
     lda.w entity_box_y1,Y
@@ -866,18 +883,18 @@ Entity.MoveAndCollide:
     .DivideStatic 16
     sta.b TILES_Y
 ; begin check properly
-    rep #$20
+    .SetA 16
     lda.w entity_velocx,Y
     beq @end_horizontal_movement
     bmi @left_movement
 ;right_movement:
-    .ACCU 16
+    .SoftSetA 16
     ; add x movement
     clc
     adc.w entity_posx,Y
     sta.w entity_posx,Y
     ; get right tile index
-    sep #$20
+    .SetA 8
     xba
     clc
     adc.b WIDTH
@@ -908,13 +925,13 @@ Entity.MoveAndCollide:
         sta.w entity_box_x1,Y
         bra @end_horizontal_movement
 @left_movement:
-    .ACCU 16
+    .SoftSetA 16
     ; add x movement
     clc
     adc.w entity_posx,Y
     sta.w entity_posx,Y
     ; get left tile index
-    sep #$20
+    .SetA 8
     xba
     .DivideStatic 16
     ldx.w entity_box_y1,Y
@@ -944,7 +961,7 @@ Entity.MoveAndCollide:
 @end_horizontal_movement:
     ldy.b ENTITYID
 ; get number of tiles (width_tiles) to check when moving in Y direction
-    sep #$30
+    .ForceSetA 8
     lda.w entity_box_x1,Y
     and #$0F
     clc
@@ -953,18 +970,18 @@ Entity.MoveAndCollide:
     .DivideStatic 16
     sta.b TILES_X
 ; now, perform vertical movement
-    rep #$20
+    .SetA 16
     lda.w entity_velocy,Y
     beq @end_vertical_movement
     bmi @up_movement
 ;down_movement:
-    .ACCU 16
+    .SoftSetA 16
     ; add x movement
     clc
     adc.w entity_posy,Y
     sta.w entity_posy,Y
     ; get bottom tile index
-    sep #$20
+    .SetA 8
     xba
     clc
     adc.b HEIGHT
@@ -993,13 +1010,13 @@ Entity.MoveAndCollide:
         sta.w entity_box_y1,Y
         bra @end_vertical_movement
 @up_movement:
-    .ACCU 16
+    .SoftSetA 16
     ; add x movement
     clc
     adc.w entity_posy,Y
     sta.w entity_posy,Y
     ; get top tile index
-    sep #$20
+    .SetA 8
     xba
     and #$F0
     ldx.w entity_box_x1,Y
@@ -1026,7 +1043,9 @@ Entity.MoveAndCollide:
         ; bra @end_vertical_movement
 @end_vertical_movement:
     ldy.b ENTITYID
+    .SoftSetA D_UNK
     rtl
+.endproc
 .UNDEFINE WIDTH
 .UNDEFINE HEIGHT
 .UNDEFINE ENTITYID
@@ -1035,8 +1054,10 @@ Entity.MoveAndCollide:
 
 ; $00 - width
 ; $01 - height
-Entity.KeepInBounds:
-    sep #$30
+.SoftSetAX 8, 8
+.SoftSetBank D_BANK_MIRROR_LOWRAM
+.IgnoreDirect
+.procimpll "Entity.KeepInBounds"
     lda.w entity_posx,Y
     cmp #ROOM_LEFT
     bcs @skip_left
@@ -1070,11 +1091,14 @@ Entity.KeepInBounds:
         sta.w entity_posy,Y
     @skip_bottom:
     rtl
+.endproc
 
 ; $00 - width
 ; $01 - height
-Entity.KeepInOuterBounds:
-    sep #$30
+.SoftSetAX 8, 8
+.SoftSetBank D_BANK_MIRROR_LOWRAM
+.IgnoreDirect
+.procimpll "Entity.KeepInOuterBounds"
     lda.w entity_posx,Y
     cmp #ROOM_LEFT-16
     bcs @skip_left
@@ -1108,15 +1132,17 @@ Entity.KeepInOuterBounds:
         sta.w entity_posy,Y
     @skip_bottom:
     rtl
+.endproc
 
-; Get the collision at the given position, if available
+; Get the first collision at the given position, if available
 ; $00: Mask
 ; $01: X
 ; $02: Y
-; Return: Y as entity ID
-Entity.GetCollisionAt:
-    .INDEX 8
-    .ACCU 8
+; Return: Y as entity ID, or 0 if none available
+.SoftSetAX 8, 8
+.SoftSetBank D_BANK_MIRROR_LOWRAM
+.IgnoreDirect
+.procimpll "Entity.GetCollisionAt"
     lda.b $02
     and #$F0
     sta.b $03
@@ -1155,15 +1181,17 @@ Entity.GetCollisionAt:
     .ENDR
     ldy #0
     rtl
+.endproc
 
 ; place entity shadow for entity at index Y
 ; assumes 16 bit index, 8 bit accumulator
 ; Parameters:
 ;   offs x [db] $05
 ;   offs y [db] $04
-Entity.Shadow.PutSmall:
-    .INDEX 16
-    .ACCU 8
+.SoftSetAX 8, 16
+.SoftSetBank D_BANK_MIRROR_LOWRAM
+.IgnoreDirect
+.procimpll "Entity.Shadow.PutSmall"
     ldx.w objectIndexShadow
     cpx.w objectIndex
     bcc @skipShadow
@@ -1187,20 +1215,23 @@ Entity.Shadow.PutSmall:
         sta.w objectData.1.flags,X
     @skipShadow:
     rtl
+.endproc
 
 ; place medium-sized entity shadow for entity at index Y
 ; assumes 16 bit index, 8 bit accumulator
 ; Parameters:
 ;   offs x [db] $05
 ;   offs y [db] $04
-Entity.Shadow.PutMedium:
-    rep #$30
+.SoftSetAX 16, 16
+.SoftSetBank D_BANK_MIRROR_LOWRAM
+.IgnoreDirect
+.procimpll "Entity.Shadow.PutMedium"
     lda.w objectIndexShadow
     sec
     sbc #8
     cmp.w objectIndex
     bcc @skipShadow
-        sep #$20
+        .SetA 8
         tax
         stx.w objectIndexShadow
         lda.w entity_posy+1,Y
@@ -1223,7 +1254,7 @@ Entity.Shadow.PutMedium:
         lda #%01011000
         sta.w objectData.2.flags,X
         ; now, need to make sprites big
-        rep #$20
+        .SetA 16
         ; phy
         txa
         ;
@@ -1255,20 +1286,23 @@ Entity.Shadow.PutMedium:
         rtl
     @skipShadow:
     rtl
+.endproc
 
 ; place big entity shadow for entity at index Y
 ; assumes 16 bit index, 8 bit accumulator
 ; Parameters:
 ;   offs x [db] $05
 ;   offs y [db] $04
-Entity.Shadow.PutBig:
-    rep #$30
+.SoftSetAX 16, 16
+.SoftSetBank D_BANK_MIRROR_LOWRAM
+.IgnoreDirect
+.procimpll "Entity.Shadow.PutBig"
     lda.w objectIndexShadow
     sec
     sbc #12
     cmp.w objectIndex
     bcc @skipShadow
-        sep #$20
+        .SetA 8
         tax
         stx.w objectIndexShadow
         lda.w entity_posy+1,Y
@@ -1299,7 +1333,7 @@ Entity.Shadow.PutBig:
         lda #%01011000
         sta.w objectData.3.flags,X
         ; now, need to make sprites big
-        rep #$20
+        .SetA 16
         ; phy
         txa
         ;
@@ -1331,6 +1365,7 @@ Entity.Shadow.PutBig:
         rtl
     @skipShadow:
     rtl
+.endproc
 
 Entity.PutSplatter:
     rep #$10
@@ -1375,7 +1410,10 @@ Entity.PutSplatter:
     rep #$30
     rtl
 
-Entity.RefreshHitboxes:
+.SoftSetAX 8, 8
+.SoftSetBank D_BANK_MIRROR_LOWRAM
+.IgnoreDirect
+.procimpll "Entity.RefreshHitboxes"
     ; clear data
     .DEFINE ENTITY_INDEX $00
     .DEFINE ENTITY_ID $0C
@@ -1386,7 +1424,6 @@ Entity.RefreshHitboxes:
     .DEFINE INC_Y $0A
     .DEFINE TMP $0E
     ; put hitboxes
-    sep #$30
     lda.l numEntities
     sta.b ENTITY_INDEX
     beql @end
@@ -1459,5 +1496,6 @@ Entity.RefreshHitboxes:
     .UNDEFINE WIDTH_STORE
     .UNDEFINE INC_Y
     .UNDEFINE TMP
+.endproc
 
 .ENDS

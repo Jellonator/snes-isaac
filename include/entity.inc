@@ -401,3 +401,124 @@
     cmp.w player_box_y1
     bmi addr
 .ENDM
+
+; PROCEDURE DEFINITIONS
+
+.SoftSetA 8
+.IgnoreX
+.SoftSetBank D_BANK_MIRROR_LOWRAM
+.IgnoreDirect
+.procheaderl "Entity.Enemy.TickContactDamage"
+    .InvalidateA
+.endproc
+
+; Set target direction based on pathfinding table.
+; This will generally allow this entity to pathfind towards the player.
+.SoftSetAX 8, 8
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procheaderl "Entity.Enemy.PathfindTargetPlayer"
+.endproc
+
+; Set target direction to face directly towards the player.
+.SoftSetAX 8, 8
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procheaderl "Entity.Enemy.DirectTargetPlayer"
+.endproc
+
+; Set target direction to angle between [Y] and [X].
+.SoftSetAX 8, 8
+.SoftSetBank D_BANK_MIRROR_LOWRAM
+.SoftSetDirect $0000
+.procheaderl "Entity.DirectTargetEntity"
+.endproc
+
+; Set target direction to angle between [Y] and given position.
+; Position is x=[tempDP+$00]: uint16, y=[tempDP+$02]: uint16
+.SoftSetAX 8, 8
+.SoftSetBank D_BANK_MIRROR_LOWRAM
+.SoftSetDirect $0000
+.procheaderl "Entity.DirectTargetPosition"
+.endproc
+
+; Move this entity according to its velocity, and collide with blocks.
+; This function operates in two phases: horizontal movement, followed by vertical movement.
+; $00 - width
+; $01 - height
+.SoftSetAX 8, 8
+.SoftSetBank D_BANK_MIRROR_LOWRAM
+.SoftSetDirect $0000
+.procheaderl "Entity.MoveAndCollide"
+    .SoftSetA D_UNK
+.endproc
+
+; Keeps an entity inside the inner level bounds
+; $00 - width
+; $01 - height
+.SoftSetAX 8, 8
+.SoftSetBank D_BANK_MIRROR_LOWRAM
+.IgnoreDirect
+.procheaderl "Entity.KeepInBounds"
+.endproc
+
+; Keeps an entity inside the 'outer' bounds of the room
+; (This is the normal bounds, expanded by 16px)
+; $00 - width
+; $01 - height
+.SoftSetAX 8, 8
+.SoftSetBank D_BANK_MIRROR_LOWRAM
+.IgnoreDirect
+.procheaderl "Entity.KeepInOuterBounds"
+.endproc
+
+; Get the first collision at the given position, if available
+; $00: Mask
+; $01: X
+; $02: Y
+; Return: Y as entity ID
+.SoftSetAX 8, 8
+.IgnoreDirect
+.SoftSetBank D_BANK_MIRROR_LOWRAM
+.procheaderl "Entity.GetCollisionAt"
+.endproc
+
+; Update spatial partition to contain all entity hitboxes
+.IgnoreDirect
+.SoftSetAX 8, 8
+.SoftSetBank D_BANK_MIRROR_LOWRAM
+.procheaderl "Entity.RefreshHitboxes"
+.endproc
+
+; place entity shadow for entity at index Y
+; assumes 16 bit index, 8 bit accumulator
+; Parameters:
+;   offs x [db] $05
+;   offs y [db] $04
+.SoftSetAX 8, 16
+.SoftSetBank D_BANK_MIRROR_LOWRAM
+.IgnoreDirect
+.procheaderl "Entity.Shadow.PutSmall"
+.endproc
+
+; place medium-sized entity shadow for entity at index Y
+; assumes 16 bit index, 8 bit accumulator
+; Parameters:
+;   offs x [db] $05
+;   offs y [db] $04
+.SoftSetAX 16, 16
+.SoftSetBank D_BANK_MIRROR_LOWRAM
+.IgnoreDirect
+.procheaderl "Entity.Shadow.PutMedium"
+.endproc
+
+; place big entity shadow for entity at index Y
+; assumes 16 bit index, 8 bit accumulator
+; Parameters:
+;   offs x [db] $05
+;   offs y [db] $04
+.SoftSetAX 16, 16
+.SoftSetBank D_BANK_MIRROR_LOWRAM
+.IgnoreDirect
+.procheaderl "Entity.Shadow.PutBig"
+.endproc

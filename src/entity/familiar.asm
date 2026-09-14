@@ -147,7 +147,8 @@ entity_familiar_tick:
         lda.b tempDP
         sta.b tempDP+2
         ; get angle
-        jsl Entity.Enemy.DirectTargetEntity
+        sep #$30
+        jsl Entity.DirectTargetEntity
         .ACCU 8
         .INDEX 8
         ldx.b entityTargetAngle

@@ -185,6 +185,7 @@ _duke_endtick:
     sta.w entity_posy,Y
     lda BOSS_WIDTH + BOSS_HEIGHT * $0100
     sta.b $00
+    sep #$30
     jsl Entity.KeepInOuterBounds
 ; load & set gfx
     sep #$20
@@ -251,7 +252,7 @@ _duke_endtick:
     .REPT 9 INDEX i
         .SetCurrentObjectS_Inc
     .ENDR
-    ldy _tmp_entityid
+    ldy.b _tmp_entityid
     pea (BOSS_HEIGHT - 8) + ($100*0)
     jsl Entity.Shadow.PutMedium
     plx

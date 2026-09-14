@@ -56,7 +56,6 @@ entity_basic_fly_tick:
     +:
 ; move
     jsl Entity.Enemy.DirectTargetPlayer
-    sep #$30
     lda.b entityTargetFound
     beq @no_target
         ldx.b entityTargetAngle

@@ -3,7 +3,7 @@
 .BANK $01 SLOT "ROM"
 .SECTION "Snes_Init" SEMIFREE
 ResetRegisters:
-    sep #$30  ; X,Y,A are 8 bit numbers
+    .ForceSetAX 8, 8
     lda #$8F  ; screen off, full brightness
     sta $2100 ; brightness + screen enable register 
     stz $2101 ; Sprite register (size + address in VRAM) 

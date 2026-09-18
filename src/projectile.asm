@@ -17,38 +17,12 @@
     xba
 .ENDM
 
-.BANK ROMBANK_ENTITYCODE SLOT "ROM"
-.SECTION "ProjectileHooks" FREE
-
-projectile_entity_init:
-    ; creator is responsible for setting position, velocity
-    rep #$20
-    lda #0
-    sta.w entity_mask,Y
-    ; sta.w entity_signal,Y; implicit by 16b store
-    sta.w entity_state,Y
-    ; sta.w entity_timer,Y; implicit by 16b store
-    sta.w loword(projectile_flags),Y
-    sta.w loword(projectile_velocz),Y
-    lda #$0800
-    sta.w loword(projectile_height),Y
-    rts
-
-projectile_entity_tick:
-    jsl projectile_tick__
-    rts
-
-projectile_entity_free:
-    rts
-
-.ENDS
-
 .BANK $01 SLOT "ROM"
 .SECTION "Projectilecode" FREE
 
 _big_projectile_update_sprite:
-    .INDEX 16
-    .ACCU 8
+    .SoftSetX 16
+    .SoftSetA 8
     asl
     clc
     adc #$30 - 16
@@ -71,11 +45,11 @@ _big_projectile_update_sprite:
     ; +:
     phx
     php
-    rep #$30
+    .ForceSetAX 16, 16
     .SetCurrentObjectS
     plp
-    .INDEX 16
-    .ACCU 8
+    .SoftSetX 16
+    .SoftSetA 8
     plx
     ldy.w objectIndex
     iny
@@ -105,8 +79,8 @@ _big_projectile_update_sprite:
 
 _projectile_update_sprite:
     ; send to OAM
-    sep #$20 ; 8A, 16XY
-    rep #$10
+    .ForceSetA 8
+    .ForceSetX 16
     tyx
     ldy.w objectIndex
     lda.w loword(projectile_size),X
@@ -157,32 +131,32 @@ _projectile_update_sprite:
     rts
 
 _projectile_tile_do_nothing:
-    .INDEX 16
-    .ACCU 16
+    .SoftSetX 16
+    .SoftSetA 16
     rts
 
 _projectile_tile_poop:
-    .INDEX 16
-    .ACCU 16
-    sep #$20 ; 8 bit A
+    .SoftSetX 16
+    .SoftSetA 16
+    .ForceSetA 8
     lda [currentRoomTileVariantTableAddress],Y
     cmp #2
     beq @removeTile
     inc A
     sta [currentRoomTileVariantTableAddress],Y
-    rep #$20 ; 16 bit A
+    .ForceSetA 16
     jsl HandleTileChanged
     rts
 @removeTile:
-    sep #$20 ; 8 bit A
+    .ForceSetA 8
     lda #0
     sta [currentRoomTileVariantTableAddress],Y
     lda #BLOCK_REGULAR
     sta [currentRoomTileTypeTableAddress],Y
-    rep #$20 ; 16 bit A
+    .ForceSetA 16
     jsl HandleTileChanged
     ; put splotch
-    sep #$20 ; 8 bit A
+    .ForceSetA 8
     tyx
     lda.l RoomTileToXTable,X
     asl
@@ -204,19 +178,21 @@ _projectile_tile_poop:
     php
     jsl Splat.poop1
     ; maybe spawn a pickup
-    rep #$30
+    .ForceSetAX 16, 16
     jsl Random.Room.Update8
-    sep #$30
+    .ForceSetAX 8, 8
     cmp #26
     bcs @no_spawn
     cmp #7
     bcc @spawn_heart
-    ;spawn_coin:
-        rep #$30
+    ; spawn_coin:
+        .PushBank
+        .ForceSetBank $7E
+        .ForceSetAX 16, 16
         lda #entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_RANDOM_COIN)
-        jsl Entity.Create ; Y = entity ID
-        sep #$30
-        lda $02,S
+        .call "Entity.Create"
+        .ForceSetAX 8, 8
+        lda 1+$02,S
         tax
         lda.l RoomTileToXTable,X
         .MultiplyStatic 16
@@ -228,14 +204,18 @@ _projectile_tile_poop:
         clc
         adc #ROOM_TOP
         sta.w entity_box_y1,Y
-        jsl Entity.Init
+        .ForceSetAX 16, 16
+        .call "Entity.Init"
+        .PopBank
         jmp @no_spawn
     @spawn_heart:
-        rep #$30
+        .PushBank
+        .ForceSetBank $7E
+        .ForceSetAX 16, 16
         lda #entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_RANDOM_HEART)
-        jsl Entity.Create ; Y = entity ID
-        sep #$30
-        lda $02,S
+        .call "Entity.Create"
+        .ForceSetAX 8, 8
+        lda 1+$02,S
         tax
         lda.l RoomTileToXTable,X
         .MultiplyStatic 16
@@ -247,7 +227,9 @@ _projectile_tile_poop:
         clc
         adc #ROOM_TOP
         sta.w entity_box_y1,Y
-        jsl Entity.Init
+        .ForceSetAX 16, 16
+        .call "Entity.Init"
+        .PopBank
 @no_spawn:
     plp
     ply
@@ -262,6 +244,7 @@ ProjectileTileHandlerTable:
     .ENDIF
 .ENDR
 
+; todo: consolidate destruction results with _ExplosionTileHandlerTable?
 ProjectileTileHandleTrampoline:
     jsr (ProjectileTileHandlerTable,X)
     rtl
@@ -270,25 +253,28 @@ ProjectileTileHandleTrampoline:
 .define PROJECTILE_TMP_POSX $01
 .define PROJECTILE_TMP_POSY $02
 .define PROJECTILE_TMP_VAL $12
+.PushContext
+.SoftSetBank $7E
 _projectile_delete:
-    rep #$30
+    .ForceSetAX 16, 16
     ldy.b PROJECTILE_TMP_IDX
-    jml Entity.Free ; tail call optimization
+    .tailcall "Entity.Free"
+.PopContextSoft
 
 .MACRO ._tear_size_damage_macro ARGS size, damage
-    .ACCU 16
+    .SoftSetA 16
     cmp #damage + 1
     bcs +
-        sep #$20
+        .ForceSetA 8
         lda #size
         sta.l projectile_size,X
         rtl
     +:
-    .ACCU 16
+    .SoftSetA 16
 .ENDM
 
 Projectile.SetSizeFromDamage:
-    rep #$30
+    .ForceSetAX 16, 16
     lda.w projectile_damage,X
     ._tear_size_damage_macro  0,  1 ;   2x2
     ._tear_size_damage_macro  1,  2 ;   3x3
@@ -301,15 +287,16 @@ Projectile.SetSizeFromDamage:
     ._tear_size_damage_macro  8, 52 ; 10x10
     ._tear_size_damage_macro  9, 72 ; 12x12
     ._tear_size_damage_macro 10, 96 ; 14x14
-    sep #$20
+    .ForceSetA 8
     lda #11
     sta.l projectile_size,X
     rtl
 
-projectile_tick__:
-    .INDEX 16
-    .ACCU 16
-    rep #$30
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $00
+.procdefinel "projectile_tick__"
+    .SetAX 16, 16
     sty.b PROJECTILE_TMP_IDX
 ; Handle lifetime (drop when life ends)
     lda.w projectile_lifetime,Y
@@ -324,7 +311,7 @@ projectile_tick__:
     dec A
     sta.w projectile_lifetime,Y
     @lifeEnd:
-; Apply speed to position
+; Apply speed to position, and get tile position
     ; X
     lda.w entity_posx,Y
     clc
@@ -332,7 +319,7 @@ projectile_tick__:
     sta.w entity_posx,Y
     ; store X index
     xba
-    sep #$20
+    .ForceSetA 8
     clc
     adc #$04
     sta.b PROJECTILE_TMP_POSX
@@ -342,13 +329,13 @@ projectile_tick__:
     lsr
     sta.b PROJECTILE_TMP_VAL
     ; Y
-    rep #$20
+    .ForceSetA 16
     lda.w entity_posy,Y
     clc
     adc.w entity_velocy,Y
     sta.w entity_posy,Y
     xba
-    sep #$30
+    .ForceSetAX 8, 8
     clc
     adc #$04
     sta.b PROJECTILE_TMP_POSY
@@ -360,7 +347,7 @@ projectile_tick__:
     bit #PROJECTILE_FLAG_HOMING
     beql @no_homing
         ; get nearest entity
-        sep #$30
+        .ForceSetAX 8, 8
         lda #0
         xba
         ldx.b PROJECTILE_TMP_VAL
@@ -417,7 +404,7 @@ projectile_tick__:
         adc #$80
         tax
         ; slow velocity
-        rep #$30
+        .ForceSetAX 16, 16
         lda.w entity_velocx,Y
         .NEG_A16
         .ShiftRight_SIGN 5, 1
@@ -431,7 +418,7 @@ projectile_tick__:
         adc.w entity_velocy,Y
         sta.w entity_velocy,Y
         lda #0
-        sep #$30
+        .ForceSetAX 8, 8
         ; add velocity
         lda.l CosTable8,X
         .Convert8To16_SIGNED 0, 1
@@ -440,7 +427,7 @@ projectile_tick__:
         adc.w entity_velocx,Y
         sta.w entity_velocx,Y
         lda #0
-        sep #$30
+        .ForceSetAX 8, 8
         lda.l SinTable8,X
         .Convert8To16_SIGNED 0, 1
         .ShiftRight_SIGN 3, 1
@@ -448,7 +435,7 @@ projectile_tick__:
         adc.w entity_velocy,Y
         sta.w entity_velocy,Y
 @no_homing:
-    sep #$30
+    .ForceSetAX 8, 8
 ; Check tile
     ldx.b PROJECTILE_TMP_VAL
     lda.l GameTileToRoomTileIndexTable,X
@@ -467,7 +454,7 @@ projectile_tick__:
     ; continuing on...
     lda [currentRoomTileTypeTableAddress],Y
     bpl @skipTileHandler
-    rep #$30
+    .ForceSetAX 16, 16
     and #$00FF
     asl
     tax
@@ -475,7 +462,7 @@ projectile_tick__:
     jmp _projectile_delete
 @skipTileHandler:
 ; Check collisions
-    sep #$30
+    .ForceSetAX 8, 8
     ; set detection mask
     ; ldx.b PROJECTILE_TMP_IDX
     lda #ENTITY_MASK_TEAR
@@ -491,7 +478,7 @@ projectile_tick__:
     beq @skipCollisionHandler
         ; found object:
         ; update veloc
-        rep #$30
+        .ForceSetAX 16, 16
         ldx.b PROJECTILE_TMP_IDX
         ; lda.w entity_velocx,X
         ; .ShiftRight_SIGN 1, FALSE
@@ -514,7 +501,7 @@ projectile_tick__:
         sbc.w projectile_damage,X
         sta.w entity_health,Y
         ; signal damaged
-        sep #$20
+        .ForceSetA 8
         php
         lda.w entity_signal,Y
         ora #ENTITY_SIGNAL_DAMAGE
@@ -526,7 +513,7 @@ projectile_tick__:
         sta.w entity_signal,Y
         lda #ENTITY_FLASH_TIME
         sta.w loword(entity_damageflash),Y
-        rep #$30
+        .ForceSetAX 16, 16
         ; if damage < targethp or !(flags&POLYPHEMUS): kill
         lda.w projectile_damage,X
         cmp.b $00
@@ -545,9 +532,9 @@ projectile_tick__:
     @hit_and_kill:
         jmp _projectile_delete
 @skipCollisionHandler:
-    rep #$10
+    .ForceSetX 16
     ldy.b PROJECTILE_TMP_IDX
-    sep #$20
+    .ForceSetA 8
     lda.w entity_box_x1,Y
     clc
     adc #8
@@ -560,18 +547,23 @@ projectile_tick__:
     sta.w entity_box_y2,Y
     jsr _projectile_update_sprite
     rtl
+.endproc
 
 ; Create a new projectile, whose position and velocity inherits from entity [Y]
 ; Returns projectile ID in [X]
 ; Make sure to set `lifetime`, `flags`, `damage`, `size`, and `type` afterwards.
 Projectile.CreateAndInheritVelocity:
 ; Create
-    rep #$20
-    sep #$10
+    .ForceSetA 16
+    .ForceSetX 8
     lda #ENTITY_TYPE_PROJECTILE
     phy
-    jsl Entity.CreateAndInit
-    sep #$30
+    .PushBank
+    .ForceSetBank $7E
+    .ForceSetAX 16, 16
+    .call "Entity.CreateAndInit"
+    .PopBank
+    .ForceSetAX 8, 8
     tyx
     ply ; Y = this, X = projectile
 ; projectile->position = this->center - vec2(2, 2)
@@ -589,7 +581,7 @@ Projectile.CreateAndInheritVelocity:
     sbc #5
     sta.w entity_box_y1,X
 ; projectile->velocity = this->velocity
-    rep #$20
+    .ForceSetA 16
     lda.w entity_velocx,Y
     sta.w entity_velocx,X
     lda.w entity_velocy,Y
@@ -599,7 +591,7 @@ Projectile.CreateAndInheritVelocity:
 ; Updates projectile in [X] to add velocity based on input.
 ; $00: u16 - SPEED
 Projectile.AddInputVelocity:
-    .ACCU 16
+    .SoftSetA 16
 ; velocity - check direction
     lda.w joy1held
     bit #JOY_Y
@@ -650,11 +642,11 @@ Projectile.AddInputVelocity:
 ; $00: u8 - SPEED (Q7.1)
 ; entityTargetAngle: u8 - ANGLE
 Projectile.AddAngleVelocity:
-    .ACCU 16
-    .INDEX 8
+    .SoftSetA 16
+    .SoftSetX 8
     ldx.b entityTargetAngle
     stz.b $30
-    sep #$20
+    .ForceSetA 8
 ; A = LENGTH
     lda.b $00
     sta.l MULTU_A
@@ -667,7 +659,7 @@ Projectile.AddAngleVelocity:
     sta.l MULTU_B
     nop ; 2 cycles
 ; veloc.y = sign(sin(θ)) * length·sin(θ)
-    rep #$20 ; 3 cycles
+    .ForceSetA 16
     lda.l MULTU_RESULT ; 4 cycles before load
     bit.b $30-1
     bpl +
@@ -675,7 +667,7 @@ Projectile.AddAngleVelocity:
     +:
     sta.w entity_velocy,Y
 ; B = cos(θ)
-    sep #$20
+    .ForceSetA 8
     lda.l CosTable8,X
     bpl +
         sta.b $31 ; $31: cos(θ)
@@ -684,7 +676,7 @@ Projectile.AddAngleVelocity:
     sta.l MULTU_B
     nop ; 2 cycles
 ; veloc.x = sign(cos(θ)) * cos(θ)
-    rep #$20 ; 3 cycles
+    .ForceSetA 16
     lda.l MULTU_RESULT ; 4 cycles before load
     bit.b $31-1
     bpl +
@@ -693,5 +685,36 @@ Projectile.AddAngleVelocity:
     sta.w entity_velocx,Y
 ; end
     rtl
+
+.ENDS
+
+.BANK ROMBANK_ENTITYCODE SLOT "ROM"
+.SECTION "ProjectileHooks" FREE
+
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $00
+.procdefines "projectile_entity_init", "IEntityInit"
+    lda #0
+    sta.w loword(projectile_velocz),Y
+    lda #$0800
+    sta.w loword(projectile_height),Y
+    rts
+.endproc
+
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $00
+.procdefines "projectile_entity_tick", "IEntityFree"
+    .call "projectile_tick__"
+    rts
+.endproc
+
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $00
+.procdefines "projectile_entity_free", "IEntityFree"
+    rts
+.endproc
 
 .ENDS

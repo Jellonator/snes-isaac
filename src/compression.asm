@@ -11,7 +11,7 @@
 ; Note that a custom Lz4 format is used. The differences are:
 ; * The header is only two bytes, and indicates the number of blocks.
 Decompress.Lz4FromROM:
-    .INDEX 16
+    .SoftSetX 16
     .DEFINE NUM_BLOCKS $30
     .DEFINE LEN_LITERAL $32
     .DEFINE LEN_MATCH $34
@@ -20,7 +20,7 @@ Decompress.Lz4FromROM:
 ; backup bank
     phb
 ; initialize registers
-    sep #$20
+    .ForceSetA 8
     pha
     plb ; B = source bank
     sta.l DMA0_SRCH ; SRCH = source bank
@@ -35,7 +35,7 @@ Decompress.Lz4FromROM:
     lda #bankbyte(Decompress.Lz4FromROM@match_copy_end)
     sta.l tempWritableCode+6
     ; continue setting registers
-    rep #$30
+    .ForceSetAX 16, 16
     tya
     sta.l WMADDL ; WMADDL = dest addr
     sta.b DEST_ADDR ; since reading WMADDL is open bus, we need to track it separately

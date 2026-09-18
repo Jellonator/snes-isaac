@@ -30,7 +30,7 @@
 
     ; Sort array at X with size A
     {funcname}:
-        rep #$30
+        .ForceSetAX 16, 16
         .DEFINE ARRAY $09
         .DEFINE START $07
         .DEFINE END   $05
@@ -74,7 +74,7 @@
             lda ARRAY,S
             tay
             .IF word_size == 8
-                sep #$20
+                .ForceSetA 8
             .ENDIF
             lda.w $0000,X
             pha
@@ -83,7 +83,7 @@
             pla
             sta.w $0000,Y
             .IF word_size == 8
-                rep #$20
+                .ForceSetA 16
             .ENDIF
         @end_inc:
         ; ROOT = START
@@ -115,7 +115,7 @@
                 adc ARRAY,S
                 tax
                 jsl sort_func
-                rep #$30
+                .ForceSetAX 16, 16
                 bcs @use_left_child
                     ; ++CHILD
                     lda CHILD,S
@@ -139,11 +139,11 @@
             adc ARRAY,S
             tay
             jsl sort_func
-            rep #$30
+            .ForceSetAX 16, 16
             bcs @end_sift ; else break
                 ; swap(ROOT, CHILD)
                 .IF word_size == 8
-                    sep #$20
+                    .ForceSetA 8
                 .ENDIF
                 lda.w $0000,X
                 pha
@@ -152,7 +152,7 @@
                 pla
                 sta.w $0000,Y
                 .IF word_size == 8
-                    rep #$20
+                    .ForceSetA 16
                 .ENDIF
                 ; ROOT = CHILD
                 lda CHILD,S

@@ -9,16 +9,16 @@
 ;   room slot index         [db] $07
 ;   room definition address [dl] $04
 InitializeRoomSlot:
-    rep #$30 ; 16 bit AXY
+    .ForceSetAX 16, 16
     ; Put room definition address into ZP so that it can be used with
     ; direct indirect long addressing mode
     lda $04,s
     sta.b $0A
-    sep #$20 ; 8 bit A, 16 bit XY
+    .ForceSetA 8
     lda $06,s
     sta.b $0C
     ; Turn slot index into slot address in X
-    rep #$30
+    .ForceSetAX 16, 16
     lda $07,S
     and #$00FF
     sta.b $0D
@@ -29,7 +29,7 @@ InitializeRoomSlot:
     sta.l roomSlotTiles.1.roomDefinition,X
     lda $05,s
     sta.l roomSlotTiles.1.roomDefinition+1,X
-    sep #$20 ; 8 bit A, 16 bit XY
+    .ForceSetA 8
     ; write tile position
     lda $08,s
     ; write room size
@@ -64,7 +64,7 @@ InitializeRoomSlot:
         sta.l roomSlotTiles.1.entityStoreTable.{i+1}.type,X
     .ENDR
     ; set room rng
-    rep #$30
+    .ForceSetAX 16, 16
     jsl Random.Stage.Update32
     sta.l roomSlotTiles.1.rng,X
     tya
@@ -86,13 +86,17 @@ InitializeRoomSlot:
 ;   room slot index         [db] $04
 LoadRoomSlotIntoLevel:
     ; first, clear existing level
-    jsl Entity.FreeAll
+    phb
+    .ForceSetBank $7E
+    .ForceSetAX 16, 16
+    .call "Entity.FreeAll"
+    plb
     jsl Palette.init_data
     ; Turn slot index into slot address in X
-    sep #$30
+    .ForceSetAX 8, 8
     lda $04,S
     sta.b currentRoomSlot
-    rep #$30
+    .ForceSetAX 16, 16
     and #$00FF
     sta.b $10
     .MultiplyIndexByRoomSizeA P_DIR, $10
@@ -115,7 +119,7 @@ LoadRoomSlotIntoLevel:
     inc A
     sta.b currentRoomRngAddress_High
     ; determine current ground data
-    rep #$30
+    .ForceSetAX 16, 16
     ldy #roomdefinition_t.chapterOverride
     lda [currentRoomDefinition],Y
     and #$00FF
@@ -129,7 +133,7 @@ LoadRoomSlotIntoLevel:
     lda.l ChapterDefinitions,X
     tax
     sta.b tempDP
-    sep #$30 ; 8 bit AXY
+    .ForceSetAX 8, 8
     ldx.b loadedRoomIndex
     lda.w mapTileTypeTable,X
     cmp #ROOMTYPE_START
@@ -141,14 +145,14 @@ LoadRoomSlotIntoLevel:
         .CopyGroundAddr spritedata.stage.basement_ground_starting_room
         jmp @ground_end
     @ground_default:
-        rep #$30
+        .ForceSetAX 16, 16
         ldx.b tempDP
         lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.ground,X
         sta.w currentRoomGroundData
-        sep #$20
+        .ForceSetA 8
         lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.ground+2,X
         sta.w currentRoomGroundData+2
-        rep #$20
+        .ForceSetA 16
         lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.groundPalette,X
         sta.w currentRoomGroundPalette
     @ground_end:
@@ -166,7 +170,7 @@ LoadRoomSlotIntoLevel:
     ; * teleported to room - need to split
     ; * room transition - need to split
     jsr _room_decompress_tilemap
-    sep #$20
+    .ForceSetA 8
     lda $05,S
     cmp #ROOM_LOAD_CONTEXT_GAMELOAD
     beq @upload_full_direct
@@ -190,7 +194,7 @@ LoadRoomSlotIntoLevel:
     .REPT 3 INDEX i
         wai
         .DisableRENDER
-            rep #$30
+            .ForceSetAX 16, 16
             ldx.b tempDP
             lda #loword(private_spriteAllocBuffer)
             .IF i > 0
@@ -202,7 +206,7 @@ LoadRoomSlotIntoLevel:
             sta.w DMA0_SIZE
             lda #BG2_CHARACTER_BASE_ADDR + $0B00*i
             sta.w VMADDR
-            sep #$20
+            .ForceSetA 8
             lda #bankbyte(private_spriteAllocBuffer)
             sta.w DMA0_SRCH
             lda #$18
@@ -218,7 +222,7 @@ LoadRoomSlotIntoLevel:
     @upload_end:
     ; copy all four palettes via vqueue
     .REPT 4 INDEX i
-        rep #$30
+        .ForceSetAX 16, 16
         ldx.b tempDP
         pea 30 ; skip first byte, to not overwrite clear color
         lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.palettes + (i*3) + 2,X
@@ -230,7 +234,7 @@ LoadRoomSlotIntoLevel:
         adc #2
         pha
         jsl CopyPaletteVQueue
-        rep #$30
+        .ForceSetAX 16, 16
         pla
         pla
         pla
@@ -240,7 +244,7 @@ LoadRoomSlotIntoLevel:
     .CopyROMToVQueueBin P_IMM, EmptyRoomTiles, 16*16*2
     ; Create operations. 12 are required to copy whole map.
     ; This will also Update the vqueueBinData offset
-    rep #$30 ; 16 bit AXY
+    .ForceSetAX 16, 16
     lda.w vqueueBinOffset
     sta.b $10 ; $10 is copy of bin offset
     clc
@@ -286,7 +290,7 @@ LoadRoomSlotIntoLevel:
     sta $02 ; $00 = dest bin
     sta $1A
     ; Begin iteration
-    ; sep #$10 ; 8b XY
+    ; .ForceSetX 8
     lda #ROOM_TILE_HEIGHT
     sta $04 ; $04 = Y iterations
     ldy #0
@@ -320,12 +324,12 @@ LoadRoomSlotIntoLevel:
     dec $04 ; } while (--iy);
     bne @loop_tile_y
 ; update doors
-    sep #$30 ; 8b AXY
+    .ForceSetAX 8, 8
     ldx.b currentRoomSlot
     lda.l roomSlotMapPos,X
     tay
     ; store map position variables
-    rep #$20
+    .ForceSetA 16
     tya
     clc
     adc #loword(mapDoorHorizontal)
@@ -339,7 +343,7 @@ LoadRoomSlotIntoLevel:
     sec
     sbc #MAP_MAX_WIDTH
     sta.b mapDoorNorth
-    sep #$20
+    .ForceSetA 8
     php
     ; safety-check: if this is a secret room and all doors are closed, open all bomb doors
     ldx.b loadedRoomIndex
@@ -436,7 +440,7 @@ LoadRoomSlotIntoLevel:
     rtl
 
 _room_decompress_tilemap:
-    rep #$30
+    .ForceSetAX 16, 16
     ldx.b tempDP
     lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.tiledata,X
     pha
@@ -449,14 +453,14 @@ _room_decompress_tilemap:
     rts
 
 _room_upload_tilemap:
-    rep #$30
+    .ForceSetAX 16, 16
     lda #loword(private_spriteAllocBuffer)
     sta.w DMA0_SRCL
     lda #$4000
     sta.w DMA0_SIZE
     lda #BG2_CHARACTER_BASE_ADDR
     sta.w VMADDR
-    sep #$20
+    .ForceSetA 8
     lda #bankbyte(private_spriteAllocBuffer)
     sta.w DMA0_SRCH
     lda #$18
@@ -473,11 +477,11 @@ _room_upload_tilemap:
 ;   room load context       [db] $05
 ;   room slot index         [db] $04
 LoadAndInitRoomSlotIntoLevel:
-    rep #$20
+    .ForceSetA 16
     lda $04,S
     pha
     jsl LoadRoomSlotIntoLevel
-    rep #$20
+    .ForceSetA 16
     pla
 InitLoadedRoomslot:
     ; initialize and update certain variables
@@ -495,11 +499,11 @@ TileLocationMap:
 ; Update the VRAM tile in currentConsideredTile
 ; Clobbers A, X, and Y
 HandleTileChanged:
-    .ACCU 16
-    .INDEX 16
-    phb
+    .SoftSetA 16
+    .SoftSetX 16
+    .PushBank
     phy
-    .ChangeDataBank $80
+    .ForceSetBank $80
     lda [currentRoomTileTypeTableAddress],Y ; get TYPE
     and #$00FF
     asl
@@ -527,11 +531,11 @@ HandleTileChanged:
     sta.l vqueueMiniOps.1.vramAddr,X
     inc.w vqueueNumMiniOps
     ply
-    plb
+    .PopBank
     rtl
 
 UpdateDoorTileNorth:
-    rep #$30
+    .ForceSetAX 16, 16
     ; Init vqueue
     lda.w vqueueNumMiniOps
     asl
@@ -576,7 +580,7 @@ UpdateDoorTileNorth:
     rtl
 
 UpdateDoorTileSouth:
-    rep #$30
+    .ForceSetAX 16, 16
     ; Init vqueue
     lda.w vqueueNumMiniOps
     asl
@@ -625,7 +629,7 @@ UpdateDoorTileSouth:
     rtl
 
 UpdateDoorTileWest:
-    rep #$30
+    .ForceSetAX 16, 16
     ; Init vqueue
     lda.w vqueueNumMiniOps
     asl
@@ -670,7 +674,7 @@ UpdateDoorTileWest:
     rtl
 
 UpdateDoorTileEast:
-    rep #$30
+    .ForceSetAX 16, 16
     ; Init vqueue
     lda.w vqueueNumMiniOps
     asl
@@ -895,8 +899,8 @@ DoorTileTopperTable_LEFT:
 ; TRANSITION ZONE ;
 
 _transition_ground_right:
-    .ACCU 16
-    .INDEX 16
+    .SoftSetA 16
+    .SoftSetX 16
     ; get column that was just loaded in
     ; col = (scrollx / 8) % 32
     lda.w gameRoomScrollX
@@ -905,8 +909,8 @@ _transition_ground_right:
     jmp _transition_ground_horizontal
 
 _transition_ground_left:
-    .ACCU 16
-    .INDEX 16
+    .SoftSetA 16
+    .SoftSetX 16
     ; get column that was just loaded in
     ; col = (scrollx / 8 - 1) % 32
     lda.w gameRoomScrollX
@@ -916,8 +920,8 @@ _transition_ground_left:
     jmp _transition_ground_horizontal
 
 _transition_ground_down:
-    .ACCU 16
-    .INDEX 16
+    .SoftSetA 16
+    .SoftSetX 16
     ; get row that was just loaded in
     ; col = ((scrolly + 32) / 8 - 4) % 32
     lda.w gameRoomScrollY
@@ -926,8 +930,8 @@ _transition_ground_down:
     jmp _transition_ground_vertical
 
 _transition_ground_up:
-    .ACCU 16
-    .INDEX 16
+    .SoftSetA 16
+    .SoftSetX 16
     ; get row that was just loaded in
     ; col = ((scrolly + 32) / 8 - 1) % 32
     lda.w gameRoomScrollY
@@ -941,8 +945,8 @@ _transition_ground_up:
 .DEFINE ADDR (tempDP+2)
 .DEFINE TILE (tempDP+4)
 _transition_ground_horizontal:
-    .ACCU 16
-    .INDEX 16
+    .SoftSetA 16
+    .SoftSetX 16
     sec
     sbc #4
     cmp #24
@@ -980,7 +984,7 @@ _transition_ground_horizontal:
         sta.l vqueueOps.{i+1}.aAddr,X
         adc #$0180 ; assume carry to be clear
     .ENDR
-    sep #$20
+    .ForceSetA 8
     lda #bankbyte(groundCharacterData)
     .REPT 16 INDEX i
         sta.l vqueueOps.{i+1}.aAddr+2,X
@@ -991,7 +995,7 @@ _transition_ground_horizontal:
         sta.l vqueueOps.{i+1}.mode,X
     .ENDR
 ; create mini ops for tile data
-    rep #$20
+    .ForceSetA 16
     ; X = vqueueNumMiniOps * 4
     lda.w vqueueNumMiniOps
     asl
@@ -1038,8 +1042,8 @@ _transition_ground_horizontal:
 .DEFINE ROW (tempDP+0)
 ; we are *transitioning* vertically, so we are writing in a *row* of ground tiles
 _transition_ground_vertical:
-    .ACCU 16
-    .INDEX 16
+    .SoftSetA 16
+    .SoftSetX 16
     sec
     sbc #8
     cmp #16
@@ -1070,14 +1074,14 @@ _transition_ground_vertical:
     clc
     adc #loword(groundCharacterData)
     sta.l vqueueOps.1.aAddr,X
-    sep #$20
+    .ForceSetA 8
     lda #bankbyte(groundCharacterData)
     sta.l vqueueOps.1.aAddr+2,X
     ; mode = VQUEUE_MODE_VRAM
     lda #VQUEUE_MODE_VRAM
     sta.l vqueueOps.1.mode,X
 ; create mini ops for tile data
-    rep #$20
+    .ForceSetA 16
     ; X = vqueueNumMiniOps * 4
     lda.w vqueueNumMiniOps
     asl
@@ -1150,7 +1154,7 @@ _transition_update_and_upload_sprites:
 ; first, clear sprite table
     jsl ClearSpriteTable
 ; now, update sprite table
-    rep #$30
+    .ForceSetAX 16, 16
     lda #objectDataExt
     sta.b TEMP
     lda #%10
@@ -1219,8 +1223,8 @@ _transition_update_and_upload_sprites:
     rts
 
 _transition_loop:
-    .ACCU 16
-    .INDEX 16
+    .SoftSetA 16
+    .SoftSetX 16
     lda #32
     sta.b FRAMES
     jsr _transition_update_and_upload_sprites
@@ -1233,7 +1237,7 @@ _transition_loop:
     jsl ProcessVQueue
     jsl UploadSpriteTable
     ; update scroll
-    rep #$20
+    .ForceSetA 16
     lda.w gameRoomScrollX
     clc
     adc.b HORIZONTAL_OFFSET
@@ -1245,7 +1249,7 @@ _transition_loop:
     and #$01FF
     sta.w gameRoomScrollY
     ; update BG2 scroll
-    sep #$20
+    .ForceSetA 8
     lda.w gameRoomScrollX
     sta.w BG2HOFS
     lda.w gameRoomScrollX+1
@@ -1268,17 +1272,17 @@ _transition_loop:
     sta.w BG3HOFS
     lda.w gameRoomScrollX+1
     sta.w BG3HOFS
-    rep #$20
+    .ForceSetA 16
     lda.w gameRoomScrollY
     clc
     adc #32
-    sep #$20
+    .ForceSetA 8
     sta.w BG3VOFS
     xba
     sta.w BG3VOFS
     .EnableRENDER
 ; update ground
-    rep #$30
+    .ForceSetAX 16, 16
     lda.b DIRECTION
     and #$00FF
     asl
@@ -1287,7 +1291,7 @@ _transition_loop:
 ; update sprite locations
     jsr _transition_update_and_upload_sprites
 ; maybe end loop
-    rep #$20
+    .ForceSetA 16
     dec.b FRAMES
     bnel @loop
     rts
@@ -1306,7 +1310,7 @@ _transition_bg2eor_table:
     .dw BG2_TILE_ADDR_OFFS_X, BG2_TILE_ADDR_OFFS_Y, BG2_TILE_ADDR_OFFS_X, BG2_TILE_ADDR_OFFS_Y
 
 _copy_objects_to_object_buffer:
-    rep #$30
+    .ForceSetAX 16, 16
     ldy #0
     ldx.b OBJECT_TABLE_SIZE
     cpx #512
@@ -1369,7 +1373,7 @@ _copy_objects_to_object_buffer:
 
 ; Backup palette data
 _palettedata_backup:
-    rep #$30
+    .ForceSetAX 16, 16
     ldx #3*64-2
     @loop:
         lda.w palettePtr,X
@@ -1381,10 +1385,10 @@ _palettedata_backup:
 
 ; restore palette data
 _palettedata_restore_backup:
-    sep #$20
+    .ForceSetA 8
     lda #$80
     tsb.w isRoomTransitioning
-    rep #$30
+    .ForceSetAX 16, 16
     ldx #3*64-2
     @loop:
         lda.l paletteDataBackup,X
@@ -1396,12 +1400,12 @@ _palettedata_restore_backup:
 
 ; free palettes used by palette backup data
 _palettedata_free_backup:
-    sep #$30
+    .ForceSetAX 8, 8
     lda.w isRoomTransitioning
     bpl @loop_end
     and #$7F
     sta.w isRoomTransitioning
-    rep #$20
+    .ForceSetA 16
     ; we only care about sprite palettes, so start at $21
     ldx #$00
     @loop_continue:
@@ -1444,14 +1448,14 @@ Transition.ForceFreeBackedUpPalettes:
 ; room_id   $05,S
 ; direction $04,S
 TransitionRoomIndex:
-    sep #$20
+    .ForceSetA 8
     lda #1
     sta.w isRoomTransitioning
     wai
 ; disable BG1 (temporarily), and copy character data of current room to BG1
     .DisableRENDER
         ; VRAM BG3 TILES -> RAM TILES (2KB)
-        rep #$20
+        .ForceSetA 16
         lda #loword(tempTileData)
         sta.w DMA0_SRCL
         lda #$0800
@@ -1459,7 +1463,7 @@ TransitionRoomIndex:
         lda #BG3_TILE_BASE_ADDR
         sta.w VMADDR
         lda.w VMDATAREAD
-        sep #$20
+        .ForceSetA 8
         lda #bankbyte(tempTileData)
         sta.w DMA0_SRCH
         lda #$39
@@ -1472,7 +1476,7 @@ TransitionRoomIndex:
         sta.w MDMAEN
     .EnableRENDER
     ; update BG3 tiles to use palettes 4-7 instead
-    rep #$30
+    .ForceSetAX 16, 16
     ldx #$0800 - 2
     @loop:
         lda.l tempTileData,X
@@ -1482,7 +1486,7 @@ TransitionRoomIndex:
         dex
         bpl @loop
     ; get floor pointer
-    rep #$30
+    .ForceSetAX 16, 16
     ldy #roomdefinition_t.chapterOverride
     lda [currentRoomDefinition],Y
     and #$00FF
@@ -1512,14 +1516,14 @@ TransitionRoomIndex:
         jsl Render.HDMAEffect.Clear
         jsl ProcessVQueue
         ; copy character data page 1 (8K)
-        rep #$30
+        .ForceSetAX 16, 16
         lda #loword(private_spriteAllocBuffer)
         sta.w DMA0_SRCL
         lda #$2000
         sta.w DMA0_SIZE
         lda #BG1_CHARACTER_BASE_ADDR
         sta.w VMADDR
-        sep #$20
+        .ForceSetA 8
         lda #bankbyte(private_spriteAllocBuffer)
         sta.w DMA0_SRCH
         lda #$18
@@ -1542,7 +1546,7 @@ TransitionRoomIndex:
     wai
     .DisableRENDER
         ; copy character data page 2 (8K)
-        rep #$30
+        .ForceSetAX 16, 16
         ldx.b TEMP
         lda #loword(private_spriteAllocBuffer) + $2000
         sta.w DMA0_SRCL
@@ -1550,7 +1554,7 @@ TransitionRoomIndex:
         sta.w DMA0_SIZE
         lda #BG1_CHARACTER_BASE_ADDR + $1000
         sta.w VMADDR
-        sep #$20
+        .ForceSetA 8
         lda #bankbyte(private_spriteAllocBuffer)
         sta.w DMA0_SRCH
         lda #$18
@@ -1567,7 +1571,7 @@ TransitionRoomIndex:
     .DisableRENDER
         ; copy all four palettes (128B)
         .REPT 4 INDEX i
-            rep #$30
+            .ForceSetAX 16, 16
             ldx.b TEMP
             pea 32
             lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.palettes + (i*3) + 2,X
@@ -1577,20 +1581,20 @@ TransitionRoomIndex:
             lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.palettes + (i*3),X
             pha
             jsl CopyPalette
-            rep #$30
+            .ForceSetAX 16, 16
             pla
             pla
             pla
         .ENDR
         ; RAM TILES -> VRAM BG3 TILES (2KB)
-        rep #$20
+        .ForceSetA 16
         lda #BG3_TILE_BASE_ADDR
         sta.w VMADDR
         lda #$0800
         sta.w DMA0_SIZE
         lda #loword(tempTileData)
         sta.w DMA0_SRCL
-        sep #$20
+        .ForceSetA 8
         lda #bankbyte(tempTileData)
         sta.w DMA0_SRCH
         lda #$80
@@ -1602,7 +1606,7 @@ TransitionRoomIndex:
         lda #1
         sta.w MDMAEN
         ; VRAM BG2 TILES -> RAM TILES (2KB)
-        rep #$20
+        .ForceSetA 16
         lda #loword(tempTileData)
         sta.w DMA0_SRCL
         lda #$0800
@@ -1610,7 +1614,7 @@ TransitionRoomIndex:
         lda #BG2_TILE_BASE_ADDR
         sta.w VMADDR
         lda.w VMDATAREAD
-        sep #$20
+        .ForceSetA 8
         lda #bankbyte(tempTileData)
         sta.w DMA0_SRCH
         lda #$39
@@ -1623,7 +1627,7 @@ TransitionRoomIndex:
         sta.w MDMAEN
     .EnableRENDER
 ; during CPU, swap palettes for BG2
-    rep #$30
+    .ForceSetAX 16, 16
     ldx #$0000
     ldy #$0400
     @loop_set_palette:
@@ -1642,14 +1646,14 @@ TransitionRoomIndex:
 ; copy RAM tile data to BG1, clear BG2, and re-enable BG1 with new flags
     .DisableRENDER
         ; RAM TILES -> VRAM BG1 TILES (2KB)
-        rep #$20
+        .ForceSetA 16
         lda #BG1_TILE_BASE_ADDR
         sta.w VMADDR
         lda #$0800
         sta.w DMA0_SIZE
         lda #loword(tempTileData)
         sta.w DMA0_SRCL
-        sep #$20
+        .ForceSetA 8
         lda #bankbyte(tempTileData)
         sta.w DMA0_SRCH
         lda #$80
@@ -1661,14 +1665,14 @@ TransitionRoomIndex:
         lda #1
         sta.w MDMAEN
         ; BACKGROUND -> VRAM BG2 tiles (2KB)
-        rep #$20
+        .ForceSetA 16
         lda #BG2_TILE_BASE_ADDR
         sta.w VMADDR
         lda #$0800
         sta.w DMA0_SIZE
         lda #loword(EmptyBackgroundTile)
         sta.w DMA0_SRCL
-        sep #$20
+        .ForceSetA 8
         lda #bankbyte(EmptyBackgroundTile)
         sta.w DMA0_SRCH
         lda #$80
@@ -1678,12 +1682,12 @@ TransitionRoomIndex:
         lda #1
         sta.w MDMAEN
         ; TRANSPARENT -> VRAM BG2 tiles current page (512B)
-        rep #$20
+        .ForceSetA 16
         lda.w gameRoomBG2Offset
         sta.b TEMP
         lda #loword(TransparentBackgroundTile)
         sta.w DMA0_SRCL
-        sep #$20
+        .ForceSetA 8
         lda #bankbyte(TransparentBackgroundTile)
         sta.w DMA0_SRCH
         lda #$80
@@ -1691,15 +1695,15 @@ TransitionRoomIndex:
         lda #%00001001
         sta.w DMA0_CTL
         .REPT 12 INDEX i
-            rep #$20
+            .ForceSetA 16
             lda.b TEMP
             sta.w VMADDR
             lda #32
             sta.w DMA0_SIZE
-            sep #$20
+            .ForceSetA 8
             lda #1
             sta.w MDMAEN
-            rep #$20
+            .ForceSetA 16
             lda.b TEMP
             clc
             adc #32
@@ -1711,7 +1715,7 @@ TransitionRoomIndex:
             sta.b TEMP
         .ENDR
     ; update render flags
-        sep #$20
+        .ForceSetA 8
         ; enable BG1
         lda #%00010111
         sta.w SCRNDESTM
@@ -1732,7 +1736,7 @@ TransitionRoomIndex:
     .EnableRENDER
     wai
 ; set up for new room to load
-    rep #$30
+    .ForceSetAX 16, 16
     lda $04,S
     and #$00FF
     sta.b DIRECTION
@@ -1743,12 +1747,12 @@ TransitionRoomIndex:
     sta.l gameRoomBG2Offset
     jsr _palettedata_backup
 ; unload current room
-    sep #$20
+    .ForceSetA 8
     lda #ENTITY_CONTEXT_TRANSITION
     sta.b entityExecutionContext
     jsl Room_Unload
 ; load new room
-    sep #$30
+    .ForceSetAX 8, 8
     lda $05,S
     sta.b loadedRoomIndex
     tax
@@ -1757,12 +1761,12 @@ TransitionRoomIndex:
     lda.l mapTileSlotTable,X
     pha
     jsl LoadRoomSlotIntoLevel
-    rep #$30
+    .ForceSetAX 16, 16
     pla
     lda #ENTITY_CONTEXT_STANDARD
     sta.b entityExecutionContext
 ; initialize sprite table with current sprites
-    rep #$30
+    .ForceSetAX 16, 16
     stz.b HORIZONTAL_OFFSET
     stz.b VERTICAL_OFFSET
     stz.b OBJECT_TABLE_SIZE
@@ -1771,18 +1775,22 @@ TransitionRoomIndex:
     jsr _palettedata_restore_backup
 ; init room, and run one single tick
     jsl InitLoadedRoomslot
-    rep #$30
+    .ForceSetAX 16, 16
     jsl ClearSpriteTable
     jsl Entity.ClearSpatialPartition
-    sep #$20
+    .ForceSetA 8
     lda #ENTITY_CONTEXT_TRANSITION
     sta.b entityExecutionContext
+    .ForceSetAX 8, 8
+    phb
+    .ChangeDataBank $7E
     jsl Entity.TickAll
-    sep #$20
+    plb
+    .ForceSetA 8
     lda #ENTITY_CONTEXT_STANDARD
     sta.b entityExecutionContext
 ; add new sprites to sprite table
-    rep #$30
+    .ForceSetAX 16, 16
     lda $04,S
     and #$00FF
     asl
@@ -1795,7 +1803,7 @@ TransitionRoomIndex:
 ; free palettes allocated by previous room
     jsr _palettedata_free_backup
 ; scroll into new room
-    rep #$30
+    .ForceSetAX 16, 16
     lda $04,S
     and #$00FF
     sta.b DIRECTION ; update DIRECTION again, in case an entity overwrote it
@@ -1812,18 +1820,18 @@ TransitionRoomIndex:
         ; copy UI to VRAM (8KB)
         pea BG1_CHARACTER_BASE_ADDR
         pea 16*16
-        sep #$20 ; 8 bit A
+        .ForceSetA 8
         lda #bankbyte(spritedata.UI)
         pha
         pea spritedata.UI
         jsl CopySprite
-        sep #$20 ; 8 bit A
+        .ForceSetA 8
         pla
-        rep #$20 ; 16 bit A
+        .ForceSetA 16
         pla
         pla
         pla
-        sep #$20
+        .ForceSetA 8
         ; set UI to use 8px tiles
         lda #%00100001
         sta.w BGMODE
@@ -1851,19 +1859,19 @@ TransitionRoomIndex:
         PEA PALETTE_UI.1 + bankbyte(palettes.ui_light.w)
         PEA palettes.ui_light.w
         jsl CopyPalette
-        rep #$20 ; 16 bit A
+        .ForceSetA 16
         PLA
         PLA
         PEA PALETTE_UI.2 + bankbyte(palettes.ui_gold.w)
         PEA palettes.ui_gold.w
         jsl CopyPalette
-        rep #$20 ; 16 bit A
+        .ForceSetA 16
         PLA
         PLA
         PEA PALETTE_UI.0 + bankbyte(palettes.item_inactive.w)
         PEA palettes.item_inactive.w
         jsl CopyPalette
-        rep #$20 ; 16 bit A
+        .ForceSetA 16
         PLA
         PLA
         PLA
@@ -1874,13 +1882,13 @@ TransitionRoomIndex:
     jsl UI.update_key_display
     jsl UI.update_all_hearts
     jsl Item.update_active_palette
-    sep #$20
+    .ForceSetA 8
     lda #$FF
     sta.w numTilesToUpdate
     jsl Trinket.update_display
     jsl UI.update_charge_display
     jsl Consumable.update_display_no_overlay
-    rep #$30
+    .ForceSetAX 16, 16
     lda.w vqueueNumRegOps
     inc.w vqueueNumRegOps
     inc.w vqueueNumRegOps
@@ -1897,7 +1905,7 @@ TransitionRoomIndex:
 ; re-enable HDMA
     jsl Render.EnableHDMA
 ; end
-    sep #$20
+    .ForceSetA 8
     lda #0
     sta.w isRoomTransitioning
     rtl

@@ -228,7 +228,7 @@
 
 ; Set entity box bounds with given width and height
 .MACRO .EntityEasySetBox ARGS width, height
-    sep #$20
+    .SetA 8
 
     lda.w entity_box_x1,Y
     clc
@@ -244,7 +244,7 @@
 ; Check for collision of entity Y with player, based on box boundaries
 ; If colliding, jump to 'addr'
 .MACRO .EntityEasyCheckPlayerCollision_Box ARGS addr
-    sep #$20
+    .SetA 8
 
     lda.w entity_box_x1,Y
     cmp.w player_box_x2
@@ -269,7 +269,7 @@
 ; Check for collision of entity Y with player, based on box boundaries
 ; If NOT colliding, jump to 'addr'
 .MACRO .EntityEasyCheckNoPlayerCollision_Box ARGS addr
-    sep #$20
+    .SetA 8
 
     lda.w entity_box_x1,Y
     cmp.w player_box_x2
@@ -292,7 +292,7 @@
 ; offset by provided boundaries
 ; If colliding, jump to 'addr'
 .MACRO .EntityEasyCheckPlayerCollision_Rect ARGS addr, left, right, top, bottom
-    sep #$20
+    .SetA 8
 
     lda.w entity_box_x1,Y
     clc
@@ -326,7 +326,7 @@
 ; offset by provided boundaries
 ; If not colliding, jump to 'addr'
 .MACRO .EntityEasyCheckNoPlayerCollision_Rect ARGS addr, left, right, top, bottom
-    sep #$20
+    .SetA 8
 
     lda.w entity_box_x1,Y
     clc
@@ -357,7 +357,7 @@
 ; offset by provided offset
 ; If colliding, jump to 'addr'
 .MACRO .EntityEasyCheckPlayerCollision_Center ARGS addr, offx, offy
-    sep #$20
+    .SetA 8
 
     lda.w entity_box_x1,Y
     clc
@@ -383,7 +383,7 @@
 ; offset by provided offset
 ; If not colliding, jump to 'addr'
 .MACRO .EntityEasyCheckNoPlayerCollision_Center ARGS addr, offx, offy
-    sep #$20
+    .SetA 8
 
     lda.w entity_box_x1,Y
     clc
@@ -402,7 +402,124 @@
     bmi addr
 .ENDM
 
+; ENTITY INTERFACES
+
+; Called during entity initialization
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procinterfaces "IEntityInit"
+    .InvalidateAX
+.endproc
+
+; Called every frame for every entity
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procinterfaces "IEntityTick"
+    .InvalidateAX
+.endproc
+
+; Called during entity cleanup
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procinterfaces "IEntityFree"
+    .InvalidateAX
+.endproc
+
 ; PROCEDURE DEFINITIONS
+
+; Create and initialize an entity of type+variant A
+; lower byte is type, upper byte is variant
+; Returns reference as Y
+.InvalidateA
+.SoftSetX 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procheaderl "Entity.CreateAndInit"
+    .SoftSetA 16
+.endproc
+
+; Create an entity of type+variant A
+; lower byte is type, upper byte is variant
+; Returns reference as Y
+; Make sure to call Entity.Init afterwards; use this function instead of
+; Entity.CreateAndInit if you want to set some variables (e.g. entity_state,
+; entity_timer) before running its init function
+.InvalidateA
+.SoftSetX 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procheaderl "Entity.Create"
+    .SoftSetA 16
+.endproc
+
+; Initialize entity in Y
+; call after Entity.Create
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procheaderl "Entity.Init"
+.endproc
+
+; Free the given entity in reference Y
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procheaderl "Entity.Free"
+    .SoftSetA 8
+.endproc
+
+; Replace this entity slot with a different type.
+; This is a bit more efficient than calling `Entity.Free` followed by
+; `Entity.Create`, with the added benefit that stored values are kept (though
+; they might be replaced by the init function).
+; Do note that this will never change the entity ID. This means that non-character
+; entities may NOT be replaced with character entities, lest you introduce
+; hard-to-diagnose bugs.
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procheaderl "Entity.Replace"
+.endproc
+
+; Change the type and variant of this entity, without freeing or initializing
+; this entity. ONLY USE THIS IF YOU KNOW WHAT YOU ARE DOING!!!
+; This is mostly only useful for swapping out variants. Though, if you want to
+; do that, you should just `sta.w entity_variant,Y` anyways.
+.InvalidateA
+.IgnoreX
+.SoftSetBank $7E
+.IgnoreDirect
+.procheaderl "Entity.ChangeType"
+    .SoftSetA 8
+.endproc
+
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procheaderl "Entity.FreeAll"
+.endproc
+
+.SoftSetAX 8, 8
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procheaderl "Entity.TickAll"
+    .SoftSetAX 16, 16
+.endproc
+
+.SoftSetAX 8, 8
+.SoftSetBank $7E
+.IgnoreDirect
+.procheaderl "Entity.SortExecutionOrder"
+.endproc
+
+.SoftSetAX 16, 16
+.SoftSetBank D_BANK_MIRROR_LOWRAM
+.SoftSetDirect $0000
+.procheaderl "Entity.InitializeEntityTable"
+.endproc
 
 .SoftSetA 8
 .IgnoreX

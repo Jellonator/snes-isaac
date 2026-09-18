@@ -5,13 +5,13 @@
 
 ReadInput:
     ; loop until controller allows itself to be read
-    rep #$20 ; 8 bit A
+    .ForceSetA 16
 @read_input_loop:
     lda HVBJOY
     and #$01
     bne @read_input_loop ;0.14% -> 1.2%
     ; Read input
-    rep #$30 ; 16 bit AXY
+    .ForceSetAX 16, 16
     ldx.w joy1raw
     lda $4218
     sta.w joy1raw
@@ -23,7 +23,7 @@ ReadInput:
     and.w joy1raw
     sta.w joy1held
     ; Not worried about controller validity for now
-    sep #$30 ; 8 bit AXY
+    .ForceSetAX 8, 8
     rts
 
 ; Clear a section of WRAM
@@ -33,14 +33,14 @@ ReadInput:
 ;   num bytes    [dw] $04
 ; MUST call with jsl
 ClearWRam:
-    rep #$20 ; 16 bit A
+    .ForceSetA 16
     lda $04,s
     sta DMA0_SIZE
     lda #loword(EmptyData)
     sta DMA0_SRCL
     lda $07,s
     sta WMADDL
-    sep #$20 ; 8 bit A
+    .ForceSetA 8
     lda #bankbyte(EmptyData)
     sta DMA0_SRCH
     lda $06,s

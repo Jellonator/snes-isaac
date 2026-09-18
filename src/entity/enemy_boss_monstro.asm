@@ -21,9 +21,10 @@
 
 .DEFINE MONSTRO_BASE_HEALTH 350
 
-entity_boss_monstro_init:
-    .ACCU 16
-    .INDEX 16
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "entity_boss_monstro_init", "IEntityInit"
     inc.w currentRoomEnemyCount
     ; default info
     lda #MONSTRO_BASE_HEALTH
@@ -31,7 +32,7 @@ entity_boss_monstro_init:
     sta.w loword(entity_char_max_health),Y
     lda #ENTITY_FLAGS_NEAREST_ENEMY_TARGET
     sta.w loword(entity_flags),Y
-    sep #$20
+    .ForceSetA 8
     lda #10
     sta.w entity_timer,Y
     lda #0
@@ -53,7 +54,7 @@ entity_boss_monstro_init:
             pea loword(spritedata.boss_monstro) + (64 * ix + 128 * 4 * iy) ; >2
             pea loword(spritedata.boss_monstro) + (64 * ix + 128 * 4 * iy + 64 * 4) ; >2
             jsl Spriteman.WriteSpriteToRawSlot
-            rep #$30
+            .ForceSetAX 16, 16
             pla ; <2
             pla ; <2
             pla ; <2
@@ -65,18 +66,23 @@ entity_boss_monstro_init:
     tya
     jsl BossBar.Add
     rts
+.endproc
 
-entity_boss_monstro_tick:
-    .ACCU 16
-    .INDEX 16
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "entity_boss_monstro_tick", "IEntityTick"
     sty.b $08
 ; check signal
-    sep #$30
+    .ForceSetAX 8, 8
     lda #ENTITY_SIGNAL_KILL
     and.w entity_signal,Y
     beq @not_kill
-        jsl Entity.Free
+        .PushContext
+        .ForceSetAX 16, 16
+        .call "Entity.Free"
         rts
+        .PopContextSoft
     @not_kill:
     lda #ENTITY_SIGNAL_DAMAGE
     and.w entity_signal,Y
@@ -84,8 +90,8 @@ entity_boss_monstro_tick:
         jsl BossBar.ReRender
     @not_damage:
 ; load & set gfx
-    sep #$20
-    rep #$10
+    .ForceSetA 8
+    .ForceSetX 16
     ldx.w objectIndex
     ; X pos
     lda.w entity_posx + 1,Y
@@ -144,7 +150,7 @@ entity_boss_monstro_tick:
     .ENDR
     ; inc object index
     ; (there's probably a more efficient way to do this but idc)
-    rep #$30
+    .ForceSetAX 16, 16
     .REPT 12 INDEX i
         .SetCurrentObjectS_Inc
     .ENDR
@@ -152,9 +158,8 @@ entity_boss_monstro_tick:
     pea (MONSTRO_HEIGHT - 14) + ($100*10)
     jsl Entity.Shadow.PutBig
     plx
-    
 ; add to partition
-    sep #$30
+    .ForceSetAX 8, 8
     lda.w entity_box_x1,Y
     clc
     adc #MONSTRO_WIDTH
@@ -166,7 +171,7 @@ entity_boss_monstro_tick:
     adc #MONSTRO_HEIGHT - MONSTRO_CENTER_Y
     sta.w entity_box_y2,Y
 ; set some flags
-    sep #$20
+    .ForceSetA 8
     lda #ENTITY_MASKSET_ENEMY
     sta.w entity_mask,Y
     lda #0
@@ -179,7 +184,7 @@ entity_boss_monstro_tick:
 ;     dec A
 ;     sta.w entity_timer,Y
 ;     bne @no_projectile
-;         rep #$30 ; 16 bit AXY
+;         .ForceSetAX 16, 16
 ;         jsl projectile_slot_get
 ;     ; set base projectile info
 ;         ; life
@@ -187,12 +192,12 @@ entity_boss_monstro_tick:
 ;         sta.w projectile_lifetime,X
 ;         ; size
 ;         stz.w projectile_flags,X
-;         sep #$20
+;         .ForceSetA 8
 ;         stz.w projectile_size,X
 ;         ; type
 ;         lda #PROJECTILE_TYPE_ENEMY_BASIC
 ;         sta.w projectile_type,X
-;         rep #$20
+;         .ForceSetA 16
 ;         ; position
 ;         ldy $08
 ;         lda.w entity_posx,Y
@@ -213,22 +218,24 @@ entity_boss_monstro_tick:
 ;         sta.w entity_timer,Y
 @no_projectile:
     rts
+.endproc
 
-entity_boss_monstro_free:
-    .ACCU 16
-    .INDEX 16
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "entity_boss_monstro_free", "IEntityFree"
     dec.w currentRoomEnemyCount
     ; free mem
     .REPT 12 INDEX i
         phy
-        php
         ldx.w loword(entity_char_custom.{i+1}),Y
         jsl Spriteman.FreeRawSlot
-        plp
+        .ForceSetAX 16, 16
         ply
     .ENDR
     tya
     jsl BossBar.Remove
     rts
+.endproc
 
 .ENDS

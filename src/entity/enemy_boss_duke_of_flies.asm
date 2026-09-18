@@ -23,6 +23,13 @@
 
 .DEFINE _tmp_entityid $10
 
+.SoftSetAX 8, 8
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procinterfaces "IDukeState"
+    .InvalidateAX
+.endproc
+
 .BANK $02 SLOT "ROM"
 .SECTION "Entity Boss Duke of Flies Extra" SUPERFREE
 
@@ -32,78 +39,11 @@ _duke_state_funcs:
     .dw _duke_releaseflies
     .dw _duke_death
 
-_duke_idle:
-    sep #$20
-    ; decrement timer
-    lda.w entity_timer,Y
-    beq @maybe_spawn
-    dec A
-    sta.w entity_timer,Y
-    jmp @no_spawn
-    ; if zero, then maybe spawn fly
-    @maybe_spawn:
-        lda.w currentRoomEnemyCount
-        cmp #MAX_FLY_COUNT
-        bcs @no_spawn
-        lda #STATE_SPAWNFLY
-        sta.w entity_state,Y
-        lda #0
-        sta.w entity_timer,Y
-    @no_spawn:
-    jmp _duke_endtick
-
-_duke_spawn_fly:
-    sep #$20
-    lda.w entity_timer,Y
-    inc A
-    sta.w entity_timer,Y
-    cmp #30
-    beq @do_spawn
-    cmp #60
-    bcs @end_spawn
-    jmp @continue
-    @do_spawn:
-        rep #$30
-        phy
-        php
-        lda #ENTITY_TYPE_ENEMY_ATTACK_FLY
-        jsl Entity.CreateAndInit
-        tyx
-        plp
-        ply
-        sep #$20
-        lda.w entity_posx+1,Y
-        clc
-        adc #16
-        sta.w entity_posx+1,X
-        lda.w entity_posy+1,Y
-        clc
-        adc #36
-        sta.w entity_posy+1,X
-        jmp @continue
-    @end_spawn:
-        sep #$20
-        lda #60
-        sta.w entity_timer,Y
-        lda #STATE_IDLE
-        sta.w entity_state,Y
-    @continue:
-    jmp _duke_endtick
-
-_duke_releaseflies:
-    jmp _duke_endtick
-
-_duke_death:
-    rep #$30
-    phy
-    jsl Entity.Free
-    rep #$30
-    ply
-    rts
-
-_duke_endtick:
+.SoftSetAX 8, 8
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "_duke_endtick"
 ; check signal
-    sep #$30
     lda #ENTITY_SIGNAL_KILL
     and.w entity_signal,Y
     beq @not_kill
@@ -119,7 +59,7 @@ _duke_endtick:
         jsl BossBar.ReRender
     @not_damage:
 ; X VELOC
-    rep #$30
+    .ForceSetAX 16, 16
     lda.w entity_posx,Y
     cmp #$100 * ROOM_LEFT
     bcs +
@@ -174,7 +114,7 @@ _duke_endtick:
     jmp @velocy_pos
     @velocy_end:
 ; finalize movement
-    rep #$30
+    .ForceSetAX 16, 16
     lda.w entity_velocx,Y
     clc
     adc.w entity_posx,Y
@@ -185,11 +125,11 @@ _duke_endtick:
     sta.w entity_posy,Y
     lda BOSS_WIDTH + BOSS_HEIGHT * $0100
     sta.b $00
-    sep #$30
+    .ForceSetAX 8, 8
     jsl Entity.KeepInOuterBounds
 ; load & set gfx
-    sep #$20
-    rep #$10
+    .ForceSetA 8
+    .ForceSetX 16
     ldx.w objectIndex
     ; X pos
     lda.w entity_posx + 1,Y
@@ -248,7 +188,7 @@ _duke_endtick:
     .ENDR
     ; inc object index
     ; (there's probably a more efficient way to do this but idc)
-    rep #$30
+    .ForceSetAX 16, 16
     .REPT 9 INDEX i
         .SetCurrentObjectS_Inc
     .ENDR
@@ -257,29 +197,120 @@ _duke_endtick:
     jsl Entity.Shadow.PutMedium
     plx
 ; set some flags
-    sep #$20
+    .ForceSetA 8
     lda #ENTITY_MASKSET_ENEMY
     sta.w entity_mask,Y
     lda #0
     sta.w entity_signal,Y
     rts
+.endproc
 
-entity_duke_of_flies_main_tick:
-    sep #$20
-    lda.w entity_state,Y
-    and #$00FF
-    tax
+.SoftSetAX 8, 8
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "_duke_idle", "IDukeState"
+    ; decrement timer
+    lda.w entity_timer,Y
+    beq @maybe_spawn
+    dec A
+    sta.w entity_timer,Y
+    jmp @no_spawn
+    ; if zero, then maybe spawn fly
+    @maybe_spawn:
+        lda.w currentRoomEnemyCount
+        cmp #MAX_FLY_COUNT
+        bcs @no_spawn
+        lda #STATE_SPAWNFLY
+        sta.w entity_state,Y
+        lda #0
+        sta.w entity_timer,Y
+    @no_spawn:
+    .SetAX 8, 8
+    .tailcall "_duke_endtick"
+.endproc
+
+.SoftSetAX 8, 8
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "_duke_spawn_fly", "IDukeState"
+    lda.w entity_timer,Y
+    inc A
+    sta.w entity_timer,Y
+    cmp #30
+    beq @do_spawn
+    cmp #60
+    bcs @end_spawn
+    jmp @continue
+    @do_spawn:
+        .ForceSetAX 16, 16
+        phy
+        php
+        lda #ENTITY_TYPE_ENEMY_ATTACK_FLY
+        .call "Entity.CreateAndInit"
+        tyx
+        plp
+        ply
+        .ForceSetA 8
+        lda.w entity_posx+1,Y
+        clc
+        adc #16
+        sta.w entity_posx+1,X
+        lda.w entity_posy+1,Y
+        clc
+        adc #36
+        sta.w entity_posy+1,X
+        jmp @continue
+    @end_spawn:
+        .ForceSetA 8
+        lda #60
+        sta.w entity_timer,Y
+        lda #STATE_IDLE
+        sta.w entity_state,Y
+    @continue:
+    .SetAX 8, 8
+    .tailcall "_duke_endtick"
+.endproc
+
+.SoftSetAX 8, 8
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "_duke_releaseflies", "IDukeState"
+    .SetAX 8, 8
+    .tailcall "_duke_endtick"
+.endproc
+
+.SoftSetAX 8, 8
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "_duke_death", "IDukeState"
+    .ForceSetAX 16, 16
+    phy
+    .call "Entity.Free"
+    .SetAX 16, 16
+    ply
+    rts
+.endproc
+
+.SoftSetAX 8, 8
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefinel "entity_duke_of_flies_main_tick"
+    ldx.w entity_state,Y
+    .setupcall_in "IDukeState"
     jsr (_duke_state_funcs,X)
+    .setupcall_out "IDukeState"
     rtl
+.endproc
 
 .ENDS
 
 .BANK ROMBANK_ENTITYCODE SLOT "ROM"
 .SECTION "Entity Boss Duke of Flies Hooks" FREE
 
-entity_boss_duke_of_flies_init:
-    .ACCU 16
-    .INDEX 16
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "entity_boss_duke_of_flies_init", "IEntityInit"
     inc.w currentRoomEnemyCount
     ; default info
     lda #BASE_HP
@@ -287,7 +318,7 @@ entity_boss_duke_of_flies_init:
     sta.w loword(entity_char_max_health),Y
     lda #ENTITY_FLAGS_NEAREST_ENEMY_TARGET
     sta.w loword(entity_flags),Y
-    sep #$20
+    .ForceSetA 8
     lda #10
     sta.w entity_timer,Y
     lda #0
@@ -301,9 +332,9 @@ entity_boss_duke_of_flies_init:
     .REPT 3 INDEX iy
         .REPT 3 INDEX ix
             ; get slot
-            sep #$30
+            .ForceSetAX 8, 8
             jsl Spriteman.GetRawSlot
-            rep #$30
+            .ForceSetAX 16, 16
             txa
             ldy.b _tmp_entityid
             sta.w loword(entity_char_custom.{iy * 3 + ix + 1}),Y
@@ -312,14 +343,14 @@ entity_boss_duke_of_flies_init:
             pea loword(spritedata.boss_duke_of_flies) + (64 * ix + 128 * 3 * iy) ; >2
             pea loword(spritedata.boss_duke_of_flies) + (64 * ix + 128 * 3 * iy + 64 * 3) ; >2
             jsl Spriteman.WriteSpriteToRawSlot
-            rep #$30
+            .ForceSetAX 16, 16
             pla ; <2
             pla ; <2
             pla ; <2
         .ENDR
     .ENDR
     ldy.b _tmp_entityid
-    rep #$30
+    .ForceSetAX 16, 16
     lda #TARGET_VELOC
     sta.w duke_target_velocx,Y
     sta.w duke_target_velocy,Y
@@ -327,16 +358,18 @@ entity_boss_duke_of_flies_init:
     lda.b _tmp_entityid
     jsl BossBar.Add
     rts
+.endproc
 
-entity_boss_duke_of_flies_tick:
-    .ACCU 16
-    .INDEX 16
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "entity_boss_duke_of_flies_tick", "IEntityTick"
     sty.b _tmp_entityid
-    sep #$30 ; 8B AXY
+    .ForceSetAX 8, 8
     ; main tick
-    jsl entity_duke_of_flies_main_tick
+    .call "entity_duke_of_flies_main_tick"
     ; add to partition
-    sep #$30
+    .ForceSetAX 8, 8
     lda.w entity_box_x1,Y
     clc
     adc #BOSS_WIDTH
@@ -348,10 +381,12 @@ entity_boss_duke_of_flies_tick:
     adc #BOSS_HEIGHT - BOSS_CENTER_Y
     sta.w entity_box_y2,Y
     rts
+.endproc
 
-entity_boss_duke_of_flies_free:
-    .ACCU 16
-    .INDEX 16
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "entity_boss_duke_of_flies_free", "IEntityFree"
     dec.w currentRoomEnemyCount
     ; free mem
     .REPT 9 INDEX i
@@ -366,5 +401,6 @@ entity_boss_duke_of_flies_free:
     lda.b _tmp_entityid
     jsl BossBar.Remove
     rts
+.endproc
 
 .ENDS

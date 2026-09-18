@@ -39,7 +39,7 @@
 
 ; Use if boolean value is needed for stage
 ; Though you may still be able to use more of byte if bad entropy is acceptible
-.IgnoreFlags
+.IgnoreContext
 .SoftSetBank D_BANK_MIRROR_LOWRAM
 .SoftSetA 16
 .procimpll "Random.Stage.Update1"
@@ -49,7 +49,7 @@
 
 ; Use if 4-bit value is needed for stage
 ; Result stored in lower byte of A
-.IgnoreFlags
+.IgnoreContext
 .SoftSetBank D_BANK_MIRROR_LOWRAM
 .SoftSetA 16
 .procimpll "Random.Stage.Update4"
@@ -60,7 +60,7 @@
 ; Use if 8-bit value is needed for stage
 ; Result stored in lower byte of A, though higher byte may also be used if
 ; bad entropy is acceptible
-.IgnoreFlags
+.IgnoreContext
 .SoftSetBank D_BANK_MIRROR_LOWRAM
 .SoftSetA 16
 .procimpll "Random.Stage.Update8"
@@ -69,7 +69,7 @@
 .endproc
 
 ; Use if 16-bit value is needed for stage
-.IgnoreFlags
+.IgnoreContext
 .SoftSetBank D_BANK_MIRROR_LOWRAM
 .SoftSetA 16
 .procimpll "Random.Stage.Update16"
@@ -79,7 +79,7 @@
 
 ; Use if 32-bit value is needed for stage
 ; lower two bytes stored in A, higher two bytes stored in Y
-.IgnoreFlags
+.IgnoreContext
 .SoftSetBank D_BANK_MIRROR_LOWRAM
 .SoftSetAX 16, 16
 .procimpll "Random.Stage.Update32"
@@ -88,7 +88,7 @@
     rtl
 .endproc
 
-.IgnoreFlags
+.IgnoreContext
 .SoftSetBank D_BANK_MIRROR_LOWRAM
 .SoftSetA 16
 .procdefines "_RngGeneratorInitStage"
@@ -106,7 +106,7 @@
 ; Use if 8-bit value is needed for stage
 ; Result stored in lower byte of A, though higher byte may also be used if
 ; bad entropy is acceptible
-.IgnoreFlags
+.IgnoreContext
 .SoftSetA 16
 .SoftSetDirect $0000
 .procimpll "Random.Room.Update8"
@@ -115,7 +115,7 @@
 .endproc
 
 ; Use if 16-bit value is needed for stage
-.IgnoreFlags
+.IgnoreContext
 .SoftSetA 16
 .SoftSetDirect $0000
 .procimpll "Random.Room.Update16"
@@ -128,7 +128,7 @@
 ; these numbers are just spit out in the same order every time from a table.
 ; These are better used for instances where this isn't too noticeable and
 ; doesn't affect level generation.
-.IgnoreFlags
+.IgnoreContext
 .SoftSetAX 16, 16
 .SoftSetBank D_BANK_MIRROR_LOWRAM
 .procimpll "Random.Quick16"
@@ -141,7 +141,7 @@
 .endproc
 
 ; Clear RNG with known values
-.IgnoreFlags
+.IgnoreContext
 .InvalidateA
 .SoftSetBank D_BANK_MIRROR_LOWRAM
 .procimpll "Random.Clear"
@@ -157,7 +157,7 @@
     rtl
 .endproc
 
-.IgnoreFlags
+.IgnoreContext
 .InvalidateA
 .SoftSetBank D_BANK_MIRROR_LOWRAM
 .procimpll "Random.InitFromTimer"

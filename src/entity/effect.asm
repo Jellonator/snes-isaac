@@ -105,9 +105,10 @@ EntityEffectTypes:
     .dw EntityEffect_Null
     .dw EntityEffect_Explosion
 
-true_entity_effect_init:
-    .ACCU 16
-    .INDEX 16
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefinel "true_entity_effect_init"
     ; Get type ref
     lda.w entity_variant,Y
     and #$00FF
@@ -123,12 +124,12 @@ true_entity_effect_init:
     lda.l bankaddr(EntityEffectTypes) + entityeffect_header_t.num_frames,X
     and #$00FF
     sta.w entity_health,Y
-    sep #$20
+    .ForceSetA 8
     lda.l bankaddr(EntityEffectTypes) + entityeffect_header_t.tile_alloc,X
     cmp.w spiteTableAvailableSlots
     bcc +
     beq +
-        rep #$20
+        .ForceSetA 16
         lda #EntityEffect_Null
         sta.w effect_header_ptr,Y
         inc A
@@ -141,11 +142,11 @@ true_entity_effect_init:
         sta.w entity_health,Y
     +:
     ; set up timer
-    sep #$20
+    .ForceSetA 8
     lda #1
     sta.w entity_timer,Y
     ; allocate sprite slots
-    rep #$20
+    .ForceSetA 16
     phy
     lda.l bankaddr(EntityEffectTypes) + entityeffect_header_t.tile_alloc,X
     and #$00FF
@@ -157,23 +158,23 @@ true_entity_effect_init:
     adc #entity_array_data
     sta.w array_ptr,Y
     sta.b $02
-    sep #$30
+    .ForceSetAX 8, 8
 @loop:
     .spriteman_get_raw_slot_lite ; already in bank $7E
     txa
     sta.b ($02)
-    rep #$20
+    .ForceSetA 16
     inc.b $02
-    sep #$20
+    .ForceSetA 8
     dec.b $00
     bne @loop
 @end:
-    rep #$30
+    .ForceSetAX 16, 16
     ply
     ; load sprite
     jsr _load_frame
     ; set up palette
-    rep #$30
+    .ForceSetAX 16, 16
     ldx.w effect_header_ptr,Y
     lda.l bankaddr(EntityEffectTypes) + entityeffect_header_t.palette,X
     sta.w effect_palette_value,Y
@@ -183,21 +184,23 @@ true_entity_effect_init:
         lda.l bankaddr(EntityEffectTypes) + entityeffect_header_t.palette_depth,X
         and #$00FF
         jsl Palette.find_or_upload_transparent
-        rep #$30
+        .ForceSetAX 16, 16
         ply
         txa
         sta.w effect_palette_ptr,Y
 @skip_palette_upload:
     ; some other setup
-    sep #$20
+    .ForceSetA 8
     lda.w entity_posy+1,Y
     sta.w loword(entity_ysort),Y
     ; end
     rtl
+.endproc
 
-true_entity_effect_free:
-    .ACCU 16
-    .INDEX 16
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefinel "true_entity_effect_free"
     ldx.w effect_header_ptr,Y
     lda.l bankaddr(EntityEffectTypes) + entityeffect_header_t.tile_alloc,X
     and #$00FF
@@ -205,18 +208,18 @@ true_entity_effect_free:
     beq @end
     lda.w array_ptr,Y
     sta.b $02
-    sep #$30
+    .ForceSetAX 8, 8
 @loop:
     lda ($02)
     tax
     .spriteman_free_raw_slot_lite
-    rep #$20
+    .ForceSetA 16
     inc.b $02
-    sep #$20
+    .ForceSetA 8
     dec.b $00
     bne @loop
 @end:
-    rep #$30
+    .ForceSetAX 16, 16
     ; free palette
     lda.w effect_palette_value,Y
     beq @skip_free_palette
@@ -224,10 +227,12 @@ true_entity_effect_free:
         jsl Palette.free
 @skip_free_palette:
     rtl
+.endproc
 
-true_entity_effect_tick:
-    .ACCU 16
-    .INDEX 16
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefinel "true_entity_effect_tick"
     .DEFINE STORE_Y $00
     .DEFINE ARRAY $02
     .DEFINE POSX $04
@@ -248,7 +253,7 @@ true_entity_effect_tick:
     sta.b PALETTE
     lda #0
     ; draw
-    sep #$20
+    .ForceSetA 8
     @loop:
         ldx.b TILE
         lda.l bankaddr(EntityEffectTypes) + entityeffect_tile_t.tile,X
@@ -279,35 +284,35 @@ true_entity_effect_tick:
         stx.b TILE
         ; increment object
         ; TODO: optimize?
-        rep #$20
+        .ForceSetA 16
         .SetCurrentObjectS_Inc
         lda #0
-        sep #$20
+        .ForceSetA 8
         jmp @loop
 @end:
     ldy.b STORE_Y
     ; decrement frame
     tyx
-    sep #$20
+    .ForceSetA 8
     dec.w entity_timer,X
     bne @no_advance_frame
         ; advance frame
         dec.w entity_health,X
         bne @no_kill
             ; kill
-            rep #$30
-            jsl Entity.Free
+            .ForceSetAX 16, 16
+            .call "Entity.Free"
             rtl
     @no_kill:
-        rep #$20
+        .ForceSetA 16
         lda.w effect_frame_ptr,Y
         clc
         adc #_sizeof_entityeffect_frame_t
         sta.w effect_frame_ptr,Y
-        ; rep #$30
+        ; .ForceSetAX 16, 16
         jsr _load_frame
 @no_advance_frame:
-    rep #$30
+    .ForceSetAX 16, 16
     rtl
     .UNDEFINE STORE_Y
     .UNDEFINE ARRAY
@@ -315,11 +320,12 @@ true_entity_effect_tick:
     .UNDEFINE POSY
     .UNDEFINE TILE
     .UNDEFINE PALETTE
+.endproc
 
 ; Load sprite data in frame stored in `effect_frame_ptr`
 _load_frame:
-    .ACCU 16
-    .INDEX 16
+    .SoftSetA 16
+    .SoftSetX 16
     .DEFINE COLUMN $00
     .DEFINE ROW $02
     .DEFINE ARRAY $04
@@ -334,11 +340,11 @@ _load_frame:
     ; set timer
     sty.b STORE_Y
     ldx.w effect_frame_ptr,Y
-    sep #$20
+    .ForceSetA 8
     lda.l bankaddr(EntityEffectTypes) + entityeffect_frame_t.frames,X
     sta.w entity_timer,Y
     ; set tile pointer, for later rendering
-    rep #$20
+    .ForceSetA 16
     lda.l bankaddr(EntityEffectTypes) + entityeffect_frame_t.tiles,X
     sta.w effect_tile_ptr,Y
     stz.b COLUMN_ORIGINAL
@@ -346,7 +352,7 @@ _load_frame:
     lda.w array_ptr,Y
     sta.b ARRAY
     ; push initial address
-    sep #$20
+    .ForceSetA 8
     lda.l bankaddr(EntityEffectTypes) + entityeffect_frame_t.columns,X
     beq @skip_upload
     sta.b COLUMN_ORIGINAL
@@ -355,7 +361,7 @@ _load_frame:
     sta.b ROW
     lda.l bankaddr(EntityEffectTypes) + entityeffect_frame_t.sprite+2,X
     pha ; bank (1B)
-    rep #$20
+    .ForceSetA 16
     lda.l bankaddr(EntityEffectTypes) + entityeffect_frame_t.sprite,X
     pha ; upper half (2B)
     lda.b COLUMN_ORIGINAL
@@ -372,7 +378,7 @@ _load_frame:
             and #$00FF
             tax
             jsl Spriteman.WriteSpriteToRawSlot
-            rep #$30
+            .ForceSetAX 16, 16
             clc
             lda $01,S
             adc #8*4*2
@@ -391,15 +397,15 @@ _load_frame:
         sta $03,S
         dec.b ROW
         bne @loop_y
-    sep #$20
+    .ForceSetA 8
     pla
-    rep #$30
+    .ForceSetAX 16, 16
     pla
     pla
     ldy.b STORE_Y
     rts
 @skip_upload:
-    rep #$30
+    .ForceSetAX 16, 16
     ldy.b STORE_Y
     rts
     .UNDEFINE COLUMN
@@ -414,28 +420,28 @@ _load_frame:
 .BANK ROMBANK_ENTITYCODE SLOT "ROM"
 .SECTION "Entity Effect Hooks" FREE
 
-entity_effect_init:
-    .ACCU 16
-    .INDEX 16
-    pla
-    phk
-    pha
-    jml true_entity_effect_init
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "entity_effect_init", "IEntityInit"
+    .call "true_entity_effect_init"
+    rts
+.endproc
 
-entity_effect_free:
-    .ACCU 16
-    .INDEX 16
-    pla
-    phk
-    pha
-    jml true_entity_effect_free
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "entity_effect_free", "IEntityTick"
+    .call "true_entity_effect_free"
+    rts
+.endproc
 
-entity_effect_tick:
-    .ACCU 16
-    .INDEX 16
-    pla
-    phk
-    pha
-    jml true_entity_effect_tick
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "entity_effect_tick", "IEntityFree"
+    .call "true_entity_effect_tick"
+    rts
+.endproc
 
 .ENDS

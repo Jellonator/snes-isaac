@@ -10,6 +10,13 @@
 .define loaded_palette loword(entity_custom.4 + 1)
 .define sprite_tile entity_health
 
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procinterfaces "IVariantHandler"
+    .InvalidateAX
+.endproc
+
 .BANK $02 SLOT "ROM"
 .SECTION "Entity Pickup" SUPERFREE
 
@@ -49,7 +56,7 @@ _variant_init:
     .dw _handle_null     ; 6 - battery
     .dw _handle_null     ; 7 - heart
     .dw _handle_null     ; 8 - soul heart
-    .dw _init_consumable ; 9 - consumable
+    .dw _handle_null     ; 9 - consumable
     .dw _init_trinket    ; A - trinket
 
 _variant_free:
@@ -62,13 +69,13 @@ _variant_free:
     .dw _handle_null     ; 6 - battery
     .dw _handle_null     ; 7 - heart
     .dw _handle_null     ; 8 - soul heart
-    .dw _free_consumable ; 9 - consumable
+    .dw _handle_null     ; 9 - consumable
     .dw _free_trinket    ; A - trinket
 
-.DEFINE SPAWN_ANIM_FRAMES 14
+.DEFINE SPAWN_ANIM_FRAMES 17
 
 _spawn_anim_y:
-    .db -4, -4, -4, -4, -3, -3, -3, -2, -1, 0, -1, -2, -1, 0
+    .db 0, -2, -3, -4, -4, -4, -4, -3, -3, -3, -2, -1, 0, -1, -2, -1, 0
 
 ; Note: prices are in DECIMAL MODE
 PickupVariantPrices:
@@ -145,10 +152,13 @@ PickupTable_RoomReward:
     .ChanceTableRestDW 0
     .ChanceTableEnd
 
-_subtract_money:
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "_subtract_money"
     phy
     php
-    sep #$20
+    .ForceSetA 8
     lda.w pickup_price,Y
     beq @skip
     sep #$08
@@ -166,17 +176,23 @@ _subtract_money:
     plp
     ply
     rts
+.endproc
 
-_init_consumable:
-_free_consumable:
-_handle_null:
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "_handle_null", "IVariantHandler"
     rts
+.endproc
 
-_handle_penny:
-    rep #$30 ; 16b A
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "_handle_penny", "IVariantHandler"
     phy
     php
     sep #$28 ; enable decimal
+    .SoftSetA 8
     lda.w playerData.money
     sec
     sbc.w pickup_price,Y
@@ -191,14 +207,19 @@ _handle_penny:
     plp
     ply
     ; KILL
-    jsl Entity.Free
+    .callsetup "Entity.Free", SETUP_FLAGS
+    .call "Entity.Free"
     rts
+.endproc
 
-_handle_nickle:
-    rep #$30 ; 16b A
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "_handle_nickle", "IVariantHandler"
     phy
     php
     sep #$28 ; enable decimal
+    .SoftSetA 8
     lda.w playerData.money
     sec
     sbc.w pickup_price,Y
@@ -213,14 +234,19 @@ _handle_nickle:
     plp
     ply
     ; KILL
-    jsl Entity.Free
+    .callsetup "Entity.Free", SETUP_FLAGS
+    .call "Entity.Free"
     rts
+.endproc
 
-_handle_dime:
-    rep #$30 ; 16b A
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "_handle_dime", "IVariantHandler"
     phy
     php
     sep #$28 ; enable decimal
+    .SoftSetA 8
     lda.w playerData.money
     sec
     sbc.w pickup_price,Y
@@ -235,11 +261,15 @@ _handle_dime:
     plp
     ply
     ; KILL
-    jsl Entity.Free
+    .callsetup "Entity.Free", SETUP_FLAGS
+    .call "Entity.Free"
     rts
+.endproc
 
-_handle_bomb:
-    rep #$30 ; 16b A
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "_handle_bomb", "IVariantHandler"
     phy
     php
     sep #$08 ; enable decimal
@@ -254,13 +284,18 @@ _handle_bomb:
     jsl UI.update_bomb_display
     plp
     ply
-    jsr _subtract_money
+    .callsetup "_subtract_money", SETUP_FLAGS
+    .call "_subtract_money"
     ; KILL
-    jsl Entity.Free
+    .callsetup "Entity.Free", SETUP_FLAGS
+    .call "Entity.Free"
     rts
+.endproc
 
-_handle_key:
-    rep #$30 ; 16b A
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "_handle_key", "IVariantHandler"
     phy
     php
     sep #$08 ; enable decimal
@@ -275,36 +310,46 @@ _handle_key:
     jsl UI.update_key_display
     plp
     ply
-    jsr _subtract_money
+    .callsetup "_subtract_money", SETUP_FLAGS
+    .call "_subtract_money"
     ; KILL
-    jsl Entity.Free
+    .callsetup "Entity.Free", SETUP_FLAGS
+    .call "Entity.Free"
     rts
+.endproc
 
-_handle_battery:
-    rep #$30 ; 16b A
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "_handle_battery", "IVariantHandler"
     phy
     php
     jsl Item.can_add_charge
-    sep #$20
+    .ForceSetA 8
     cmp #0
     beq @skip
     jsl Item.add_charge_battery
     plp
     ply
-    jsr _subtract_money
+    .callsetup "_subtract_money", SETUP_FLAGS
+    .call "_subtract_money"
     ; KILL
-    jsl Entity.Free
+    .callsetup "Entity.Free", SETUP_FLAGS
+    .call "Entity.Free"
     rts
 @skip:
     plp
     ply
     rts
+.endproc
 
-_handle_heart:
-    rep #$30
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "_handle_heart", "IVariantHandler"
     phy
     php
-    sep #$30
+    .ForceSetAX 8, 8
     lda #2
     jsl Player.Heal
     cmp #2
@@ -312,19 +357,24 @@ _handle_heart:
         ; healed some amount, remove heart
         plp
         ply
-        jsr _subtract_money
-        jsl Entity.Free
+        .callsetup "_subtract_money", SETUP_FLAGS
+    .call "_subtract_money"
+        .callsetup "Entity.Free", SETUP_FLAGS
+        .call "Entity.Free"
         rts
     +:
     plp
     ply
     rts
+.endproc
 
-_handle_soul_heart:
-    rep #$30
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "_handle_soul_heart", "IVariantHandler"
     phy
     php
-    sep #$30
+    .ForceSetAX 8, 8
     lda #2
     jsl Player.AddSoulHearts
     cmp #2
@@ -332,41 +382,58 @@ _handle_soul_heart:
         ; healed some amount, remove heart
         plp
         ply
-        jsr _subtract_money
-        jsl Entity.Free
+        .callsetup "_subtract_money", SETUP_FLAGS
+    .call "_subtract_money"
+        .callsetup "Entity.Free", SETUP_FLAGS
+        .call "Entity.Free"
         rts
     +:
     plp
     ply
     rts
+.endproc
 
-_handle_consumable:
-    jsr _subtract_money
-    sep #$30
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "_handle_consumable", "IVariantHandler"
+    .callsetup "_subtract_money", SETUP_FLAGS
+    .call "_subtract_money"
+    .ForceSetAX 8, 8
     phy
     php
     lda.w consumable_type,Y
     jsl Consumable.pickup
     plp
     ply
-    jsl Entity.Free
+    .callsetup "Entity.Free", SETUP_FLAGS
+    .call "Entity.Free"
     rts
+.endproc
 
-_handle_trinket:
-    jsr _subtract_money
-    sep #$30
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "_handle_trinket", "IVariantHandler"
+    .callsetup "_subtract_money", SETUP_FLAGS
+    .call "_subtract_money"
+    .ForceSetAX 8, 8
     phy
     php
     lda.w consumable_type,Y
     jsl Trinket.Pickup
     plp
     ply
-    jsl Entity.Free
+    .callsetup "Entity.Free", SETUP_FLAGS
+    .call "Entity.Free"
     rts
+.endproc
 
-_init_trinket:
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "_init_trinket", "IVariantHandler"
     ; get item definition for trinket
-    rep #$30
     lda.w consumable_type,Y
     and #$00FF
     asl
@@ -388,21 +455,21 @@ _init_trinket:
     lda.b $10
     ldy.b $12
     jsl Palette.find_or_upload_opaque
-    rep #$30
+    .ForceSetAX 16, 16
     ply
     txa
-    sep #$20
+    .ForceSetA 8
     sta.w loaded_palette,Y
     ; load sprite for trinket
-    rep #$30
+    .ForceSetAX 16, 16
     .PaletteIndex_X_ToSpriteDef_A
     ora.b $14
     phy
     jsl Spriteman.NewSpriteRef
-    rep #$30
+    .ForceSetAX 16, 16
     ply
     txa
-    sep #$20
+    .ForceSetA 8
     sta.w loaded_sprite,Y
     ; set tile
     lda.w loword(spriteTableValue + spritetab_t.spritemem),X
@@ -415,25 +482,32 @@ _init_trinket:
     ora #%00100001
     sta.w sprite_tile+1,Y
     rts
+.endproc
 
-_free_trinket:
-    rep #$30
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "_free_trinket", "IVariantHandler"
+    .ForceSetAX 16, 16
     phy
     lda.w loaded_sprite,Y
     and #$00FF
     tax
     jsl Spriteman.UnrefSprite
-    rep #$30
+    .ForceSetAX 16, 16
     ply
     lda.w loaded_palette,Y
     phy
     jsl Palette.free
-    rep #$30
+    .ForceSetAX 16, 16
     ply
     rts
+.endproc
 
-true_entity_pickup_tick:
-    rep #$30
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefinel "true_entity_pickup_tick"
     phy
     ldx.w anim_timer,Y
     cpx #SPAWN_ANIM_FRAMES-1
@@ -449,7 +523,7 @@ true_entity_pickup_tick:
     ldx.w objectIndex
     sta.w objectData.1.tileid,X
     ; X position
-    sep #$20
+    .ForceSetA 8
     lda.w entity_posx + 1,Y
     sta.w objectData.1.pos_x,X
     ; Y position
@@ -458,13 +532,13 @@ true_entity_pickup_tick:
     adc.b $00
     sta.w objectData.1.pos_y,X
     sta.w loword(entity_ysort),Y
-    rep #$30
+    .ForceSetAX 16, 16
     .SetCurrentObjectS_Inc
     ply
 ; collision detection
     .EntityEasySetBox 16 16
     ; decrement pickup prevention timer
-    sep #$20
+    .ForceSetA 8
     lda.w pickup_prevention_timer,Y
     beq +
         dec a
@@ -476,23 +550,25 @@ true_entity_pickup_tick:
     bcc @not_standing_on_pickup
     ; check hitbox
     .EntityEasyCheckNoPlayerCollision_Center @not_standing_on_pickup, 8, 10
-        rep #$30
+        .ForceSetAX 16, 16
         lda.w pickup_prevention_timer,Y ; timer must be 0 and player must have stepped off
         bne @skip_pickup
         lda.w entity_variant,Y
         and #$00FF
         asl
         tax
+        .setupcall_in "IVariantHandler"
         jsr (_variant_handlers,X)
+        .setupcall_out "IVariantHandler"
         jmp @skip_pickup
     @not_standing_on_pickup:
         ; disable pickup prevention flag
-        sep #$20
+        .ForceSetA 8
         lda #0
         sta.w pickup_prevention_timer+1,Y
     @skip_pickup:
 ; maybe put text
-    sep #$30
+    .ForceSetAX 8, 8
     lda.b entityExecutionContext
     cmp #ENTITY_CONTEXT_STANDARD
     bne @no_put_price_text
@@ -503,7 +579,7 @@ true_entity_pickup_tick:
         inc A
         sta.w has_put_text,Y
         ; get address
-        rep #$30
+        .ForceSetAX 16, 16
         lda.w entity_box_x1,Y
         and #$00FF
         lsr
@@ -556,11 +632,12 @@ true_entity_pickup_tick:
         sta.l vqueueMiniOps.3.data,X
 @no_put_price_text:
     rtl
+.endproc
 
-true_entity_pickup_init_spawn:
-    .ACCU 16
-    .INDEX 16
-    sep #$20
+.SoftSetAX 8, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefinel "true_entity_pickup_init_spawn"
     lda #0
     sta.w pickup_price,Y
     sta.w has_put_text,Y
@@ -573,7 +650,7 @@ true_entity_pickup_init_spawn:
     lda.w entity_variant,Y
     bpl @no_randomize
         ; get table
-        rep #$30
+        .ForceSetAX 16, 16
         and #$7F
         asl
         tax
@@ -581,7 +658,7 @@ true_entity_pickup_init_spawn:
         sta.b $00
         ; get RNG
         jsl Random.Room.Update8
-        .ACCU 16
+        .SoftSetA 16
         and #$00FF
         ; get variant
         asl
@@ -589,7 +666,7 @@ true_entity_pickup_init_spawn:
         adc.b $00
         tax
         lda.l bankaddr(PickupRandomizerTables),X
-        sep #$20
+        .ForceSetA 8
         xba
         sta.w entity_variant,Y
 @no_randomize:
@@ -606,11 +683,11 @@ true_entity_pickup_init_spawn:
     lda.w entity_variant,Y
     cmp #ENTITY_PICKUP_VARIANT_CONSUMABLE
     bne @dont_set_consumable_type
-        rep #$30
+        .ForceSetAX 16, 16
         jsl Random.Room.Update8
-        .ACCU 16
+        .SoftSetA 16
         sta.l DIVU_DIVIDEND
-        sep #$30
+        .ForceSetAX 8, 8
         lda #CONSUMABLE_COUNT-1
         sta.l DIVU_DIVISOR
         .REPT 8
@@ -624,11 +701,11 @@ true_entity_pickup_init_spawn:
     lda.w entity_variant,Y
     cmp #ENTITY_PICKUP_VARIANT_TRINKET
     bne @dont_set_trinket_type
-        rep #$30
+        .ForceSetAX 16, 16
         jsl Random.Room.Update8
-        .ACCU 16
+        .SoftSetA 16
         sta.l DIVU_DIVIDEND
-        sep #$30
+        .ForceSetAX 8, 8
         lda #TRINKET_COUNT-1
         sta.l DIVU_DIVISOR
         .REPT 8
@@ -639,18 +716,21 @@ true_entity_pickup_init_spawn:
         sta.w consumable_type,Y
 @dont_set_trinket_type:
     rtl
+.endproc
 
-true_entity_pickup_init:
-    .ACCU 16
-    .INDEX 16
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefinel "true_entity_pickup_init"
     lda.b entityExecutionContext
     cmp #ENTITY_CONTEXT_INIT_DESERIALIZE
     beq @deserialized
     cmp #ENTITY_CONTEXT_INIT_DROP
     beq @deserialized
-        jsl true_entity_pickup_init_spawn
+        .SetA 8
+        .call "true_entity_pickup_init_spawn"
 @deserialized:
-    sep #$20
+    .ForceSetA 8
     lda #0
     sta.w pickup_prevention_timer+1,Y
     sta.w has_put_text,Y
@@ -663,7 +743,7 @@ true_entity_pickup_init:
     +:
     lda #30
     sta.w pickup_prevention_timer,Y
-    rep #$30
+    .ForceSetAX 16, 16
     lda #SPAWN_ANIM_FRAMES-1
     ldx.b entityExecutionContext
     cpx #ENTITY_CONTEXT_STANDARD
@@ -672,7 +752,7 @@ true_entity_pickup_init:
     +:
     sta.w anim_timer,Y
     ; set default tile
-    rep #$30
+    .ForceSetAX 16, 16
     lda.w entity_variant,Y
     and #$00FF
     asl
@@ -681,33 +761,39 @@ true_entity_pickup_init:
     ora #%00100000 * $0100
     sta.w sprite_tile,Y
     ; initialize pickup by type
-    rep #$30
+    .ForceSetAX 16, 16
     lda.w entity_variant,Y
     and #$00FF
     asl
     tax
+    .setupcall_in "IVariantHandler"
     jsr (_variant_init,X)
+    .setupcall_out "IVariantHandler"
     rtl
+.endproc
 
-true_entity_pickup_free:
-    .ACCU 16
-    .INDEX 16
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefinel "true_entity_pickup_free"
     ; free pickup by type
-    rep #$30
+    .SetAX 16, 16
     lda.w entity_variant,Y
     and #$00FF
     asl
     tax
+    .setupcall_in "IVariantHandler"
     jsr (_variant_free,X)
+    .setupcall_out "IVariantHandler"
     ; maybe erase text
-    sep #$30
+    .ForceSetAX 8, 8
     lda.b entityExecutionContext
     cmp #ENTITY_CONTEXT_STANDARD
     bne @no_erase_price_text
     lda.w has_put_text,Y
     beq @no_erase_price_text
         ; get address
-        rep #$30
+        .ForceSetAX 16, 16
         lda.w entity_box_x1,Y
         and #$00FF
         lsr
@@ -748,26 +834,35 @@ true_entity_pickup_free:
         sta.l vqueueMiniOps.3.data,X
 @no_erase_price_text:
     rtl
+.endproc
 
 .ENDS
 
 .BANK ROMBANK_ENTITYCODE SLOT "ROM"
 .SECTION "Entity Pickup Hooks" FREE
 
-entity_pickup_init:
-    jsl true_entity_pickup_init
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "entity_pickup_init", "IEntityInit"
+    .call "true_entity_pickup_init"
     rts
+.endproc
 
-entity_pickup_free:
-    jsl true_entity_pickup_free
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "entity_pickup_free", "IEntityFree"
+    .call "true_entity_pickup_free"
     rts
+.endproc
 
-entity_pickup_tick:
-    .ACCU 16
-    .INDEX 16
-    pla
-    phk
-    pha
-    jml true_entity_pickup_tick
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "entity_pickup_tick", "IEntityTick"
+    .call "true_entity_pickup_tick"
+    rts
+.endproc
 
 .ENDS

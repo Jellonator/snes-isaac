@@ -130,9 +130,9 @@
 .endproc
 
 _CmpRoomsByAvailableEndpointTiles:
-    .INDEX 16
-    .ACCU 16
-    sep #$30
+    .SoftSetX 16
+    .SoftSetA 16
+    .ForceSetAX 8, 8
     phx
     phy
     lda $01,S
@@ -157,7 +157,7 @@ _CmpRoomsByAvailableEndpointTiles:
 ; consumes X
 ; Stores result into $03
 ; Stored an adjacent location in $04
-.InvalidateFlags
+.InvalidateContext
 .SoftSetAX 8, 8
 .SoftSetBank $7E
 .IgnoreDirect
@@ -201,7 +201,7 @@ _CmpRoomsByAvailableEndpointTiles:
 .endproc
 
 ; Sets $03 to `1` if `A` is adjacent to $02
-.InvalidateFlags
+.InvalidateContext
 .SoftSetAX 8, 8
 .SoftSetBank $7E
 .IgnoreDirect
@@ -264,7 +264,7 @@ _CmpRoomsByAvailableEndpointTiles:
 ; else {
 ;   numEndpoints = i;
 ; }
-.InvalidateFlags
+.InvalidateContext
 .SoftSetAX 8, 8
 .SoftSetBank $7E
 .IgnoreDirect
@@ -336,7 +336,7 @@ _CmpRoomsByAvailableEndpointTiles:
 .endproc
 
 ; Similar to _CalculateAvailableEndpointTiles, except we only use tiles
-; which are adjacent to the starting room.InvalidateFlags
+; which are adjacent to the starting room.
 .SoftSetAX 8, 8
 .SoftSetBank $7E
 .IgnoreDirect
@@ -411,13 +411,13 @@ _CmpRoomsByAvailableEndpointTiles:
 
 ; Similar to _CalculateAvailableEndpointTiles, except we only consider tiles
 ; which would create a new endroom
-.InvalidateFlags
+.InvalidateContext
 .SoftSetAX 8, 8
 .SoftSetBank $7E
 .IgnoreDirect
 .procdefines "_CalculateNewEndpointTiles"
-    .ACCU 8
-    .INDEX 8
+    .SoftSetA 8
+    .SoftSetX 8
     stz.b mapgenNumAvailableEndpointTiles
     lda.b mapgenNumAvailableTiles
     bne +
@@ -514,7 +514,7 @@ _CmpRoomsByAvailableEndpointTiles:
     rts
 .endproc
 
-.InvalidateFlags
+.InvalidateContext
 .SoftSetAX 8, 8
 .SoftSetBank $7E
 .IgnoreDirect
@@ -530,7 +530,7 @@ _CmpRoomsByAvailableEndpointTiles:
     rts
 .endproc
 
-.InvalidateFlags
+.InvalidateContext
 .SoftSetAX 8, 8
 .SoftSetBank $7E
 .IgnoreDirect
@@ -603,13 +603,13 @@ _CmpRoomsByAvailableEndpointTiles:
 
 ; Removes the room at mapgenAvailableTiles[X]
 ; Consumes Y and A
-.InvalidateFlags
+.InvalidateContext
 .SoftSetAX 8, 8
 .SoftSetBank $7E
 .IgnoreDirect
 .procdefines "_RemoveAvailableTileX"
-    .ACCU 8
-    .INDEX 8
+    .SoftSetA 8
+    .SoftSetX 8
     ldy.b mapgenNumAvailableTiles
     dey
     sty.b mapgenNumAvailableTiles
@@ -620,13 +620,13 @@ _CmpRoomsByAvailableEndpointTiles:
 
 ; push tile in X to available rooms
 ; consumes A and Y
-.InvalidateFlags
+.InvalidateContext
 .SoftSetAX 8, 8
 .SoftSetBank $7E
 .IgnoreDirect
 .procdefines "_PushAvailableTileX"
-    .ACCU 8
-    .INDEX 8
+    .SoftSetA 8
+    .SoftSetX 8
     ldy.b mapgenNumAvailableTiles
     stx.b mapgenAvailableTiles,Y
     iny
@@ -640,7 +640,7 @@ _CmpRoomsByAvailableEndpointTiles:
 ; Initialize the tile at X
 ; Parameters:
 ;     roomtype: db $03,S
-.InvalidateFlags
+.InvalidateContext
 .SoftSetAX 8, 8
 .SoftSetBank $7E
 .IgnoreDirect
@@ -674,7 +674,7 @@ _CmpRoomsByAvailableEndpointTiles:
 ; Parameters:
 ;     slot:     db $05,S
 ;     roomtype: db $04,S
-.InvalidateFlags
+.InvalidateContext
 .SoftSetAX 8, 8
 .SoftSetBank $7E
 .IgnoreDirect
@@ -703,7 +703,7 @@ _CmpRoomsByAvailableEndpointTiles:
     rtl
 .endproc
 
-.InvalidateFlags
+.InvalidateContext
 .SoftSetBank $7E
 .IgnoreDirect
 .SoftSetAX 16, 16
@@ -784,7 +784,7 @@ _CmpRoomsByAvailableEndpointTiles:
 .endproc
 
 ; Setup the room at tile position X
-.InvalidateFlags
+.InvalidateContext
 .SoftSetAX 8, 8
 .SoftSetBank $7E
 .IgnoreDirect
@@ -948,13 +948,13 @@ _CmpRoomsByAvailableEndpointTiles:
 
 ; Push tiles adjacent to A
 ; consumes X
-.InvalidateFlags
+.InvalidateContext
 .SoftSetAX 8, 8
 .SoftSetBank $7E
 .IgnoreDirect
 .procdefines "_PushAdjacentEmptyTilesA"
-    .ACCU 8
-    .INDEX 8
+    .SoftSetA 8
+    .SoftSetX 8
     .BranchIfTileOnRightBorderA @skipRight
         inc A
         tax
@@ -1002,7 +1002,7 @@ _CmpRoomsByAvailableEndpointTiles:
     rts
 .endproc
 
-.InvalidateFlags
+.InvalidateContext
 .IgnoreDirect
 .SoftSetBank D_BANK_MIRROR_LOWRAM
 .procimpll "MapGen.ClearAll"
@@ -1028,7 +1028,7 @@ _CmpRoomsByAvailableEndpointTiles:
     rtl
 .endproc
 
-.InvalidateFlags
+.InvalidateContext
 .procimpll "MapGen.GenerateMap"
     phb ; push Databank
     .SetAX 8, 8
@@ -1230,7 +1230,7 @@ _CmpRoomsByAvailableEndpointTiles:
     sta.w numTilesToUpdate
     plb
     rtl
-    .InvalidateFlags
+    .InvalidateContext
 .endproc
 
 .ENDS

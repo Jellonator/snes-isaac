@@ -60,7 +60,7 @@ _PlayerHealthIsRedHeartTable:
 ; Returns true (A=1) if player has any empty heart containers
 Player.CanHeal:
     ; check health slots
-    sep #$30
+    .ForceSetAX 8, 8
     ldy #HEALTHSLOT_COUNT-1
     @loop:
         lda.w playerData.healthSlots,Y
@@ -83,7 +83,7 @@ Player.CanHeal:
 ; Heals player for [A] half-hearts
 ; Returns [A] as remaining health to heal
 Player.Heal:
-    sep #$30
+    .ForceSetAX 8, 8
     tax
     beq @end
     ; Look for empty slots
@@ -147,7 +147,7 @@ Player.Heal:
 
 ; Returns true (A=1) if player has space for at least one half soul heart
 Player.CanAddSoulHeart:
-    sep #$30
+    .ForceSetAX 8, 8
     ldy #HEALTHSLOT_COUNT-1
     @loop:
         lda.w playerData.healthSlots,Y
@@ -166,7 +166,7 @@ Player.CanAddSoulHeart:
 ; Adds [A] soul hearts to player
 ; Returns [A] as remaining soul hearts to add
 Player.AddSoulHearts
-    sep #$30
+    .ForceSetAX 8, 8
     tax
     beq @end
     ; Look for empty slots
@@ -237,7 +237,7 @@ _PlayerDied:
 .DEFINE PLAYER_TOOK_SOUL_HEALTH 2
 _PlayerTakeHealth:
     ; check health slots
-    sep #$30
+    .ForceSetAX 8, 8
     ldy #HEALTHSLOT_COUNT-1
     @loop:
         lda.w playerData.healthSlots,Y
@@ -269,11 +269,11 @@ _PlayerTakeHealth:
         bcc @died
     +
     ; set invuln timer
-    rep #$30
+    .ForceSetAX 16, 16
     lda #60 ; 1 second
     sta.w playerData.invuln_timer
     ; check damage that was taken. If it is a red heart, then set devil deal flag.
-    sep #$30
+    .ForceSetAX 8, 8
     ldx.b $02
     lda.l _PlayerHealthIsRedHeartTable,X
     beq +
@@ -294,7 +294,7 @@ _PlayerHandleDamaged:
     lda.w playerData.invuln_timer
     bne +
         jsl _PlayerTakeHealth
-        sep #$20
+        .ForceSetA 8
         lda.w player_signal
         bit #ENTITY_SIGNAL_DOUBLEDAMAGE
         beq ++
@@ -305,7 +305,7 @@ _PlayerHandleDamaged:
     rtl
 
 Player.health_up:
-    sep #$30
+    .ForceSetAX 8, 8
     ldy #HEALTHSLOT_COUNT-1
     @loop:
         ; move health slots over one
@@ -321,7 +321,7 @@ Player.health_up:
     jmp UI.update_all_hearts
 
 Player.get_effective_health:
-    sep #$30
+    .ForceSetAX 8, 8
     stz.b $00
     ldy #HEALTHSLOT_COUNT-1
     @loop:
@@ -341,7 +341,7 @@ Player.get_effective_health:
     jmp UI.update_all_hearts
 
 Player.count_red_heart_slots:
-    sep #$30
+    .ForceSetAX 8, 8
     ldy #0
     @loop:
         ldx.w playerData.healthSlots,Y
@@ -355,7 +355,7 @@ Player.count_red_heart_slots:
     rtl
 
 Player.take_heart_container:
-    sep #$30
+    .ForceSetAX 8, 8
     ldy #0
     ; first, loop until non-red heart is found.
     ; This is to maintain the player's current sum red health as best as possible.
@@ -387,7 +387,7 @@ Player.take_heart_container:
     jmp UI.update_all_hearts
 
 Player.reset_stats:
-    rep #$20
+    .ForceSetA 16
     lda #PLAYER_STATBASE_ACCEL
     sta.w playerData.stat_accel
     lda #PLAYER_STATBASE_SPEED
@@ -405,7 +405,7 @@ Player.reset_stats:
 
 PlayerInit:
     jsl Costume.player_reset
-    rep #$20 ; 16 bit A
+    .ForceSetA 16
     stz.w joy1held
     stz.w joy1press
     stz.w joy1raw
@@ -428,7 +428,7 @@ PlayerInit:
     sta.w playerData.money
     lda #$10
     sta.w playerData.keys
-    lda #$00
+    lda #$10
     sta.w playerData.bombs
     stz.w playerData.current_consumable
     stz.w playerData.current_active_charge
@@ -443,7 +443,7 @@ PlayerInit:
     jsl UI.update_money_display
     jsl Consumable.update_display_no_overlay
     jsl Trinket.update_display
-    sep #$30
+    .ForceSetAX 8, 8
     stz.w player_signal
     lda #HEALTH_REDHEART_FULL
     sta.w playerData.healthSlots.1
@@ -453,7 +453,7 @@ PlayerInit:
     jsl Item.reset_items
     jsl Trinket.Init
     jsl Player.reset_stats
-    sep #$30
+    .ForceSetAX 8, 8
     stz.w playerData.walk_frame
     stz.w playerData.bomb_wait_timer
     stz.w playerData.anim_wait_timer
@@ -463,14 +463,14 @@ PlayerInit:
     sta.w playerData.facingdir_body
     lda #2
     jsl Player.set_head_frame@upload_frame
-    sep #$30
+    .ForceSetAX 8, 8
     lda #2
     jsl Player.set_body_frame@upload_frame
     rts
 
 ; Abridged version of PlayerInit that doesn't reset player items or resources.
 PlayerEnterFloor:
-    rep #$30
+    .ForceSetAX 16, 16
     lda #PLAYER_FLAG_INVALIDATE_ITEM_CACHE
     sta.w playerData.flags
     sta.w player_velocx
@@ -483,7 +483,7 @@ PlayerEnterFloor:
     stz.w playerData.invuln_timer
     stz.w playerData.brimstone_timer
     jsl PlayerDiscoverNearbyRooms
-    sep #$30
+    .ForceSetAX 8, 8
     stz.w player_signal
     stz.w playerData.walk_frame
     stz.w playerData.bomb_wait_timer
@@ -494,14 +494,14 @@ PlayerEnterFloor:
     sta.w playerData.facingdir_body
     lda #2
     jsl Player.set_head_frame@upload_frame
-    sep #$30
+    .ForceSetAX 8, 8
     lda #2
     jsl Player.set_body_frame@upload_frame
     rtl
 
 ; Init player after loading from SRAM
 PlayerInitPostLoad:
-    rep #$30
+    .ForceSetAX 16, 16
     lda #PLAYER_FLAG_INVALIDATE_ITEM_CACHE
     sta.w playerData.flags
     sta.w player_velocx
@@ -510,7 +510,7 @@ PlayerInitPostLoad:
     stz.w playerData.invuln_timer
     stz.w playerData.brimstone_timer
     jsl PlayerDiscoverNearbyRooms
-    sep #$30
+    .ForceSetAX 8, 8
     stz.w player_signal
     stz.w playerData.walk_frame
     stz.w playerData.bomb_wait_timer
@@ -521,7 +521,7 @@ PlayerInitPostLoad:
     sta.w playerData.facingdir_body
     lda #2
     jsl Player.set_head_frame@upload_frame
-    sep #$30
+    .ForceSetAX 8, 8
     lda #2
     jsl Player.set_body_frame@upload_frame
     jsl UI.update_all_hearts
@@ -535,7 +535,7 @@ PlayerInitPostLoad:
 
 ; Set head frame to A
 Player.set_head_frame:
-    sep #$30
+    .ForceSetAX 8, 8
     cmp.w playerData.active_head_frame
     bne @upload_frame
         rtl ; - same frame, no upload
@@ -543,7 +543,7 @@ Player.set_head_frame:
     sta.w playerData.active_head_frame
 ; upload
     ; inc ops
-    rep #$30
+    .ForceSetAX 16, 16
     lda.l vqueueNumOps
     asl
     asl
@@ -554,7 +554,7 @@ Player.set_head_frame:
     inc A
     sta.l vqueueNumOps
     ; mode[] = VQUEUE_MODE_VRAM
-    sep #$20
+    .ForceSetA 8
     lda #VQUEUE_MODE_VRAM
     sta.l vqueueOps.1.mode,X
     sta.l vqueueOps.2.mode,X
@@ -564,7 +564,7 @@ Player.set_head_frame:
     sta.l vqueueOps.2.aAddr+2,X
     ; aAddr[0] = playerSpriteBuffer + frame×128
     ; aAddr[1] = playerSpriteBuffer + frame×128 + 64
-    rep #$30
+    .ForceSetAX 16, 16
     lda.w playerData.active_head_frame
     and #$00FF
     xba
@@ -590,7 +590,7 @@ Player.set_head_frame:
 
 ; Set body frame to A
 Player.set_body_frame:
-    sep #$30
+    .ForceSetAX 8, 8
     cmp.w playerData.active_body_frame
     bne @upload_frame
         rtl ; - same frame, no upload
@@ -598,7 +598,7 @@ Player.set_body_frame:
     sta.w playerData.active_body_frame
 ; upload
     ; inc ops
-    rep #$30
+    .ForceSetAX 16, 16
     lda.l vqueueNumOps
     asl
     asl
@@ -609,7 +609,7 @@ Player.set_body_frame:
     inc A
     sta.l vqueueNumOps
     ; mode[] = VQUEUE_MODE_VRAM
-    sep #$20
+    .ForceSetA 8
     lda #VQUEUE_MODE_VRAM
     sta.l vqueueOps.1.mode,X
     sta.l vqueueOps.2.mode,X
@@ -619,7 +619,7 @@ Player.set_body_frame:
     sta.l vqueueOps.2.aAddr+2,X
     ; aAddr[0] = playerSpriteBuffer + frame×128
     ; aAddr[1] = playerSpriteBuffer + frame×128 + 64
-    rep #$30
+    .ForceSetAX 16, 16
     lda.w playerData.active_body_frame
     and #$00FF
     xba
@@ -646,7 +646,7 @@ Player.set_body_frame:
 .DEFINE PLAYER_WALK_TIMER_FRAME_DELAY $0900
 
 _update_player_animation_vx:
-    rep #$30
+    .ForceSetAX 16, 16
     lda.w player_velocx
     beq @not_moving
     .ABS_A16_POSTLOAD
@@ -658,12 +658,12 @@ _update_player_animation_vx:
     jmp @upload_frame
 @not_moving:
     stz.w playerData.walk_timer
-    sep #$20
+    .ForceSetA 8
     stz.w playerData.walk_frame
     jmp @upload_frame
 @next_frame:
     stz.w playerData.walk_timer
-    sep #$20
+    .ForceSetA 8
     lda.w playerData.walk_frame
     inc A
     cmp #6
@@ -672,22 +672,22 @@ _update_player_animation_vx:
     +:
     sta.w playerData.walk_frame
 @upload_frame:
-    sep #$30
+    .ForceSetAX 8, 8
     lda.w playerData.walk_frame
     clc
     adc #24
     jsl Player.set_body_frame
-    rep #$30
+    .ForceSetAX 16, 16
     lda.w player_velocx
     bpl +
-        sep #$20
+        .ForceSetA 8
         lda #%01100000
         sta.w playerData.body_flags 
     +:
     rts
 
 _update_player_animation_vy_up:
-    rep #$30
+    .ForceSetAX 16, 16
     lda.w player_velocy
     .NEG_A16
     clc
@@ -698,7 +698,7 @@ _update_player_animation_vy_up:
     jmp @upload_frame
 @next_frame:
     stz.w playerData.walk_timer
-    sep #$20
+    .ForceSetA 8
     lda.w playerData.walk_frame
     dec A
     bpl +
@@ -706,7 +706,7 @@ _update_player_animation_vy_up:
     +:
     sta.w playerData.walk_frame
 @upload_frame:
-    sep #$30
+    .ForceSetAX 8, 8
     lda.w playerData.walk_frame
     clc
     adc #16
@@ -714,7 +714,7 @@ _update_player_animation_vy_up:
     rts
 
 _update_player_animation_vy:
-    rep #$30
+    .ForceSetAX 16, 16
     lda.w player_velocy
     beq @not_moving
     bmil _update_player_animation_vy_up
@@ -726,12 +726,12 @@ _update_player_animation_vy:
     jmp @upload_frame
 @not_moving:
     stz.w playerData.walk_timer
-    sep #$20
+    .ForceSetA 8
     stz.w playerData.walk_frame
     jmp @upload_frame
 @next_frame:
     stz.w playerData.walk_timer
-    sep #$20
+    .ForceSetA 8
     lda.w playerData.walk_frame
     inc A
     cmp #6
@@ -740,7 +740,7 @@ _update_player_animation_vy:
     +:
     sta.w playerData.walk_frame
 @upload_frame:
-    sep #$30
+    .ForceSetAX 8, 8
     lda.w playerData.walk_frame
     clc
     adc #16
@@ -748,7 +748,7 @@ _update_player_animation_vy:
     rts
 
 _update_player_animation:
-    sep #$20
+    .ForceSetA 8
     lda.w playerData.anim_wait_timer
     beq +
         dec A
@@ -763,7 +763,7 @@ _update_player_animation:
     stz.w playerData.head_offset_y
     ; lda #0
     ; jsl Player.set_head_frame
-    rep #$30
+    .ForceSetAX 16, 16
     lda.w player_velocx
     .ABS_A16_POSTLOAD
     sta.b $00
@@ -771,7 +771,7 @@ _update_player_animation:
     .ABS_A16_POSTLOAD
     cmp.b $00
     bcs @update_y
-        sep #$10
+        .ForceSetX 8
         lda.w player_velocx
         beq @nomovex
             ldy #FACINGDIR_RIGHT
@@ -784,7 +784,7 @@ _update_player_animation:
         jsr _update_player_animation_vx
         jmp @end
     @update_y:
-        sep #$10
+        .ForceSetX 8
         lda.w player_velocy
         beq @nomovey
             ldy #FACINGDIR_DOWN
@@ -802,7 +802,7 @@ _update_player_animation:
         ; TODO: use firing laser sprite
         rts
     +:
-    sep #$30
+    .ForceSetAX 8, 8
     lda.w playerData.playerItemStackNumber+ITEMID_CHOCOLATE_MILK
     bne @chocolate_milk
     lda.w playerData.playerItemStackNumber+ITEMID_BRIMSTONE
@@ -813,7 +813,7 @@ _update_player_animation:
     bcc +
         jsr _update_player_head_facing
     +
-    sep #$30
+    .ForceSetAX 8, 8
     ldy #0
     lda.w playerData.tear_timer+1
     cmp #$1E
@@ -828,7 +828,7 @@ _update_player_animation:
     rts
 @chocolate_milk:
     jsr _update_player_head_facing
-    sep #$30
+    .ForceSetAX 8, 8
     lda.w playerData.tear_timer+1
     bne +
         lda.w playerData.facingdir_head
@@ -850,8 +850,8 @@ _update_player_animation:
     rts
 
 _update_player_head_facing:
-    rep #$20
-    sep #$10
+    .ForceSetA 16
+    .ForceSetX 8
     lda.w joy1held
     bit #(JOY_A|JOY_B|JOY_Y|JOY_X)
     bne +
@@ -887,7 +887,7 @@ _update_player_head_facing:
     rts
 
 PlayerUpdate:
-    rep #$30 ; 16 bit AXY
+    .ForceSetAX 16, 16
     lda #0
     sta.l ENTITY_INDEX_PLAYER+entity_flags
 ; check hp
@@ -895,9 +895,9 @@ PlayerUpdate:
     bpl +
         jsl _PlayerHandleDamaged
     +:
-    sep #$20
+    .ForceSetA 8
     stz.w player_signal
-    rep #$30
+    .ForceSetAX 16, 16
     stz.w player_damageflag
     dec.w playerData.invuln_timer
     bpl +
@@ -907,29 +907,32 @@ PlayerUpdate:
     jsl Item.check_and_recalculate
 ; bombs
     ; check bomb timer
-    sep #$20
+    .ForceSetA 8
     lda.w playerData.bomb_wait_timer
     bne @cant_place_bomb
         ; check bomb count
         lda.w playerData.bombs
         beq @end_place_bomb
         ; check bomb button
-        rep #$30
+        .ForceSetAX 16, 16
         lda.w joy1press
         bit #JOY_L
         beq @end_place_bomb
         ; create bomb at position
+        .PushBank
+        .ForceSetBank $7E
         lda #entityvariant(ENTITY_TYPE_BOMB, 0)
-        jsl Entity.CreateAndInit
-        rep #$30
+        .call "Entity.CreateAndInit"
+        .PopBank
+        .SetAX 16, 16
         lda.w player_posx
         sta.w entity_posx,Y
         lda.w player_posy
         sta.w entity_posy,Y
-        sep #$20
+        .ForceSetA 8
         lda #PLAYER_BOMB_PLACE_TIMER
         sta.w playerData.bomb_wait_timer
-        rep #$20
+        .ForceSetA 16
         sep #$08
         lda.w playerData.bombs
         sec
@@ -943,7 +946,7 @@ PlayerUpdate:
         sta.w playerData.bomb_wait_timer
     @end_place_bomb:
 ; movement
-    rep #$30 ; 16 bit AXY
+    .ForceSetAX 16, 16
     lda.w playerData.stat_speed
     sta $00 ; $00 = speed
     ; check (LEFT OR RIGHT) AND (UP OR DOWN)
@@ -1076,7 +1079,7 @@ PlayerUpdate:
     beq +
         bcs @player_aligned_door_v
     +:
-    sep #$20
+    .ForceSetA 8
     lda [mapDoorWest]
     bpl +
         ldx #PLAYER_ROOM_BOUND_LEFT - PLAYER_DOOR_ENTRY_LIMIT
@@ -1087,7 +1090,7 @@ PlayerUpdate:
         ldy #PLAYER_ROOM_BOUND_RIGHT + PLAYER_DOOR_ENTRY_LIMIT
         sty TempLimitRight ; right
     +:
-    rep #$20
+    .ForceSetA 16
 @player_aligned_door_v:
 
     ldx #PLAYER_ROOM_BOUND_TOP
@@ -1101,7 +1104,7 @@ PlayerUpdate:
     beq +
         bcs @player_aligned_door_h
     +:
-    sep #$20
+    .ForceSetA 8
     lda [mapDoorNorth]
     bpl +
         ldx #PLAYER_ROOM_BOUND_TOP - PLAYER_DOOR_ENTRY_LIMIT
@@ -1112,7 +1115,7 @@ PlayerUpdate:
         ldy #PLAYER_ROOM_BOUND_BOTTOM + PLAYER_DOOR_ENTRY_LIMIT
         sty TempLimitBottom ; bottom
     +:
-    rep #$20
+    .ForceSetA 16
 @player_aligned_door_h:
 
     lda.w player_posx
@@ -1146,7 +1149,7 @@ player_outside_door_v:
     jsr PlayerMoveHorizontal
     jsr PlayerMoveVertical
 ; open doors
-    rep #$30
+    .ForceSetAX 16, 16
     lda.w currentRoomEnemyCount
     bnel @skip_open_doors
     .REPT 4 INDEX i
@@ -1203,7 +1206,7 @@ player_outside_door_v:
         sta.w playerData.keys
         rep #$08
         jsl UI.update_key_display
-        sep #$30
+        .ForceSetAX 8, 8
         lda [MAP_DOOR_MEM_LOC(i)]
         ora #DOOR_OPEN
         sta [MAP_DOOR_MEM_LOC(i)]
@@ -1216,14 +1219,14 @@ player_outside_door_v:
         .ELIF i == 3 ; WEST
             jsl UpdateDoorTileWest
         .ENDIF
-        rep #$30
+        .ForceSetAX 16, 16
         ; open door
         @skip_door_{i}:
         rep #$08
     .ENDR
 @skip_open_doors:
     ; set box pos
-    sep #$30
+    .ForceSetAX 8, 8
     lda.w player_box_x1
     clc
     adc #16
@@ -1237,7 +1240,7 @@ player_outside_door_v:
     ; set flags/mask
     lda #ENTITY_MASKSET_PLAYER
     sta.w player_mask
-    sep #$30 ; 16b AXY
+    .ForceSetAX 8, 8
     lda.w playerData.playerItemStackNumber+ITEMID_BRIMSTONE
     beq +
         jsr _player_handle_shoot_brimstone
@@ -1255,7 +1258,7 @@ player_outside_door_v:
 
 ; standard player shoot
 _player_handle_shoot_standard:
-    rep #$30 ; 16b AXY
+    .ForceSetAX 16, 16
     lda.w playerData.tear_timer
     clc
     adc.w playerData.stat_tear_rate
@@ -1268,7 +1271,7 @@ _player_handle_shoot_standard:
     beq @player_did_not_fire
     jsr PlayerShootTear
     jsl Projectile.SetSizeFromDamage
-    rep #$20
+    .ForceSetA 16
     lda.w playerData.tear_timer
     sec
     sbc #$3C00
@@ -1284,7 +1287,7 @@ _player_handle_shoot_standard:
     rts
 
 _player_handle_shoot_chocolate_milk:
-    rep #$30
+    .ForceSetAX 16, 16
     ; check inputs
     lda.w joy1held
     bit #(JOY_A|JOY_B|JOY_Y|JOY_X)
@@ -1316,8 +1319,8 @@ _player_handle_shoot_chocolate_milk:
     jsr PlayerShootTear
     ; we still have projectile in X
     ; handle bottom byte of damage
-    sep #$20
-    rep #$10
+    .ForceSetA 8
+    .ForceSetX 16
     lda.w projectile_damage,X
     sta.w MULTU_A
     lda.w playerData.tear_timer+1
@@ -1325,11 +1328,11 @@ _player_handle_shoot_chocolate_milk:
     nop ; +2 | 2
     nop ; +2 | 4
     nop ; +2 | 6
-    rep #$20 ; +3 | 9
+    .ForceSetA 16
     lda.w MULTU_RESULT
     sta.b $00
     ; top byte of damage
-    sep #$20
+    .ForceSetA 8
     lda.w projectile_damage+1,X
     sta.w MULTU_A
     lda.w playerData.tear_timer+1
@@ -1337,18 +1340,18 @@ _player_handle_shoot_chocolate_milk:
     nop ; +2 | 2
     nop ; +2 | 4
     nop ; +2 | 6
-    rep #$20 ; +3 | 9
+    .ForceSetA 16
     lda.w MULTU_RESULT
     sta.b $02
     ; divide low byte properly
     lda.b $00
     sta.w DIVU_DIVIDEND
-    sep #$20
+    .ForceSetA 8
     lda #$3C
     sta.w DIVU_DIVISOR
     ; divide high byte by $3C, multiply by $100. Comes out to ~×4
     ; this may bias high damages to be even higher, but idc
-    rep #$20 ;  +3 | 3
+    .ForceSetA 16
     lda.b $02 ; +4 | 7
     asl ;       +2 | 9
     asl ;       +2 | 11
@@ -1361,7 +1364,7 @@ _player_handle_shoot_chocolate_milk:
     ; DAMAGE = projectile_damage * timer / $3C00
     rts
 @end:
-    rep #$30
+    .ForceSetAX 16, 16
     stz.w playerData.tear_timer
     rts
 
@@ -1370,8 +1373,8 @@ _player_handle_shoot_chocolate_milk:
 .DEFINE BOX_RIGHT $12
 .DEFINE BOX_BOTTOM $13
 _player_render_brimstone_left:
-    .ACCU 8
-    .INDEX 8
+    .SoftSetA 8
+    .SoftSetX 8
     lda.w player_box_x1
     inc A
     inc A
@@ -1382,9 +1385,9 @@ _player_render_brimstone_left:
     dec A
     pha
     jsl Render.HDMAEffect.BrimstoneLeft
-    rep #$20
+    .ForceSetA 16
     pla
-    sep #$30
+    .ForceSetAX 8, 8
     lda.w player_box_x1
     clc
     adc #8
@@ -1402,8 +1405,8 @@ _player_render_brimstone_left:
     jmp _player_handle_brimstone_damage_tick
 
 _player_render_brimstone_right:
-    .ACCU 8
-    .INDEX 8
+    .SoftSetA 8
+    .SoftSetX 8
     lda.w player_box_x1
     clc
     adc #13
@@ -1414,9 +1417,9 @@ _player_render_brimstone_right:
     dec A
     pha
     jsl Render.HDMAEffect.BrimstoneRight
-    rep #$20
+    .ForceSetA 16
     pla
-    sep #$30
+    .ForceSetAX 8, 8
     lda.w player_box_x1
     clc
     adc #8
@@ -1434,8 +1437,8 @@ _player_render_brimstone_right:
     jmp _player_handle_brimstone_damage_tick
 
 _player_render_brimstone_up:
-    .ACCU 8
-    .INDEX 8
+    .SoftSetA 8
+    .SoftSetX 8
     lda.w player_box_x1
     inc A
     inc A
@@ -1445,9 +1448,9 @@ _player_render_brimstone_up:
     sbc #12
     pha
     jsl Render.HDMAEffect.BrimstoneUp
-    rep #$20
+    .ForceSetA 16
     pla
-    sep #$30
+    .ForceSetAX 8, 8
     lda.w player_box_x1
     inc A
     inc A
@@ -1465,8 +1468,8 @@ _player_render_brimstone_up:
     jmp _player_handle_brimstone_damage_tick
 
 _player_render_brimstone_down:
-    .ACCU 8
-    .INDEX 8
+    .SoftSetA 8
+    .SoftSetX 8
     lda.w player_box_x1
     inc A
     inc A
@@ -1474,9 +1477,9 @@ _player_render_brimstone_down:
     lda.w player_box_y1
     pha
     jsl Render.HDMAEffect.BrimstoneDown
-    rep #$20
+    .ForceSetA 16
     pla
-    sep #$30
+    .ForceSetAX 8, 8
     lda.w player_box_x1
     inc A
     inc A
@@ -1501,8 +1504,8 @@ _player_render_brimstone_down:
 .DEFINE INC_Y $1A
 .DEFINE DAMAGE_AMOUNT $1B
 _player_handle_brimstone_damage_tick:
-    .ACCU 8
-    .INDEX 8
+    .SoftSetA 8
+    .SoftSetX 8
 ; only do this tick once every four ticks,
 ; aligned against other important ticks. This gives us the extra 20% of update
 ; time, so we don't have to worry about time as much.
@@ -1534,13 +1537,13 @@ _player_handle_brimstone_damage_tick:
     +:
 ; calc damage
     ; we do `ceil(damage/4)` damage 15 times per second, about `4×damage` per second
-    rep #$20
+    .ForceSetA 16
     lda.w playerData.stat_damage
     clc
     adc #3
     .DivideStatic 4
     sta.b DAMAGE_AMOUNT
-    sep #$30
+    .ForceSetAX 8, 8
 ; set up iterators
     ; WIDTH
     ldx.b BOX_LEFT
@@ -1584,9 +1587,9 @@ _player_handle_brimstone_damage_tick:
         sta.b WIDTH
         @loop_x:
             ; handle tile
-            rep #$30
+            .ForceSetAX 16, 16
             jsl Random.Quick16
-            sep #$30
+            .ForceSetAX 8, 8
             cmp #100
             bcs @skip_tile2
             phy
@@ -1597,12 +1600,12 @@ _player_handle_brimstone_damage_tick:
             tay
             lda [currentRoomTileTypeTableAddress],Y
             bpl @skip_tile
-                rep #$30
+                .ForceSetAX 16, 16
                 and #$00FF
                 asl
                 tax
                 jsl ProjectileTileHandleTrampoline
-                sep #$30
+                .ForceSetAX 8, 8
             @skip_tile:
             ply
             @skip_tile2:
@@ -1628,12 +1631,12 @@ _player_handle_brimstone_damage_tick:
                     cmp.w entity_box_y2,X
                     bcs @spatial_skip_{i}
                     ; box checks out, deal damage
-                    rep #$20
+                    .ForceSetA 16
                     lda.w entity_health,X
                     sec
                     sbc.b DAMAGE_AMOUNT
                     sta.w entity_health,X
-                    sep #$20
+                    .ForceSetA 8
                     php
                     lda.w entity_signal,X
                     ora #ENTITY_SIGNAL_DAMAGE
@@ -1682,8 +1685,8 @@ _player_render_brimstone_funcs:
     .dw _player_render_brimstone_up
 
 _player_find_aligned_right:
-    .ACCU 8
-    .INDEX 8
+    .SoftSetA 8
+    .SoftSetX 8
     stz.b $00 ; $00 - ENTITY
     lda #$FF
     sta.b $01 ; $01 - DISTANCE
@@ -1716,8 +1719,8 @@ _player_find_aligned_right:
     rts
 
 _player_find_aligned_left:
-    .ACCU 8
-    .INDEX 8
+    .SoftSetA 8
+    .SoftSetX 8
     stz.b $00 ; $00 - ENTITY
     lda #$FF
     sta.b $01 ; $01 - DISTANCE
@@ -1750,8 +1753,8 @@ _player_find_aligned_left:
     rts
 
 _player_find_aligned_up:
-    .ACCU 8
-    .INDEX 8
+    .SoftSetA 8
+    .SoftSetX 8
     stz.b $00 ; $00 - ENTITY
     lda #$FF
     sta.b $01 ; $01 - DISTANCE
@@ -1792,8 +1795,8 @@ _player_find_aligned_up:
     rts
 
 _player_find_aligned_down:
-    .ACCU 8
-    .INDEX 8
+    .SoftSetA 8
+    .SoftSetX 8
     stz.b $00 ; $00 - ENTITY
     lda #$FF
     sta.b $01 ; $01 - DISTANCE
@@ -1841,12 +1844,12 @@ _player_find_aligned_entity_funcs:
 
 
 _player_render_brimstone_homing:
-    .ACCU 8
-    .INDEX 8
+    .SoftSetA 8
+    .SoftSetX 8
     phb
     .ChangeDataBank $7E
 ; FIRST: push bytes for X position and Y position
-    sep #$30
+    .ForceSetAX 8, 8
     lda.w player_box_x1
     clc
     adc #8
@@ -1868,7 +1871,7 @@ _player_render_brimstone_homing:
         asl
         tax
         jmp (_player_render_brimstone_funcs,X)
-        .ACCU 8
+        .SoftSetA 8
     +:
     sty.b $30
 ; THIRD: push bytes for X offset and Y offset
@@ -1930,7 +1933,7 @@ _player_render_brimstone_homing:
     jsl Render.HDMAEffect.BrimstoneOmnidirectional
 ; FIFTH: collision.
     ; check tick
-    sep #$20
+    .ForceSetA 8
     lda.w tickCounter
     and #$03
     beq +
@@ -1955,7 +1958,7 @@ _player_render_brimstone_homing:
     .DEFINE DAMAGE_AMOUNT $2C
     ; Determine DAMAGE_AMOUNT
     ; we do `ceil(damage/4)` damage 15 times per second, about `4×damage` per second
-    rep #$30
+    .ForceSetAX 16, 16
     lda.w playerData.stat_damage
     clc
     adc #3
@@ -1963,14 +1966,14 @@ _player_render_brimstone_homing:
     sta.b DAMAGE_AMOUNT
     ; deal damage to target entity directly, since we can sometimes, uh, miss,
     ; at sufficiently steep angles. don't ask and fixing is hard.
-    sep #$10
+    .ForceSetX 8
     ldy.b $30
-        rep #$20
+        .ForceSetA 16
         lda.w entity_health,Y
         sec
         sbc.b DAMAGE_AMOUNT
         sta.w entity_health,Y
-        sep #$20
+        .ForceSetA 8
         php
         lda.w entity_signal,Y
         ora #ENTITY_SIGNAL_DAMAGE
@@ -1985,7 +1988,7 @@ _player_render_brimstone_homing:
         and #$FF ~ ENTITY_MASK_TEAR
         sta.w entity_mask,Y
     ; get Y coordinate of current tile
-    rep #$30
+    .ForceSetAX 16, 16
     lda.w player_box_y1
     and #$00F0
     sta.b TILE_Y
@@ -2054,7 +2057,7 @@ _player_render_brimstone_homing:
             sta.b TILE_X2
         @x2_end:
         ; iterate tiles between TILE_X1 and TILE_X2, at Y=TILE_Y
-        sep #$30
+        .ForceSetAX 8, 8
         lda.b TILE_X1+1
         and #$0F
         sta.b INDEX_FROM
@@ -2074,12 +2077,12 @@ _player_render_brimstone_homing:
             lda [currentRoomTileTypeTableAddress],Y
             bpl @skip_tile
                 phx
-                rep #$30
+                .ForceSetAX 16, 16
                 and #$00FF
                 asl
                 tax
                 jsl ProjectileTileHandleTrampoline
-                sep #$30
+                .ForceSetAX 8, 8
                 plx
             @skip_tile:
             ; damage all entities at tile
@@ -2091,12 +2094,12 @@ _player_render_brimstone_homing:
                     and #ENTITY_MASK_TEAR
                     beq @spatial_skip_{i}
                     ; deal damage - no box check, we don't care at this point
-                    rep #$20
+                    .ForceSetA 16
                     lda.w entity_health,Y
                     sec
                     sbc.b DAMAGE_AMOUNT
                     sta.w entity_health,Y
-                    sep #$20
+                    .ForceSetA 8
                     php
                     lda.w entity_signal,Y
                     ora #ENTITY_SIGNAL_DAMAGE
@@ -2133,7 +2136,7 @@ _player_render_brimstone_homing:
         tax
         lda.l GameTileBoundaryCheck+2,X ; if Y is OOB, then exit
         bne @end_collision_code
-        rep #$20
+        .ForceSetA 16
         ; x1 += slope
         lda.b TILE_X1
         clc
@@ -2147,7 +2150,7 @@ _player_render_brimstone_homing:
         jmp @loop_y
 @end_collision_code:
 ; END
-    rep #$20
+    .ForceSetA 16
     pla
     pla
     plb
@@ -2163,8 +2166,8 @@ _player_render_brimstone_homing:
 .UNDEFINE DAMAGE_AMOUNT
 
 _player_handle_tick_brimstone:
-    .ACCU 16
-    .INDEX 16
+    .SoftSetA 16
+    .SoftSetX 16
 ; tick timer
     dec.w playerData.brimstone_timer
     lda.w joy1held
@@ -2173,7 +2176,7 @@ _player_handle_tick_brimstone:
         stz.w playerData.brimstone_timer
     +:
 ; put effect, depending on facing direction
-    sep #$30
+    .ForceSetAX 8, 8
     lda.w playerData.playerItemStackNumber+ITEMID_SPOON_BENDER
     beq @not_homing
         jmp _player_render_brimstone_homing
@@ -2185,7 +2188,7 @@ _player_handle_tick_brimstone:
     rts
 
 _player_handle_shoot_brimstone:
-    rep #$30
+    .ForceSetAX 16, 16
     lda.w playerData.brimstone_timer
     bne _player_handle_tick_brimstone
     ; check inputs
@@ -2214,7 +2217,7 @@ _player_handle_shoot_brimstone:
     cmp #$F000
     bcc @end
 ; TODO: FIRE LASER
-    rep #$30
+    .ForceSetAX 16, 16
     lda.w playerData.stat_tear_lifetime
     lsr
     clc
@@ -2223,13 +2226,13 @@ _player_handle_shoot_brimstone:
     stz.w playerData.tear_timer
     rts
 @end:
-    rep #$30
+    .ForceSetAX 16, 16
     stz.w playerData.tear_timer
     rts
 
 PlayerRender:
-    sep #$20
-    rep #$10
+    .ForceSetA 8
+    .ForceSetX 16
     ; update render data
     lda.w playerData.invuln_timer
     bit #$08
@@ -2252,13 +2255,13 @@ PlayerRender:
         sta.w objectData.1.flags,X
         lda.w playerData.body_flags
         sta.w objectData.2.flags,X
-        rep #$30 ; 16 bit AXY
+        .ForceSetAX 16, 16
         .SetCurrentObjectS_Inc
         .SetCurrentObjectS_Inc
 @invis_frame:
     ; put shadow
-    sep #$20
-    rep #$10
+    .ForceSetA 8
+    .ForceSetX 16
     ldy #ENTITY_INDEX_PLAYER
     pea $0405
     jsl Entity.Shadow.PutSmall
@@ -2266,12 +2269,13 @@ PlayerRender:
     rtl
 
 PlayerShootTear:
-    sep #$20
-    lda #0
-    xba
-    lda #ENTITY_TYPE_PROJECTILE
-    jsl Entity.CreateAndInit
-    rep #$30 ; 16 bit AXY
+    .ForceSetAX 16, 16
+    .PushBank
+    .ForceSetBank $7E
+    lda #entityvariant(ENTITY_TYPE_PROJECTILE, 0)
+    .call "Entity.CreateAndInit"
+    .PopBank
+    .SetAX 16, 16
     sty.b TempTearIdx
     tyx
 ; set player info
@@ -2287,13 +2291,13 @@ PlayerShootTear:
     lda.w playerData.tearflags
     sta.l projectile_flags,X
     ; size
-    sep #$20
+    .ForceSetA 8
     lda #3
     sta.l projectile_size,X
     ; type
     lda #PROJECTILE_TYPE_PLAYER_BASIC
     sta.w projectile_type,X
-    rep #$20
+    .ForceSetA 16
     lda #$0800
     sta.l projectile_height,X
     ; dmg
@@ -2405,8 +2409,8 @@ PlayerShootTear:
     rts
 
 PlayerMoveHorizontal:
-    .ACCU 16
-    .INDEX 16
+    .SoftSetA 16
+    .SoftSetX 16
     lda.w player_velocx
     beq @skipmove
     clc
@@ -2432,8 +2436,8 @@ PlayerMoveHorizontal:
     rts
 
 PlayerMoveLeft:
-    .ACCU 16
-    .INDEX 16
+    .SoftSetA 16
+    .SoftSetX 16
 ; Get Tile X from player left
     lda.w player_posx
     clc
@@ -2459,11 +2463,11 @@ PlayerMoveLeft:
     .TileXYToIndexA TempTileX, TempTileY2, TempTemp2
     tax
 ; Determine if tile is solid
-    sep #$20
+    .ForceSetA 8
     lda [currentRoomTileTypeTableAddress],Y ; top
     txy
     ora [currentRoomTileTypeTableAddress],y ; bottom
-    rep #$20
+    .ForceSetA 16
     bpl @end
 ; get position that player would be when flush against wall
     lda TempTileX
@@ -2478,8 +2482,8 @@ PlayerMoveLeft:
     rts
 
 PlayerMoveRight:
-    .ACCU 16
-    .INDEX 16
+    .SoftSetA 16
+    .SoftSetX 16
 ; Get Tile X from player left
     lda.w player_posx
     clc
@@ -2505,11 +2509,11 @@ PlayerMoveRight:
     .TileXYToIndexA TempTileX, TempTileY2, TempTemp2
     tax
 ; Determine if tile is solid
-    sep #$20
+    .ForceSetA 8
     lda [currentRoomTileTypeTableAddress],Y ; top
     txy
     ora [currentRoomTileTypeTableAddress],y ; bottom
-    rep #$20
+    .ForceSetA 16
     bpl @end
 ; get position that player would be when flush against wall
     lda.b TempTileX
@@ -2524,8 +2528,8 @@ PlayerMoveRight:
     rts
 
 PlayerMoveVertical:
-    .ACCU 16
-    .INDEX 16
+    .SoftSetA 16
+    .SoftSetX 16
     lda.w player_velocy
     beq @skipmove
     clc
@@ -2551,8 +2555,8 @@ PlayerMoveVertical:
     rts
 
 PlayerMoveUp:
-    .ACCU 16
-    .INDEX 16
+    .SoftSetA 16
+    .SoftSetX 16
 ; Get Tile Y from player top
     lda.w player_posy
     clc
@@ -2578,11 +2582,11 @@ PlayerMoveUp:
     .TileXYToIndexA TempTileX2, TempTileY, TempTemp2
     tax
 ; Determine if tile is solid
-    sep #$20
+    .ForceSetA 8
     lda [currentRoomTileTypeTableAddress],Y ; top
     txy
     ora [currentRoomTileTypeTableAddress],y ; bottom
-    rep #$20
+    .ForceSetA 16
     bpl @end
 ; get position that player would be when flush against wall
     lda TempTileY
@@ -2597,8 +2601,8 @@ PlayerMoveUp:
     rts
 
 PlayerMoveDown:
-    .ACCU 16
-    .INDEX 16
+    .SoftSetA 16
+    .SoftSetX 16
 ; Get Tile Y from player bottom
     lda.w player_posy
     clc
@@ -2624,11 +2628,11 @@ PlayerMoveDown:
     .TileXYToIndexA TempTileX2, TempTileY, TempTemp2
     tax
 ; Determine if tile is solid
-    sep #$20
+    .ForceSetA 8
     lda [currentRoomTileTypeTableAddress],Y ; top
     txy
     ora [currentRoomTileTypeTableAddress],y ; bottom
-    rep #$20
+    .ForceSetA 16
     bpl @end
 ; get position that player would be when flush against wall
     lda TempTileY
@@ -2660,30 +2664,30 @@ PlayerMoveDown:
         ora #MAPTILE_DISCOVERED
     .ENDIF
     sta.w mapTileFlagsTable,X
-    rep #$30
+    .ForceSetAX 16, 16
     phx
     jsl UpdateMinimapSlot
     plx
-    sep #$30
+    .ForceSetAX 8, 8
 @@@@@\@undiscovered_secret:
 .ENDM
 
 PlayerMinimapExitCurrentRoom:
-    sep #$30
+    .ForceSetAX 8, 8
     ldx.b loadedRoomIndex
     lda.w mapTileFlagsTable,X
     and #$FF ~ MAPTILE_HAS_PLAYER
     ora #MAPTILE_DISCOVERED
     sta.w mapTileFlagsTable,X
-    rep #$30
+    .ForceSetAX 16, 16
     phx
     jsl UpdateMinimapSlot
     plx
-    sep #$30
+    .ForceSetAX 8, 8
     rtl
 
 PlayerDiscoverNearbyRooms:
-    sep #$30
+    .ForceSetAX 8, 8
     ldx.b loadedRoomIndex
     .PlayerDiscoverRoomHelper 1
     ; right
@@ -2719,7 +2723,7 @@ PlayerDiscoverNearbyRooms:
     rtl
 
 PlayerCheckEnterRoom:
-    rep #$30 ; 16b AXY
+    .ForceSetAX 16, 16
     lda.w player_posx
     cmp #(ROOM_LEFT - 16)*256
     bcc @left
@@ -2733,12 +2737,12 @@ PlayerCheckEnterRoom:
     bcs @down
     rts
 @left:
-    .ACCU 16
+    .SoftSetA 16
     lda #PLAYER_START_EAST_X
     sta.w player_posx
     lda #PLAYER_START_EAST_Y
     sta.w player_posy
-    sep #$20 ; 8 bit A
+    .ForceSetA 8
     lda.b loadedRoomIndex
     dec A
     pha
@@ -2746,16 +2750,16 @@ PlayerCheckEnterRoom:
     pha
     jsr @pre_initialize
     jsl TransitionRoomIndex
-    rep #$20
+    .ForceSetA 16
     pla
     jmp @post_initialize
 @right:
-    .ACCU 16
+    .SoftSetA 16
     lda #PLAYER_START_WEST_X
     sta.w player_posx
     lda #PLAYER_START_WEST_Y
     sta.w player_posy
-    sep #$20 ; 8 bit A
+    .ForceSetA 8
     lda.b loadedRoomIndex
     inc A
     pha
@@ -2763,16 +2767,16 @@ PlayerCheckEnterRoom:
     pha
     jsr @pre_initialize
     jsl TransitionRoomIndex
-    rep #$20
+    .ForceSetA 16
     pla
     jmp @post_initialize
 @up:
-    .ACCU 16
+    .SoftSetA 16
     lda #PLAYER_START_SOUTH_Y
     sta.w player_posy
     lda #PLAYER_START_SOUTH_X
     sta.w player_posx
-    sep #$20 ; 8 bit A
+    .ForceSetA 8
     lda.b loadedRoomIndex
     sec
     sbc #MAP_MAX_WIDTH
@@ -2781,16 +2785,16 @@ PlayerCheckEnterRoom:
     pha
     jsr @pre_initialize
     jsl TransitionRoomIndex
-    rep #$20
+    .ForceSetA 16
     pla
     jmp @post_initialize
 @down:
-    .ACCU 16
+    .SoftSetA 16
     lda #PLAYER_START_NORTH_Y
     sta.w player_posy
     lda #PLAYER_START_NORTH_X
     sta.w player_posx
-    sep #$20 ; 8 bit A
+    .ForceSetA 8
     lda.b loadedRoomIndex
     clc
     adc #MAP_MAX_WIDTH
@@ -2799,12 +2803,12 @@ PlayerCheckEnterRoom:
     pha
     jsr @pre_initialize
     jsl TransitionRoomIndex
-    rep #$20
+    .ForceSetA 16
     pla
     jmp @post_initialize
 @pre_initialize:
     ; set box pos
-    sep #$30
+    .ForceSetAX 8, 8
     lda.w player_box_x1
     clc
     adc #16
@@ -2818,10 +2822,10 @@ PlayerCheckEnterRoom:
     rts
 @post_initialize:
     jsl PlayerDiscoverNearbyRooms
-    rep #$20
+    .ForceSetA 16
     stz.w player_velocx
     stz.w player_velocy
-    sep #$20
+    .ForceSetA 8
     inc.w didPlayerJustEnterRoom
     rts
 

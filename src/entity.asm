@@ -8,20 +8,15 @@
 _e_null:
     rts
 
-; For each of the following:
-; * execution bank will be $02
-; * Data bank will be $7E
-; * Y will be entity index (16B)
-; * A,X,Y will be 16B
-
 ; Create and initialize an entity of type+variant A
 ; lower byte is type, upper byte is variant
 ; Returns reference as Y
-Entity.CreateAndInit:
-    rep #$10 ; 16B XY
-    sep #$20 ; 8B A
-    phb
-    .ChangeDataBank $7E
+.InvalidateA
+.SoftSetX 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procimpll "Entity.CreateAndInit"
+    .SetA 8
     ; first: find next free slot
     pha
     xba
@@ -42,7 +37,7 @@ Entity.CreateAndInit:
     bne @loop
 @end:
     ; clear entity data
-    rep #$20
+    .SetA 16
     lda #0
     sta.w loword(entity_flags),Y
     sta.w loword(entity_velocx),Y
@@ -50,20 +45,20 @@ Entity.CreateAndInit:
     sta.w loword(private_base_entity_combined_state_timer-2),Y
     sta.w loword(private_base_entity_combined_mask_signal-2),Y
     sta.w loword(entity_health),Y
-    sep #$20
+    .SetA 8
     sta.w loword(entity_damageflash),Y
     ; init entity data
     pla
     sta.w entity_variant,Y
     pla
     sta.w entity_type,Y
-    rep #$20 ; 16B A
+    .SetA 16
     .MultiplyStatic 2
     tax
     phy
-    php
+    .PushP
     jsr (EntityDef_InitFunc, X)
-    plp
+    .PopP
     ply
     ; insert into execution order
     lda.l numEntities
@@ -74,8 +69,8 @@ Entity.CreateAndInit:
     inc A
     sta.l numEntities
     ; return
-    plb
     rtl
+.endproc
 
 ; Create an entity of type+variant A
 ; lower byte is type, upper byte is variant
@@ -83,11 +78,12 @@ Entity.CreateAndInit:
 ; Make sure to call Entity.Init afterwards; use this function instead of
 ; Entity.CreateAndInit if you want to set some variables (e.g. entity_state,
 ; entity_timer) before running its init function
-Entity.Create:
-    rep #$10 ; 16B XY
-    sep #$20 ; 8B A
-    phb
-    .ChangeDataBank $7E
+.InvalidateA
+.SoftSetX 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procimpll "Entity.Create"
+    .SetA 8
     ; first: find next free slot
     pha
     xba
@@ -108,7 +104,7 @@ Entity.Create:
     bne @loop
 @end:
     ; clear entity data
-    rep #$20
+    .SetA 16
     lda #0
     sta.w loword(entity_flags),Y
     sta.w loword(entity_velocx),Y
@@ -116,7 +112,7 @@ Entity.Create:
     sta.w loword(private_base_entity_combined_state_timer-2),Y
     sta.w loword(private_base_entity_combined_mask_signal-2),Y
     sta.w loword(entity_health),Y
-    sep #$20
+    .SetA 8
     sta.w loword(entity_damageflash),Y
     ; init entity data
     pla
@@ -124,7 +120,7 @@ Entity.Create:
     pla
     sta.w entity_type,Y
     ; insert into execution order
-    rep #$20 ; 16B A
+    .SetA 16
     lda.l numEntities
     tax
     tya
@@ -133,34 +129,32 @@ Entity.Create:
     inc A
     sta.l numEntities
     ; return
-    plb
     rtl
+.endproc
 
 ; Initialize entity in Y
 ; call after Entity.Create
-Entity.Init:
-    rep #$30
-    phb
-    .ChangeDataBank $7E
-    ; init entity
-    rep #$20 ; 16B A
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procimpll "Entity.Init"
     lda.w entity_type,Y
     and #$00FF
     .MultiplyStatic 2
     tax
     phy
-    php
+    .PushP
     jsr (EntityDef_InitFunc, X)
-    plp
+    .PopP
     ply
-    plb
     rtl
+.endproc
 
 ; Free the given entity in reference Y
-Entity.Free:
-    rep #$30 ; 16B AXY
-    phb
-    .ChangeDataBank $7E
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procimpll "Entity.Free"
     lda.w entity_type,Y
     and.w #$00FF
     .MultiplyStatic 2
@@ -171,10 +165,10 @@ Entity.Free:
     plp
     ply
     ; set type to 0
-    sep #$20
+    .SetA 8
     lda #0
     sta.w entity_type,Y
-    ; rep #$20
+    ; .ForceSetA 16
     ; remove from execution order
     tya ; A = Y
     ldx #0
@@ -192,7 +186,6 @@ Entity.Free:
             lda.w entityExecutionOrder,Y
             sta.w entityExecutionOrder,X
             ; assume that no other instances will occur and return
-            plb
             rtl
         ; } else {
         +:
@@ -201,12 +194,11 @@ Entity.Free:
             cpx.w numEntities
             bne @loop
         ; }
-        ;   }
     ; }
     @endloop:
     ; return
-    plb
     rtl
+.endproc
 
 ; Replace this entity slot with a different type.
 ; This is a bit more efficient than calling `Entity.Free` followed by
@@ -215,10 +207,10 @@ Entity.Free:
 ; Do note that this will never change the entity ID. This means that non-character
 ; entities may NOT be replaced with character entities, lest you introduce
 ; hard-to-diagnose bugs.
-Entity.Replace:
-    rep #$30
-    phb
-    .ChangeDataBank $7E
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procimpll "Entity.Replace"
     pha ; store type and variant for later
 ; call free function
     lda.w entity_type,Y
@@ -230,16 +222,18 @@ Entity.Replace:
     jsr (EntityDef_FreeFunc,X)
     plp
     ply
-; call init function
-    sep #$20
+; clear info
+    .SetA 8
     lda #0
     sta.w entity_mask,Y
     sta.w entity_signal,Y
     sta.w loword(entity_damageflash),Y
     sta.w loword(entity_flags),Y
-    rep #$20 ; 16B A
+    .SetA 16
+; set type
     pla
     sta.w entity_type,Y
+; call init function
     and #$00FF
     .MultiplyStatic 2
     tax
@@ -249,28 +243,31 @@ Entity.Replace:
     plp
     ply
 ; return
-    plb
     rtl
+.endproc
 
 ; Change the type and variant of this entity, without freeing or initializing
 ; this entity. ONLY USE THIS IF YOU KNOW WHAT YOU ARE DOING!!!
 ; This is mostly only useful for swapping out variants. Though, if you want to
 ; do that, you should just `sta.w entity_variant,Y` anyways.
-Entity.ChangeType:
-    sep #$20
-    phb
-    .ChangeDataBank $7E
+.InvalidateA
+.IgnoreX
+.SoftSetBank $7E
+.IgnoreDirect
+.procimpll "Entity.ChangeType"
+    .SetA 8
     sta.w entity_type,Y
     xba
     sta.w entity_variant,Y
-    plb
     rtl
+.endproc
 
 ; Free all entities
-Entity.FreeAll:
-    rep #$30 ; 16B AXY
-    phb
-    .ChangeDataBank $7E
+
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procimpll "Entity.FreeAll"
     ldy.w #ENTITY_FIRST_CUSTOM_INDEX
 @loop:
     lda.w entity_type,Y
@@ -284,25 +281,26 @@ Entity.FreeAll:
     plp
     ply
     ; set type to 0
-    sep #$20
+    .SetA 8
     lda #0
     sta.w entity_type,Y
-    rep #$20
+    .SetA 16
 @skip_ent:
     dey
     dey
     bne @loop
 @end:
-    plb
-    jsl Entity.InitializeEntityTable
+    .call "Entity.InitializeEntityTable"
     rtl
+.endproc
 
 ; Tick all entities
-Entity.TickAll:
-    phb
-    .ChangeDataBank $7E
-    jsl Entity.SortExecutionOrder
-    rep #$30 ; 16B AXY
+.SoftSetAX 8, 8
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procimpll "Entity.TickAll"
+    .call "Entity.SortExecutionOrder"
+    .SetAX 16, 16
     ldx.w numEntities
     beq @end
     @loop:
@@ -321,8 +319,8 @@ Entity.TickAll:
         dex
         bne @loop
 @end:
-    plb
     rtl
+.endproc
 
 ; ENTITY DEFINITIONS
 
@@ -500,8 +498,10 @@ EntityDef_Flags:
 .ORG 0
 .SECTION "EntityExtCode"
 
-Entity.SortExecutionOrder:
-    sep #$30
+.SoftSetAX 8, 8
+.SoftSetBank $7E
+.IgnoreDirect
+.procimpll "Entity.SortExecutionOrder"
     lda.w numEntities
     cmp #2
     bcc @noSort
@@ -559,27 +559,30 @@ Entity.SortExecutionOrder:
 ; end
 @noSort:
     rtl
+.endproc
 
-Entity.InitializeEntityTable:
-    rep #$20
+.SoftSetAX 16, 16
+.SoftSetBank D_BANK_MIRROR_LOWRAM
+.SoftSetDirect $0000
+.procimpll "Entity.InitializeEntityTable"
     ; save player info
     lda.w player_posx
     pha
     lda.w player_posy
     pha
     ; clear
-    sep #$20
+    .SetA 8
     phd
     pea $4300
     pld
     .ClearWRam_ZP entity_data_begin, (entity_data_end-entity_data_begin)
     pld
     ; set player type
-    sep #$20
+    .SetA 8
     lda #ENTITY_TYPE_PLAYER
     sta.w player_type
     ; load player info
-    rep #$20
+    .SetA 16
     pla
     sta.w player_posy
     pla
@@ -593,6 +596,7 @@ Entity.InitializeEntityTable:
     lda #ENTITY_CONTEXT_STANDARD
     sta.b entityExecutionContext
     rtl
+.endproc
 
 Entity.ClearSpatialPartition:
     phd
@@ -713,8 +717,8 @@ Entity.ClearSpatialPartition:
 ; https://codebase64.org/doku.php?id=base:8bit_atan2_8-bit_angle
 ; A couple of modifications were made for accuracy
 _directtargetentity_x_is_zero:
-    .ACCU 8
-    .INDEX 8
+    .SoftSetA 8
+    .SoftSetX 8
     lda.w entity_box_y1,Y
     cmp.w entity_box_y1,X
     bcc +
@@ -726,8 +730,8 @@ _directtargetentity_x_is_zero:
     sta.b entityTargetAngle
     rtl
 _directtargetentity_y_is_zero:
-    .ACCU 8
-    .INDEX 8
+    .SoftSetA 8
+    .SoftSetX 8
     lda.w entity_box_x1,Y
     cmp.w entity_box_x1,X
     bcc +
@@ -787,8 +791,8 @@ _directtargetentity_y_is_zero:
 .endproc
 
 _directtargetposition_x_is_zero:
-    .ACCU 8
-    .INDEX 8
+    .SoftSetA 8
+    .SoftSetX 8
     lda.w entity_box_y1,Y
     cmp.b tempDP+$03
     bcc +
@@ -800,8 +804,8 @@ _directtargetposition_x_is_zero:
     sta.b entityTargetAngle
     rtl
 _directtargetposition_y_is_zero:
-    .ACCU 8
-    .INDEX 8
+    .SoftSetA 8
+    .SoftSetX 8
     lda.w entity_box_x1,Y
     cmp.b tempDP+$01
     bcc +
@@ -1368,14 +1372,14 @@ _directtargetposition_y_is_zero:
 .endproc
 
 Entity.PutSplatter:
-    rep #$10
-    sep #$20
+    .ForceSetX 16
+    .ForceSetA 8
     lda.w loword(entity_ysort),Y
     sta.b $06
     lda #GROUND_PALETTE_RED
     sta.b $04
     .REPT 8 INDEX i
-        sep #$20
+        .ForceSetA 8
         lda.w entity_box_x1,Y
         .IF i == 0 || i == 7
             clc
@@ -1407,7 +1411,7 @@ Entity.PutSplatter:
         ply
         inc.b $06
     .ENDR
-    rep #$30
+    .ForceSetAX 16, 16
     rtl
 
 .SoftSetAX 8, 8

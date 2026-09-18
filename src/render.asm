@@ -12,14 +12,14 @@ VBlank:
 VBlank2:
     sei ; disable interrupts
     phb
-    rep #$30 ; 16 bit AXY
+    .ForceSetAX 16, 16
     pha
     .ChangeDataBank $80
     lda.w blockVQueueMutex
     beq @continuevblank
     phx
     jsl Render.UpdateHDMA
-    rep #$30
+    .ForceSetAX 16, 16
     plx
     pla
     plb
@@ -31,19 +31,19 @@ VBlank2:
     jsl Render.UpdateHDMA
     ; Since VBlank only actually executes while the game isn't updating, we
     ; don't have to worry about storing previous state here
-    sep #$20 ; 8 bit A
+    .ForceSetA 8
     lda #%10000000
     sta INIDISP
-    sep #$30 ; 16 bit AXY
+    .ForceSetAX 8, 8
     lda RDNMI
 ; upload sprite data
-    rep #$20 ; 16 bit A
+    .ForceSetA 16
     stz OAMADDR
     lda #512+32
     sta DMA0_SIZE
     lda.w #objectData
     sta DMA0_SRCL
-    sep #$20 ; 8 bit A
+    .ForceSetA 8
     lda #0
     sta DMA0_SRCH
     ; Absolute address, auto increment, 1 byte at a time
@@ -58,7 +58,7 @@ VBlank2:
     jsl ProcessVQueue
 ; Force-load VRAM sections
     ; check if ground needs reloading
-    sep #$20 ; 8 bit A
+    .ForceSetA 8
     lda.l needResetEntireGround
     beq @skipUpdateGround
         lda #0
@@ -66,7 +66,7 @@ VBlank2:
         jsl InitializeBackground
 @skipUpdateGround:
     ; Check if minimap needs updating
-    sep #$20 ; 8 bit A
+    .ForceSetA 8
     lda.w numTilesToUpdate
     cmp #$FF
     bne @skipUpdateAllTiles
@@ -74,7 +74,7 @@ VBlank2:
         jsr UpdateEntireMinimap
 @skipUpdateAllTiles:
 ; Process HDMA
-    .ACCU 8
+    .SoftSetA 8
     lda.l hdmaWindowMainPositionActiveBufferId
     eor #1
     sta.l hdmaWindowMainPositionActiveBufferId
@@ -82,7 +82,7 @@ VBlank2:
     eor #1
     sta.l hdmaWindowSubPositionActiveBufferId
 ; end
-    sep #$20 ; 8 bit A
+    .ForceSetA 8
     pla ; compensate for phb earlier
     lda.w roomBrightness
     sta INIDISP
@@ -92,7 +92,7 @@ VBlank2:
     rti
 
 Render.UpdateHDMA:
-    rep #$30
+    .ForceSetAX 16, 16
 ; HDMA CTL
     lda #%00000001 + ($0100*lobyte(WH0))
     sta.w DMA7_CTL
@@ -101,7 +101,7 @@ Render.UpdateHDMA:
     lda #%00000011 + ($0100*lobyte(CGADDR))
     sta.w DMA5_CTL
 ; HDMA WINDOW BUFFER ADDRESS
-    sep #$20
+    .ForceSetA 8
     ldx #loword(hdmaWindowMainPositionBuffer1)
     lda.l hdmaWindowMainPositionActiveBufferId
     beq +
@@ -165,31 +165,31 @@ Render.UpdateHDMA:
     rtl
 
 Render.EnableHDMA:
-    sep #$20
+    .ForceSetA 8
     lda #1
     sta.l enableHDMA
     rtl
 
 Render.DisableHDMA:
-    sep #$20
+    .ForceSetA 8
     lda #0
     sta.l enableHDMA
     rtl
 
 Render.DisablePaletteHDMA:
-    sep #$20
+    .ForceSetA 8
     lda #0
     sta.l hdmaPaletteBuffer_trinket1 + hdmapalettebufferentry_t.lines
     rtl
 
 Render.EnablePaletteHDMA:
-    sep #$20
+    .ForceSetA 8
     lda #1
     sta.l hdmaPaletteBuffer_trinket1 + hdmapalettebufferentry_t.lines
     rtl
 
 Render.ClearHDMA:
-    sep #$30
+    .ForceSetAX 8, 8
     lda #0
     sta.l enableHDMA
     sta.l hdmaWindowMainPositionActiveBufferId
@@ -250,7 +250,7 @@ Render.ClearHDMA:
     lda #80
     sta.l hdmaPaletteBuffer.39.lines
 ; copy BG1 palette into buffer
-    rep #$20
+    .ForceSetA 16
     .REPT 16 INDEX i
         lda.l palettes.ui_gold + i*2
         sta.l hdmaPaletteBuffer.{i + 56}.color
@@ -265,8 +265,8 @@ Render.ClearHDMA:
     rtl
 
 Render.HDMAEffect.Clear:
-    sep #$20
-    rep #$10
+    .ForceSetA 8
+    .ForceSetX 16
     ; get address of inactive table
     ldx #hdmaWindowMainPositionBuffer1
     lda.l hdmaWindowMainPositionActiveBufferId
@@ -290,8 +290,8 @@ Render.HDMAEffect.Clear:
 Render.HDMAEffect.BrimstoneRight:
     phb
     .ChangeDataBank $7E
-    sep #$20
-    rep #$10
+    .ForceSetA 8
+    .ForceSetX 16
     ; get address of inactive table
     ldx #hdmaWindowMainPositionBuffer1
     lda.w hdmaWindowMainPositionActiveBufferId
@@ -360,8 +360,8 @@ Render.HDMAEffect.BrimstoneRight:
 Render.HDMAEffect.BrimstoneLeft:
     phb
     .ChangeDataBank $7E
-    sep #$20
-    rep #$10
+    .ForceSetA 8
+    .ForceSetX 16
     ; get address of inactive table
     ldx #hdmaWindowMainPositionBuffer1
     lda.w hdmaWindowMainPositionActiveBufferId
@@ -430,8 +430,8 @@ Render.HDMAEffect.BrimstoneLeft:
 Render.HDMAEffect.BrimstoneUp:
     phb
     .ChangeDataBank $7E
-    sep #$20
-    rep #$10
+    .ForceSetA 8
+    .ForceSetX 16
     ; get address of inactive table
     ldx #hdmaWindowMainPositionBuffer1
     lda.w hdmaWindowMainPositionActiveBufferId
@@ -501,8 +501,8 @@ Render.HDMAEffect.BrimstoneUp:
 Render.HDMAEffect.BrimstoneDown:
     phb
     .ChangeDataBank $7E
-    sep #$20
-    rep #$10
+    .ForceSetA 8
+    .ForceSetX 16
     ; get address of inactive table
     ldx #hdmaWindowMainPositionBuffer1
     lda.w hdmaWindowMainPositionActiveBufferId
@@ -611,7 +611,7 @@ Render.HDMAEffect.BrimstoneOmnidirectional:
     .DEFINE CAP_END_Y $1C
     .DEFINE CAP_X $1E
     ; $00 = LEN(dir)
-    rep #$30
+    .ForceSetAX 16, 16
     lda 1+$04,S
     and #$00FF
     asl
@@ -633,11 +633,11 @@ Render.HDMAEffect.BrimstoneOmnidirectional:
     and #$FF00
     .ABS_A16_POSTLOAD
     sta.l DIVU_DIVIDEND
-    sep #$20
+    .ForceSetA 8
     lda.b DIR_LEN
     sta.l DIVU_DIVISOR
     ; do rep and prepare next value while waiting for multiplication to finish
-    rep #$30  ; +3 cycles = 3
+    .ForceSetAX 16, 16
     lda 1+$04,S ; +5 cycles = 8
     xba       ; +3 cycles = 11
     and #$FF00; +3 cycles = 14
@@ -648,10 +648,10 @@ Render.HDMAEffect.BrimstoneOmnidirectional:
     ; $04 = dir_y / LEN(DIR) as Q8.8
     txa
     sta.l DIVU_DIVIDEND
-    sep #$20
+    .ForceSetA 8
     lda.b DIR_LEN
     sta.l DIVU_DIVISOR
-    rep #$30 ; +3 cycles
+    .ForceSetAX 16, 16
     ; NORM_X_MULT = NORM_X × 6
     lda.b NORM_X
     asl
@@ -676,9 +676,9 @@ Render.HDMAEffect.BrimstoneOmnidirectional:
     bcc +
         lda #$FF
     +:
-    sep #$20
+    .ForceSetA 8
     sta.l DIVU_DIVISOR
-    rep #$30
+    .ForceSetAX 16, 16
     ; NORM_Y_MULT = NORM_Y × 6
     lda.b NORM_Y
     asl
@@ -690,7 +690,7 @@ Render.HDMAEffect.BrimstoneOmnidirectional:
     lda.l DIVU_QUOTIENT
     sta.b SLOPE
 ; get address of inactive table
-    sep #$20
+    .ForceSetA 8
     ldx #hdmaWindowMainPositionBuffer1
     lda.w hdmaWindowMainPositionActiveBufferId
     beq +
@@ -698,14 +698,14 @@ Render.HDMAEffect.BrimstoneOmnidirectional:
     +:
     stx.b BASE_INDEX
 ; copy default data to window data
-    rep #$20
+    .ForceSetA 16
     lda #_default_window_data@end - _default_window_data
     sta.l DMA0_SIZE
     lda #loword(_default_window_data)
     sta.l DMA0_SRCL
     txa
     sta.l WMADDL
-    sep #$20
+    .ForceSetA 8
     lda #$7E
     sta.l WMADDH
     lda #bankbyte(_default_window_data)
@@ -736,7 +736,7 @@ Render.HDMAEffect.BrimstoneOmnidirectional:
 
 @sub_neg_x_neg_y:
     ; offset X and Y coords, so that they don't overlap the player sprite so much
-    .ACCU 8
+    .SoftSetA 8
     lda 1+$07,S
     sec
     sbc.b NORM_X_MULT+1
@@ -746,7 +746,7 @@ Render.HDMAEffect.BrimstoneOmnidirectional:
     sbc.b NORM_Y_MULT+1
     sta 1+$06,S
     ; Get base X coord
-    rep #$30
+    .ForceSetAX 16, 16
     lda 1+$07,S
     and #$00FF
     xba
@@ -813,11 +813,11 @@ Render.HDMAEffect.BrimstoneOmnidirectional:
     lda.b CUMM_X
     sec
     @@loop_set_left:
-        sep #$20
+        .ForceSetA 8
         xba
         sta.w $0001,X
         xba
-        rep #$20
+        .ForceSetA 16
         sbc.b SLOPE
         cmp #BRIMWIN_LEFT*$0100
         bcc @@set_left2
@@ -828,7 +828,7 @@ Render.HDMAEffect.BrimstoneOmnidirectional:
         bne @@loop_set_left
     jmp @@end_set_left
     @@set_left2:
-        sep #$20
+        .ForceSetA 8
         lda #BRIMWIN_LEFT
     @@loop_set_left2:
         sta.w $0001,X
@@ -837,13 +837,13 @@ Render.HDMAEffect.BrimstoneOmnidirectional:
         dex
         dey
         bne @@loop_set_left2
-    rep #$30
+    .ForceSetAX 16, 16
     @@end_set_left:
     ; set cap
     ldx.b CAP_END_Y
     cpx.b CAP_POINT_Y
     beq @@end_set_cap
-    sep #$20
+    .ForceSetA 8
     lda.b CAP_X+1
     @@loop_set_cap:
         sta.w $0002,X
@@ -858,7 +858,7 @@ Render.HDMAEffect.BrimstoneOmnidirectional:
 
 @sub_pos_x_neg_y:
     ; offset X and Y coords, so that they don't overlap the player sprite so much
-    .ACCU 8
+    .SoftSetA 8
     lda 1+$07,S
     clc
     adc.b NORM_X_MULT+1
@@ -868,7 +868,7 @@ Render.HDMAEffect.BrimstoneOmnidirectional:
     sbc.b NORM_Y_MULT+1
     sta 1+$06,S
     ; Get base X coord
-    rep #$30
+    .ForceSetAX 16, 16
     lda 1+$07,S
     and #$00FF
     xba
@@ -907,7 +907,7 @@ Render.HDMAEffect.BrimstoneOmnidirectional:
         bne @@loop_set_right
     jmp @@end_set_right
     @@set_right2:
-        sep #$20
+        .ForceSetA 8
         lda #BRIMWIN_RIGHT
     @@loop_set_right2:
         sta.w $0002,X
@@ -916,7 +916,7 @@ Render.HDMAEffect.BrimstoneOmnidirectional:
         dex
         dey
         bne @@loop_set_right2
-    rep #$30
+    .ForceSetAX 16, 16
     @@end_set_right:
     ; Get base X coord
     lda 1+$07,S
@@ -948,11 +948,11 @@ Render.HDMAEffect.BrimstoneOmnidirectional:
     sta.b CAP_X
     clc
     @@loop_set_left:
-        sep #$20
+        .ForceSetA 8
         xba
         sta.w $0001,X
         xba
-        rep #$20
+        .ForceSetA 16
         adc.b SLOPE
         bcs @@end_set_left
         dex
@@ -965,7 +965,7 @@ Render.HDMAEffect.BrimstoneOmnidirectional:
     ldx.b CAP_END_Y
     cpx.b CAP_POINT_Y
     beq @@end_set_cap
-    sep #$20
+    .ForceSetA 8
     lda.b CAP_X+1
     @@loop_set_cap:
         sta.w $0001,X
@@ -980,7 +980,7 @@ Render.HDMAEffect.BrimstoneOmnidirectional:
 
 @sub_neg_x_pos_y:
     ; offset X and Y coords, so that they don't overlap the player sprite so much
-    .ACCU 8
+    .SoftSetA 8
     lda 1+$07,S
     sec
     sbc.b NORM_X_MULT+1
@@ -990,7 +990,7 @@ Render.HDMAEffect.BrimstoneOmnidirectional:
     adc.b NORM_Y_MULT+1
     sta 1+$06,S
     ; Get base X coord
-    rep #$30
+    .ForceSetAX 16, 16
     lda 1+$07,S
     and #$00FF
     xba
@@ -1066,11 +1066,11 @@ Render.HDMAEffect.BrimstoneOmnidirectional:
     lda.b CUMM_X
     sec
     @@loop_set_left:
-        sep #$20
+        .ForceSetA 8
         xba
         sta.w $0001,X
         xba
-        rep #$20
+        .ForceSetA 16
         sbc.b SLOPE
         cmp #BRIMWIN_LEFT*$0100
         bcc @@set_left2
@@ -1081,7 +1081,7 @@ Render.HDMAEffect.BrimstoneOmnidirectional:
         bne @@loop_set_left
     jmp @@end_set_left
     @@set_left2:
-        sep #$20
+        .ForceSetA 8
         lda #BRIMWIN_LEFT
     @@loop_set_left2:
         sta.w $0001,X
@@ -1090,13 +1090,13 @@ Render.HDMAEffect.BrimstoneOmnidirectional:
         inx
         dey
         bne @@loop_set_left2
-    rep #$30
+    .ForceSetAX 16, 16
     @@end_set_left:
     ; set cap
     ldx.b CAP_POINT_Y
     cpx.b CAP_END_Y
     beq @@end_set_cap
-    sep #$20
+    .ForceSetA 8
     lda.b CAP_X+1
     @@loop_set_cap:
         sta.w $0002,X
@@ -1111,7 +1111,7 @@ Render.HDMAEffect.BrimstoneOmnidirectional:
 
 @sub_pos_x_pos_y:
     ; offset X and Y coords, so that they don't overlap the player sprite so much
-    .ACCU 8
+    .SoftSetA 8
     lda 1+$07,S
     clc
     adc.b NORM_X_MULT+1
@@ -1121,7 +1121,7 @@ Render.HDMAEffect.BrimstoneOmnidirectional:
     adc.b NORM_Y_MULT+1
     sta 1+$06,S
     ; Get base X coord
-    rep #$30
+    .ForceSetAX 16, 16
     lda 1+$07,S
     and #$00FF
     xba
@@ -1165,7 +1165,7 @@ Render.HDMAEffect.BrimstoneOmnidirectional:
         bne @@loop_set_right
     jmp @@end_set_right
     @@set_right2:
-        sep #$20
+        .ForceSetA 8
         lda #BRIMWIN_RIGHT
     @@loop_set_right2:
         sta.w $0002,X
@@ -1174,7 +1174,7 @@ Render.HDMAEffect.BrimstoneOmnidirectional:
         inx
         dey
         bne @@loop_set_right2
-    rep #$30
+    .ForceSetAX 16, 16
     @@end_set_right:
     ; Get base X coord
     lda 1+$07,S
@@ -1210,11 +1210,11 @@ Render.HDMAEffect.BrimstoneOmnidirectional:
     sta.b CAP_X
     clc
     @@loop_set_left:
-        sep #$20
+        .ForceSetA 8
         xba
         sta.w $0001,X
         xba
-        rep #$20
+        .ForceSetA 16
         adc.b SLOPE
         bcs @@end_set_left
         inx
@@ -1227,7 +1227,7 @@ Render.HDMAEffect.BrimstoneOmnidirectional:
     ldx.b CAP_POINT_Y
     cpx.b CAP_END_Y
     beq @@end_set_cap
-    sep #$20
+    .ForceSetA 8
     lda.b CAP_X+1
     @@loop_set_cap:
         sta.w $0001,X
@@ -1241,15 +1241,15 @@ Render.HDMAEffect.BrimstoneOmnidirectional:
     rtl
 
 ClearSpriteTable:
-    .ACCU 16
-    .INDEX 16
+    .SoftSetA 16
+    .SoftSetX 16
     stz.w objectIndex
     lda #512
     sta.w objectIndexShadow
     .REPT 32/2 INDEX i
         stz.w objectDataExt + (i*2)
     .ENDR
-    sep #$20
+    .ForceSetA 8
     lda #SPRITE_Y_DISABLED
     .REPT 128 INDEX i
         sta.w objectData.{i+1}.pos_y
@@ -1257,14 +1257,14 @@ ClearSpriteTable:
     rtl
 
 UploadSpriteTable:
-    rep #$20 ; 16 bit A
+    .ForceSetA 16
     lda #0
     sta.l OAMADDR
     lda #512+32
     sta.l DMA0_SIZE
     lda.w #objectData
     sta.l DMA0_SRCL
-    sep #$20 ; 8 bit A
+    .ForceSetA 8
     lda #0
     sta.l DMA0_SRCH
     ; Absolute address, auto increment, 1 byte at a time
@@ -1284,12 +1284,12 @@ UploadSpriteTable:
 ;   source bank    [db] $06
 ;   source address [dw] $04
 CopyPalette:
-    rep #$20 ; 16 bit A
+    .ForceSetA 16
     lda $04,S
     sta $4302 ; source address
     lda $08,S
     sta $4305 ; 32 bytes for palette
-    sep #$20 ; 8 bit A
+    .ForceSetA 8
     lda $06,S
     sta $4304 ; source bank
     lda $07,S
@@ -1308,16 +1308,16 @@ CopyPalette:
 ;   source bank    [db] $06
 ;   source address [dw] $04
 CopyPaletteVQueue:
-    rep #$30 ; 16 bit A
+    .ForceSetAX 16, 16
     .VQueueOpToA
     tax
     inc.w vqueueNumOps
-    rep #$20 ; 16 bit A
+    .ForceSetA 16
     lda $04,S
     sta.l vqueueOps.1.aAddr,X; source address
     lda $08,S
     sta.l vqueueOps.1.numBytes,X ; 32 bytes for palette
-    sep #$20 ; 8 bit A
+    .ForceSetA 8
     lda $06,S
     sta.l vqueueOps.1.aAddr+2,X ; source bank
     lda $07,S
@@ -1335,7 +1335,7 @@ CopyPaletteVQueue:
 ;   source bank    [db] $06
 ;   source address [dw] $04
 CopySprite:
-    rep #$20 ; 16 bit A
+    .ForceSetA 16
     lda $07,s
     asl ; multiply by 32 bytes per tile
     asl
@@ -1347,7 +1347,7 @@ CopySprite:
     sta.w DMA0_SRCL ; source address
     lda $09,s
     sta.w VMADDR ; VRAM address
-    sep #$20 ; 8 bit A
+    .ForceSetA 8
     lda $06,s
     sta.w DMA0_SRCH ; source bank
     lda #$80
@@ -1367,14 +1367,14 @@ CopySprite:
 ;   source bank    [db] $06
 ;   source address [dw] $04
 CopyVMEM:
-    rep #$20 ; 16 bit A
+    .ForceSetA 16
     lda $07,s
     sta.w DMA0_SIZE ; number of bytes
     lda $04,s
     sta.w DMA0_SRCL ; source address
     lda $09,s
     sta.w VMADDR ; VRAM address
-    sep #$20 ; 8 bit A
+    .ForceSetA 8
     lda $06,s
     sta.w DMA0_SRCH ; source bank
     lda #$80
@@ -1397,7 +1397,7 @@ CopyVMEM:
 ;   source address [dw] $04
 CopySpriteVQueue:
     phb
-    rep #$30 ; 16 bit A
+    .ForceSetAX 16, 16
     .VQueueOpToA
     tay
     inc.w vqueueNumOps
@@ -1413,7 +1413,7 @@ CopySpriteVQueue:
     sta.w loword(vqueueOps.1.aAddr),Y ; source address
     lda 1+$09,S
     sta.w loword(vqueueOps.1.vramAddr),Y ; VRAM address
-    sep #$20 ; 8 bit A
+    .ForceSetA 8
     lda 1+$06,S
     sta.w loword(vqueueOps.1.aAddr+2),Y ; source bank
     lda #VQUEUE_MODE_VRAM
@@ -1432,7 +1432,7 @@ CopySpriteVQueue:
 ;   source address[dw]
 ; MUST call with jsl
 CopySpritePartial:
-    rep #$20
+    .ForceSetA 16
     ; TODO
     rtl
 
@@ -1442,14 +1442,14 @@ CopySpritePartial:
 ;   num bytes    [dw] $04
 ; MUST call with jsl
 ClearVMem:
-    rep #$20 ; 16 bit A
+    .ForceSetA 16
     lda $04,s
     sta DMA0_SIZE ; number of bytes
     lda #EmptyData
     sta DMA0_SRCL ; source address
     lda $06,s
     sta $2116 ; VRAM address
-    sep #$20 ; 8 bit A
+    .ForceSetA 8
     lda #bankbyte(EmptyData)
     sta DMA0_SRCH ; source bank
     lda #$80
@@ -1463,14 +1463,14 @@ ClearVMem:
     rtl
 
 InitializeUI:
-    rep #$20 ; 16 bit A
+    .ForceSetA 16
     lda #_sizeof_DefaultUiData
     sta.w DMA0_SIZE ; number of bytes
     lda #loword(DefaultUiData)
     sta.w DMA0_SRCL ; source address
     lda #BG1_TILE_BASE_ADDR
     sta.w VMADDR ; VRAM address
-    sep #$20 ; 8 bit A
+    .ForceSetA 8
     lda #bankbyte(DefaultUiData)
     sta.w DMA0_SRCH ; source bank
     lda #$80
@@ -1485,14 +1485,14 @@ InitializeUI:
 
 InitializeBackground:
     ; update character data
-    rep #$30 ; 16 bit A
+    .ForceSetAX 16, 16
     lda #24 * 16 * 8 * 2
     sta.w DMA0_SIZE ; number of bytes
     lda #groundCharacterData
     sta.w DMA0_SRCL ; source address
     lda #BG3_CHARACTER_BASE_ADDR
     sta.w VMADDR ; VRAM address
-    sep #$20 ; 8 bit A
+    .ForceSetA 8
     lda #bankbyte(groundCharacterData)
     sta.w DMA0_SRCH ; source bank
     lda #$80
@@ -1504,13 +1504,13 @@ InitializeBackground:
     lda #$01
     sta.w MDMAEN ; begin transfer
     ; tile data
-    rep #$30 ; 16 bit A
+    .ForceSetAX 16, 16
     lda #BG3_TILE_BASE_ADDR
     sta.w VMADDR ; VRAM address
-    sep #$20 ; 8 bit A
+    .ForceSetA 8
     lda #$80
     sta.w VMAIN ; VRAM address increment flags
-    rep #$30
+    .ForceSetAX 16, 16
     ldy #32*32
     ldx #0
 @loop:
@@ -1526,7 +1526,7 @@ InitializeBackground:
 ; Add entity 'A' to boss contributors list
 ; Assumes DB=$7E
 BossBar.Add:
-    sep #$30
+    .ForceSetAX 8, 8
     ldx.w boss_contributor_count
     sta.w boss_contributor_array,X
     inc.w boss_contributor_count
@@ -1537,7 +1537,7 @@ BossBar.Add:
 ; Remove entity 'A' from boss contributors list
 ; Assumes DB = $7E
 BossBar.Remove:
-    sep #$30
+    .ForceSetAX 8, 8
     ldx.w boss_contributor_count
     txy
 @loop:
@@ -1557,14 +1557,14 @@ BossBar.Remove:
 
 ; Assumes DB=$7E
 BossBar.ReRender:
-    sep #$30
+    .ForceSetAX 8, 8
     lda #1
     sta.w boss_health_need_rerender
     rtl
 
 _bossbar_no_contributors:
     ; clear boss bar
-    rep #$30
+    .ForceSetAX 16, 16
     .VQueueOpToA
     tax
     inc.w vqueueNumOps
@@ -1576,7 +1576,7 @@ _bossbar_no_contributors:
     lda #19*2
     sta.l vqueueOps.1.numBytes,X
     sta.l vqueueOps.2.numBytes,X
-    sep #$20
+    .ForceSetA 8
     lda #VQUEUE_MODE_VRAM_CLEAR
     sta.l vqueueOps.1.mode,X
     sta.l vqueueOps.2.mode,X
@@ -1584,7 +1584,7 @@ _bossbar_no_contributors:
     rtl
 
 BossBar.Update:
-    sep #$30
+    .ForceSetAX 8, 8
     ; check need re-render
     lda.l boss_health_need_rerender
     bne +
@@ -1598,7 +1598,7 @@ BossBar.Update:
     ldx.w boss_contributor_count
     beq _bossbar_no_contributors
 ; sum health of all entities
-    rep #$20
+    .ForceSetA 16
     ; $00,$01,$02 - health
     stz.b $00
     stz.b $02
@@ -1657,10 +1657,10 @@ BossBar.Update:
 ; divide
     lda.b $00
     sta.l DIVU_DIVIDEND
-    sep #$20
+    .ForceSetA 8
     lda.b $05
     sta.l DIVU_DIVISOR
-    rep #$30
+    .ForceSetAX 16, 16
 ; allocate bin, while waiting on division
     lda.w vqueueBinOffset
     sec
@@ -1734,7 +1734,7 @@ BossBar.Update:
     jmp @loop_clear
 @finalize:
 ; set up vqueue
-    rep #$30
+    .ForceSetAX 16, 16
     .VQueueOpToA
     tax
     inc.w vqueueNumOps
@@ -1751,7 +1751,7 @@ BossBar.Update:
     clc
     adc #19*2
     sta.l vqueueOps.2.aAddr,X
-    sep #$20
+    .ForceSetA 8
     lda #VQUEUE_MODE_VRAM
     sta.l vqueueOps.1.mode,X
     sta.l vqueueOps.2.mode,X

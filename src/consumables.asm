@@ -221,13 +221,13 @@ _empty_use:
 ; Teleport to room at location A
 TeleportToRoom:
 ; TODO: better transition
-    .INDEX 8
-    .ACCU 8
+    .SoftSetX 8
+    .SoftSetA 8
     pha
     ; unload current room
     jsl Room_Unload
     jsl PlayerMinimapExitCurrentRoom
-    sep #$30
+    .ForceSetAX 8, 8
     pla
     sta.b loadedRoomIndex
     tax
@@ -236,14 +236,14 @@ TeleportToRoom:
     lda.l mapTileSlotTable,X
     pha
     jsl LoadAndInitRoomSlotIntoLevel
-    rep #$30
+    .ForceSetAX 16, 16
     pla
     jsl PlayerDiscoverNearbyRooms
     ; Find safe spot for player
-    sep #$30
+    .ForceSetAX 8, 8
     lda.b [mapDoorSouth]
     beq +
-        rep #$20
+        .ForceSetA 16
         lda #PLAYER_START_SOUTH_Y
         sta.w player_posy
         lda #PLAYER_START_SOUTH_X
@@ -253,7 +253,7 @@ TeleportToRoom:
     +:
     lda.b [mapDoorNorth]
     beq +
-        rep #$20
+        .ForceSetA 16
         lda #PLAYER_START_NORTH_Y
         sta.w player_posy
         lda #PLAYER_START_NORTH_X
@@ -263,7 +263,7 @@ TeleportToRoom:
     +:
     lda.b [mapDoorEast]
     beq +
-        rep #$20
+        .ForceSetA 16
         lda #PLAYER_START_EAST_X
         sta.w player_posx
         lda #PLAYER_START_EAST_Y
@@ -273,7 +273,7 @@ TeleportToRoom:
     +:
     lda.b [mapDoorWest]
     beq +
-        rep #$20
+        .ForceSetA 16
         lda #PLAYER_START_WEST_X
         sta.w player_posx
         lda #PLAYER_START_WEST_Y
@@ -282,14 +282,14 @@ TeleportToRoom:
         rtl
     +:
     ; failsafe: spawn at south
-    rep #$20
+    .ForceSetA 16
     lda #PLAYER_START_SOUTH_Y
     sta.w player_posy
     lda #PLAYER_START_SOUTH_X
     sta.w player_posx
 @finish:
     ; update x2,y2
-    sep #$20
+    .ForceSetA 8
     lda.w player_box_x1
     clc
     adc #16
@@ -303,31 +303,31 @@ TeleportToRoom:
     rtl
 
 _tarot_fool:
-    sep #$30
+    .ForceSetAX 8, 8
     lda.l roomslot_start
     jsl TeleportToRoom
     rts
 
 _tarot_star:
-    sep #$30
+    .ForceSetAX 8, 8
     lda.l roomslot_star
     jsl TeleportToRoom
     rts
 
 _tarot_moon:
-    sep #$30
+    .ForceSetAX 8, 8
     lda.l roomslot_secret1
     jsl TeleportToRoom
     rts
 
 _tarot_hermit:
-    sep #$30
+    .ForceSetAX 8, 8
     lda.l roomslot_shop
     jsl TeleportToRoom
     rts
 
 _tarot_emperor:
-    sep #$30
+    .ForceSetAX 8, 8
     lda.l roomslot_boss
     jsl TeleportToRoom
     rts
@@ -335,38 +335,44 @@ _tarot_emperor:
 ; Set current consumable to 'A'
 ; May spawn a pickup if the player currently has a card in their inventory
 Consumable.pickup:
-    sep #$30
+    .ForceSetAX 8, 8
     pha
     ; drop current consumable, if applicable
     lda.w playerData.current_consumable
     beq @skip_drop
-        rep #$30
+        .ForceSetAX 16, 16
         lda.b entityExecutionContext
         pha
         lda #ENTITY_CONTEXT_INIT_DROP
         sta.b entityExecutionContext
         lda #entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_CONSUMABLE)
-        jsl Entity.Create
-        sep #$30
+        .PushBank
+        .SoftSetDirect $0000
+        .ForceSetBank $7E
+        .call "Entity.Create"
+        .ForceSetAX 8, 8
         lda.w playerData.current_consumable
         sta.w entity_timer,Y
-        rep #$30
+        .ForceSetAX 16, 16
         lda.w player_posx
         sta.w entity_posx,Y
         lda.w player_posy
         sta.w entity_posy,Y
-        jsl Entity.Init
-        rep #$30
+        .call "Entity.Init"
+        .ForceSetAX 16, 16
         pla
         sta.b entityExecutionContext
+        .PopBank
 @skip_drop:
     ; set current consumable
-    sep #$30
+    .ForceSetAX 8, 8
     pla
     sta.w playerData.current_consumable
+
+.InvalidateContext
 Consumable.update_display:
     ; Get pointer to consumable
-    rep #$30
+    .ForceSetAX 16, 16
     lda.w playerData.current_consumable
     and #$00FF
     asl
@@ -386,15 +392,15 @@ Consumable.update_display:
     ; set up vqueue to upload sprite
     pea BG1_CHARACTER_BASE_ADDR + $0C00
     pea 4
-    sep #$20
+    .ForceSetA 8
     lda #bankbyte(tempTileData)
     pha
-    rep #$20
+    .ForceSetA 16
     pea loword(tempTileData)
     .REPT 4 INDEX i
         jsl CopySpriteVQueue
         .IF i < 3
-            rep #$20
+            .ForceSetA 16
             lda $01,S
             clc
             adc #spritesize(4, 4)
@@ -405,14 +411,14 @@ Consumable.update_display:
             sta $06,S
         .ENDIF
     .ENDR
-    rep #$20
+    .ForceSetA 16
     pla
     pla
     pla
-    sep #$20
+    .ForceSetA 8
     pla
     ; upload palette
-    rep #$30
+    .ForceSetAX 16, 16
     plx
     phx
     pea 32
@@ -420,7 +426,7 @@ Consumable.update_display:
     lda.l bankaddr(Consumable.consumables) | consumable_t.sprite_palette,X
     pha
     jsl CopyPaletteVQueue
-    rep #$30
+    .ForceSetAX 16, 16
     pla
     pla
     pla
@@ -438,7 +444,7 @@ Consumable.update_display:
         adc #consumable_t.name
         tax
         jsl Overlay.putline
-        rep #$30
+        .ForceSetAX 16, 16
         lda $02,S
         clc
         adc #consumable_t.tagline
@@ -446,14 +452,14 @@ Consumable.update_display:
         jsl Overlay.putline
         plb
 @no_put_text:
-    rep #$30
+    .ForceSetAX 16, 16
     plx
     rtl
 
 ; Update the consumable display without displaying an overlay message
 Consumable.update_display_no_overlay:
     ; Get pointer to consumable
-    rep #$30
+    .ForceSetAX 16, 16
     lda.w playerData.current_consumable
     and #$00FF
     asl
@@ -473,15 +479,15 @@ Consumable.update_display_no_overlay:
     ; set up vqueue to upload sprite
     pea BG1_CHARACTER_BASE_ADDR + $0C00
     pea 4
-    sep #$20
+    .ForceSetA 8
     lda #bankbyte(tempTileData)
     pha
-    rep #$20
+    .ForceSetA 16
     pea loword(tempTileData)
     .REPT 4 INDEX i
         jsl CopySpriteVQueue
         .IF i < 3
-            rep #$20
+            .ForceSetA 16
             lda $01,S
             clc
             adc #spritesize(4, 4)
@@ -492,14 +498,14 @@ Consumable.update_display_no_overlay:
             sta $06,S
         .ENDIF
     .ENDR
-    rep #$20
+    .ForceSetA 16
     pla
     pla
     pla
-    sep #$20
+    .ForceSetA 8
     pla
     ; upload palette
-    rep #$30
+    .ForceSetAX 16, 16
     plx
     phx
     pea 32
@@ -507,18 +513,18 @@ Consumable.update_display_no_overlay:
     lda.l bankaddr(Consumable.consumables) | consumable_t.sprite_palette,X
     pha
     jsl CopyPaletteVQueue
-    rep #$30
+    .ForceSetAX 16, 16
     pla
     pla
     pla
 @no_put_text:
-    rep #$30
+    .ForceSetAX 16, 16
     plx
     rtl
 
 Consumable.use:
     ; run
-    rep #$30
+    .ForceSetAX 16, 16
     lda.w playerData.current_consumable
     and #$00FF
     beq @skip
@@ -532,7 +538,7 @@ Consumable.use:
     jmp ($0000)
 @next:
     ; set consumable to 0
-    sep #$20
+    .ForceSetA 8
     lda #0
     sta.w playerData.current_consumable
     ; update display

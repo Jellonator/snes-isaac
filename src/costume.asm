@@ -14,7 +14,7 @@
 Costume.player_reset:
     ; copy data from `spritedata.isaac_head` to `playerSpriteBuffer`
     phb
-    rep #$30
+    .ForceSetAX 16, 16
     lda #(32 * 4 * 32)
     ldx #loword(spritedata.isaac_head)
     ldy #loword(playerSpriteBuffer)
@@ -25,34 +25,34 @@ Costume.player_reset:
 Costume.player_recalculate:
     jsl Costume.player_reset
     phb
-    sep #$20
+    .ForceSetA 8
     ; POLYPHEMUS
     lda.l playerData.playerItemStackNumber + ITEMID_POLYPHEMUS
     beq +
-        rep #$30
+        .ForceSetAX 16, 16
         .put_sprite spritedata.costume_polyphemus, 8, 0, 0
         .put_sprite spritedata.costume_polyphemus, 8, 0, 8
-        sep #$20
+        .ForceSetA 8
     +:
     ; WIRE COAT HANGER
     lda.l playerData.playerItemStackNumber + ITEMID_WIRE_COAT_HANGER
     beq +
-        rep #$30
+        .ForceSetAX 16, 16
         .put_sprite spritedata.costume_wire_coat_hanger, 4, 0, 0
         .put_sprite spritedata.costume_wire_coat_hanger, 4, 0, 4
         .put_sprite spritedata.costume_wire_coat_hanger, 4, 0, 8
         .put_sprite spritedata.costume_wire_coat_hanger, 4, 0, 12
-        sep #$20
+        .ForceSetA 8
     +:
     ; SPOON BENDER
     lda.l playerData.playerItemStackNumber + ITEMID_SPOON_BENDER
     beq +
-        rep #$30
+        .ForceSetAX 16, 16
         .put_sprite spritedata.costume_spoon_bender, 4, 0, 0
         .put_sprite spritedata.costume_spoon_bender, 4, 0, 4
         .put_sprite spritedata.costume_spoon_bender, 4, 0, 8
         .put_sprite spritedata.costume_spoon_bender, 4, 0, 12
-        sep #$20
+        .ForceSetA 8
     +:
     ; end
     plb
@@ -62,8 +62,8 @@ Costume.player_recalculate:
 ; The mask is calculated from character data; transparent pixels will not
 ; replace existing data.
 Costume.blit_tiles_no_mask:
-    .ACCU 16
-    .INDEX 16
+    .SoftSetA 16
+    .SoftSetX 16
     sta.b $00
 @loop:
     ; note: we have 4bpp, with four bitplanes
@@ -149,8 +149,8 @@ Costume.blit_tiles_no_mask:
 ;   16B: bitplanes 3 and 4
 ;   16B: mask - each bit corresponds to a bit in each bitplane
 Costume.blit_tiles_with_interlaced_mask:
-    .ACCU 16
-    .INDEX 16
+    .SoftSetA 16
+    .SoftSetX 16
     sta.b $00
 @loop:
     .REPT 8 INDEX i

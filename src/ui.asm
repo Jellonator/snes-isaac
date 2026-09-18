@@ -4,7 +4,7 @@
 .SECTION "UI" FREE
 
 UI.update_money_display:
-    rep #$30 ; 16B AXY
+    .ForceSetAX 16, 16
     ; inc vqueue
     lda.w vqueueNumMiniOps
     asl
@@ -35,7 +35,7 @@ UI.update_money_display:
     rtl
 
 UI.update_bomb_display:
-    rep #$30 ; 16B AXY
+    .ForceSetAX 16, 16
     ; inc vqueue
     lda.w vqueueNumMiniOps
     asl
@@ -66,7 +66,7 @@ UI.update_bomb_display:
     rtl
 
 UI.update_key_display:
-    rep #$30 ; 16B AXY
+    .ForceSetAX 16, 16
     ; inc vqueue
     lda.w vqueueNumMiniOps
     asl
@@ -107,7 +107,7 @@ _PlayerHealthTileValueTable:
 
 ; Render heart at slot Y
 UI.update_single_heart:
-    rep #$30 ; 16B AXY
+    .ForceSetAX 16, 16
     ; Init vqueue
     lda.w vqueueNumMiniOps
     asl
@@ -139,7 +139,7 @@ UI.update_single_heart:
     rtl
 
 UI.update_all_hearts:
-    sep #$30
+    .ForceSetAX 8, 8
     ldy #HEALTHSLOT_COUNT-1
     @loop:
         phy
@@ -156,7 +156,7 @@ UI.update_all_hearts:
 ; We assume that this will be performed during stage load.
 ; Just set numTilesToUpdate to $FF instead.
 UpdateEntireMinimap:
-    rep #$30 ; 16 bit AXY
+    .ForceSetAX 16, 16
     lda #$80
     sta.w VMAIN ; single increment, no mapping
     .REPT 5 INDEX i
@@ -198,8 +198,8 @@ UpdateEntireMinimap:
     rts
 
 _ClearMinimapLine:
-    .ACCU 16
-    .INDEX 16
+    .SoftSetA 16
+    .SoftSetX 16
     lda #deft($53, 6)
     .REPT 5 INDEX i
         sta.w VMDATA
@@ -208,8 +208,8 @@ _ClearMinimapLine:
     rts
 
 _UpdateMinimapLine:
-    .ACCU 16
-    .INDEX 16
+    .SoftSetA 16
+    .SoftSetX 16
     .REPT 5 INDEX i
         .IF i != 2
             lda.b loadedRoomIndex
@@ -245,8 +245,8 @@ _UpdateMinimapLine:
 
 ; Get tile value for tile Y
 Map.GetTileValue:
-    .INDEX 16
-    .ACCU 16
+    .SoftSetX 16
+    .SoftSetA 16
     lda.w mapTileTypeTable,Y
     and #$00FF
     asl
@@ -314,7 +314,7 @@ Map.GetTileValue:
 ;    slot dw $04,S
 UpdateMinimapSlot:
     ; screw it, just update the whole minimap now
-    sep #$20
+    .ForceSetA 8
     lda #$FF
     sta.w numTilesToUpdate
     rtl
@@ -331,7 +331,7 @@ UI.update_charge_display:
     .DEFINE TMP_CHARGE $10
     .DEFINE TMP_PLAYER_CHARGE $12
     ; get item info
-    rep #$30
+    .ForceSetAX 16, 16
     lda.w playerData.current_active_item
     and #$00FF
     asl
@@ -465,12 +465,12 @@ UI.update_charge_display:
     .ENDR
 @end_write:
 ; and now, upload item sprite depending on if we have enough charge
-    rep #$30
+    .ForceSetAX 16, 16
     ldx.b ITEMPTR
     pea BG1_CHARACTER_BASE_ADDR + $0EE0
     pea 2
     stz.b IS_FULL
-    sep #$20
+    .ForceSetA 8
     lda.w playerData.current_active_charge
     cmp.b USAGE_CHARGE
     bcc +
@@ -478,7 +478,7 @@ UI.update_charge_display:
     +:
     lda #$7F
     pha
-    rep #$20
+    .ForceSetA 16
     lda.l bankaddr(Item.items) | itemdef_t.sprite_index,X
     and #$00FF
     ldy.b IS_FULL
@@ -529,7 +529,7 @@ UI.update_charge_display:
     .REPT 2 INDEX i
         jsl CopySpriteVQueue
         .IF i == 0
-            rep #$20
+            .ForceSetA 16
             lda $01,S
             clc
             adc #spritesize(4, 2)
@@ -540,11 +540,11 @@ UI.update_charge_display:
             sta $06,S
         .ENDIF
     .ENDR
-    rep #$20
+    .ForceSetA 16
     pla
     pla
     pla
-    sep #$20
+    .ForceSetA 8
     pla
     rtl
 

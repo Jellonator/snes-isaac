@@ -17,7 +17,7 @@
 
 ; Initialize all palette data to default
 Palette.init_data:
-    rep #$30
+    .ForceSetAX 16, 16
     lda #$8080
     .REPT 8 INDEX iy
         .REPT 4 INDEX ix
@@ -43,7 +43,7 @@ Palette.init_data:
 ; Parameters: A - palette depth
 ; Return: X as palette ID
 Palette.alloc_opaque:
-    sep #$30
+    .ForceSetAX 8, 8
     tax
     lda.l PaletteDepthRequiredSlots,X
     cmp #0
@@ -132,7 +132,7 @@ Palette.alloc_opaque:
 
 ; Return first free palette for transparent sprites
 Palette.alloc_transparent:
-    sep #$30
+    .ForceSetAX 8, 8
     tax
     lda.l PaletteDepthRequiredSlots,X
     cmp #0
@@ -228,7 +228,7 @@ Palette.incref:
 
 ; Free palette in X
 Palette.free:
-    rep #$20
+    .ForceSetA 16
     dec.w paletteRefCount,X
     bne +
         ; de-allocate subpalettes
@@ -252,7 +252,7 @@ Palette.free:
 
 ; Queue for palette at [Y] to be uploaded into slot [X]
 Palette.queue_upload:
-    rep #$30
+    .ForceSetAX 16, 16
     ; set palette pointer
     tya
     sta.w palettePtr,X
@@ -275,7 +275,7 @@ Palette.queue_upload:
         .MultiplyStatic 8
         tax
         ; CGRAM mode
-        sep #$20
+        .ForceSetA 8
         lda #VQUEUE_MODE_CGRAM
         sta.l vqueueOps.1.mode,X
         lda #bankbyte(palettes.default)
@@ -287,7 +287,7 @@ Palette.queue_upload:
         adc #$80 + i*4
         sta.l vqueueOps.1.vramAddr,X
         ; num bytes
-        rep #$20
+        .ForceSetA 16
         lda #8
         sta.l vqueueOps.1.numBytes,X
         ; addr
@@ -309,7 +309,7 @@ Palette.queue_upload:
 ; Returns:
 ;    X - palette ID
 Palette.find_or_upload_opaque:
-    rep #$30
+    .ForceSetAX 16, 16
     .REPT 32 INDEX i
         ; skip standard color subpalettes
         .IF (i # 4 != 0)
@@ -324,12 +324,12 @@ Palette.find_or_upload_opaque:
     ; none found, allocate new
     phy
     jsl Palette.alloc_opaque
-    rep #$30
+    .ForceSetAX 16, 16
     ply
     txa
     phx
     jsl Palette.queue_upload
-    rep #$30
+    .ForceSetAX 16, 16
     plx
     rtl
 
@@ -342,7 +342,7 @@ Palette.find_or_upload_opaque:
 ; Returns:
 ;    X - palette ID
 Palette.find_or_upload_transparent:
-    rep #$30
+    .ForceSetAX 16, 16
     .REPT 32 INDEX i
         ; skip standard color subpalettes
         .IF (i # 4 != 0)
@@ -357,11 +357,11 @@ Palette.find_or_upload_transparent:
     ; none found, allocate new
     phy
     jsl Palette.alloc_transparent
-    rep #$30
+    .ForceSetAX 16, 16
     ply
     phx
     jsl Palette.queue_upload
-    rep #$30
+    .ForceSetAX 16, 16
     plx
     rtl
 

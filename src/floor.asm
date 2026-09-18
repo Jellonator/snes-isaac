@@ -8,7 +8,7 @@
 ; $03,S room load context
 _Floor_Begin:
     jsl MapGen.GenerateMap
-    sep #$30 ; 8 bit AXY
+    .ForceSetAX 8, 8
     ; reset ground
     lda #1
     sta.l needResetEntireGround
@@ -24,13 +24,13 @@ _Floor_Begin:
     lda #0
     pha
     jsl LoadAndInitRoomSlotIntoLevel
-    rep #$20 ; 16b A
+    .ForceSetA 16
     pla
     ; init player
     jsl PlayerEnterFloor
     ; put overlay
     jsl Overlay.clear
-    rep #$30
+    .ForceSetAX 16, 16
     lda.l currentFloorIndex
     asl
     tax
@@ -46,14 +46,14 @@ _Floor_Begin:
 
 ; Initialize floor data when beginning a new game
 Floor.Init:
-    sep #$20
+    .ForceSetA 8
     ; clear devil deal flags (base devil chance should be 100%)
     lda #3
     sta.l floors_since_devil_deal
     lda #0
     sta.l devil_deal_flags
     ; clear floor information
-    rep #$30
+    .ForceSetAX 16, 16
     lda #0
     sta.w floorFlags
     sta.w currentFloorIndex
@@ -62,35 +62,35 @@ Floor.Init:
     lda.l FloorDefinitions,X
     sta.w currentFloorPointer
     ; initialize
-    sep #$20
+    .ForceSetA 8
     lda #ROOM_LOAD_CONTEXT_GAMELOAD
     pha
     jsr _Floor_Begin
-    sep #$20
+    .ForceSetA 8
     pla
     jsr _Floor_Update_Graphics
     rtl
 
 ; Initialize floor data when loading from a save file
 Floor.InitPostLoad:
-    rep #$30
+    .ForceSetAX 16, 16
     lda #0
     sta.w floorFlags
     jsr _Floor_Update_Graphics
-    sep #$30
+    .ForceSetAX 8, 8
     lda #1
     sta.l needResetEntireGround
     jsl PlayerInitPostLoad
     rtl
 
 Floor.Next:
-    rep #$30
+    .ForceSetAX 16, 16
     lda #FLOOR_FLAG_NEXT
     tsb.w floorFlags
     rtl
 
 Floor.Transition.In:
-    sep #$30
+    .ForceSetAX 8, 8
     wai
     .REPT 16 INDEX  i
     lda #(i * 16) | $0F
@@ -105,7 +105,7 @@ Floor.Transition.In:
     rtl
 
 Floor.Transition.Out:
-    sep #$30
+    .ForceSetAX 8, 8
     wai
     .REPT 16 INDEX  i
     lda #((15 - i) * 16) | $0F
@@ -120,13 +120,13 @@ Floor.Transition.Out:
     rtl
 
 Floor.Tick:
-    rep #$30
+    .ForceSetAX 16, 16
     lda #FLOOR_FLAG_FADEIN2
     trb.w floorFlags
     beq @no_fadein2
         jsl Floor.Transition.Out
 @no_fadein2:
-    rep #$30
+    .ForceSetAX 16, 16
     lda #FLOOR_FLAG_FADEIN
     trb.w floorFlags
     beq @no_fadein
@@ -134,12 +134,12 @@ Floor.Tick:
         tsb.w floorFlags
         jsr _Floor_Update_Graphics
 @no_fadein:
-    rep #$30
+    .ForceSetAX 16, 16
     lda #FLOOR_FLAG_NEXT
     trb.w floorFlags
     beq @no_level_transition
         jsl Floor.Transition.In
-        rep #$30
+        .ForceSetAX 16, 16
         lda.w currentFloorIndex
         inc A
         sta.w currentFloorIndex
@@ -147,13 +147,13 @@ Floor.Tick:
         tax
         lda.l FloorDefinitions,X
         sta.w currentFloorPointer
-        sep #$20
+        .ForceSetA 8
         lda #ROOM_LOAD_CONTEXT_FLOORBEGIN
         pha
         jsr _Floor_Begin
-        sep #$20
+        .ForceSetA 8
         pla
-        rep #$30
+        .ForceSetAX 16, 16
         lda #FLOOR_FLAG_FADEIN
         tsb.w floorFlags
 @no_level_transition:
@@ -161,11 +161,11 @@ Floor.Tick:
 
 _Floor_Update_Graphics:
     ; f-blank
-    sep #$20
+    .ForceSetA 8
     lda #$80
     sta.w INIDISP
     ; get chapter pointer
-    rep #$30
+    .ForceSetAX 16, 16
     ldx.w currentFloorPointer
     lda.l FLOOR_DEFINITION_BASE + floordefinition_t.chapter,X
     and #$00FF
@@ -184,7 +184,7 @@ _Floor_Update_Graphics:
         lda.l FLOOR_DEFINITION_BASE + chapterdefinition_t.palettes + (i*3),X
         pha
         jsl CopyPalette
-        rep #$30
+        .ForceSetAX 16, 16
         pla
         pla
         pla
@@ -192,14 +192,14 @@ _Floor_Update_Graphics:
     .ENDR
     ; don't need to upload tiles here, this is performed by room
     ; set clear color
-    sep #$20 ; 8 bit A
+    .ForceSetA 8
     stz CGADDR
     lda #lobyte(CLEAR_COLOR)
     sta CGDATA
     lda #hibyte(CLEAR_COLOR)
     sta CGDATA
     ; disable f-blank
-    sep #$20
+    .ForceSetA 8
     lda #$00
     sta.w INIDISP
     rts

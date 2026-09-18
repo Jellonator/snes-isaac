@@ -9,7 +9,7 @@
 ; Current value of the BANK register
 .DEFINE D_BANK -1
 ; Current value of the DIRECT PAGE register
-.DEFINE D_DIRECT -1
+.DEFINE D_DIRECT $0000
 
 ; Indicates that a register's value is currently unknown
 ; For a procedure's input, indicates that the register value is not important.
@@ -20,7 +20,7 @@
 ; will not be modified, and its value is not used.
 .DEFINE D_IGNORE -2
 ; Indicates that a register's value is parameterized.
-; For a procedure's input, indicates that the register's value is a paramter.
+; For a procedure's input, indicates that the register's value is a parameter.
 ; For a procedure's output, indicates that the register's value is a return.
 .DEFINE D_PARAMETER -3
 ; Special bank value: anything that has mirrored access to $0000-$1FFF; i.e.:
@@ -33,6 +33,9 @@
 .DEFINE PROC_CALL_LONG 1
 .DEFINE PROC_CALL_SHORT 2
 
+.DEFINE PROC_TYPE_PROCEDURE 1
+.DEFINE PROC_TYPE_INTERFACE 2
+
 .DEFINE _CONTEXT_STACK_SIZE 0
 
 .FUNCTION is_bank_io(bank) (bank == D_BANK_MIRROR_IO) || ((bank >= $00) && (bank <= $3F)) || ((bank >= $80) && (bank <= $BF))
@@ -41,6 +44,29 @@
 .FUNCTION is_direct_specific(dp) (dp >= $0000) && (dp <= $FFFF)
 .FUNCTION is_flag_specific(flag) (flag >= 0)
 .FUNCTION is_valid_inout_pair(inflag, outflag) ((inflag != D_IGNORE) && (outflag != D_IGNORE)) || ((inflag == D_IGNORE) && (outflag == D_IGNORE))
+
+; Returns true if the flag 'flag' is compatible with base flags 'base'
+; e.g., when inheriting an interface:
+; INFLAGS: call `is_compatible_inflag(self_in_flags, interface_in_flags)`
+; OUTFLAGS: call `is_compatible_outflag(self_out_flags, interface_out_flags)`
+.FUNCTION is_compatible_inflag(flag, base) (base == flag) || ((base == D_UNK) && (flag == D_IGNORE)) || ((base == D_PARAMETER) && (flag == D_IGNORE)) || ((base >= 0) && (flag < 0))
+.FUNCTION is_compatible_outflag(flag, base) (base == flag) || ((base == D_PARAMETER) && (flag >= 0)) || ((base == D_UNK) && ((flag == D_IGNORE) || (flag >= 0)))
+.FUNCTION is_compatible_bank_inflag(flag, base) is_compatible_inflag(flag, base) || ((flag == D_BANK_MIRROR_IO) && is_bank_io(base)) || ((flag == D_BANK_MIRROR_LOWRAM) && is_bank_lowram(base))
+.FUNCTION is_compatible_bank_outflag(flag, base) is_compatible_outflag(flag, base) || ((base == D_BANK_MIRROR_IO) && is_bank_io(flag)) || ((base == D_BANK_MIRROR_LOWRAM) && is_bank_lowram(flag))
+
+; Update INDEX and ACCU without inserting instructions
+.MACRO .RefreshFlags
+    .IF D_FLAG_A == 8
+        .ACCU 8
+    .ELIF D_FLAG_A == 16
+        .ACCU 16
+    .ENDIF
+    .IF D_FLAG_X == 8
+        .INDEX 8
+    .ELIF D_FLAG_X == 16
+        .INDEX 16
+    .ENDIF
+.ENDM
 
 ; Set the 'A' flag to the given number of bits
 .MACRO .SetA ARGS p_a
@@ -51,6 +77,7 @@
         sep #$20
     .ENDIF
     .REDEFINE D_FLAG_A p_a
+    .RefreshFlags
 .ENDM
 
 ; Set the 'X' flag to the given number of bits
@@ -62,6 +89,7 @@
         sep #$10
     .ENDIF
     .REDEFINE D_FLAG_X p_x
+    .RefreshFlags
 .ENDM
 
 ; Set the 'A' and 'X' flags to the given number of bits
@@ -90,13 +118,14 @@
     .ENDIF
     .REDEFINE D_FLAG_A p_a
     .REDEFINE D_FLAG_X p_x
+    .RefreshFlags
 .ENDM
 
 ; Set the 'B' register to the given value
 .MACRO .SetBank ARGS p_b
     .ASSERT ((p_b >= $00) && (p_b <= $FF))
     ; Technically not the fastest method, but this guarantees A is kept
-    .IF (p_b != D_BANK) && (p_b != -1)
+    .IF (p_b != D_BANK) && (p_b != D_UNK)
         pea p_b * $0101
         plb
         plb
@@ -107,7 +136,7 @@
 ; Set the 'direct' register to the given value
 .MACRO .SetDirect ARGS p_d
     .ASSERT ((p_d >= $00) && (p_d <= $FFFF))
-    .IF (p_d != D_DIRECT) && (p_d != -1)
+    .IF (p_d != D_DIRECT) && (p_d != D_UNK)
         pea p_d
         pld
     .ENDIF
@@ -124,6 +153,7 @@
         sep #$20
     .ENDIF
     .REDEFINE D_FLAG_A p_a
+    .RefreshFlags
 .ENDM
 
 ; Set the 'X' flag to the given number of bits
@@ -136,6 +166,7 @@
         sep #$10
     .ENDIF
     .REDEFINE D_FLAG_X p_x
+    .RefreshFlags
 .ENDM
 
 ; Set the 'A' and 'X' flags to the given number of bits
@@ -165,6 +196,7 @@
     .ENDIF
     .REDEFINE D_FLAG_A p_a
     .REDEFINE D_FLAG_X p_x
+    .RefreshFlags
 .ENDM
 
 ; Set the 'B' register to the given value
@@ -190,139 +222,125 @@
 ; Clear all register and flag values
 ; Use this before sections where you don't know what the context will be,
 ; e.g. before non-context managed functions.
-.MACRO .InvalidateFlags
-    .REDEFINE D_DIRECT -1
-    .REDEFINE D_BANK -1
-    .REDEFINE D_FLAG_A -1
-    .REDEFINE D_FLAG_X -1
+.MACRO .InvalidateContext
+    .REDEFINE D_DIRECT D_UNK
+    .REDEFINE D_BANK D_UNK
+    .REDEFINE D_FLAG_A D_UNK
+    .REDEFINE D_FLAG_X D_UNK
+    .RefreshFlags
 .ENDM
+
+.MACRO .ClearContext
+    .REDEFINE D_DIRECT $0000
+    .REDEFINE D_BANK D_UNK
+    .REDEFINE D_FLAG_A D_UNK
+    .REDEFINE D_FLAG_X D_UNK
+    .RefreshFlags
+.ENDM
+
 ; Invalidate the accumulator width
 .MACRO .InvalidateA
-    .REDEFINE D_FLAG_A -1
+    .REDEFINE D_FLAG_A D_UNK
+    .RefreshFlags
 .ENDM
 ; Invalidate the index width
 .MACRO .InvalidateX
-    .REDEFINE D_FLAG_X -1
+    .REDEFINE D_FLAG_X D_UNK
+    .RefreshFlags
 .ENDM
 ; Invalidate the accumulator and index widths
 .MACRO .InvalidateAX
-    .REDEFINE D_FLAG_A -1
-    .REDEFINE D_FLAG_X -1
+    .REDEFINE D_FLAG_A D_UNK
+    .REDEFINE D_FLAG_X D_UNK
+    .RefreshFlags
 .ENDM
 ; Invalidate the bank value. Use after setting the bank to an arbitrary value
 .MACRO .InvalidateBank
-    .REDEFINE D_BANK -1
+    .REDEFINE D_BANK D_UNK
 .ENDM
 ; Invalidate the direct page register. Use after setting the direct page to
 ; an arbitrary value.
 .MACRO .InvalidateDirect
-    .REDEFINE D_DIRECT -1
+    .REDEFINE D_DIRECT D_UNK
 .ENDM
 
 ; Ignore all register and flag values
 ; Use in procedures which don't affect the accumulator width, index width,
 ; data bank value, or direct page value.
-.MACRO .IgnoreFlags
-    .REDEFINE D_DIRECT -2
-    .REDEFINE D_BANK -2
-    .REDEFINE D_FLAG_A -2
-    .REDEFINE D_FLAG_X -2
+.MACRO .IgnoreContext
+    .REDEFINE D_DIRECT D_IGNORE
+    .REDEFINE D_BANK D_IGNORE
+    .REDEFINE D_FLAG_A D_IGNORE
+    .REDEFINE D_FLAG_X D_IGNORE
+    .RefreshFlags
 .ENDM
 ; Ignore the accumulator width
 .MACRO .IgnoreA
-    .REDEFINE D_FLAG_A -2
+    .REDEFINE D_FLAG_A D_IGNORE
+    .RefreshFlags
 .ENDM
 ; Ignore the index width
 .MACRO .IgnoreX
-    .REDEFINE D_FLAG_X -2
+    .REDEFINE D_FLAG_X D_IGNORE
+    .RefreshFlags
 .ENDM
 ; Ignore the accumulator and index widths
 .MACRO .IgnoreAX
-    .REDEFINE D_FLAG_A -2
-    .REDEFINE D_FLAG_X -2
+    .REDEFINE D_FLAG_A D_IGNORE
+    .REDEFINE D_FLAG_X D_IGNORE
+    .RefreshFlags
 .ENDM
 ; Ignore the bank value.
 .MACRO .IgnoreBank
-    .REDEFINE D_BANK -2
+    .REDEFINE D_BANK D_IGNORE
 .ENDM
 ; Ignore the direct page register.
 .MACRO .IgnoreDirect
-    .REDEFINE D_DIRECT -2
+    .REDEFINE D_DIRECT D_IGNORE
 .ENDM
 
 ; Indicate that bank register is a parameter
 .MACRO .ParameterBank
-    .REDEFINE D_BANK -3
+    .REDEFINE D_BANK D_PARAMETER
 .ENDM
 ; Indicate that direct register is a parameter
 .MACRO .ParameterDirect
-    .REDEFINE D_DIRECT -3
+    .REDEFINE D_DIRECT D_PARAMETER
 .ENDM
 
 ; Set the 'A' flag to the given number of bits, without inserting instructions
 .MACRO .SoftSetA ARGS p_a
-    .ASSERT p_a == 16 || p_a == 8 || p_a == -1
-    .IF p_a == 16
-        .ACCU 16
-    .ELIF p_a == 8
-        .ACCU 8
-    .ENDIF
+    .ASSERT (p_a == 16) || (p_a == 8) || (p_a == D_UNK)
     .REDEFINE D_FLAG_A p_a
+    .RefreshFlags
 .ENDM
 
 ; Set the 'X' flag to the given number of bits, without inserting instructions
 .MACRO .SoftSetX ARGS p_x
-    .ASSERT p_x == 16 || p_x == 8 || p_x == -1
-    .IF p_x == 16
-        .INDEX 16
-    .ELIF p_x == 8
-        .INDEX 8
-    .ENDIF
+    .ASSERT (p_x == 16) || (p_x == 8) || (p_x == D_UNK)
     .REDEFINE D_FLAG_X p_x
+    .RefreshFlags
 .ENDM
 
 ; Set the 'A' and 'X' flags to the given number of bits, without inserting instructions
 .MACRO .SoftSetAX ARGS p_a, p_x
-    .ASSERT (p_a == 16) || (p_a == 8) || (p_a == -1)
-    .ASSERT (p_x == 16) || (p_x == 8) || (p_x == -1)
-    .IF p_a == 16
-        .ACCU 16
-    .ELIF p_a == 8
-        .ACCU 8
-    .ENDIF
-    .IF p_x == 16
-        .INDEX 16
-    .ELIF p_x == 8
-        .INDEX 8
-    .ENDIF
+    .ASSERT (p_a == 16) || (p_a == 8) || (p_a == D_UNK)
+    .ASSERT (p_x == 16) || (p_x == 8) || (p_x == D_UNK)
     .REDEFINE D_FLAG_A p_a
     .REDEFINE D_FLAG_X p_x
+    .RefreshFlags
 .ENDM
 
 ; Set the 'B' register to the given value, without inserting instructions
 .MACRO .SoftSetBank ARGS p_b
-    .ASSERT ((p_b >= $00) && (p_b <= $FF)) || (p_b == -1) || (p_b == D_BANK_MIRROR_LOWRAM) || (p_b == D_BANK_MIRROR_IO)
+    .ASSERT ((p_b >= $00) && (p_b <= $FF)) || (p_b == D_UNK) || (p_b == D_BANK_MIRROR_LOWRAM) || (p_b == D_BANK_MIRROR_IO)
     .REDEFINE D_BANK p_b
 .ENDM
 
 ; Set the 'direct' register to the given value, without inserting instructions
 .MACRO .SoftSetDirect ARGS p_d
-    .ASSERT ((p_d >= $00) && (p_d <= $FFFF)) || (p_d == -1)
+    .ASSERT ((p_d >= $00) && (p_d <= $FFFF)) || (p_d == D_UNK)
     .REDEFINE D_DIRECT p_d
-.ENDM
-
-; Update INDEX and ACCU without inserting instructions
-.MACRO .RefreshFlags
-    .IF D_FLAG_A == 8
-        .ACCU 8
-    .ELIF D_FLAG_A == 16
-        .ACCU 16
-    .ENDIF
-    .IF D_FLAG_X == 8
-        .INDEX 8
-    .ELIF D_FLAG_X == 16
-        .INDEX 16
-    .ENDIF
 .ENDM
 
 ; If set, a 'phb' instruction will be inserted.
@@ -379,6 +397,7 @@
     .REDEFINE D_FLAG_X _CONTEXT_STACK_FLAG_X_{_CONTEXT_STACK_SIZE}
     .REDEFINE D_BANK _CONTEXT_STACK_BANK_{_CONTEXT_STACK_SIZE}
     .REDEFINE D_DIRECT _CONTEXT_STACK_DIRECT_{_CONTEXT_STACK_SIZE}
+    .RefreshFlags
     ; undefine context stack
     .UNDEFINE _CONTEXT_STACK_FLAG_A_{_CONTEXT_STACK_SIZE}
     .UNDEFINE _CONTEXT_STACK_FLAG_X_{_CONTEXT_STACK_SIZE}
@@ -442,6 +461,7 @@
     .REDEFINE D_FLAG_X _CONTEXT_STACK_FLAG_X_{_CONTEXT_STACK_SIZE}
     .REDEFINE D_BANK _CONTEXT_STACK_BANK_{_CONTEXT_STACK_SIZE}
     .REDEFINE D_DIRECT _CONTEXT_STACK_DIRECT_{_CONTEXT_STACK_SIZE}
+    .RefreshFlags
     ; undefine context stack
     .UNDEFINE _CONTEXT_STACK_FLAG_A_{_CONTEXT_STACK_SIZE}
     .UNDEFINE _CONTEXT_STACK_FLAG_X_{_CONTEXT_STACK_SIZE}
@@ -450,8 +470,57 @@
     .UNDEFINE _CONTEXT_STACK_INFO_{_CONTEXT_STACK_SIZE}
 .ENDM
 
+.DEFINE _CBANK_STACK_SIZE 0
+.MACRO .PushBank
+    phb
+    .DEFINE _CBANK_VALUE_{_CBANK_STACK_SIZE} D_BANK
+    .REDEFINE _CBANK_STACK_SIZE (_CBANK_STACK_SIZE + 1)
+.ENDM
+
+.MACRO .PopBank
+    .ASSERT _CBANK_STACK_SIZE > 0
+    .REDEFINE _CBANK_STACK_SIZE (_CBANK_STACK_SIZE - 1)
+    .REDEFINE D_BANK _CBANK_VALUE_{_CBANK_STACK_SIZE}
+    .UNDEFINE _CBANK_VALUE_{_CBANK_STACK_SIZE}
+    plb
+.ENDM
+
+.DEFINE _CDIRECT_STACK_SIZE 0
+.MACRO .PushDirect
+    phd
+    .DEFINE _CDIRECT_VALUE_{_CDIRECT_STACK_SIZE} D_DIRECT
+    .REDEFINE _CDIRECT_STACK_SIZE (_CDIRECT_STACK_SIZE + 1)
+.ENDM
+
+.MACRO .PopDirect
+    .ASSERT _CDIRECT_STACK_SIZE > 0
+    .REDEFINE _CDIRECT_STACK_SIZE (_CDIRECT_STACK_SIZE - 1)
+    .REDEFINE D_DIRECT _CDIRECT_VALUE_{_CDIRECT_STACK_SIZE}
+    .UNDEFINE _CDIRECT_VALUE_{_CDIRECT_STACK_SIZE}
+    pld
+.ENDM
+
+.DEFINE _CFLAGS_STACK_SIZE 0
+.MACRO .PushP
+    php
+    .DEFINE _CFLAGS_VALUE_A_{_CFLAGS_STACK_SIZE} D_FLAG_A
+    .DEFINE _CFLAGS_VALUE_X_{_CFLAGS_STACK_SIZE} D_FLAG_X
+    .REDEFINE _CFLAGS_STACK_SIZE (_CFLAGS_STACK_SIZE + 1)
+.ENDM
+
+.MACRO .PopP
+    .ASSERT _CFLAGS_STACK_SIZE > 0
+    .REDEFINE _CFLAGS_STACK_SIZE (_CFLAGS_STACK_SIZE - 1)
+    .REDEFINE D_FLAG_A _CFLAGS_VALUE_A_{_CFLAGS_STACK_SIZE}
+    .REDEFINE D_FLAG_X _CFLAGS_VALUE_X_{_CFLAGS_STACK_SIZE}
+    .UNDEFINE _CFLAGS_VALUE_A_{_CFLAGS_STACK_SIZE}
+    .UNDEFINE _CFLAGS_VALUE_X_{_CFLAGS_STACK_SIZE}
+    plp
+    .RefreshFlags
+.ENDM
+
 ; Define a procedure without its implementation
-.MACRO .procheader ARGS name, callconvention
+.MACRO .procheader ARGS name, callconvention, interface
     .IFDEF _IN_CONTEXT_FUNC_DEF
         .FAIL ".procheader can not be used within another procedure definition"
     .ENDIF
@@ -460,10 +529,75 @@
         .FAIL
     .ELSE
     ; setup procedure temporary defines
-        .DEFINE _IN_CONTEXT_FUNC_DEF callconvention
+        .DEFINE _IN_CONTEXT_FUNC_DEF 1
         .DEFINE _FUNC_CONTEXT_NAME name
     ; setup call convention
-        .DEFINE {name}_PROC_ 1
+        .DEFINE {name}_PROC_ PROC_TYPE_PROCEDURE
+        .DEFINE {name}_CALL_ callconvention
+        .DEFINE {name}_LABEL_ name
+    ; define 'in' flags for procedure. These indicate to the callee what these
+    ; flags should be set to before calling
+        .DEFINE {name}_IN_FLAG_A_ D_FLAG_A
+        .DEFINE {name}_IN_FLAG_X_ D_FLAG_X
+        .DEFINE {name}_IN_BANK_ D_BANK
+        .DEFINE {name}_IN_DIRECT_ D_DIRECT
+    ; setup and check interface
+        .IF NARGS >= 3
+            .DEFINE {name}_INTERFACE_ interface
+            .IF {name}_CALL_ != {interface}_CALL_
+                .PRINT "Procedure CALL CONVENTION ", name, " does not match interface ", interface, "\n"
+                .FAIL
+            .ENDIF
+            .IF !is_compatible_inflag({name}_IN_FLAG_A_, {interface}_IN_FLAG_A_)
+                .PRINT "Procedure IN FLAG A ", name, " does not match interface ", interface, "\n"
+                .FAIL
+            .ENDIF
+            .IF !is_compatible_inflag({name}_IN_FLAG_X_, {interface}_IN_FLAG_X_)
+                .PRINT "Procedure IN FLAG X ", name, " does not match interface ", interface, "\n"
+                .FAIL
+            .ENDIF
+            .IF !is_compatible_bank_inflag({name}_IN_BANK_, {interface}_IN_BANK_)
+                .PRINT "Procedure IN BANK ", name, " does not match interface ", interface, "\n"
+                .FAIL
+            .ENDIF
+            .IF !is_compatible_inflag({name}_IN_DIRECT_, {interface}_IN_DIRECT_)
+                .PRINT "Procedure IN DIRECT ", name, " does not match interface ", interface, "\n"
+                .FAIL
+            .ENDIF
+        .ENDIF
+    .ENDIF
+.ENDM
+
+.MACRO .procheaderl ARGS name, interface
+    .IF NARGS >= 2
+        .procheader name, PROC_CALL_LONG, interface
+    .ELSE
+        .procheader name, PROC_CALL_LONG
+    .ENDIF
+.ENDM
+
+.MACRO .procheaders ARGS name, interface
+    .IF NARGS >= 2
+        .procheader name, PROC_CALL_SHORT, interface
+    .ELSE
+        .procheader name, PROC_CALL_SHORT
+    .ENDIF
+.ENDM
+
+; Define a procedure interface. These can not have an implementation
+.MACRO .procinterface ARGS name, callconvention
+    .IFDEF _IN_CONTEXT_FUNC_DEF
+        .FAIL ".procheader can not be used within another procedure definition"
+    .ENDIF
+    .IFDEF {name}_PROC_
+        .PRINT "Procedure ", name, " is already defined\n"
+        .FAIL
+    .ELSE
+    ; setup procedure temporary defines
+        .DEFINE _IN_CONTEXT_FUNC_DEF 1
+        .DEFINE _FUNC_CONTEXT_NAME name
+    ; setup call convention
+        .DEFINE {name}_PROC_ PROC_TYPE_INTERFACE
         .DEFINE {name}_CALL_ callconvention
     ; define 'in' flags for procedure. These indicate to the callee what these
     ; flags should be set to before calling
@@ -474,12 +608,12 @@
     .ENDIF
 .ENDM
 
-.MACRO .procheaderl ARGS name
-    .procheader name, PROC_CALL_LONG
+.MACRO .procinterfacel ARGS name
+    .procinterface name, PROC_CALL_LONG
 .ENDM
 
-.MACRO .procheaders ARGS name
-    .procheader name, PROC_CALL_SHORT
+.MACRO .procinterfaces ARGS name
+    .procinterface name, PROC_CALL_SHORT
 .ENDM
 
 ; Implement a procedure that was previously defined with .procheader
@@ -488,6 +622,11 @@
 ; check that procedure is defined
     .IF !defined({name}_PROC_)
         .PRINT "Procedure ", name, " is not defined\n"
+        .FAIL 1
+    .ENDIF
+; check that procedure is not an interface
+    .IF {name}_PROC_ == PROC_TYPE_INTERFACE
+        .PRINT "Can not implement procedure for interface ", name, "\n"
         .FAIL 1
     .ENDIF
 ; check that calling conventions match
@@ -506,11 +645,11 @@
 .ENDM
 
 .MACRO .procimpll ARGS name
-    .procimpl name, PROC_CALL_LONG
+    .procimpl name, PROC_CALL_LONG, interface
 .ENDM
 
 .MACRO .procimpls ARGS name
-    .procimpl name, PROC_CALL_SHORT
+    .procimpl name, PROC_CALL_SHORT, interface
 .ENDM
 
 ; Define a procedure with the given calling convention
@@ -520,7 +659,7 @@
 ; the current context, and compilation will fail if there is a mismatch.
 ; After calling the function, the accumulator/index width, bank value, and DP
 ; value will be updated to match the function's output values for this state.
-.MACRO .procdefine ARGS name, callconvention
+.MACRO .procdefine ARGS name, callconvention, interface
     .IFDEF _IN_CONTEXT_FUNC_DEF
         .FAIL ".procdefine can not be used within another procedure definition"
     .ENDIF
@@ -528,19 +667,32 @@
         .PRINT "Procedure ", name, " is already defined; use .procimpl instead\n"
         .FAIL
     .ENDIF
-    .procheader name, callconvention
+    ; setup procedure header
+    .IF NARGS >= 3
+        .procheader name, callconvention, interface
+    .ELSE
+        .procheader name, callconvention
+    .ENDIF
     ; define function (simplified .procimpl)
     {name}:
 .ENDM
 
 ; Define a procedure which can be called from any bank.
-.MACRO .procdefinel ARGS name
-    .procdefine name, PROC_CALL_LONG
+.MACRO .procdefinel ARGS name, interface
+    .IF NARGS >= 2
+        .procdefine name, PROC_CALL_LONG, interface
+    .ELSE
+        .procdefine name, PROC_CALL_LONG
+    .ENDIF
 .ENDM
 
 ; Define a procedure which is called within the same bank.
-.MACRO .procdefines ARGS name
-    .procdefine name, PROC_CALL_SHORT
+.MACRO .procdefines ARGS name, interface
+    .IF NARGS >= 2
+        .procdefine name, PROC_CALL_SHORT, interface
+    .ELSE
+        .procdefine name, PROC_CALL_SHORT
+    .ENDIF
 .ENDM
 
 ; End procedure definition
@@ -605,14 +757,69 @@
         .PRINT "in ", _FUNC_CONTEXT_NAME, "\n"
         .FAIL
     .ENDIF
+; if this implements an interface, check that we match interface
+    .IFDEF {_FUNC_CONTEXT_NAME}_INTERFACE_
+        .DEFINE _interface_ {_FUNC_CONTEXT_NAME}_INTERFACE_
+        .IF !is_compatible_outflag({_FUNC_CONTEXT_NAME}_OUT_FLAG_A_, {_interface_}_OUT_FLAG_A_)
+            .PRINT "Procedure OUT FLAG A ", _FUNC_CONTEXT_NAME, " does not match interface ", _interface_, "\n"
+            .FAIL
+        .ENDIF
+        .IF !is_compatible_outflag({_FUNC_CONTEXT_NAME}_OUT_FLAG_X_, {_interface_}_OUT_FLAG_X_)
+            .PRINT "Procedure OUT FLAG X ", _FUNC_CONTEXT_NAME, " does not match interface ", _interface_, "\n"
+            .FAIL
+        .ENDIF
+        .IF !is_compatible_bank_outflag({_FUNC_CONTEXT_NAME}_OUT_BANK_, {_interface_}_OUT_BANK_)
+            .PRINT "Procedure OUT BANK ", _FUNC_CONTEXT_NAME, " does not match interface ", _interface_, "\n"
+            .FAIL
+        .ENDIF
+        .IF !is_compatible_outflag({_FUNC_CONTEXT_NAME}_OUT_DIRECT_, {_interface_}_OUT_DIRECT_)
+            .PRINT "Procedure OUT DIRECT ", _FUNC_CONTEXT_NAME, " does not match interface ", _interface_, "\n"
+            .FAIL
+        .ENDIF
+        .UNDEFINE _interface_
+    .ENDIF
 ; clear flags, since presumably, we are no longer in a procedure context.
     .UNDEFINE _FUNC_CONTEXT_NAME
-    .InvalidateFlags
+    .ClearContext
 .ENDM
 
-; Call the given procedure
-; Prints an error and fails if the context does not match before calling
-.MACRO .call ARGS func
+.DEFINE SETUP_FLAG_A $01
+.DEFINE SETUP_FLAG_X $02
+.DEFINE SETUP_FLAGS $03
+.DEFINE SETUP_BANK $04
+.DEFINE SETUP_DIRECT $08
+
+; set up for calling the function 'func'
+; this may update AX flags, bank, and direct page registers,
+; depending on passed flags.
+.MACRO .callsetup ARGS func, setupflags
+    .IFNDEF {func}_PROC_
+        .PRINT "No such procedure ", func, "\n"
+        .FAIL
+    .ENDIF
+    .IF (setupflags & SETUP_FLAGS) == SETUP_FLAGS
+        .SetAX {func}_IN_FLAG_A_, {func}_IN_FLAG_X_
+    .ELSE
+        .IF (setupflags & SETUP_FLAG_A) != 0
+            .SetA {func}_IN_FLAG_A_
+        .ENDIF
+        .IF (setupflags & SETUP_FLAG_X) != 0
+            .SetX {func}_IN_FLAG_X_
+        .ENDIF
+    .ENDIF
+    .IF (setupflags & SETUP_BANK) != 0
+        .SetBank {func}_IN_BANK_
+    .ENDIF
+    .IF (setupflags & SETUP_DIRECT) != 0
+        .SetDirect {func}_IN_DIRECT_
+    .ENDIF
+.ENDM
+
+.MACRO .setupcall_in ARGS func
+    .IFNDEF {func}_PROC_
+        .PRINT "No such procedure ", func, "\n"
+        .FAIL
+    .ENDIF
 ; check that context is correct for calling this function
     .IF ({func}_IN_FLAG_A_ >= 0) && (D_FLAG_A != {func}_IN_FLAG_A_)
         .PRINT "A is ", DEC D_FLAG_A, "; should be ", DEC {func}_IN_FLAG_A_, " to call ", func, "\n"
@@ -640,7 +847,29 @@
         .PRINT "DP is $", HEX D_DIRECT, "; should be $", HEX {func}_IN_DIRECT_, " to call ", func, "\n"
         .FAIL
     .ENDIF
-; call function
+.ENDM
+
+.MACRO .setupcall_out ARGS func
+; indicate that flags and registers have been modified by the function
+    .IF {func}_OUT_FLAG_A_ != D_IGNORE
+        .REDEFINE D_FLAG_A {func}_OUT_FLAG_A_
+    .ENDIF
+    .IF {func}_OUT_FLAG_X_ != D_IGNORE
+        .REDEFINE D_FLAG_X {func}_OUT_FLAG_X_
+    .ENDIF
+    .IF ({func}_OUT_BANK_ != D_IGNORE) && ({func}_OUT_BANK_ != D_BANK_MIRROR_IO) && ({func}_OUT_BANK_ != D_BANK_MIRROR_LOWRAM)
+        .REDEFINE D_BANK {func}_OUT_BANK_
+    .ENDIF
+    .IF {func}_OUT_DIRECT_ != D_IGNORE
+        .REDEFINE D_DIRECT {func}_OUT_DIRECT_
+    .ENDIF
+    .RefreshFlags
+.ENDM
+
+; Call the given procedure
+; Prints an error and fails if the context does not match before calling
+.MACRO .call ARGS func
+    .setupcall_in func
     .IF ({func}_CALL_ == PROC_CALL_LONG)
         jsl {func}
     .ELIF ({func}_CALL_ == PROC_CALL_SHORT)
@@ -653,18 +882,24 @@
         .PRINT func, " has no valid calling convention\n"
         .FAIL
     .ENDIF
-; indicate that flags and registers have been modified by the function
-    .IF {func}_OUT_FLAG_A_ != -2
-        .REDEFINE D_FLAG_A {func}_OUT_FLAG_A_
+    .setupcall_out func
+.ENDM
+
+; Jump to the given procedure
+; Prints an error and fails if the context does not match before calling
+.MACRO .tailcall ARGS func
+    .setupcall_in func
+    .IF ({func}_CALL_ == PROC_CALL_LONG)
+        jml {func}
+    .ELIF ({func}_CALL_ == PROC_CALL_SHORT)
+        ; .IF bank() != bank(func)
+        ;     .PRINT "Can not call ", func, " from bank $", HEX bank(), "\n"
+        ;     .FAIL
+        ; .ENDIF
+        jmp {func}
+    .ELSE
+        .PRINT func, " has no valid calling convention\n"
+        .FAIL
     .ENDIF
-    .IF {func}_OUT_FLAG_X_ != -2
-        .REDEFINE D_FLAG_X {func}_OUT_FLAG_X_
-    .ENDIF
-    .IF ({func}_OUT_BANK_ != -2) && ({func}_OUT_BANK_ != D_BANK_MIRROR_IO) && ({func}_OUT_BANK_ != D_BANK_MIRROR_LOWRAM)
-        .REDEFINE D_BANK {func}_OUT_BANK_
-    .ENDIF
-    .IF {func}_OUT_DIRECT_ != -2
-        .REDEFINE D_DIRECT {func}_OUT_DIRECT_
-    .ENDIF
-    .RefreshFlags
+    .setupcall_out func
 .ENDM

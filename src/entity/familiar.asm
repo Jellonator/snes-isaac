@@ -18,11 +18,11 @@
 .DEFINE BROTHER_BOBBY_TEAR_SPEED $0100
 
 entity_familiar_init:
-    .ACCU 16
-    .INDEX 16
+    .SoftSetA 16
+    .SoftSetX 16
     sty.b $10
     ; allocate sprite slots
-    sep #$30
+    .ForceSetAX 8, 8
     .spriteman_get_raw_slot_lite
     txa
     sta.w _gfxptr.1,Y
@@ -39,21 +39,21 @@ entity_familiar_init:
     @skip_get_parent:
     sta.w _familiar_parent,Y
     ; upload palette
-    rep #$30
+    .ForceSetAX 16, 16
     ldy #loword(palettes.item_brother_bobby)
     lda #8
     jsl Palette.find_or_upload_opaque
-    rep #$30
+    .ForceSetAX 16, 16
     ldy.b $10
     txa
-    sep #$20
+    .ForceSetA 8
     sta.w _palette,Y
     ; upload sprite to buffer
-    rep #$30
+    .ForceSetAX 16, 16
     .PaletteIndex_X_ToSpriteDef_A
     ora #sprite.familiar.brother_bobby
     jsl Spriteman.NewBufferRef
-    rep #$30
+    .ForceSetAX 16, 16
     ldy.b $10
     txa
     sta.w _spritebuffer,Y
@@ -74,7 +74,7 @@ entity_familiar_init:
     and #$00FF
     tax
     jsl Spriteman.WriteSpriteToRawSlot
-    rep #$30
+    .ForceSetAX 16, 16
     pla
     pla
     pla
@@ -96,7 +96,7 @@ entity_familiar_init:
     and #$00FF
     tax
     jsl Spriteman.WriteSpriteToRawSlot
-    rep #$30
+    .ForceSetAX 16, 16
     pla
     pla
     pla
@@ -104,8 +104,8 @@ entity_familiar_init:
     rts
 
 entity_familiar_tick:
-    .ACCU 16
-    .INDEX 16
+    .SoftSetA 16
+    .SoftSetX 16
     ; friction
     lda.w entity_velocx,Y
     .ShiftRight_SIGN 1, 0
@@ -147,10 +147,10 @@ entity_familiar_tick:
         lda.b tempDP
         sta.b tempDP+2
         ; get angle
-        sep #$30
+        .ForceSetAX 8, 8
         jsl Entity.DirectTargetEntity
-        .ACCU 8
-        .INDEX 8
+        .SoftSetA 8
+        .SoftSetX 8
         ldx.b entityTargetAngle
         lda.l SinTable8,X
         .Convert8To16_SIGNED 1, 0
@@ -164,7 +164,7 @@ entity_familiar_tick:
         clc
         adc.w entity_velocy,Y
         sta.w entity_velocy,Y
-        sep #$20
+        .ForceSetA 8
         ldx.b entityTargetAngle
         lda.l CosTable8,X
         .Convert8To16_SIGNED 1, 0
@@ -180,7 +180,7 @@ entity_familiar_tick:
         sta.w entity_velocx,Y
     @skip_handle_follow:
     ; add velocity
-    rep #$30
+    .ForceSetAX 16, 16
     lda.w entity_velocx,Y
     clc
     adc.w entity_posx,Y
@@ -206,7 +206,7 @@ entity_familiar_tick:
         sta.w entity_velocy,Y
     +:
     ; get tile IDs
-    sep #$30
+    .ForceSetAX 8, 8
     ldx.w _gfxptr.1,Y
     lda.l SpriteSlotIndexTable,X
     sta.b $00
@@ -236,39 +236,39 @@ entity_familiar_tick:
     lda.b $00
     sta.w objectData.1.tileid,X
     ; inc object index
-    rep #$30
+    .ForceSetAX 16, 16
     phy
     .SetCurrentObjectS_Inc
     .SetCurrentObjectS_Inc
     ply
     ; put shadow
-    sep #$20
+    .ForceSetA 8
     pea $0405
     jsl Entity.Shadow.PutSmall
-    rep #$30
+    .ForceSetAX 16, 16
     pla
     ; set box and flags
     .EntityEasySetBox 16, 16
-    sep #$20
+    .ForceSetA 8
     lda.w entity_box_y1,Y
     clc
     adc #8
     sta.w loword(entity_ysort),Y
     ; Maybe create projectile
-    sep #$30
+    .ForceSetAX 8, 8
     lda.w entity_timer,Y
     inc A
     cmp #BROTHER_BOBBY_FIRE_TIME
     bccl @dont_fire_tear
     ; check input
-        rep #$20
+        .ForceSetA 16
         lda.w joy1held
         bit #(JOY_A|JOY_B|JOY_Y|JOY_X)
         beql @end_fire_tear
     ; create entity
         jsl Projectile.CreateAndInheritVelocity
-        .ACCU 16
-        .INDEX 8
+        .SoftSetA 16
+        .SoftSetX 8
         ; life
         lda #BROTHER_BOBBY_TEAR_LIFETIME
         sta.w projectile_lifetime,X
@@ -283,14 +283,14 @@ entity_familiar_tick:
         sta.b $00
         jsl Projectile.AddInputVelocity
         ; size
-        sep #$20
+        .ForceSetA 8
         lda #2
         sta.w loword(projectile_size),X
         ; type
         lda #PROJECTILE_TYPE_PLAYER_BASIC
         sta.w projectile_type,X
     ; set timer to 0
-        sep #$20
+        .ForceSetA 8
         lda #0
 @dont_fire_tear:
     sta.w entity_timer,Y
@@ -299,16 +299,16 @@ entity_familiar_tick:
     rts
 
 entity_familiar_free:
-    .ACCU 16
-    .INDEX 16
+    .SoftSetA 16
+    .SoftSetX 16
     ; free sprites
-    sep #$30
+    .ForceSetAX 8, 8
     ldx.w _gfxptr.1,Y
     .spriteman_free_raw_slot_lite
     ldx.w _gfxptr.2,Y
     .spriteman_free_raw_slot_lite
     ; free buffer
-    rep #$30
+    .ForceSetAX 16, 16
     ldx.w _spritebuffer,Y
     phy
     php
@@ -326,23 +326,24 @@ entity_familiar_free:
 .BANK $02 SLOT "ROM"
 .SECTION "Entity Familiar Extra" SUPERFREE
 
+.SoftSetDirect $0000
 Familiars.RefreshFamiliars:
-    phb
-    .ChangeDataBank $7E
-    rep #$20
+    .PushBank
+    .ForceSetBank $7E
+    .ForceSetA 16
     lda.b entityExecutionContext
     pha
     lda #ENTITY_CONTEXT_FAMILIAR
     sta.b entityExecutionContext
 ; determine number of each familiar type needed
-    sep #$10
+    .ForceSetX 8
     ldx #0
     @loop_clear:
         stz.w loword(tempData_7E),X
         inx
         inx
         bne @loop_clear
-    sep #$30
+    .ForceSetAX 8, 8
     ; count from items
     lda.w playerData.playerItemStackNumber + ITEMID_BROTHER_BOBBY
     sta.w loword(tempData_7E) + ENTITY_FAMILIAR_BROTHER_BOBBY
@@ -363,9 +364,10 @@ Familiars.RefreshFamiliars:
         bpl @skip_entity_plx
         ; if resulting count is less than 0, then free this entity
         ; the previous entity will now be in [X], so we don't need any shenanigans
-        php
-        jsl Entity.Free
-        plp
+        .PushP
+        .ForceSetAX 16, 16
+        .call "Entity.Free"
+        .PopP
     @skip_entity_plx:
         plx
     @skip_entity:
@@ -381,16 +383,16 @@ Familiars.RefreshFamiliars:
         bmi @skip_spawn
         phx
         php
-        rep #$30
+        .ForceSetAX 16, 16
         txa
         xba
         ora #ENTITY_TYPE_FAMILIAR
-        jsl Entity.Create
+        .call "Entity.Create"
         lda.w player_posx
         sta.w entity_posx,Y
         lda.w player_posy
         sta.w entity_posy,Y
-        jsl Entity.Init
+        .call "Entity.Init"
         plp
         plx
         jmp @loop_spawn
@@ -398,15 +400,16 @@ Familiars.RefreshFamiliars:
         inx
         bne @loop_spawn
 ; end
-    rep #$20
+    .ForceSetA 16
     pla
     sta.b entityExecutionContext
-    plb
+    .PopBank
     rtl
+.ClearContext
 
 Familiars.MoveFamiliarsToPlayer:
-    rep #$20
-    sep #$10
+    .ForceSetA 16
+    .ForceSetX 8
     ldx.w numEntities
     beq @end_loop_entities
     @loop_entities:

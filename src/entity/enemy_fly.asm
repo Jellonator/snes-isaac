@@ -8,16 +8,19 @@
 
 .DEFINE BASE_HEALTH 24
 
-entity_basic_fly_init:
-    .ACCU 16
-    .INDEX 16
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "entity_basic_fly_init", "IEntityInit"
+    .SoftSetA 16
+    .SoftSetX 16
     inc.w currentRoomEnemyCount
     ; default info
     tyx
-    sep #$20
+    .ForceSetA 8
     lda.l RandTable,X
     sta.w entity_timer,Y
-    rep #$20
+    .ForceSetA 16
     lda #BASE_HEALTH
     sta.w entity_health,Y
     lda #ENTITY_FLAGS_NEAREST_ENEMY_TARGET
@@ -26,7 +29,7 @@ entity_basic_fly_init:
     lda #sprite.enemy.attack_fly.0
     phy
     jsl Spriteman.NewSpriteRef
-    rep #$30
+    .ForceSetAX 16, 16
     ply
     txa
     sta.w _fly_fgxptr.1,Y
@@ -34,25 +37,30 @@ entity_basic_fly_init:
     lda #sprite.enemy.attack_fly.1
     phy
     jsl Spriteman.NewSpriteRef
-    rep #$30
+    .ForceSetAX 16, 16
     ply
     txa
     sta.w _fly_fgxptr.2,Y
     ; end
     rts
+.endproc
 
-entity_basic_fly_tick:
-    .ACCU 16
-    .INDEX 16
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "entity_basic_fly_tick", "IEntityTick"
 ; check signal
-    sep #$30 ; 8B AXY
+    .ForceSetAX 8, 8
     lda #ENTITY_SIGNAL_KILL
     and.w entity_signal,Y
     beq +
         ; We have perished
         jsl Entity.PutSplatter
-        jsl Entity.Free
+        .PushContext
+        .ForceSetAX 16, 16
+        .call "Entity.Free"
         rts
+        .PopContextSoft
     +:
 ; move
     jsl Entity.Enemy.DirectTargetPlayer
@@ -65,7 +73,7 @@ entity_basic_fly_tick:
         clc
         adc.w entity_posy,Y
         sta.w entity_posy,Y
-        sep #$20
+        .ForceSetA 8
         lda.l CosTable8,X
         .Convert8To16_SIGNED 0, 0
         .ShiftRight_SIGN 2, 0
@@ -74,7 +82,7 @@ entity_basic_fly_tick:
         sta.w entity_posx,Y
     @no_target:
     ; apply velocity
-    rep #$20
+    .ForceSetA 16
     lda.w entity_velocx,Y
     clc
     adc.w entity_posx,Y
@@ -91,7 +99,7 @@ entity_basic_fly_tick:
     .ShiftRight_SIGN 1, 0
     sta.w entity_velocy,Y
     ; randomish movement
-    sep #$30
+    .ForceSetAX 8, 8
     ldx.w entity_timer,Y
     lda.l SinTable8,X
     .ShiftRight_SIGN 2, 0
@@ -99,7 +107,7 @@ entity_basic_fly_tick:
     clc
     adc.w entity_posx,Y
     sta.w entity_posx,Y
-    sep #$20
+    .ForceSetA 8
     lda.l CosTable8,X
     .ShiftRight_SIGN 2, 0
     .Convert8To16_SIGNED 0, 0
@@ -107,7 +115,7 @@ entity_basic_fly_tick:
     adc.w entity_posy,Y
     sta.w entity_posy,Y
     ; set box
-    sep #$30 ; 8B AXY
+    .ForceSetAX 8, 8
     lda.w entity_box_x1,Y
     clc
     adc #15
@@ -119,9 +127,9 @@ entity_basic_fly_tick:
     adc #7
     sta.w entity_box_y2,Y
 ; load & set gfx
-    rep #$20
+    .ForceSetA 16
     lda #0
-    sep #$20
+    .ForceSetA 8
     ldx.w _fly_fgxptr.1,Y
     lda.w entity_timer,Y
     dec A
@@ -159,13 +167,13 @@ entity_basic_fly_tick:
     lda #0
     sta.w entity_signal,Y
     ; inc object index
-    rep #$30
+    .ForceSetAX 16, 16
     phy
     .SetCurrentObjectS
     ply
     ; put shadow
-    sep #$20
-    rep #$10
+    .ForceSetA 8
+    .ForceSetX 16
     ldx.w objectIndex
     inx
     inx
@@ -180,10 +188,12 @@ entity_basic_fly_tick:
 @no_player_col:
     ; end
     rts
+.endproc
 
-entity_basic_fly_free:
-    .ACCU 16
-    .INDEX 16
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "entity_basic_fly_free", "IEntityFree"
     dec.w currentRoomEnemyCount
     lda #0
     sta.w entity_mask,Y
@@ -197,5 +207,6 @@ entity_basic_fly_free:
     tax
     jsl Spriteman.UnrefSprite
     rts
+.endproc
 
 .ENDS

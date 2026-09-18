@@ -1,6 +1,6 @@
 .include "base.inc"
 
-.BANK $02 SLOT "ROM"
+.BANK $00 SLOT "ROM"
 .SECTION "Entity Bomb" SUPERFREE
 
 .DEFINE BOMB1 $208A
@@ -16,22 +16,22 @@
 .DEFINE DOOR_OPEN_RADIUS 24
 
 _bomb_tile_do_nothing:
-    .INDEX 16
-    .ACCU 16
+    .SoftSetX 16
+    .SoftSetA 16
     rts
 
 _bomb_tile_poop:
-    .INDEX 16
-    .ACCU 16
-    sep #$20 ; 8 bit A
+    .SoftSetX 16
+    .SoftSetA 16
+    .ForceSetA 8
     lda #0
     sta [currentRoomTileVariantTableAddress],Y
     lda #BLOCK_REGULAR
     sta [currentRoomTileTypeTableAddress],Y
-    rep #$20 ; 16 bit A
+    .ForceSetA 16
     jsl HandleTileChanged
     ; put splotch
-    sep #$20 ; 8 bit A
+    .ForceSetA 8
     tyx
     lda.l RoomTileToXTable,X
     asl
@@ -57,14 +57,14 @@ _bomb_tile_poop:
     rts
 
 _bomb_tile_rock:
-    .INDEX 16
-    .ACCU 16
-    sep #$20 ; 8 bit A
+    .SoftSetX 16
+    .SoftSetA 16
+    .ForceSetA 8
     lda #BLOCK_REGULAR_VARIANT_RUBBLE
     sta [currentRoomTileVariantTableAddress],Y
     lda #BLOCK_REGULAR
     sta [currentRoomTileTypeTableAddress],Y
-    rep #$20 ; 16 bit A
+    .ForceSetA 16
     jsl HandleTileChanged
     ; TODO: check for tinted rock
     rts
@@ -82,16 +82,17 @@ _ExplosionTileHandlerTable:
     .ENDIF
 .ENDR
 
-true_entity_bomb_tick:
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefinel "true_entity_bomb_tick"
     .DEFINE Y_STORE $10
     .DEFINE TILE $12
     .DEFINE TOP $14
     .DEFINE LEFT $16
     .DEFINE RIGHT $18
     .DEFINE BOTTOM $1A
-    .ACCU 16
-    .INDEX 16
-    sep #$20
+    .ForceSetA 8
     lda.w entity_timer,Y
     dec A
     sta.w entity_timer,Y
@@ -173,8 +174,8 @@ true_entity_bomb_tick:
                 jsl UpdateDoorTileWest
             .ENDIF
             plb
-            rep #$10
-            sep #$20
+            .ForceSetX 16
+            .ForceSetA 8
             ply
             @skip_door_{i}:
         .ENDR
@@ -192,12 +193,12 @@ true_entity_bomb_tick:
         sta.b TILE
         stz.b TILE+1
         ; check collisions
-        rep #$30
+        .ForceSetAX 16, 16
         ldx.b TILE
         .REPT 3 INDEX iy
             .REPT 3 INDEX ix
                 ; handle entities
-                sep #$30
+                .ForceSetAX 8, 8
                 .REPT SPATIAL_LAYER_COUNT INDEX i
                     ldy.w spatial_partition.{i+1},X
                     beql @no_ent_{ix}_{iy} ; no entities found; skip
@@ -216,12 +217,12 @@ true_entity_bomb_tick:
                         lda.b TOP
                         cmp.w entity_box_y2,Y
                         bcs @skip_ent_{ix}_{iy}_{i}
-                            rep #$20
+                            .ForceSetA 16
                             lda.w entity_health,Y
                             sec
                             sbc #EXPLOSION_DAMAGE
                             sta.w entity_health,Y
-                            sep #$20
+                            .ForceSetA 8
                             php
                             lda.w entity_signal,Y
                             plp
@@ -238,7 +239,7 @@ true_entity_bomb_tick:
                     @skip_ent_{ix}_{iy}_{i}:
                 .ENDR
                 @no_ent_{ix}_{iy}:
-                rep #$30
+                .ForceSetAX 16, 16
                 ; handle tile
                 lda.l GameTileToRoomTileIndexTable,X
                 and #$00FF
@@ -248,7 +249,7 @@ true_entity_bomb_tick:
                 asl
                 tax
                 jsr (_ExplosionTileHandlerTable,X)
-                rep #$30
+                .ForceSetAX 16, 16
                 .IF (ix < 2) && (iy < 2)
                     inc.b TILE
                     ldx.b TILE
@@ -266,7 +267,7 @@ true_entity_bomb_tick:
         .ENDR
         ldy.b Y_STORE
         ; create splat
-        sep #$20
+        .ForceSetA 8
         lda.w entity_posx+1,Y
         sta.b $07
         lda.w entity_posy+1,Y
@@ -276,7 +277,7 @@ true_entity_bomb_tick:
         phb
         .ChangeDataBank $80
         jsl Splat.explode_small
-        rep #$10
+        .ForceSetX 16
         ldy.b Y_STORE
         lda.w entity_posx+1,Y
         sec
@@ -289,15 +290,15 @@ true_entity_bomb_tick:
         jsl Splat.explode_big
         plb
         ; create graphic
-        rep #$30
+        .ForceSetAX 16, 16
         ldy.b Y_STORE
         lda.w entity_posx,Y
         pha
         lda.w entity_posy,Y
         pha
         lda #entityvariant(ENTITY_TYPE_EFFECT, ENTITY_EFFECT_EXPLOSION)
-        jsl Entity.CreateAndInit
-        rep #$30
+        .call "Entity.CreateAndInit"
+        .ForceSetAX 16, 16
         pla
         clc
         adc #8*$0100
@@ -306,13 +307,13 @@ true_entity_bomb_tick:
         clc
         adc #8*$0100
         sta.w entity_posx,Y
-        rep #$30
+        .ForceSetAX 16, 16
         ldy.b Y_STORE
-        jsl Entity.Free
+        .call "Entity.Free"
         rtl
     @timer_continue:
     ;
-    rep #$30
+    .ForceSetAX 16, 16
     phy
     ; tile ID
     lda.w entity_timer,Y
@@ -326,14 +327,14 @@ true_entity_bomb_tick:
     ldx.w objectIndex
     sta.w objectData.1.tileid,X
     ; X position
-    sep #$20
+    .ForceSetA 8
     lda.w entity_posx + 1,Y
     sta.w objectData.1.pos_x,X
     ; Y position
     lda.w entity_posy + 1,Y
     sta.w objectData.1.pos_y,X
     sta.w loword(entity_ysort),Y
-    rep #$30
+    .ForceSetAX 16, 16
     .SetCurrentObjectS_Inc
     ply
     rtl
@@ -343,32 +344,36 @@ true_entity_bomb_tick:
     .UNDEFINE LEFT
     .UNDEFINE RIGHT
     .UNDEFINE BOTTOM
+.endproc
 
 .ENDS
 
 .BANK ROMBANK_ENTITYCODE SLOT "ROM"
 .SECTION "Entity Bomb Hooks" FREE
 
-entity_bomb_init:
-    .ACCU 16
-    .INDEX 16
-    sep #$20
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "entity_bomb_init", "IEntityInit"
+    .ForceSetA 8
     lda #120
     sta.w entity_timer,Y
-    rep #$30
     rts
+.endproc
 
-entity_bomb_free:
-    .ACCU 16
-    .INDEX 16
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "entity_bomb_free", "IEntityFree"
     rts
+.endproc
 
-entity_bomb_tick:
-    .ACCU 16
-    .INDEX 16
-    pla
-    phk
-    pha
-    jml true_entity_bomb_tick
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "entity_bomb_tick"
+    .call "true_entity_bomb_tick"
+    rts
+.endproc
 
 .ENDS

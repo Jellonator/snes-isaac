@@ -5,7 +5,7 @@
 
 true_entity_trapdoor_tick:
     ; rtl
-    rep #$30
+    .ForceSetAX 16, 16
     phy
     lda #0
     ; tile ID
@@ -13,17 +13,17 @@ true_entity_trapdoor_tick:
     ldx.w objectIndex
     sta.w objectData.1.tileid,X
     ; X position
-    sep #$20
+    .ForceSetA 8
     lda.w entity_posx + 1,Y
     sta.w objectData.1.pos_x,X
     ; Y position
     lda.w entity_posy + 1,Y
     sta.w objectData.1.pos_y,X
     sta.w loword(entity_ysort),Y
-    rep #$30
+    .ForceSetAX 16, 16
     .SetCurrentObjectS_Inc
     ply
-    sep #$20
+    .ForceSetA 8
     lda.w entity_timer,Y
     beq +
         dec A
@@ -44,22 +44,22 @@ true_entity_trapdoor_tick:
 .SECTION "Entity Trapdoor Hooks" FREE
 
 entity_trapdoor_init:
-    .ACCU 16
-    .INDEX 16
-    sep #$20
+    .SoftSetA 16
+    .SoftSetX 16
+    .ForceSetA 8
     lda #60
     sta.w entity_timer,Y
-    rep #$20
+    .ForceSetA 16
     rts
 
 entity_trapdoor_free:
-    .ACCU 16
-    .INDEX 16
+    .SoftSetA 16
+    .SoftSetX 16
     rts
 
 entity_trapdoor_tick:
-    .ACCU 16
-    .INDEX 16
+    .SoftSetA 16
+    .SoftSetX 16
     pla
     phk
     pha

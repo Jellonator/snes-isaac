@@ -1,4 +1,5 @@
 .include "base.inc"
+.include "rng.inc"
 
 .DEFINE MAX_HELPER_FLY_BUFFER_COUNT 128
 .DEFINE MAX_HELPER_FLY_ACTIVE_COUNT 8
@@ -23,18 +24,19 @@ _target_player_base_angle:
     .db 4*(256 / 8)
     .db 0*(256 / 8)
 
-entity_helper_fly_init:
-    .ACCU 16
-    .INDEX 16
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "entity_helper_fly_init", "IEntityInit"
     ; inc count
-    sep #$20
+    .SetA 8
     inc.w playerData.helperFlyActiveCount
     lda #0
     sta.w entity_state,Y
     ; random timer
-    rep #$30
-    jsl Random.Quick16
-    sep #$30
+    .SetAX 16, 16
+    .call "Random.Quick16"
+    .SetA 8
     sta.w entity_timer,Y
     ; get position mask and angle
     lda.w playerData.helperFlyPositionMask
@@ -46,12 +48,14 @@ entity_helper_fly_init:
     lda.l ShiftLeftTable8,X
     tsb.w playerData.helperFlyPositionMask
     rts
+.endproc
 
-entity_helper_fly_tick:
-    .ACCU 16
-    .INDEX 16
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "entity_helper_fly_tick", "IEntityTick"
 ; determine target
-    sep #$10
+    .SetX 8
     ldx.w entity_state,Y
     beq @no_target_entity
     ; verify target
@@ -60,10 +64,10 @@ entity_helper_fly_tick:
         cmp.w entity_type,X
         beq +
         @stop_following_target:
-            sep #$20
+            .SetA 8
             lda #0
             sta.w entity_state,Y
-            rep #$20
+            .SetA 16
             jmp @no_target_entity
         +:
         lda.w entity_mask,X
@@ -79,7 +83,7 @@ entity_helper_fly_tick:
         ror
         sta.b tempDP+$02
     ; check collision with target
-        sep #$20
+        .SetA 8
         lda.w entity_posx+1,Y
         cmp.w entity_box_x1,X
         bcc @end_collision_check
@@ -90,7 +94,7 @@ entity_helper_fly_tick:
         bcc @end_collision_check
         cmp.w entity_box_y2,X
         bcs @end_collision_check
-            rep #$20
+            .SetA 16
             lda.w playerData.stat_damage
             asl
             sta.b $00
@@ -98,7 +102,7 @@ entity_helper_fly_tick:
             sec
             sbc.b $00
             sta.w entity_health,X
-            sep #$20
+            .SetA 8
             php
             lda.w entity_signal,X
             plp
@@ -108,13 +112,13 @@ entity_helper_fly_tick:
             +:
             sta.w entity_signal,X
             ; alright, now we do damage and unalive self
-            jsl Entity.Free
+            .SetAX 16, 16
+            .call "Entity.Free"
             rts
         @end_collision_check:
         jmp @end_targetting
     @no_target_entity:
-        .ACCU 16
-        .INDEX 8
+        .SoftSetAX 16, 8
         ldx.w _position_angle_index,Y
         lda.l _target_player_base_angle,X
         clc
@@ -132,7 +136,7 @@ entity_helper_fly_tick:
         sta.b tempDP+$02
     ; check for target in range
         ; get nearest enemy ID
-        sep #$30
+        .SetAX 8, 8
         lda.w entity_posx+1,Y
         lsr
         lsr
@@ -149,7 +153,7 @@ entity_helper_fly_tick:
         lda.w entity_type,X
         beq @end_targetting
         ; check enemy is in range
-        rep #$20
+        .SetA 16
         lda.w entity_posx,X
         adc.w entity_box_x2-1,X
         ror
@@ -163,14 +167,14 @@ entity_helper_fly_tick:
         cmp #TARGET_DISTANCE
         bcs @end_targetting
         ; target is valid, store
-        sep #$20
+        .SetA 8
         txa
         sta.w entity_state,Y
-        rep #$20
+        .SetA 16
         lda.w entity_type,X
         sta.w _target_entity_verification,Y
     @end_targetting:
-    rep #$20
+    .ForceSetA 16
 ; Move X position
     lda.b tempDP+$00
     sec
@@ -226,9 +230,9 @@ entity_helper_fly_tick:
     sta.w entity_posy,Y
 @end_move_y:
 ; animate
-    rep #$30
-    jsl Random.Quick16
-    sep #$30
+    .SetAX 16, 16
+    .call "Random.Quick16"
+    .SetAX 8, 8
     and #$01
     adc.w entity_timer,Y
     inc A
@@ -275,11 +279,13 @@ entity_helper_fly_tick:
     inx
     stx.w objectIndex
     rts
+.endproc
 
-entity_helper_fly_free:
-    .ACCU 16
-    .INDEX 16
-    sep #$30
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "entity_helper_fly_free", "IEntityFree"
+    .SetAX 8, 8
     dec.w playerData.helperFlyActiveCount
     ; If freed by room transition, then increment buffer
     lda.b entityExecutionContext
@@ -292,6 +298,7 @@ entity_helper_fly_free:
     lda.l ShiftLeftTable8,X
     trb.w playerData.helperFlyPositionMask
     rts
+.endproc
 
 .ENDS
 
@@ -299,8 +306,8 @@ entity_helper_fly_free:
 .SECTION "Entity Helper Fly Extra" SUPERFREE
 
 ; Add `A` to helper fly count
-HelperFly.Add:
-    sep #$20
+HelperFly.Add: ; TOPROC
+    .ForceSetA 8
     clc
     adc.w playerData.helperFlyBufferCount
     bcc +
@@ -314,8 +321,8 @@ HelperFly.Add:
     sta.w playerData.helperFlyBufferCount
     rtl
 
-HelperFly.Tick:
-    sep #$20
+HelperFly.Tick: ; TOPROC
+    .ForceSetA 8
     lda.w playerData.helperFlyBufferCount
     bne +
         rtl ; no flies in buffer, exit
@@ -327,11 +334,18 @@ HelperFly.Tick:
     +:
     ; spawn a fly
     dec.w playerData.helperFlyBufferCount
-    rep #$30
+    .ForceSetAX 16, 16
     lda #entityvariant(ENTITY_TYPE_HELPER_FLY, 0)
-    jsl Entity.CreateAndInit
+    phb
+    .PushContext
+    .SetBank $7E
+    .SoftSetDirect $0000
+    .SoftSetAX 16, 16
+    .call "Entity.CreateAndInit"
+    .PopContextSoft
+    plb
     ; set position and velocity
-    rep #$30
+    .ForceSetAX 16, 16
     lda.w player_velocx
     sta.w entity_velocx,Y
     lda.w player_velocy

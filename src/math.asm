@@ -5,8 +5,8 @@
 
 ConvertBinaryToDecimalU16:
     .DEFINE RESULT $00
-    .INDEX 16
-    .ACCU 16
+    .SoftSetX 16
+    .SoftSetA 16
     ; special case: A<10
     cmp #10
     bcs +
@@ -14,11 +14,11 @@ ConvertBinaryToDecimalU16:
     +:
     .REPT 4 INDEX i
         sta.l DIVU_DIVIDEND
-        sep #$20
+        .ForceSetA 8
         lda #10
         sta.l DIVU_DIVISOR
-        rep #$20
-        rep #$20
+        .ForceSetA 16
+        .ForceSetA 16
         .REPT 5
             nop
         .ENDR
@@ -52,7 +52,7 @@ ConvertBinaryToDecimalU16:
 
 ConvertBinaryToDecimalU8:
     .DEFINE RESULT $00
-    .ACCU 8
+    .SoftSetA 8
     ; special case: A<10
     cmp #10
     bcs +
@@ -92,7 +92,7 @@ ConvertBinaryToDecimalU8:
 ; Since there are only 256 possible values, we can just use a binary search
 ; powered by far too many compare instructions
 Sqrt16:
-    rep #$30
+    .ForceSetAX 16, 16
     cmp #2
     bcs +
         rtl

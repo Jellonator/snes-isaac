@@ -86,27 +86,27 @@ _Menu.StateTickTable:
     .dw _empty_func ; char select
 
 _Menu.Tick:
-    rep #$30
+    .ForceSetAX 16, 16
     ldx.b menuState
     jsr (_Menu.StateTickTable,X)
     rts
 
 ; Set state to A
 _Menu.SetState:
-    rep #$30
+    .ForceSetAX 16, 16
     and #$00FF
     sta.b menuState
     ; clear BG1
     jsr _Menu.ClearBG1
     ; call enter table
-    rep #$30
+    .ForceSetAX 16, 16
     lda.b menuState
     tax
     jsr (_Menu.StateEnterTable,X)
     rts
 
 _Menu.ScrollLeft:
-    rep #$30
+    .ForceSetAX 16, 16
     lda.b menuBG2Offset
     eor #BG2_TILE_ADDR_OFFS_X
     sta.b menuBG2Offset
@@ -120,7 +120,7 @@ _Menu.ScrollLeft:
     rts
 
 _Menu.ScrollRight:
-    rep #$30
+    .ForceSetAX 16, 16
     lda.b menuBG2Offset
     eor #BG2_TILE_ADDR_OFFS_X
     sta.b menuBG2Offset
@@ -134,7 +134,7 @@ _Menu.ScrollRight:
     rts
 
 _Menu.ScrollUp:
-    rep #$30
+    .ForceSetAX 16, 16
     lda.b menuBG2Offset
     eor #BG2_TILE_ADDR_OFFS_Y
     sta.b menuBG2Offset
@@ -148,7 +148,7 @@ _Menu.ScrollUp:
     rts
 
 _Menu.ScrollDown:
-    rep #$30
+    .ForceSetAX 16, 16
     lda.b menuBG2Offset
     eor #BG2_TILE_ADDR_OFFS_Y
     sta.b menuBG2Offset
@@ -164,7 +164,7 @@ _Menu.ScrollDown:
 ; Upload tile data to BG2
 ; Tile data pointer stored in X
 _Menu.UploadBG2:
-    rep #$30 ; 16 bit A
+    .ForceSetAX 16, 16
     stx.b $00
     .VQueueOpToA
     tax
@@ -192,18 +192,18 @@ _Menu.UploadBG2:
         ; rest
         lda #16*2
         sta.l vqueueOps.{i+1}.numBytes,X
-        sep #$20
+        .ForceSetA 8
         lda #bankbyte(_MenuBackgroundData)
         sta.l vqueueOps.{i+1}.aAddr+2,X
         lda #VQUEUE_MODE_VRAM
         sta.l vqueueOps.{i+1}.mode,X
-        rep #$20
+        .ForceSetA 16
     .ENDR
     rts
 
 ; Clear BG1
 _Menu.ClearBG1:
-    rep #$30
+    .ForceSetAX 16, 16
     .VQueueOpToA
     tax
     inc.w vqueueNumOps
@@ -213,14 +213,14 @@ _Menu.ClearBG1:
     sta.l vqueueOps.1.vramAddr,X
     lda #32*32*2
     sta.l vqueueOps.1.numBytes,X
-    sep #$20
+    .ForceSetA 8
     lda #VQUEUE_MODE_VRAM_CLEAR
     sta.l vqueueOps.1.mode,X
     rts
 
 ; put text at Y into position X
 _Menu.PutTextBG1:
-    rep #$30
+    .ForceSetAX 16, 16
     ; get tile address
     txa
     clc
@@ -230,14 +230,14 @@ _Menu.PutTextBG1:
     sta.b $00
     sty.b $02
     ; get string length
-    sep #$20
+    .ForceSetA 8
     tyx
     phb
     phk
     plb
     jsl String.len
     plb
-    .ACCU 16
+    .SoftSetA 16
     sta.b $04
     asl
     sta.b $06
@@ -275,7 +275,7 @@ _Menu.PutTextBG1:
     sta.l vqueueOps.1.aAddr,X
     lda.b $00
     sta.l vqueueOps.1.vramAddr,X
-    sep #$20
+    .ForceSetA 8
     lda #$7F
     sta.l vqueueOps.1.aAddr+2,X
     lda #VQUEUE_MODE_VRAM
@@ -325,7 +325,7 @@ Menu.Begin:
     stz.w BG1VOFS
     stz.w BG1VOFS
     ; set menu variables
-    rep #$20
+    .ForceSetA 16
     stz.b currentScrollX
     stz.b currentScrollY
     stz.b targetScrollX
@@ -342,61 +342,61 @@ Menu.Begin:
     pea 0
     pea $0000
     jsl ClearVMem
-    rep #$20
+    .ForceSetA 16
     .POPN 4
     ; init vqueue
     jsl ClearVQueue
     ; Upload background
-    rep #$30
+    .ForceSetAX 16, 16
     ldx #loword(spritedata.menu.background)
     ldy #loword(private_spriteAllocBuffer)
     lda #bankbyte(spritedata.menu.background) | $7F00
     jsl Decompress.Lz4FromROM
     pea $0000
     pea 16*16/2
-    sep #$20
+    .ForceSetA 8
     lda #$7F
     pha
     pea loword(private_spriteAllocBuffer)
     jsl CopySprite
     .POPN 7
     ; Upload UI
-    rep #$30
+    .ForceSetAX 16, 16
     ldx #loword(spritedata.menu.mainmenu)
     ldy #loword(private_spriteAllocBuffer)
     lda #bankbyte(spritedata.menu.mainmenu) | $7F00
     jsl Decompress.Lz4FromROM
     pea BG2_CHARACTER_BASE_ADDR
     pea 16*16
-    sep #$20
+    .ForceSetA 8
     lda #$7F
     pha
     pea loword(private_spriteAllocBuffer)
     jsl CopySprite
     .POPN 7
     ; Upload logo
-    rep #$30
+    .ForceSetAX 16, 16
     ldx #loword(spritedata.menu.logo)
     ldy #loword(private_spriteAllocBuffer)
     lda #bankbyte(spritedata.menu.logo) | $7F00
     jsl Decompress.Lz4FromROM
     pea BG2_CHARACTER_BASE_ADDR + $1000
     pea 16*16
-    sep #$20
+    .ForceSetA 8
     lda #$7F
     pha
     pea loword(private_spriteAllocBuffer)
     jsl CopySprite
     .POPN 7
     ; Decompress and upload UI
-    rep #$30
+    .ForceSetAX 16, 16
     ldx #loword(spritedata.menu.ui)
     ldy #loword(private_spriteAllocBuffer)
     lda #bankbyte(spritedata.menu.ui) | $7F00
     jsl Decompress.Lz4FromROM
     pea BG1_CHARACTER_BASE_ADDR
     pea 16*16
-    sep #$20
+    .ForceSetA 8
     lda #$7F
     pha
     pea loword(private_spriteAllocBuffer)
@@ -405,14 +405,14 @@ Menu.Begin:
     ; Upload background tiles
     pea MENU_BG3_TILE_BASE_ADDR
     pea 32*32*2
-    sep #$20
+    .ForceSetA 8
     lda #bankbyte(_MenuBackgroundData)
     pha
     pea loword(_MenuBackgroundData)
     jsl CopyVMEM
     .POPN 7
     ; Upload start layout
-    rep #$30
+    .ForceSetAX 16, 16
     lda #STATE_START
     jsr _Menu.SetState
     ; Upload background palette
@@ -451,11 +451,11 @@ Menu.Begin:
     jsl CopyPalette
     .POPN 6
     ; Clear sprites
-    rep #$30
+    .ForceSetAX 16, 16
     jsl ClearSpriteTable
     jsl UploadSpriteTable
     ; clear some render flags
-    sep #$30
+    .ForceSetAX 8, 8
     lda #0
     sta.l gamePauseTimer
     sta.l needResetEntireGround
@@ -464,9 +464,9 @@ Menu.Begin:
     jsl Render.ClearHDMA
     jsl Render.DisableHDMA
     ; re-enable rendering
-    rep #$20
+    .ForceSetA 16
     stz.w blockVQueueMutex
-    sep #$20
+    .ForceSetA 8
     lda #$0F
     sta.w roomBrightness
     .EnableRENDER
@@ -475,7 +475,7 @@ Menu.Begin:
 ; Main loop for menu
 _Menu.Loop:
     ; update counter
-    rep #$30 ; 16 bit AXY
+    .ForceSetAX 16, 16
     inc.w blockVQueueMutex
     inc.w tickCounter
     ; clear data
@@ -484,7 +484,7 @@ _Menu.Loop:
     jsr _Menu.Tick
     jsr _Menu.HandleScroll
     ; increment seed timer
-    rep #$20
+    .ForceSetA 16
     lda.l seed_timer_low
     inc A
     sta.l seed_timer_low
@@ -494,13 +494,13 @@ _Menu.Loop:
         sta.l seed_timer_high
     +:
     ; End update code
-    rep #$30 ; 16 bit AXY
+    .ForceSetAX 16, 16
     stz.w blockVQueueMutex
     wai
     jmp _Menu.Loop
 
 _Menu.HandleScroll:
-    rep #$30
+    .ForceSetAX 16, 16
     ; scroll X
     lda.b currentScrollX
     .CMPS_BEGIN P_DIR targetScrollX
@@ -535,7 +535,7 @@ _Menu.HandleScroll:
     .CMPS_END
 ; store scroll
     ; get vqueue register ops
-    rep #$20
+    .ForceSetA 16
     lda.w vqueueNumRegOps
     asl
     tax
@@ -544,7 +544,7 @@ _Menu.HandleScroll:
     adc #12
     sta.w vqueueNumRegOps
     ; store values
-    ; sep #$20
+    ; .ForceSetA 8
     lda.b currentScrollX
     sta.l vqueueRegOps_Value+$00,X
     lda #BG2HOFS
@@ -578,7 +578,7 @@ _Menu.HandleScroll:
     lda #BG1VOFS
     sta.l vqueueRegOps_Addr+$0E,X
     ; BG3 has 75% scroll
-    ; rep #$20
+    ; .ForceSetA 16
     lda.b currentScrollX
     .ShiftRight_SIGN 3, 0
     sta.b $00
@@ -593,7 +593,7 @@ _Menu.HandleScroll:
     sec
     sbc.b $02
     sta.b $02
-    ; sep #$20
+    ; .ForceSetA 8
     lda.b $00
     sta.l vqueueRegOps_Value+$10,X
     lda #BG3HOFS
@@ -617,11 +617,11 @@ _menu_start_text:
     .ASC "PRESS START", 0
 
 _menu_start_init:
-    rep #$30
+    .ForceSetAX 16, 16
     ldx #loword(_MenuLayout_PageStart)
     jsr _Menu.UploadBG2
     ; put text
-    rep #$30
+    .ForceSetAX 16, 16
     ldy #loword(_menu_start_text)
     ldx #textpos(11, 22)
     lda #deft($00, 3)
@@ -630,12 +630,12 @@ _menu_start_init:
     rts
 
 _menu_start_tick:
-    rep #$30
+    .ForceSetAX 16, 16
     lda.w joy1press
     bit #JOY_START
     beq +
         jsr _Menu.ScrollDown
-        rep #$30
+        .ForceSetAX 16, 16
         lda #STATE_MAIN
         jsr _Menu.SetState
     +:
@@ -657,18 +657,18 @@ _menu_main_actions:
     .dw _menu_main_action_continue
 
 _menu_main_action_newrun:
-    sep #$20
+    .ForceSetA 8
     stz.w loadFromSaveState
     jsl Floor.Transition.In
     jml Game.Begin
 
 _menu_main_action_continue:
-    sep #$20
+    .ForceSetA 8
     lda.w currentSaveSlot
     jsl Save.IsSavestateInUse
     cmp #1
     bne @no_continue
-        sep #$20
+        .ForceSetA 8
         lda #1
         sta.w loadFromSaveState
         jsl Floor.Transition.In
@@ -680,46 +680,46 @@ _menu_main_init:
     ldx #loword(_MenuLayout_Main)
     jsr _Menu.UploadBG2
     ; put text NEW RUN
-    rep #$30
+    .ForceSetAX 16, 16
     ldy #loword(_menu_main_newgame)
     ldx #textpos(10, 8)
     lda #deft($00, 3)
     sta.b palette
     jsr _Menu.PutTextBG1
     ; put text CONTINUE
-    rep #$30
+    .ForceSetAX 16, 16
     lda #deft($00, 3)
     sta.b palette
     jsl Save.IsSavestateInUse
-    .ACCU 8
+    .SoftSetA 8
     cmp #1
     beq +
-        rep #$30
+        .ForceSetAX 16, 16
         lda #deft($00, 4)
         sta.b palette
     +:
-    rep #$30
+    .ForceSetAX 16, 16
     ldy #loword(_menu_main_continuegame)
     ldx #textpos(11, 10)
     jsr _Menu.PutTextBG1
-    rep #$30
+    .ForceSetAX 16, 16
     stz.b selection
     rts
 
 _menu_main_tick:
     ; exit
-    rep #$30
+    .ForceSetAX 16, 16
     lda.w joy1press
     bit #JOY_B
     beq +
         jsr _Menu.ScrollUp
-        rep #$30
+        .ForceSetAX 16, 16
         lda #STATE_START
         jsr _Menu.SetState
         rts
     +:
     ; change selection
-    rep #$30
+    .ForceSetAX 16, 16
     lda.b selection
     sta.b $02
     stz.b $00
@@ -727,20 +727,20 @@ _menu_main_tick:
     bit #JOY_UP
     beq +
         inc.b $00
-        sep #$20
+        .ForceSetA 8
         lda.b selection
         dec A
         bpl ++
             lda #MENU_MAIN_SELECT_COUNT-1
         ++:
         sta.b selection
-        rep #$20
+        .ForceSetA 16
     +:
     lda.w joy1press
     bit #JOY_DOWN
     beq +
         inc.b $00
-        sep #$20
+        .ForceSetA 8
         lda.b selection
         inc A
         cmp #MENU_MAIN_SELECT_COUNT
@@ -748,7 +748,7 @@ _menu_main_tick:
             lda #0
         ++:
         sta.b selection
-        rep #$20
+        .ForceSetA 16
     +:
     lda.b $00
     beq @no_change_select
@@ -781,7 +781,7 @@ _menu_main_tick:
         sta.l vqueueMiniOps.2.vramAddr,X
 @no_change_select:
     ; action
-    rep #$30
+    .ForceSetAX 16, 16
     lda.w joy1press
     bit #JOY_START
     beq +

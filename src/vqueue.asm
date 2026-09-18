@@ -4,7 +4,7 @@
 .SECTION "VQueue" FREE
 
 ClearVQueue:
-    rep #$20 ; 16b A
+    .ForceSetA 16
     stz.w vqueueNumOps
     lda #loword(vqueueBinData_End)
     sta.w vqueueBinOffset
@@ -13,8 +13,8 @@ ClearVQueue:
     rtl
 
 _proc_vqueue_vram:
-    .ACCU 16
-    .INDEX 16
+    .SoftSetA 16
+    .SoftSetX 16
     lda #(%00000001 + ($0100 * $18))
     sta.l DMA0_CTL
     lda.w vqueueOps.1.vramAddr,Y
@@ -34,14 +34,14 @@ _proc_vqueue_vram:
     jmp ProcessVQueue@process_vqueue_loop_continue
 
 _proc_vqueue_cgram:
-    .ACCU 16
-    .INDEX 16
+    .SoftSetA 16
+    .SoftSetX 16
     lda #(%00000000 + ($0100 * $22))
     sta.l DMA0_CTL
     lda.w vqueueOps.1.vramAddr,Y
-    sep #$20
+    .ForceSetA 8
     sta.l CGADDR
-    rep #$20
+    .ForceSetA 16
     lda.w vqueueOps.1.aAddr,Y
     sta.l DMA0_SRCL
     lda.w vqueueOps.1.aAddr+2,Y
@@ -53,8 +53,8 @@ _proc_vqueue_cgram:
     jmp ProcessVQueue@process_vqueue_loop_continue
 
 _proc_vqueue_vram_clear:
-    .ACCU 16
-    .INDEX 16
+    .SoftSetA 16
+    .SoftSetX 16
     lda #(%00001001 + ($0100 * $18))
     sta.l DMA0_CTL
     lda.w vqueueOps.1.vramAddr,Y
@@ -77,7 +77,7 @@ _proc_modes:
 ProcessVQueue:
     phb
     .ChangeDataBank $7F
-    rep #$30 ; 8b A
+    .ForceSetAX 16, 16
     lda.l vqueueNumOps
     beq @process_vqueue_end
     sta.b $00
@@ -104,7 +104,7 @@ ProcessVQueue:
     beq @process_reg_end
     asl
     sta.b $00
-    sep #$20
+    .ForceSetA 8
     ldy #0
 @process_reg_loop:
     ldx.w vqueueRegOps_Addr,Y
@@ -117,7 +117,7 @@ ProcessVQueue:
 @process_reg_end:
 ; Clear vqueue and reset bank
     plb
-    rep #$30
+    .ForceSetAX 16, 16
     stz.w vqueueNumOps
     stz.w vqueueNumRegOps
     lda.w #loword(vqueueBinData_End)
@@ -133,7 +133,7 @@ ProcessVQueue:
     sta.w DMA0_CTL
     lda #loword(vqueueMiniOps)
     sta.w DMA0_SRCL
-    sep #$20 ; 8b A
+    .ForceSetA 8
     lda #bankbyte(vqueueMiniOps)
     sta DMA0_SRCH
     lda #$01

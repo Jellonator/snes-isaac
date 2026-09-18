@@ -34,19 +34,19 @@ Game.Begin:
     PEA $5000 + bankbyte(palettes.ui_light.w)
     PEA palettes.ui_light.w
     jsl CopyPalette
-    rep #$20 ; 16 bit A
+    .ForceSetA 16
     PLA
     PLA
     PEA $6000 + bankbyte(palettes.ui_gold.w)
     PEA palettes.ui_gold.w
     jsl CopyPalette
-    rep #$20 ; 16 bit A
+    .ForceSetA 16
     PLA
     PLA
     PEA PALETTE_UI.0 + bankbyte(palettes.item_inactive.w)
     PEA palettes.item_inactive.w
     jsl CopyPalette
-    rep #$20 ; 16 bit A
+    .ForceSetA 16
     PLA
     PLA
     .REPT 8 INDEX i
@@ -59,7 +59,7 @@ Game.Begin:
             PEA palettes.default.w
         .ENDIF
         jsl CopyPalette
-        rep #$20 ; 16 bit A
+        .ForceSetA 16
         PLA
         PLA
     .ENDR
@@ -67,55 +67,55 @@ Game.Begin:
     ; copy UI to VRAM
     pea BG1_CHARACTER_BASE_ADDR
     pea 16*16
-    sep #$20 ; 8 bit A
+    .ForceSetA 8
     lda #bankbyte(spritedata.UI)
     pha
     pea spritedata.UI
     jsl CopySprite
-    sep #$20 ; 8 bit A
+    .ForceSetA 8
     pla
-    rep #$20 ; 16 bit A
+    .ForceSetA 16
     pla
     pla
     pla
     ; copy tear to VRAM
-    rep #$30
+    .ForceSetAX 16, 16
     ldx #loword(spritedata.isaac_tear)
     ldy #loword(private_spriteAllocBuffer)
     lda #bankbyte(spritedata.isaac_tear) | $7F00
     jsl Decompress.Lz4FromROM
-    rep #$30
+    .ForceSetAX 16, 16
     .REPT 6 INDEX i
         pea SPRITE1_BASE_ADDR + 16*32 + 256*i ; VRAM address
         pea 8 ; num tiles
-        sep #$20 ; 8 bit A
+        .ForceSetA 8
         lda #$7F
         pha
         pea loword(private_spriteAllocBuffer) + 8*i*32 ; address
         jsl CopySprite
-        sep #$20 ; 8 bit A
+        .ForceSetA 8
         pla
-        rep #$20 ; 16 bit A
+        .ForceSetA 16
         pla
         pla
         pla
     .ENDR
     ; copy default sprites to VRAM
-    rep #$30
+    .ForceSetAX 16, 16
     ldx #loword(spritedata.default_sprites)
     ldy #loword(private_spriteAllocBuffer)
     lda #bankbyte(spritedata.default_sprites) | $7F00
     jsl Decompress.Lz4FromROM
     pea SPRITE1_BASE_ADDR + 64*32
     pea 128
-    sep #$20
+    .ForceSetA 8
     lda #$7F
     pha
     pea loword(private_spriteAllocBuffer)
     jsl CopySprite
-    sep #$20 ; 8 bit A
+    .ForceSetA 8
     pla
-    rep #$20 ; 16 bit A
+    .ForceSetA 16
     pla
     pla
     pla
@@ -123,12 +123,12 @@ Game.Begin:
     pea BG1_TILE_BASE_ADDR
     pea 32*32*2
     jsl ClearVMem
-    rep #$20 ; 16 bit A
+    .ForceSetA 16
     pla
     pla
     jsl InitializeUI
     ; Set up tilemap. First, write empty in all slots
-    rep #$30 ; 16 bit X, Y, Z
+    .ForceSetAX 16, 16
     lda #BG2_TILE_BASE_ADDR
     sta.w VMADDR
     lda #deft($08, 2)
@@ -162,7 +162,7 @@ tile_data_loop:
     iny
     cpy #$0300 ; 32 * 12 tiles
     bne tile_data_loop
-    sep #$30 ; 8 bit X, Y, Z
+    .ForceSetAX 8, 8
     ; show sprites and BG2 on main screen
     lda #%00010111
     sta.w SCRNDESTM
@@ -198,7 +198,7 @@ tile_data_loop:
     sta.w BG2VOFS
     stz.w BG3VOFS
     stz.w BG3VOFS
-    rep #$30
+    .ForceSetAX 16, 16
     lda #0
     sta.l tickCounter
     ; init rng
@@ -215,7 +215,7 @@ tile_data_loop:
     plb
     jsl Palette.init_data
     ; Initialize other variables
-    sep #$30
+    .ForceSetAX 8, 8
     lda #bankbyte(mapTileSlotTable)
     sta.b currentRoomTileTypeTableAddress+2
     sta.b currentRoomTileVariantTableAddress+2
@@ -228,7 +228,7 @@ tile_data_loop:
     stz.w isGamePaused
     stz.w shouldGamePause
     stz.w isRoomTransitioning
-    rep #$30
+    .ForceSetAX 16, 16
     lda #0
     stz.w gamePauseTimer
     sta.w currentRoomGroundPalette
@@ -240,22 +240,23 @@ tile_data_loop:
     lda #1
     sta.w blockVQueueMutex
     ; clear entity table
-    jsl Entity.InitializeEntityTable
+    .ForceSetAX 16, 16
+    .ForceSetBank $80
+    .call "Entity.InitializeEntityTable"
     ; clear pathfinding data
     jsl Pathing.Initialize
     ; init player
     jsr PlayerInit
     ; init floor
-    .ForceSetBank $80
-    sep #$20
+    .ForceSetA 8
     lda.w loadFromSaveState
     beq @normal_load
     ; load save
         .call "MapGen.ClearAll"
-        sep #$20
+        .ForceSetA 8
         lda.w currentSaveSlot
         jsl Save.ReadSaveState
-        sep #$30
+        .ForceSetAX 8, 8
         lda #ROOM_LOAD_CONTEXT_SAVELOAD
         pha
         lda.b currentRoomSlot
@@ -264,7 +265,7 @@ tile_data_loop:
         lda.l roomSlotMapPos,X
         sta.b loadedRoomIndex
         jsl LoadAndInitRoomSlotIntoLevel
-        rep #$20
+        .ForceSetA 16
         pla
         jsl Floor.InitPostLoad
         jmp @end_load
@@ -273,11 +274,11 @@ tile_data_loop:
         jsl Floor.Init
     @end_load:
     ; Clear sprites
-    rep #$30
+    .ForceSetAX 16, 16
     jsl ClearSpriteTable
     jsl UploadSpriteTable
     ; clear some render flags
-    sep #$30
+    .ForceSetAX 8, 8
     lda #1
     sta.l needResetEntireGround
     sta.l boss_health_need_rerender
@@ -290,14 +291,14 @@ tile_data_loop:
     jsl Render.ClearHDMA
     jsl Render.EnableHDMA
     ; re-enable rendering
-    rep #$20
+    .ForceSetA 16
     stz.w blockVQueueMutex
-    sep #$20
+    .ForceSetA 8
     lda #$00
     sta.w roomBrightness
     .EnableRENDER
     ; Set transition flag
-    rep #$20
+    .ForceSetA 16
     lda #FLOOR_FLAG_FADEIN
     tsb.w floorFlags
     ; Enable interrupts and joypad
@@ -305,13 +306,13 @@ tile_data_loop:
 ; GAME LOOP
 _Game.Loop:
     ; update counter
-    rep #$30 ; 16 bit AXY
+    .ForceSetAX 16, 16
     inc.w blockVQueueMutex
-    sep #$20
+    .ForceSetA 8
     stz.w didPlayerJustEnterRoom
     lda.w isGamePaused
     bne @skip_paused
-        rep #$30
+        .ForceSetAX 16, 16
         inc.w tickCounter
         ; clear data
         jsl ClearSpriteTable
@@ -322,7 +323,7 @@ _Game.Loop:
         ; Each of these functions may take up to 20% of runtime each, and running
         ; them all simultaneously would kill performance. The couple frames of lag
         ; between updates is deemed acceptable.
-        rep #$30
+        .ForceSetAX 16, 16
         lda.w tickCounter
         and #$03
         cmp #0
@@ -343,20 +344,24 @@ _Game.Loop:
             jsl Pathing.UpdateEnemyNearest
         @end:
         ; run all update hooks
-        sep #$30
+        .ForceSetAX 8, 8
         jsl Entity.RefreshHitboxes
         jsr PlayerUpdate
+        .ForceSetAX 8, 8
+        phb
+        .ChangeDataBank $7E
         jsl Entity.TickAll
+        plb
         jsl Room_Tick
         jsl Floor.Tick
         jsr _UpdateUsables
         ; Finally, check if room should be changed
         jsr PlayerCheckEnterRoom
-        sep #$20
+        .ForceSetA 8
         lda.w didPlayerJustEnterRoom
         bne _Game.Loop
         ; Maybe Pause
-        sep #$30
+        .ForceSetAX 8, 8
         lda.w joy1press+1
         bit #hibyte(JOY_START)
         beq @skip_paused
@@ -369,7 +374,7 @@ _Game.Loop:
     jsl Overlay.update
     jsl BossBar.Update
     ; update pause timer
-    sep #$30
+    .ForceSetAX 8, 8
     lda.w shouldGamePause
     beq @unpause
         ; pausing
@@ -379,7 +384,7 @@ _Game.Loop:
             inc A
             sta.w gamePauseTimer
             jsr Pause.UpdateScroll
-            sep #$30
+            .ForceSetAX 8, 8
         +:
         jmp @end_pause_timer
     @unpause:
@@ -388,7 +393,7 @@ _Game.Loop:
             dec A
             sta.w gamePauseTimer
             jsr Pause.UpdateScroll
-            sep #$30
+            .ForceSetAX 8, 8
         +:
 @end_pause_timer
     ; set pause flag
@@ -402,7 +407,7 @@ _Game.Loop:
         jsr Pause.Update
     +:
     ; End update code
-    rep #$30 ; 16 bit AXY
+    .ForceSetAX 16, 16
     stz.w blockVQueueMutex
     wai
     jmp _Game.Loop
@@ -414,14 +419,14 @@ Game.UpdateAllPathfinding:
     rtl
 
 _UpdateUsables:
-    rep #$30 ; 16 bit AXY
-    rep #$30
+    .ForceSetAX 16, 16
+    .ForceSetAX 16, 16
     lda.w joy1press
     bit #JOY_SELECT
     beq @skip_use_consumable
         jsl Consumable.use
 @skip_use_consumable:
-    rep #$30
+    .ForceSetAX 16, 16
     lda.w joy1press
     bit #JOY_R
     beq @skip_use_item
@@ -465,7 +470,7 @@ _pause_actions:
     .dw Pause.ActionExit
 
 Pause.ActionUnpause:
-    sep #$20
+    .ForceSetA 8
     stz.w shouldGamePause
     jsr Pause.End
     rts
@@ -475,17 +480,17 @@ Pause.ActionOptions:
 
 Pause.ActionExit:
     jsl Room_Unload
-    sep #$20
+    .ForceSetA 8
     lda.w currentSaveSlot
     jsl Save.WriteSaveState
     jml Menu.Begin
 
 Pause.Begin:
-    sep #$20
+    .ForceSetA 8
     lda #0
     sta.w pausePage
     sta.w pauseSelect
-    rep #$30
+    .ForceSetAX 16, 16
     stz.b cheatEntryIndex
     and #$00FF
     asl
@@ -511,7 +516,7 @@ Pause.Begin:
 Pause.PageStats:
 ; copy tile data into vqueue bin
     .CopyROMToVQueueBin P_IMM tilemap.pause_stat (32*32*2)
-    rep #$30
+    .ForceSetAX 16, 16
     .VQueueOpToA
     tax
     inc.w vqueueNumOps
@@ -521,18 +526,18 @@ Pause.PageStats:
     sta.l vqueueOps.1.numBytes,X
     lda #BG1_TILE_BASE_ADDR + $0400
     sta.l vqueueOps.1.vramAddr,X
-    sep #$20
+    .ForceSetA 8
     lda #$7F
     sta.l vqueueOps.1.aAddr+2,X
     lda #VQUEUE_MODE_VRAM
     sta.l vqueueOps.1.mode,X
 ; set speed stat text
-    rep #$30
+    .ForceSetAX 16, 16
     lda.l playerData.stat_speed
     ; pixels per frame -> tiles per second: × 60/16 (estimate with multiply by 4)
     .MultiplyStatic 4
     sta.b $02
-    sep #$30
+    .ForceSetAX 8, 8
     and #$00FF
     tax
     lda.l FractionBinToDec,X
@@ -540,7 +545,7 @@ Pause.PageStats:
     lda.b $03
     jsl ConvertBinaryToDecimalU8
     sta.b $01
-    rep #$30
+    .ForceSetAX 16, 16
     ldx.w vqueueBinOffset
     ; char 3
     lda.b $00
@@ -632,7 +637,7 @@ Pause.PageStats:
 ; set tear rate text
     lda.l playerData.stat_tear_rate
     sta.b $02
-    sep #$30
+    .ForceSetAX 8, 8
     and #$00FF
     tax
     lda.l FractionBinToDec,X
@@ -640,7 +645,7 @@ Pause.PageStats:
     lda.b $03
     jsl ConvertBinaryToDecimalU8
     sta.b $01
-    rep #$30
+    .ForceSetAX 16, 16
     ldx.w vqueueBinOffset
     ; char 3
     lda.b $00
@@ -682,17 +687,17 @@ Pause.PageStats:
     lda.l playerData.stat_tear_lifetime
     .MultiplyStatic 256/4
     sta.l DIVU_DIVIDEND
-    sep #$20
+    .ForceSetA 8
     lda #15
     sta.l DIVU_DIVISOR
-    rep #$20
-    rep #$20
+    .ForceSetA 16
+    .ForceSetA 16
     .REPT 5
         nop
     .ENDR
     lda.l DIVU_QUOTIENT
     sta.b $02
-    sep #$30
+    .ForceSetAX 8, 8
     and #$00FF
     tax
     lda.l FractionBinToDec,X
@@ -700,7 +705,7 @@ Pause.PageStats:
     lda.b $03
     jsl ConvertBinaryToDecimalU8
     sta.b $01
-    rep #$30
+    .ForceSetAX 16, 16
     ldx.w vqueueBinOffset
     ; char 3
     lda.b $00
@@ -743,7 +748,7 @@ Pause.PageStats:
     ; pixels per frame -> tiles per second: × 60/16 (estimate with multiply by 4)
     .MultiplyStatic 4
     sta.b $02
-    sep #$30
+    .ForceSetAX 8, 8
     and #$00FF
     tax
     lda.l FractionBinToDec,X
@@ -751,7 +756,7 @@ Pause.PageStats:
     lda.b $03
     jsl ConvertBinaryToDecimalU8
     sta.b $01
-    rep #$30
+    .ForceSetAX 16, 16
     ldx.w vqueueBinOffset
     ; char 3
     lda.b $00
@@ -813,7 +818,7 @@ Pause.CopySeed:
 Pause.PageMap:
 ; copy tile data into vqueue bin
     .CopyROMToVQueueBin P_IMM tilemap.pause_map (32*32*2)
-    rep #$30
+    .ForceSetAX 16, 16
     .VQueueOpToA
     tax
     inc.w vqueueNumOps
@@ -823,13 +828,13 @@ Pause.PageMap:
     sta.l vqueueOps.1.numBytes,X
     lda #BG1_TILE_BASE_ADDR + $0400
     sta.l vqueueOps.1.vramAddr,X
-    sep #$20
+    .ForceSetA 8
     lda #$7F
     sta.l vqueueOps.1.aAddr+2,X
     lda #VQUEUE_MODE_VRAM
     sta.l vqueueOps.1.mode,X
 ; display map
-    rep #$30
+    .ForceSetAX 16, 16
     lda.w vqueueBinOffset
     clc
     adc #2*textpos(4, 8)
@@ -866,14 +871,14 @@ Pause.End:
     rts
 
 Pause.Update:
-    rep #$30
+    .ForceSetAX 16, 16
 ; Updates which are common to all pages
     ; check page change
     stz.b $00
     lda.w joy1press
     bit #JOY_L
     beq +
-        sep #$20
+        .ForceSetA 8
         inc.b $00
         lda.w pausePage
         dec A
@@ -881,12 +886,12 @@ Pause.Update:
             lda #PAUSE_NUM_PAGES-1
         ++:
         sta.w pausePage
-        rep #$20
+        .ForceSetA 16
     +:
     lda.w joy1press
     bit #JOY_R
     beq +
-        sep #$20
+        .ForceSetA 8
         inc.b $00
         lda.w pausePage
         inc A
@@ -895,7 +900,7 @@ Pause.Update:
             lda #0
         ++:
         sta.w pausePage
-        rep #$20
+        .ForceSetA 16
     +:
     lda.b $00
     beq +
@@ -904,12 +909,12 @@ Pause.Update:
         asl
         tax
         jsr (_pause_pages,X)
-        sep #$20
+        .ForceSetA 8
         lda #1
         sta.b $00
     +:
     ; check if we are on cheats page
-    sep #$20
+    .ForceSetA 8
     lda.w pausePage
     cmp #PAUSE_CHEAT_PAGE
     bne +
@@ -917,7 +922,7 @@ Pause.Update:
     +:
 ; Updates that only occur on STATS and MAP
     ; check cheat entry
-    rep #$30
+    .ForceSetAX 16, 16
     lda.b cheatEntryIndex
     asl
     tax
@@ -942,14 +947,14 @@ Pause.Update:
         rts
 @no_cheat_entry:
     ; check selection change
-    sep #$20
+    .ForceSetA 8
     lda.w pauseSelect
     sta.b $02
-    rep #$20
+    .ForceSetA 16
     lda.w joy1press
     bit #JOY_UP
     beq +
-        sep #$20
+        .ForceSetA 8
         inc.b $00
         lda.w pauseSelect
         dec A
@@ -957,12 +962,12 @@ Pause.Update:
             lda #PAUSE_NUM_SELECT-1
         ++:
         sta.w pauseSelect
-        rep #$20
+        .ForceSetA 16
     +:
     lda.w joy1press
     bit #JOY_DOWN
     beq +
-        sep #$20
+        .ForceSetA 8
         inc.b $00
         lda.w pauseSelect
         inc A
@@ -971,7 +976,7 @@ Pause.Update:
             lda #0
         ++:
         sta.w pauseSelect
-        rep #$20
+        .ForceSetA 16
     +:
     lda.b $00
     beq +
@@ -1000,7 +1005,7 @@ Pause.Update:
         sta.l vqueueMiniOps.2.vramAddr,X
     +:
     ; perform action
-    rep #$20
+    .ForceSetA 16
     lda.w joy1press
     bit #JOY_A | JOY_START
     beq @skip_action
@@ -1037,7 +1042,7 @@ _cheat_action_tick:
 Pause.PageCheat:
 ; copy tilemap
     .CopyROMToVQueueBin P_IMM tilemap.pause_cheat (32*32*2)
-    rep #$30
+    .ForceSetAX 16, 16
     .VQueueOpToA
     tax
     inc.w vqueueNumOps
@@ -1047,20 +1052,20 @@ Pause.PageCheat:
     sta.l vqueueOps.1.numBytes,X
     lda #BG1_TILE_BASE_ADDR + $0400
     sta.l vqueueOps.1.vramAddr,X
-    sep #$20
+    .ForceSetA 8
     lda #$7F
     sta.l vqueueOps.1.aAddr+2,X
     lda #VQUEUE_MODE_VRAM
     sta.l vqueueOps.1.mode,X
 ; set default values
-    rep #$20
+    .ForceSetA 16
     stz.b cheatActionSelect
     jsr _cheat_action_begin_floor
     rts
 
 _pause_update_cheats_page:
 ; exit if start is pressed
-    rep #$20
+    .ForceSetA 16
     lda.w joy1press
     bit #JOY_START
     beq +
@@ -1069,14 +1074,14 @@ _pause_update_cheats_page:
     +:
 ; swap actions
     ; check page change
-    rep #$20
+    .ForceSetA 16
     lda.b cheatActionSelect
     sta.b $02
     stz.b $00
     lda.w joy1press
     bit #JOY_UP
     beq +
-        sep #$20
+        .ForceSetA 8
         inc.b $00
         lda.b cheatActionSelect
         dec A
@@ -1084,12 +1089,12 @@ _pause_update_cheats_page:
             lda #NUM_CHEAT_ACTIONS-1
         ++:
         sta.b cheatActionSelect
-        rep #$20
+        .ForceSetA 16
     +:
     lda.w joy1press
     bit #JOY_DOWN
     beq +
-        sep #$20
+        .ForceSetA 8
         inc.b $00
         lda.b cheatActionSelect
         inc A
@@ -1098,7 +1103,7 @@ _pause_update_cheats_page:
             lda #0
         ++:
         sta.b cheatActionSelect
-        rep #$20
+        .ForceSetA 16
     +:
     lda.b $00
     beq +
@@ -1132,11 +1137,11 @@ _pause_update_cheats_page:
         asl
         tax
         jsr (_cheat_action_begin,X)
-        sep #$20
+        .ForceSetA 8
         lda #1
         sta.b $00
         rts
-        .ACCU 16
+        .SoftSetA 16
     +:
     ; update action
     lda.b cheatActionSelect
@@ -1149,7 +1154,7 @@ _pause_update_cheats_page:
 
 ; write value in 'A' to number display
 _cheat_write_decimal_view:
-    rep #$30
+    .ForceSetAX 16, 16
     sta.b $00
     ; get vqueue op pointer
     lda.w vqueueNumMiniOps
@@ -1181,7 +1186,7 @@ _cheat_write_decimal_view:
 
 ; write string in [$00] to string display
 _cheat_write_text_view:
-    rep #$30
+    .ForceSetAX 16, 16
     ; get ops
     lda.w vqueueBinOffset
     sec
@@ -1207,7 +1212,7 @@ _cheat_write_text_view:
     sta.l vqueueOps.1.vramAddr,X
     lda #textpos(12, 44) + BG1_TILE_BASE_ADDR
     sta.l vqueueOps.2.vramAddr,X
-    sep #$20
+    .ForceSetA 8
     lda #$7F
     sta.l vqueueOps.1.aAddr+2,X
     sta.l vqueueOps.2.aAddr+2,X
@@ -1215,7 +1220,7 @@ _cheat_write_text_view:
     sta.l vqueueOps.1.mode,X
     sta.l vqueueOps.2.mode,X
     ; write text to vqueuebin
-    rep #$30
+    .ForceSetAX 16, 16
     lda #32
     sta.b $08
     @loop:
@@ -1241,7 +1246,7 @@ _cheat_write_text_view:
     rts
 
 _cheat_clear_display:
-    rep #$30
+    .ForceSetAX 16, 16
     ; get ops
     lda.w vqueueBinOffset
     sec
@@ -1271,7 +1276,7 @@ _cheat_clear_display:
     sta.l vqueueOps.2.vramAddr,X
     lda #textpos(18, 40) + BG1_TILE_BASE_ADDR
     sta.l vqueueOps.3.vramAddr,X
-    sep #$20
+    .ForceSetA 8
     lda #$7F
     sta.l vqueueOps.1.aAddr+2,X
     sta.l vqueueOps.2.aAddr+2,X
@@ -1281,7 +1286,7 @@ _cheat_clear_display:
     sta.l vqueueOps.2.mode,X
     sta.l vqueueOps.3.mode,X
     ; write text to vqueuebin
-    rep #$30
+    .ForceSetAX 16, 16
     lda #16
     sta.b $08
     ; write empty until full
@@ -1297,13 +1302,13 @@ _cheat_clear_display:
 ; FLOOR
 
 _cheat_action_floor_render:
-    rep #$20
+    .ForceSetA 16
 ; render floor index
     lda.b cheatParameterValue
     jsl ConvertBinaryToDecimalU16
     jsr _cheat_write_decimal_view
 ; get and write floor name
-    rep #$30
+    .ForceSetAX 16, 16
     lda.b cheatParameterValue
     asl
     tax
@@ -1317,14 +1322,14 @@ _cheat_action_floor_render:
     rts
 
 _cheat_action_begin_floor:
-    rep #$20
+    .ForceSetA 16
 ; get and write current floor index
     lda.w currentFloorIndex
     sta.b cheatParameterValue
     jsr _cheat_action_floor_render
 
 _cheat_action_tick_floor:
-    rep #$30
+    .ForceSetAX 16, 16
     lda.w joy1press
     bit #JOY_RIGHT
     beq @no_right
@@ -1336,7 +1341,7 @@ _cheat_action_tick_floor:
         +:
         sta.b cheatParameterValue
         jsr _cheat_action_floor_render
-        rep #$30
+        .ForceSetAX 16, 16
     @no_right:
     lda.w joy1press
     bit #JOY_LEFT
@@ -1348,7 +1353,7 @@ _cheat_action_tick_floor:
         +:
         sta.b cheatParameterValue
         jsr _cheat_action_floor_render
-        rep #$30
+        .ForceSetAX 16, 16
     @no_left:
     lda.w joy1press
     bit #JOY_A
@@ -1372,13 +1377,13 @@ _cheat_action_tick_room:
 ; ITEM GIVE
 
 _cheat_action_item_render:
-    rep #$30
+    .ForceSetAX 16, 16
     ldx.b cheatParameterValue
     lda.w playerData.playerItemStackNumber,X
     and #$00FF
     jsl ConvertBinaryToDecimalU16
     jsr _cheat_write_decimal_view
-    rep #$30
+    .ForceSetAX 16, 16
     lda.b cheatParameterValue
     asl
     tax
@@ -1392,14 +1397,14 @@ _cheat_action_item_render:
     rts
 
 _cheat_action_begin_item_give:
-    rep #$30
+    .ForceSetAX 16, 16
     lda #1
     sta.b cheatParameterValue
     jsr _cheat_action_item_render
     rts
 
 _cheat_action_tick_item_give:
-    rep #$30
+    .ForceSetAX 16, 16
     lda.w joy1press
     bit #JOY_RIGHT
     beq @no_right
@@ -1411,7 +1416,7 @@ _cheat_action_tick_item_give:
         +:
         sta.b cheatParameterValue
         jsr _cheat_action_item_render
-        rep #$30
+        .ForceSetAX 16, 16
     @no_right:
     lda.w joy1press
     bit #JOY_LEFT
@@ -1423,13 +1428,13 @@ _cheat_action_tick_item_give:
         +:
         sta.b cheatParameterValue
         jsr _cheat_action_item_render
-        rep #$30
+        .ForceSetAX 16, 16
     @no_left:
     ; try give or take items
     lda.w joy1press
     bit #JOY_A
     beq @no_give
-        sep #$20
+        .ForceSetA 8
         ldx.b cheatParameterValue
         lda.w playerData.playerItemStackNumber,X
         cmp #PLAYER_MAX_ITEM_COUNT-1
@@ -1437,7 +1442,7 @@ _cheat_action_tick_item_give:
         lda.w playerData.playerItemCount
         cmp #$FF
         beq @no_give
-        rep #$30
+        .ForceSetAX 16, 16
         lda.b cheatParameterValue
         asl
         tax
@@ -1447,38 +1452,38 @@ _cheat_action_tick_item_give:
         and #ITEMFLAG_ACTIVE
         beq @passive
     ; active
-        sep #$30
+        .ForceSetAX 8, 8
         lda.b cheatParameterValue
         jsl Item.set_active
-        rep #$30
+        .ForceSetAX 16, 16
         lda.b cheatParameterValue
         asl
         tax
         lda.l Item.items,X
         tax
         lda.l bankaddr(Item.items) + itemdef_t.charge_init,X
-        sep #$20
+        .ForceSetA 8
         sta.w playerData.current_active_charge
         jsl UI.update_charge_display
         jmp @no_give
     @passive:
-        sep #$30
+        .ForceSetAX 8, 8
         lda.b cheatParameterValue
         jsl Item.add
         jsr _cheat_action_item_render
     @no_give:
-    rep #$30
+    .ForceSetAX 16, 16
     lda.w joy1press
     bit #JOY_B
     beq @no_take
-        sep #$20
+        .ForceSetA 8
         ldx.b cheatParameterValue
         lda.w playerData.playerItemStackNumber,X
         beq @no_take
         lda.b cheatParameterValue
         jsl Item.remove
         jsr _cheat_action_item_render
-        rep #$30
+        .ForceSetAX 16, 16
     @no_take:
     rts
 
@@ -1493,12 +1498,12 @@ _cheat_action_tick_item_remove:
 ; CONSUMABLE
 
 _cheat_action_consumable_render:
-    rep #$30
+    .ForceSetAX 16, 16
     lda.l playerData.current_consumable
     and #$00FF
     jsl ConvertBinaryToDecimalU16
     jsr _cheat_write_decimal_view
-    rep #$30
+    .ForceSetAX 16, 16
     lda.l playerData.current_consumable
     and #$00FF
     asl
@@ -1513,16 +1518,16 @@ _cheat_action_consumable_render:
     rts
 
 _cheat_action_begin_consumable_set:
-    rep #$30
+    .ForceSetAX 16, 16
     jsr _cheat_action_consumable_render
     rts
 
 _cheat_action_tick_consumable_set:
-    rep #$30
+    .ForceSetAX 16, 16
     lda.w joy1press
     bit #JOY_RIGHT
     beq @no_right
-        sep #$20
+        .ForceSetA 8
         lda.l playerData.current_consumable
         inc A
         cmp #CONSUMABLE_COUNT
@@ -1532,13 +1537,13 @@ _cheat_action_tick_consumable_set:
         sta.l playerData.current_consumable
         jsr _cheat_action_consumable_render
         jsl Consumable.update_display_no_overlay
-        rep #$30
+        .ForceSetAX 16, 16
     @no_right:
-    .ACCU 16
+    .SoftSetA 16
     lda.w joy1press
     bit #JOY_LEFT
     beq @no_left
-        sep #$20
+        .ForceSetA 8
         lda.l playerData.current_consumable
         dec A
         cmp #CONSUMABLE_COUNT
@@ -1548,9 +1553,9 @@ _cheat_action_tick_consumable_set:
         sta.l playerData.current_consumable
         jsr _cheat_action_consumable_render
         jsl Consumable.update_display_no_overlay
-        rep #$30
+        .ForceSetAX 16, 16
     @no_left:
-    .ACCU 16
+    .SoftSetA 16
     rts
 
 ; MONEY
@@ -1578,7 +1583,7 @@ _cheat_action_tick_keys:
     rts
 
 Pause.UpdateScroll:
-    rep #$30
+    .ForceSetAX 16, 16
     lda.w gamePauseTimer
     and #$00FF
     asl

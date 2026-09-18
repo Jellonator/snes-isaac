@@ -5,7 +5,7 @@
 
 Pathing.Initialize:
 ; clear player
-    rep #$30
+    .ForceSetAX 16, 16
     phd
     pea $4300
     pld
@@ -15,7 +15,7 @@ Pathing.Initialize:
     sta.b <DMA0_SRCL
     lda #loword(pathfind_player_data)
     sta.w WMADDL
-    sep #$20 ; 8 bit A
+    .ForceSetA 8
     lda #0
     sta.b <DMA0_SRCH ; InitialPathfindingData is in bank 0
     sta.w WMADDH ; only bottom bit matters, so just store 0
@@ -27,14 +27,14 @@ Pathing.Initialize:
     lda #$01
     sta.w MDMAEN
 ; clear enemy
-    rep #$30
+    .ForceSetAX 16, 16
     lda #256
     sta.b <DMA0_SIZE
     lda #loword(InitialPathfindingData)
     sta.b <DMA0_SRCL
     lda #loword(pathfind_enemy_data)
     sta.w WMADDL
-    sep #$20 ; 8 bit A
+    .ForceSetA 8
     lda #0
     sta.b <DMA0_SRCH ; InitialPathfindingData is in bank 0
     sta.w WMADDH ; only bottom bit matters, so just store 0
@@ -46,14 +46,14 @@ Pathing.Initialize:
     lda #$01
     sta.w MDMAEN
 ; clear nearest enemy ID
-    rep #$30
+    .ForceSetAX 16, 16
     lda #256
     sta.b <DMA0_SIZE
     lda #loword(EmptyData)
     sta.b <DMA0_SRCL
     lda #loword(pathfind_nearest_enemy_id)
     sta.w WMADDL
-    sep #$20 ; 8 bit A
+    .ForceSetA 8
     lda #0
     sta.b <DMA0_SRCH ; EmptyData is in bank 0
     sta.w WMADDH ; only bottom bit matters, so just store 0
@@ -69,7 +69,7 @@ Pathing.Initialize:
     rtl
 
 _clear_player:
-    rep #$30
+    .ForceSetAX 16, 16
     phd
     pea $4300
     pld
@@ -79,7 +79,7 @@ _clear_player:
     sta.b <DMA0_SRCL
     lda #loword(16 * 4 + pathfind_player_data + 2)
     sta.w WMADDL
-    sep #$20 ; 8 bit A
+    .ForceSetA 8
     lda #0
     sta.b <DMA0_SRCH ; InitialPathfindingData is in bank 0
     sta.w WMADDH ; only bottom bit matters, so just store 0
@@ -94,7 +94,7 @@ _clear_player:
     rts
 
 _clear_enemy:
-    rep #$30
+    .ForceSetAX 16, 16
     phd
     pea $4300
     pld
@@ -104,7 +104,7 @@ _clear_enemy:
     sta.b <DMA0_SRCL
     lda #loword(16 * 4 + pathfind_enemy_data + 2)
     sta.w WMADDL
-    sep #$20 ; 8 bit A
+    .ForceSetA 8
     lda #0
     sta.b <DMA0_SRCH ; InitialPathfindingData is in bank 0
     sta.w WMADDH ; only bottom bit matters, so just store 0
@@ -119,7 +119,7 @@ _clear_enemy:
     rts
 
 _clear_enemy_nearest:
-    rep #$30
+    .ForceSetAX 16, 16
     phd
     pea $4300
     pld
@@ -129,7 +129,7 @@ _clear_enemy_nearest:
     sta.b <DMA0_SRCL
     lda #loword(pathfind_nearest_enemy_id)
     sta.w WMADDL
-    sep #$20 ; 8 bit A
+    .ForceSetA 8
     lda #0
     sta.b <DMA0_SRCH ; EmptyData is in bank 0
     sta.w WMADDH ; only bottom bit matters, so just store 0
@@ -158,7 +158,7 @@ Pathing.UpdatePlayer:
 ; set bank and direct page
     phb
     .ChangeDataBank $7E
-    rep #$30
+    .ForceSetAX 16, 16
     phd
     pea pathfind_player_data - $20
     pld
@@ -180,7 +180,7 @@ Pathing.UpdatePlayer:
     ldx #loword(tempData_7E | $FF)
     stx.b q_start
     stx.b q_end
-    sep #$30
+    .ForceSetAX 8, 8
 ; begin
     lda.w player_posx+1
     adc #8
@@ -199,8 +199,8 @@ Pathing.UpdatePlayer:
     sta.b q_count
 ; Main pathfinding routine
 _pathfind_main:
-    .ACCU 8
-    .INDEX 8
+    .SoftSetA 8
+    .SoftSetX 8
     @loop:
         lda.b (q_start)
         tax
@@ -283,7 +283,7 @@ Pathing.UpdateEnemy:
 ; set bank and direct page
     phb
     .ChangeDataBank $7E
-    rep #$30
+    .ForceSetAX 16, 16
     phd
     pea pathfind_enemy_data - $20
     pld
@@ -291,7 +291,7 @@ Pathing.UpdateEnemy:
     ldx #loword(tempData_7E | $FF)
     stx.b q_start
     stx.b q_end
-    sep #$30
+    .ForceSetAX 8, 8
     lda #0
     sta.b q_count
 ; set entity positions
@@ -329,7 +329,7 @@ Pathing.UpdateEnemy:
         bne @loop_entities
 @end_entities:
 ; setup tile addresses
-    rep #$30
+    .ForceSetAX 16, 16
     lda.l currentRoomTileTypeTableAddress
     sta.b tile
     dec A
@@ -344,7 +344,7 @@ Pathing.UpdateEnemy:
     sbc #24
     sta.b tile_up
 ; main
-    sep #$30
+    .ForceSetAX 8, 8
     lda.b q_count
     bne +
         pld
@@ -360,7 +360,7 @@ Pathing.UpdateEnemyNearest:
 ; set bank and direct page
     phb
     .ChangeDataBank $7E
-    rep #$30
+    .ForceSetAX 16, 16
     phd
     pea pathfind_nearest_enemy_id - $20
     pld
@@ -368,7 +368,7 @@ Pathing.UpdateEnemyNearest:
     ldx #loword(tempData_7E | $FF)
     stx.b q_start
     stx.b q_end
-    sep #$30
+    .ForceSetAX 8, 8
     lda #0
     sta.b q_count
 ; set entity positions
@@ -406,7 +406,7 @@ Pathing.UpdateEnemyNearest:
         bne @loop_entities
 @end_entities:
     ; check entity count
-    sep #$30
+    .ForceSetAX 8, 8
     lda.b q_count
     bne +
         pld

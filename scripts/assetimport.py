@@ -318,7 +318,7 @@ def insert_splat_run(out, x, y, length, ctx):
     # Finalize
     out.write(
 """    jsl GroundAddOp
-    sep #$20
+    .ForceSetA 8
 """)
     ctx["length"] = length
     ctx["x"] = x
@@ -336,7 +336,7 @@ for splat in json_splats:
     splat_number += 1
     out_inc.write(
 """Splat.{}:
-    sep #$30
+    .ForceSetAX 8, 8
     lda #{}
     sta.b $04
 """.format(name, splat["palette"]))

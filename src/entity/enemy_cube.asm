@@ -1,7 +1,7 @@
 .include "base.inc"
 
-.BANK ROMBANK_ENTITYCODE SLOT "ROM"
-.SECTION "Entity Enemy Cube" FREE
+.BANK $00 SLOT "ROM"
+.SECTION "Entity Enemy Cube Extra" SUPERFREE
 
 .DEFINE BASE_HEALTH 72
 
@@ -24,7 +24,7 @@
 .DEFINE STATE_MOVE_MID 4
 .DEFINE STATE_MOVE_END 6
 
-_frame_index_topleft:
+enemycube_frame_index_topleft:
     .db $10
     .db $10
     .db $10
@@ -42,7 +42,7 @@ _frame_index_topleft:
     .db $0A
     .db $0B
 
-_frame_index_topright:
+enemycube_frame_index_topright:
     .db $11
     .db $11
     .db $11
@@ -60,7 +60,7 @@ _frame_index_topright:
     .db $14
     .db $14
 
-_frame_index_bottomleft:
+enemycube_frame_index_bottomleft:
     .db $00
     .db $01
     .db $02
@@ -78,7 +78,7 @@ _frame_index_bottomleft:
     .db $0C
     .db $0C
 
-_frame_index_bottom_right:
+enemycube_frame_index_bottom_right:
     .db $15
     .db $15
     .db $15
@@ -96,14 +96,29 @@ _frame_index_bottom_right:
     .db $16
     .db $16
 
+enemycube_midframes_by_direction:
+    .db  0 ; PATH_DIR_NULL
+    .db  8 ; PATH_DIR_DOWN
+    .db  4 ; PATH_DIR_RIGHT
+    .db  4 ; PATH_DIR_LEFT
+    .db 12 ; PATH_DIR_UP
+    .db  0 ; PATH_DIR_UPLEFT
+    .db  0 ; PATH_DIR_UPRIGHT
+    .db  0 ; PATH_DIR_DOWNLEFT
+    .db  0 ; PATH_DIR_DOWNRIGHT
+    .db  0 ; PATH_DIR_NONE
+
 ; set frame to A
-_set_frame:
-    .ACCU 16
-    .INDEX 16
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefinel "enemycube_set_frame__"
+    .SoftSetA 16
+    .SoftSetX 16
     ; setup
     cmp.w _current_frame,Y
     bne +
-        rts
+        rtl
     +:
     sta.w _current_frame,Y
     pea $7F7F
@@ -117,7 +132,7 @@ _set_frame:
     ; upload sprite
     .REPT 4 INDEX i
         ldx.w _current_frame,Y
-        lda.l _frame_index_topleft + 16*i - 1,X
+        lda.l enemycube_frame_index_topleft + 16*i - 1,X
         and #$FF00
         lsr
         clc
@@ -130,16 +145,25 @@ _set_frame:
         tax
         jsl Spriteman.WriteSpriteToRawSlot
         ldy.b _tmp_entityid
-        rep #$30
+        .ForceSetAX 16, 16
         pla
         pla
     .ENDR
     pla
-    rts
+    rtl
+.endproc
 
-entity_enemy_cube_init:
-    .ACCU 16
-    .INDEX 16
+.ENDS
+
+.BANK ROMBANK_ENTITYCODE SLOT "ROM"
+.SECTION "Entity Enemy Cube" FREE
+
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "entity_enemy_cube_init", "IEntityInit"
+    .SoftSetA 16
+    .SoftSetX 16
     inc.w currentRoomEnemyCount
     ; setup
     lda #$FFFF
@@ -149,7 +173,7 @@ entity_enemy_cube_init:
     lda #BASE_HEALTH
     sta.w entity_health,Y
     ; get sprite slots
-    sep #$30
+    .ForceSetAX 8, 8
     .REPT 4 INDEX i
         .spriteman_get_raw_slot_lite
         ldy.b _tmp_entityid
@@ -159,43 +183,44 @@ entity_enemy_cube_init:
         sta.w _gfxptr.{i+1}+1,Y
     .ENDR
     ; load palette
-    rep #$30
+    .ForceSetAX 16, 16
     ldy #loword(palettes.enemy.isaac_cube)
     lda #10
     jsl Palette.find_or_upload_opaque
-    rep #$30
+    .ForceSetAX 16, 16
     ldy.b _tmp_entityid
     txa
     sta.w _palette,Y
     ; allocate sprite ram
-    rep #$30
+    .ForceSetAX 16, 16
     .PaletteIndex_X_ToSpriteDef_A
     ora #sprite.enemy.isaac_cube
     jsl Spriteman.NewBufferRef
-    rep #$30
+    .ForceSetAX 16, 16
     ldy.b _tmp_entityid
     txa
     sta.w _spritebuffer,Y
     ; put initial sprite
-    rep #$30
+    .ForceSetAX 16, 16
     lda #0
-    jsr _set_frame
+    .call "enemycube_set_frame__"
     ; put initial values
-    sep #$30
+    .ForceSetAX 8, 8
     lda #16
     sta.w entity_timer,Y
     lda #0
     sta.w entity_state,Y
     sta.w _current_rotation,Y
-    rep #$20
+    .ForceSetA 16
     lda #ENTITY_FLAGS_BLOCKING | ENTITY_FLAGS_NEAREST_ENEMY_TARGET
     sta.w loword(entity_flags),Y
     ; end
     rts
+.endproc
 
 _state_idle:
-    .ACCU 8
-    .INDEX 8
+    .SoftSetA 8
+    .SoftSetX 8
     lda.w entity_timer,Y
     beq @allow_next_dir
         dec A
@@ -267,21 +292,9 @@ _state_idle:
     ldy.b _tmp_entityid
     rts
 
-_midframes_by_direction:
-    .db  0 ; PATH_DIR_NULL
-    .db  8 ; PATH_DIR_DOWN
-    .db  4 ; PATH_DIR_RIGHT
-    .db  4 ; PATH_DIR_LEFT
-    .db 12 ; PATH_DIR_UP
-    .db  0 ; PATH_DIR_UPLEFT
-    .db  0 ; PATH_DIR_UPRIGHT
-    .db  0 ; PATH_DIR_DOWNLEFT
-    .db  0 ; PATH_DIR_DOWNRIGHT
-    .db  0 ; PATH_DIR_NONE
-
 _state_move_start:
-    .ACCU 8
-    .INDEX 8
+    .SoftSetA 8
+    .SoftSetX 8
     lda.w entity_timer,Y
     dec A
     sta.w entity_timer,Y
@@ -302,22 +315,22 @@ _state_move_start:
             sta.w _current_rotation,Y
         @no_dir:
         ; set frame
-        rep #$30
+        .ForceSetAX 16, 16
         lda.w _current_direction,Y
         and #$00FF
         tax
-        lda.l _midframes_by_direction,X
+        lda.l enemycube_midframes_by_direction,X
         clc
         adc.w _current_rotation,Y
         and #$00FF
-        jsr _set_frame
-        sep #$30
+        jsl enemycube_set_frame__
+        .ForceSetAX 8, 8
 @continue:
     jmp _handle_directional_movement
 
 _state_move_mid:
-    .ACCU 8
-    .INDEX 8
+    .SoftSetA 8
+    .SoftSetX 8
     lda.w entity_timer,Y
     dec A
     sta.w entity_timer,Y
@@ -346,17 +359,17 @@ _state_move_mid:
             sta.w _current_rotation,Y
         @keep_rot:
         ; set frame
-        rep #$30
+        .ForceSetAX 16, 16
         lda.w _current_rotation,Y
         and #$00FF
-        jsr _set_frame
-        sep #$30
+        jsl enemycube_set_frame__
+        .ForceSetAX 8, 8
 @continue:
     jmp _handle_directional_movement
 
 _state_move_end:
-    .ACCU 8
-    .INDEX 8
+    .SoftSetA 8
+    .SoftSetX 8
     lda.w entity_timer,Y
     dec A
     sta.w entity_timer,Y
@@ -369,8 +382,8 @@ _state_move_end:
     jmp _handle_directional_movement
 
 _handle_directional_movement:
-    .ACCU 8
-    .INDEX 8
+    .SoftSetA 8
+    .SoftSetX 8
     ldx.w _current_direction,Y
     lda.l Path_X,X
     clc
@@ -388,12 +401,13 @@ _funclist_state:
     .dw _state_move_mid
     .dw _state_move_end
 
-entity_enemy_cube_tick:
-    .ACCU 16
-    .INDEX 16
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "entity_enemy_cube_tick", "IEntityTick"
     sty.b _tmp_entityid
 ; check signal
-    sep #$30 ; 8B AXY
+    .ForceSetAX 8, 8
     lda #ENTITY_SIGNAL_KILL
     and.w entity_signal,Y
     beq +
@@ -403,13 +417,16 @@ entity_enemy_cube_tick:
         adc #12
         sta.w entity_box_y1,Y
         jsl Entity.PutSplatter
-        jsl Entity.Free
+        .PushContext
+        .ForceSetAX 16, 16
+        .call "Entity.Free"
         rts
+        .PopContextSoft
     +:
 ; AI
     lda.w loword(entity_damageflash),Y
     bne @no_tick
-    sep #$30
+    .ForceSetAX 8, 8
     lda #1
     bit.w tickCounter
     beq @no_tick
@@ -417,8 +434,8 @@ entity_enemy_cube_tick:
     jsr (_funclist_state,X)
     @no_tick:
 ; draw
-    sep #$20
-    rep #$10
+    .ForceSetA 8
+    .ForceSetX 16
     ldx.w objectIndex
     ; x pos
     lda.w entity_box_x1,Y
@@ -473,13 +490,13 @@ entity_enemy_cube_tick:
         ldx.b $02
         sta.w objectData.{i+1}.tileid,X
     .ENDR
-    rep #$30
+    .ForceSetAX 16, 16
     .REPT 4
         .SetCurrentObjectS_Inc
     .ENDR
     ldy.b _tmp_entityid
 ; insert hitbox
-    sep #$20
+    .ForceSetA 8
     lda #ENTITY_MASKSET_ENEMY
     sta.w entity_mask,Y
     lda #0
@@ -498,26 +515,29 @@ entity_enemy_cube_tick:
 @no_player_col:
     ; end
     rts
+.endproc
 
-entity_enemy_cube_free:
-    .ACCU 16
-    .INDEX 16
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "entity_enemy_cube_free", "IEntityFree"
     dec.w currentRoomEnemyCount
     sty.b _tmp_entityid
     .REPT 4 INDEX i
         ldx.w _gfxptr.{i+1},Y
         jsl Spriteman.FreeRawSlot
-        rep #$30
+        .ForceSetAX 16, 16
         ldy.b _tmp_entityid
     .ENDR
     ; free palette
     ldx.w _palette,Y
     jsl Palette.free
     ; free buffer
-    rep #$30
+    .ForceSetAX 16, 16
     ldy.b _tmp_entityid
     ldx.w _spritebuffer,Y
     jsl Spriteman.UnrefBuffer
     rts
+.endproc
 
 .ENDS

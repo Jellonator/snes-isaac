@@ -458,7 +458,7 @@
     .IF do_cmp
         cmp #0
     .ENDIF
-    rep #$20
+    .ForceSetA 16
     bpl @@@@@\.\@pos
         ora #$FF00
         .IF !b_is_zero
@@ -486,17 +486,18 @@
 .MACRO .POPN ARGS NUM
     .IF NUM == 0
     .ELIF NUM == 1
-        sep #$20
+        .ForceSetA 8
         pla
     .ELIF NUM == 2
-        rep #$20
+        .ForceSetA 16
         pla
     .ELIF NUM == 4
-        rep #$20
+        .ForceSetA 16
         pla
         pla
     .ELSE
-        rep #$21
+        rep #$21 ; also clears C flag for later adc
+        .SoftSetA 16
         tsc
         adc #NUM
         tcs
@@ -586,6 +587,7 @@
     clc
     xce ; disable emulation mode
     rep #$38 ; disable binary mode
+    .SoftSetAX 16, 16
     ldx #$1FFF
     txs ; reset stack pointer
     pea $0000
@@ -594,33 +596,33 @@
     lda #0
     tcd
     jsl ResetRegisters
-    sep #$20
+    .ForceSetA 8
     lda #$01
     sta MEMSEL ; set FastROM
 .ENDM
 
 .MACRO .DisableINT
     sei
-    sep #$20
+    .ForceSetA 8
     lda #1
     sta.w NMITIMEN
 .ENDM
 
 .MACRO .EnableINT
-    sep #$20
+    .ForceSetA 8
     cli
     lda #$81
     sta NMITIMEN
 .ENDM
 
 .MACRO .DisableRENDER
-    sep #$20
+    .ForceSetA 8
     lda #%10000000
     sta.w INIDISP
 .ENDM
 
 .MACRO .EnableRENDER
-    sep #$20
+    .ForceSetA 8
     lda.w roomBrightness
     sta.w INIDISP
 .ENDM

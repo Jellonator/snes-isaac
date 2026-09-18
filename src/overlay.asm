@@ -4,14 +4,14 @@
 .SECTION "Overlay"
 
 Overlay.init:
-    rep #$30
+    .ForceSetAX 16, 16
     lda #0
     sta.l textLines
     sta.l textDisplayTimer
     rtl
 
 Overlay.update:
-    rep #$30
+    .ForceSetAX 16, 16
     lda.l textDisplayTimer
     beq @end
         dec A
@@ -26,8 +26,8 @@ Overlay.update:
 ; Returns length as A
 ; Ideally, A should be in 8b mode
 String.len:
-    .INDEX 16
-    .ACCU 8
+    .SoftSetX 16
+    .SoftSetA 8
     ldy #0
 @loop:
     lda.w $0000,X
@@ -36,12 +36,12 @@ String.len:
     iny
     jmp @loop
 @end:
-    rep #$20
+    .ForceSetA 16
     tya
     rtl
 
 Overlay.clear:
-    rep #$30
+    .ForceSetAX 16, 16
     lda.l textLines
     bne +
         rtl
@@ -56,7 +56,7 @@ Overlay.clear:
     asl
     tax
     ; put info
-    rep #$30
+    .ForceSetAX 16, 16
     lda.l textLines
     cmp #8
     bcc +
@@ -71,10 +71,10 @@ Overlay.clear:
     sta.l vqueueOps.1.numBytes,X
     lda #BG1_TILE_BASE_ADDR + 32 * 8
     sta.l vqueueOps.1.vramAddr,X
-    sep #$20
+    .ForceSetA 8
     lda #VQUEUE_MODE_VRAM_CLEAR
     sta.l vqueueOps.1.mode,X
-    rep #$30
+    .ForceSetAX 16, 16
     lda #0
     sta.l textLines
     rtl
@@ -88,11 +88,11 @@ Overlay.putline:
     .DEFINE STRING_PTR $03
     .DEFINE BEGIN $05
     .DEFINE END $06
-    rep #$10
-    sep #$20
+    .ForceSetX 16
+    .ForceSetA 8
     stx.b STRING_PTR
     jsl String.len
-    sep #$20
+    .ForceSetA 8
     sta.b STRING_LEN
     lda #32
     sec
@@ -110,13 +110,13 @@ Overlay.putline:
     adc.b STRING_LEN
     sta.b END
     ; get and increment vqueueBinOffset
-    rep #$20
+    .ForceSetA 16
     lda.l vqueueBinOffset
     sec
     sbc #64
     sta.l vqueueBinOffset
     tax
-    sep #$20
+    .ForceSetA 8
     ; put PREFIX
     lda #0
 @loop_prefix:
@@ -154,7 +154,7 @@ Overlay.putline:
     jmp @loop_suffix
 @end_suffix:
 ; put additional flair
-    rep #$30
+    .ForceSetAX 16, 16
     lda.b BEGIN
     and #$00FF
     asl
@@ -177,7 +177,7 @@ Overlay.putline:
     sta.l $7F0000,X
 ; write to vqueue
     ; get vqueue ptr
-    rep #$30
+    .ForceSetAX 16, 16
     lda.l vqueueNumOps
     inc A
     sta.l vqueueNumOps
@@ -201,7 +201,7 @@ Overlay.putline:
     clc
     adc #BG1_TILE_BASE_ADDR + 32 * 8
     sta.l vqueueOps.1.vramAddr,X
-    sep #$20
+    .ForceSetA 8
     lda #$7F
     sta.l vqueueOps.1.aAddr+2,X
     lda #VQUEUE_MODE_VRAM

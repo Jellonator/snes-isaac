@@ -29,8 +29,8 @@
 .SECTION "Entity Item Pedastal" SUPERFREE
 
 _item_pedastal_get_variant_from_pool:
-    .ACCU 16
-    .INDEX 16
+    .SoftSetA 16
+    .SoftSetX 16
     lda.w entity_variant,Y
     sta.b $00
     and #ENTITY_ITEMPEDASTAL_POOLFLAG
@@ -74,7 +74,7 @@ _item_pedastal_get_variant_from_pool:
     adc.l DIVU_REMAINDER
     tax
     lda.l bankaddr(Item.pool.item_room),X
-    sep #$20
+    .ForceSetA 8
     sta.w entity_variant,Y
     ; maybe set price
     lda.b $00
@@ -87,26 +87,26 @@ _item_pedastal_get_variant_from_pool:
     sta.w _item_price,Y
     jmp @end_set_price
     @price_with_money:
-        rep #$30
+        .ForceSetAX 16, 16
         lda.w entity_variant,Y
         and #$00FF
         asl
         tax
         lda.l Item.items,X
         tax
-        sep #$20
+        .ForceSetA 8
         lda.l bankaddr(Item.items) + itemdef_t.shop_price,X
         sta.w _item_price,Y
         jmp @end_set_price
     @price_with_hearts:
-        rep #$30
+        .ForceSetAX 16, 16
         lda.w entity_variant,Y
         and #$00FF
         asl
         tax
         lda.l Item.items,X
         tax
-        sep #$20
+        .ForceSetA 8
         lda.l bankaddr(Item.items) + itemdef_t.flags,X
         ldx #ITEMPRICE_HEART_BASE+1
         bit #ITEMFLAG_COST_TWO_HEARTS
@@ -118,7 +118,7 @@ _item_pedastal_get_variant_from_pool:
         jmp @end_set_price
 @end_set_price:
     ; set infostore
-    rep #$20
+    .ForceSetA 16
     lda #$00
     sta.b $00
     lda.w entity_variant,Y
@@ -127,7 +127,7 @@ _item_pedastal_get_variant_from_pool:
     tax
     lda.l Item.items,X
     tax
-    sep #$20
+    .ForceSetA 8
     lda.l bankaddr(Item.items) | itemdef_t.charge_init,X
     sta.b $00
     lda.l bankaddr(Item.items) | itemdef_t.flags,X
@@ -141,8 +141,8 @@ _item_pedastal_get_variant_from_pool:
     rts
 
 true_item_pedastal_init:
-    .ACCU 16
-    .INDEX 16
+    .SoftSetA 16
+    .SoftSetX 16
     lda #0
     sta.w _has_put_text,Y
     lda.b entityExecutionContext
@@ -157,14 +157,14 @@ true_item_pedastal_init:
         plp
         ply
 @skip_get_pool:
-    sep #$20
+    .ForceSetA 8
     lda #STATE_BASE
     sta.w _item_state,Y
     jsr _item_pedastal_alloc_gfx
     rtl
 
 _item_pedastal_alloc_gfx:
-    rep #$30
+    .ForceSetAX 16, 16
     lda.w entity_variant,Y
     and #$00FF
     asl
@@ -186,7 +186,7 @@ _item_pedastal_alloc_gfx:
     lda.b $10
     ldy.b $12
     jsl Palette.find_or_upload_opaque
-    rep #$30
+    .ForceSetAX 16, 16
     ply
     txa
     sta.w _item_palette,Y
@@ -195,7 +195,7 @@ _item_pedastal_alloc_gfx:
     ora.b $14
     phy
     jsl Spriteman.NewSpriteRef
-    rep #$30
+    .ForceSetAX 16, 16
     ply
     txa
     sta.w _item_gfxptr_item,Y
@@ -203,18 +203,18 @@ _item_pedastal_alloc_gfx:
     lda #sprite.item_pedastal
     phy
     jsl Spriteman.NewSpriteRef
-    rep #$30
+    .ForceSetAX 16, 16
     ply
     txa
     sta.w _item_gfxptr_pedastal,Y
     rts
 
 _draw_normal:
-    .ACCU 8
-    .INDEX 16
-    rep #$30
+    .SoftSetA 8
+    .SoftSetX 16
+    .ForceSetAX 16, 16
     lda #0
-    sep #$20
+    .ForceSetA 8
     ; tile ID 1
     ldx.w _item_gfxptr_item,Y
     lda.w loword(spriteTableValue + spritetab_t.spritemem),X
@@ -264,7 +264,7 @@ _draw_normal:
     ora #%00100001
     sta.w objectData.1.flags,X
     ; increment object index
-    rep #$30
+    .ForceSetAX 16, 16
     phy
     .SetCurrentObjectS_Inc
     .SetCurrentObjectS_Inc
@@ -272,11 +272,11 @@ _draw_normal:
     rts
 
 _draw_no_pedastal:
-    .ACCU 8
-    .INDEX 16
-    rep #$30
+    .SoftSetA 8
+    .SoftSetX 16
+    .ForceSetAX 16, 16
     lda #0
-    sep #$20
+    .ForceSetA 8
     ; tile ID 1
     ldx.w _item_gfxptr_item,Y
     lda.w loword(spriteTableValue + spritetab_t.spritemem),X
@@ -299,15 +299,15 @@ _draw_no_pedastal:
     ora #%00100001
     sta.w objectData.1.flags,X
     ; increment object index
-    rep #$30
+    .ForceSetAX 16, 16
     phy
     .SetCurrentObjectS_Inc
     ply
     rts
 
 _set_text_with_hearts:
-    .ACCU 16
-    .INDEX 16
+    .SoftSetA 16
+    .SoftSetX 16
     ; determine palette
     lda.w _item_price,Y
     and #$00FF
@@ -350,8 +350,8 @@ _set_text_with_hearts:
     rts
 
 true_item_pedastal_tick_base:
-    .ACCU 8
-    .INDEX 16
+    .SoftSetA 8
+    .SoftSetX 16
     sty.b $10
     lda _item_price,Y
     beq @no_price
@@ -360,9 +360,9 @@ true_item_pedastal_tick_base:
     @no_price:
         jsr _draw_normal
     @end_draw:
-    rep #$30
+    .ForceSetAX 16, 16
     ldy.b $10
-    sep #$20
+    .ForceSetA 8
     lda.b entityExecutionContext
     cmp #ENTITY_CONTEXT_STANDARD
     bnel @skip_set_text
@@ -373,7 +373,7 @@ true_item_pedastal_tick_base:
         lda #1
         sta.w _has_put_text,Y
         ; get address
-        rep #$30
+        .ForceSetAX 16, 16
         lda.w entity_box_x1,Y
         and #$00FF
         lsr
@@ -437,9 +437,9 @@ true_item_pedastal_tick_base:
         lda #0
         sta.l vqueueMiniOps.4.data,X
 @skip_set_text:
-    rep #$30
+    .ForceSetAX 16, 16
     lda #0
-    sep #$20
+    .ForceSetA 8
     .EntityEasySetBox 16 12
     ; check player position, and potentially change state
     lda.w playerData.anim_wait_timer
@@ -454,19 +454,20 @@ true_item_pedastal_tick_base:
     cmp #ITEMPRICE_HEART_BASE
     bcs @col_price_red_hearts
     @col_price_money:
-        .ACCU 8
-        .INDEX 16
+        .SoftSetA 8
+        .SoftSetX 16
         lda.w playerData.money
         cmp.w _item_price,Y
         bccl @no_player_col
         jsr _do_item_pickup
         ; take money
-        rep #$20
+        .ForceSetA 16
         lda.w loword(entity_flags),Y
         ora #ENTITY_FLAGS_DONT_SERIALIZE
         sta.w loword(entity_flags),Y
         ; reduce money
         sep #$28
+        .SoftSetA 8
         lda.w _item_price,Y
         beq @dont_subtract_money
             lda.w playerData.money
@@ -482,20 +483,20 @@ true_item_pedastal_tick_base:
         @dont_subtract_money:
         rep #$08
         ; set price to 0
-        sep #$20
+        .ForceSetA 8
         lda #0
         sta.w _item_price,Y
         jmp @no_player_col
     @col_price_red_hearts:
-        .ACCU 8
-        .INDEX 16
+        .SoftSetA 8
+        .SoftSetX 16
         ; check hearts
         lda.w _item_price,Y
         and #$0F
         sta.b $12
         jsl Player.count_red_heart_slots
-        .ACCU 8
-        .INDEX 8
+        .SoftSetA 8
+        .SoftSetX 8
         ldy.b $10
         cmp.b $12
         bcc @no_player_col
@@ -504,7 +505,7 @@ true_item_pedastal_tick_base:
         ; take heart containers
         @loop:
             jsl Player.take_heart_container
-            sep #$20
+            .ForceSetA 8
             dec.b $12
             bne @loop
         ldy.b $10
@@ -512,15 +513,15 @@ true_item_pedastal_tick_base:
     @col_price_soul_hearts:
         ; TODO: soul heart cost
     @col_price_none:
-        .ACCU 8
-        .INDEX 16
+        .SoftSetA 8
+        .SoftSetX 16
         jsr _do_item_pickup
 @no_player_col:
     rtl
 
 _do_item_pickup:
     ; set state
-    sep #$20
+    .ForceSetA 8
     lda #STATE_PICKUP
     sta.w _item_state,Y
     lda #60
@@ -532,12 +533,12 @@ _do_item_pickup:
     php
     lda #22
     jsl Player.set_head_frame
-    sep #$30
+    .ForceSetAX 8, 8
     lda #30
     jsl Player.set_body_frame
     ; display pickup text
     jsl Overlay.clear
-    rep #$30
+    .ForceSetAX 16, 16
     lda $02,S
     and #$00FF
     tay
@@ -554,27 +555,27 @@ _do_item_pickup:
     adc #itemdef_t.name
     tax
     jsl Overlay.putline
-    rep #$30
+    .ForceSetAX 16, 16
     lda $02,S
     clc
     adc #itemdef_t.tagline
     tax
     jsl Overlay.putline
-    rep #$30
+    .ForceSetAX 16, 16
     plb
     plx
     ; end
     plp
     ply
-    rep #$20
+    .ForceSetA 16
     lda.w loword(entity_flags),Y
     ora #ENTITY_FLAGS_DONT_SERIALIZE
     sta.w loword(entity_flags),Y
     rts
 
 true_item_pedastal_tick_pickup:
-    .ACCU 8
-    .INDEX 16
+    .SoftSetA 8
+    .SoftSetX 16
     ; death timer >:)
     lda.w _item_anim_timer,Y
     dec A
@@ -584,9 +585,9 @@ true_item_pedastal_tick_pickup:
         jsr _item_pedastal_pickup
     +:
     ; tile ID 1
-    rep #$30
+    .ForceSetAX 16, 16
     lda #0
-    sep #$20
+    .ForceSetA 8
     ldx.w _item_gfxptr_item,Y
     lda.w loword(spriteTableValue + spritetab_t.spritemem),X
     tax
@@ -606,7 +607,7 @@ true_item_pedastal_tick_pickup:
     ora #%00100001
     sta.w objectData.1.flags,X
     ; increment index
-    rep #$30
+    .ForceSetAX 16, 16
     phy
     php
     .SetCurrentObjectS_Inc
@@ -615,12 +616,12 @@ true_item_pedastal_tick_pickup:
     ply
 
 true_item_pedastal_tick_empty:
-    .ACCU 8
-    .INDEX 16
+    .SoftSetA 8
+    .SoftSetX 16
     jsr _check_and_erase_text
-    rep #$30
+    .ForceSetAX 16, 16
     lda #0
-    sep #$20
+    .ForceSetA 8
     lda.w _item_price,Y
     bne @skip
     ; tile ID 2
@@ -639,35 +640,35 @@ true_item_pedastal_tick_empty:
     ; flags
     lda #%00100001
     sta.w objectData.1.flags,X
-    rep #$30
+    .ForceSetAX 16, 16
     .SetCurrentObjectS_Inc
 @skip:
     rtl
 
 _item_pedastal_free_gfx:
-    rep #$20
+    .ForceSetA 16
     phy
     lda.w _item_gfxptr_item,Y
     tax
     jsl Spriteman.UnrefSprite
-    rep #$30
+    .ForceSetAX 16, 16
     ply
     lda.w _item_gfxptr_pedastal,Y
     tax
     phy
     jsl Spriteman.UnrefSprite
-    rep #$30
+    .ForceSetAX 16, 16
     ply
     ldx.w _item_palette,Y
     jsl Palette.free
     rts
 
 true_item_pedastal_free:
-    .ACCU 16
-    .INDEX 16
+    .SoftSetA 16
+    .SoftSetX 16
     sty.b $10
     ; fallback to give item if in held state
-    sep #$20
+    .ForceSetA 8
     lda.w _item_state,Y
     cmp #STATE_PICKUP
     bne +
@@ -675,13 +676,13 @@ true_item_pedastal_free:
     +:
     ; clear gfx
     jsr _item_pedastal_free_gfx
-    sep #$30
+    .ForceSetAX 8, 8
     ldy.b $10
     jsr _check_and_erase_text
     rtl
 
 _check_and_erase_text:
-    sep #$30
+    .ForceSetAX 8, 8
     lda.b entityExecutionContext
     cmp #ENTITY_CONTEXT_STANDARD
     bne @no_erase_price_text
@@ -690,7 +691,7 @@ _check_and_erase_text:
         lda #0
         sta.w _has_put_text,Y
         ; get address
-        rep #$30
+        .ForceSetAX 16, 16
         lda.w entity_box_x1,Y
         and #$00FF
         lsr
@@ -733,8 +734,8 @@ _check_and_erase_text:
     rts
 
 _item_pedastal_pickup:
-    rep #$10
-    sep #$20
+    .ForceSetX 16
+    .ForceSetA 8
     lda.w _item_infostore,Y
     bit #ITEM_INFOSTORE_ACTIVE
     bne @active
@@ -745,7 +746,7 @@ _item_pedastal_pickup:
         jsl Item.add
         plp
         ply
-        sep #$20
+        .ForceSetA 8
         lda #STATE_EMPTY
         sta.w _item_state,Y
         rts
@@ -784,7 +785,7 @@ _item_pedastal_pickup:
         rts
 @prev_not_null:
     jsr _item_pedastal_free_gfx
-    sep #$20
+    .ForceSetA 8
     lda $02,S
     sta.w entity_variant,Y
     lda #STATE_BASE
@@ -794,7 +795,7 @@ _item_pedastal_pickup:
     sta.w loword(entity_flags),Y
     jsr _item_pedastal_alloc_gfx
 ; end
-    rep #$20
+    .ForceSetA 16
     pla
     rts
 
@@ -804,8 +805,8 @@ _item_pedastal_pickup:
 .SECTION "Entity Item Pedastal Hooks" FREE
 
 item_pedastal_init:
-    .ACCU 16
-    .INDEX 16
+    .SoftSetA 16
+    .SoftSetX 16
     pla
     phk
     pha
@@ -816,12 +817,12 @@ item_pedastal_free:
     rts
 
 item_pedastal_tick:
-    .ACCU 16
-    .INDEX 16
+    .SoftSetA 16
+    .SoftSetX 16
     pla
     phk
     pha
-    sep #$20
+    .ForceSetA 8
     lda.w _item_state,Y
     cmp #STATE_PICKUP
     bne +

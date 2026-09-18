@@ -39,19 +39,19 @@ _PxDataTbl_Start:
     .db %00000001
 
 GroundFullUpdate:
-    sep #$20
+    .ForceSetA 8
     lda #1
     sta.l needResetEntireGround
     rtl
 
 GroundReset:
-    sep #$20
+    .ForceSetA 8
     lda #1
     sta.l needResetEntireGround
     ; jmp GroundOpClear
 
 GroundOpClear:
-    rep #$30
+    .ForceSetAX 16, 16
     lda #0
     sta.l groundOpListStart
     sta.l groundOpListEnd
@@ -91,7 +91,7 @@ _BitTbl:
 .DEFINE tmp2 $14
 
 _AddTileToQueue:
-    rep #$30
+    .ForceSetAX 16, 16
 ; determine if we need to skip
     lda.b tile_index
     and #$0007
@@ -152,14 +152,14 @@ _AddTileToQueue:
     inc A
     sta.l vqueueNumOps
     ; set param, bAddr for vmem
-    sep #$20
+    .ForceSetA 8
     lda #VQUEUE_MODE_VRAM
     sta.w loword(vqueueOps.1.mode),Y
     ; set aAddr bank
     lda #$7F
     sta.w loword(vqueueOps.1.aAddr+2),Y
     ; vram_addr = (row * 8 * 3 + column) * 8
-    rep #$20
+    .ForceSetA 16
     lda.b bytei
     and #$FFF0
     lsr
@@ -179,7 +179,7 @@ GroundProcessOps:
     phb
     .ChangeDataBank $7F
 ; start
-    rep #$30
+    .ForceSetAX 16, 16
     lda.w loword(groundOpListEnd)
     cmp.w loword(groundOpListStart)
     bne @loop
@@ -253,7 +253,7 @@ GroundProcessOps:
         ; same tile:
 ;   value = _PxDataTbl_Start[start_index % 8] & _PxDataTbl_End[end_index % 8]
             ldx.b start_subi
-            sep #$20
+            .ForceSetA 8
             lda.l _PxDataTbl_Start,X
             ldx.b end_subi
             and.l _PxDataTbl_End,X
@@ -276,12 +276,12 @@ GroundProcessOps:
             sta.w loword(groundCharacterData),Y
 ;   tilepalettes[tile_index] = palette
             jsr _AddTileToQueue
-            rep #$20
+            .ForceSetA 16
 ;   return
             jmp @nextOp
         @differentTiles:
 ; tiles[tilebyte_index] |= _PxDataTbl_Start[start_index % 8]
-            sep #$20
+            .ForceSetA 8
             ldx.b start_subi
             ldy.b bytei
 
@@ -302,7 +302,7 @@ GroundProcessOps:
             sta.w loword(groundCharacterData),Y
 
             jsr _AddTileToQueue
-            rep #$20
+            .ForceSetA 16
 ; ++ start_index;
             inc.b start_i
             inc.b tile_index
@@ -317,7 +317,7 @@ GroundProcessOps:
             beq @inner_loop_end
             @inner_loop:
 ;   tiles[tilebyte_index] |= 0xFF
-                sep #$20
+                .ForceSetA 8
                 ldx.b bytei
 
                 lda.w loword(groundCharacterData),X
@@ -329,7 +329,7 @@ GroundProcessOps:
                 sta.w loword(groundCharacterData)+1,X
 
                 jsr _AddTileToQueue
-                rep #$20
+                .ForceSetA 16
 ;   tilebyte_index += 16
                 lda.b bytei
                 clc
@@ -344,7 +344,7 @@ GroundProcessOps:
                 bne @inner_loop
             @inner_loop_end:
 ; tiles[tilebyte_index] |= _PxDataTbl_End[end_index % 8]
-            sep #$20
+            .ForceSetA 8
             ldx.b end_subi
             ldy.b bytei
 
@@ -363,7 +363,7 @@ GroundProcessOps:
             sta.w loword(groundCharacterData),Y
 
             jsr _AddTileToQueue
-            rep #$20
+            .ForceSetA 16
     ; next index
     @nextOp:
         lda.w loword(groundOpListEnd)
@@ -391,10 +391,10 @@ _ClearTiles:
 ; length        [db] $05
 ; palette       [db] $04
 GroundAddOp:
-    rep #$30
+    .ForceSetAX 16, 16
     lda.l groundOpListStart
     tax
-    sep #$20
+    .ForceSetA 8
     ; set line
     ; only allow lines 64-192, subtract 64
     lda $06
@@ -426,7 +426,7 @@ GroundAddOp:
     lda $04
     sta.l groundOpList_palette,X
     ; add to list
-    rep #$30
+    .ForceSetAX 16, 16
     txa
     inc A
     and #MAX_GROUND_OPS-1

@@ -28,7 +28,7 @@
 
     ; Clear table
     table_clear{postfix}:
-        rep #$30
+        .ForceSetAX 16, 16
         ldx #2 * (nBuckets + nCellar)
         lda #-1
     @loop:
@@ -42,7 +42,7 @@
     ; insert A into table, allowing duplicates
     ; Returns new slot as X
     table_insert_dup{postfix}:
-        rep #$30
+        .ForceSetAX 16, 16
         sta.b $00
     ; get pointer offset from A
         .CheapModA16 nBuckets
@@ -78,7 +78,7 @@
     ; Returns new or found slot as X
     ; Also, Y will be >0 if the value already existed; otherwise 0.
     table_insert_unique{postfix}:
-        rep #$30
+        .ForceSetAX 16, 16
         sta.b $00
         ; get pointer offset from A
         .CheapModA16 nBuckets
@@ -140,7 +140,7 @@
 
     ; Returns table offset in X
     table_find{postfix}:
-        rep #$30
+        .ForceSetAX 16, 16
         sta.b $00
         ; get pointer offset from A
         .CheapModA16 nBuckets
@@ -166,7 +166,7 @@
     ; Remove value A from table
     table_remove{postfix}:
     ; slightly modified 'find' routine,
-        rep #$30
+        .ForceSetAX 16, 16
         sta.b $00
         ; get pointer offset from A
         .CheapModA16 nBuckets

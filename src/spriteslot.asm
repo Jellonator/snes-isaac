@@ -1,4 +1,5 @@
 .include "base.inc"
+.include "spriteslot.inc"
 
 .BANK $01 SLOT "ROM"
 .SECTION "SpriteSlotManager"
@@ -10,7 +11,7 @@ Spriteman.Init:
     phb
     .ChangeDataBank $7E
     ; initialize sprite queue
-    sep #$30
+    .ForceSetAX 8, 8
     lda #64
     sta.w loword(spiteTableAvailableSlots)
     ldx #SPRITE_TABLE_SIZE
@@ -45,7 +46,7 @@ Spriteman.Init:
 ; The sprite tile index to write into the object table can be looked up via 
 ; SpriteSlotIndexTable.
 Spriteman.GetRawSlot:
-    sep #$30
+    .ForceSetAX 8, 8
     .spriteman_get_raw_slot_lite
     rtl
 
@@ -58,7 +59,7 @@ Spriteman.GetRawSlot:
 ; Assumes data bank is $7E (though any bank $00-$3F, $80-$CF will also work)
 Spriteman.WriteSpriteToRawSlot:
     phb ; >1
-    rep #$30 ; 16 bit AXY
+    .ForceSetAX 16, 16
 ; increment vqueueops; just trust that we aren't already in bank $7F
     .VQueueOpToA
     inc.w vqueueNumOps
@@ -88,7 +89,7 @@ Spriteman.WriteSpriteToRawSlot:
     sta.w loword(vqueueOps.1.aAddr),Y
     lda $01 + 4,S
     sta.w loword(vqueueOps.2.aAddr),Y
-    sep #$20 ; 8B A
+    .ForceSetA 8
     lda $05 + 4,S
     sta.w loword(vqueueOps.1.aAddr+2),Y
     sta.w loword(vqueueOps.2.aAddr+2),Y
@@ -99,7 +100,7 @@ Spriteman.WriteSpriteToRawSlot:
 ; Frees a sprite slot
 ; Assumes data bank is $7E
 Spriteman.FreeRawSlot:
-    sep #$30
+    .ForceSetAX 8, 8
     .spriteman_free_raw_slot_lite
     rtl
 
@@ -136,8 +137,8 @@ Spriteman.NewSpriteRef:
     sta.b SPRITE_ID
     ; insert unique sprite; determine if sprite ID already in use
     jsl table_insert_unique_sprite
-    .INDEX 16
-    .ACCU 16
+    .SoftSetX 16
+    .SoftSetA 16
     cpy #0
     beq @did_insert
     ; value already existed, increment ref and return
@@ -146,17 +147,17 @@ Spriteman.NewSpriteRef:
 @did_insert:
     stx.b SPRITE_TABLE_INDEX
     ; get sprite slot
-    sep #$30
+    .ForceSetAX 8, 8
     .spriteman_get_raw_slot_lite
     ; update sprite table
     txa
-    rep #$10 ; 16b X, 8b A
+    .ForceSetX 16
     ldy.b SPRITE_TABLE_INDEX
     sta.w loword(spriteTableValue.1.spritemem),Y
     lda.b #1
     sta.w loword(spriteTableValue.1.count),Y
 ; write sprite data
-    rep #$30 ; 16 bit AXY
+    .ForceSetAX 16, 16
     .VQueueOpToA
     tax
     lda.w vqueueNumOps
@@ -218,16 +219,16 @@ Spriteman.NewSpriteRef:
         tax
         jsr (_newspriteref_upload_modes, X)
         ; swizzle step 2: Swizzle
-        rep #$30
+        .ForceSetAX 16, 16
         ldx.w vqueueBinOffset
         lda.b TEMP
         ldy #4
         jsl SpritePaletteSwizzle_B7F
         ; step 3: set new address
-        sep #$20
+        .ForceSetA 8
         lda #$7F
         sta.b SPRITE_BANK
-        rep #$20
+        .ForceSetA 16
         lda.w vqueueBinOffset
         sta.b SPRITE_ADDR
 @no_swizzle:
@@ -238,7 +239,7 @@ Spriteman.NewSpriteRef:
     clc
     adc #64
     sta.l vqueueOps.2.aAddr,X
-    sep #$20
+    .ForceSetA 8
     lda.b SPRITE_BANK
     sta.l vqueueOps.1.aAddr+2,X
     sta.l vqueueOps.2.aAddr+2,X
@@ -255,8 +256,8 @@ Spriteman.NewSpriteRef:
 Spriteman.NewSpriteRefEmpty:
     ; insert unique sprite; determine if sprite ID already in use
     jsl table_insert_unique_sprite
-    .INDEX 16
-    .ACCU 16
+    .SoftSetX 16
+    .SoftSetA 16
     cpy #0
     beq @did_insert
     ; value already existed, increment ref and return
@@ -266,16 +267,16 @@ Spriteman.NewSpriteRefEmpty:
 @did_insert:
     stx.b SPRITE_TABLE_INDEX
     ; get sprite slot
-    sep #$30
+    .ForceSetAX 8, 8
     .spriteman_get_raw_slot_lite
     ; update sprite table
     txa
-    rep #$10 ; 16b X, 8b A
+    .ForceSetX 16
     ldx.b SPRITE_TABLE_INDEX
     sta.w loword(spriteTableValue.1.spritemem),X
     lda.b #1
     sta.w loword(spriteTableValue.1.count),X
-    rep #$30
+    .ForceSetAX 16, 16
     lda #1
     rtl
 
@@ -284,14 +285,14 @@ _newspriteref_upload_modes:
     .dw _newspriteref_upload_lz4
 
 _newspriteref_upload_direct:
-    .ACCU 16
-    .INDEX 16
+    .SoftSetA 16
+    .SoftSetX 16
     .CopyROMToVQueueBin P_DIR, SPRITE_ADDR, 128
     rts
 
 _newspriteref_upload_lz4:
-    .ACCU 16
-    .INDEX 16
+    .SoftSetA 16
+    .SoftSetX 16
     ; destination
     lda.w vqueueBinOffset
     sec
@@ -318,16 +319,16 @@ _newspriteref_upload_lz4:
 ; Increment reference
 ; Assumes data bank is $7E
 Spriteman.IncRef:
-    .INDEX 16
-    sep #$20 ; 8b A
+    .SoftSetX 16
+    .ForceSetA 8
     inc.w loword(spriteTableValue.1.count),X
     rtl
 
 ; Decrement reference
 ; Assumes data bank is $7E
 Spriteman.UnrefSprite:
-    .INDEX 16
-    sep #$20 ; 8b A
+    .SoftSetX 16
+    .ForceSetA 8
     dec.w loword(spriteTableValue.1.count),X
     beq @remove
         ; --X->count > 0
@@ -336,17 +337,17 @@ Spriteman.UnrefSprite:
     stx.b $00
     lda.w loword(spriteTableValue.1.spritemem),X
     tax
-    sep #$30
+    .ForceSetAX 8, 8
     .spriteman_free_raw_slot_lite
-    rep #$30 ; 16b AXY
+    .ForceSetAX 16, 16
     ldx.b $00
     lda.w loword(spriteTableKey),X
     jsl table_remove_sprite
     rtl
 
 _spriteman_allocbuffer_fail:
-    .INDEX 8
-    .ACCU 8
+    .SoftSetX 8
+    .SoftSetA 8
     ldx #$00
     rtl
 ; Allocate [A] tiles of sprite *buffer* in RAM
@@ -355,7 +356,7 @@ _spriteman_allocbuffer_fail:
 ; swizzling, or other operations on sprite data that is intended to be uploaded
 ; to VRAM on demand. e.g., animated sprites with custom palettes.
 Spriteman.AllocRawBuffer:
-    sep #$30
+    .ForceSetAX 8, 8
     ldx #1
 ; search for block with appropriate size
     @loop_search:
@@ -426,7 +427,7 @@ Spriteman.AllocRawBuffer:
 
 ; Free sprite memory buffer [X]
 Spriteman.FreeRawBuffer:
-    sep #$30
+    .ForceSetAX 8, 8
     cpx #0
     beq @skip_merge_prev
     ; indicate block is inactive
@@ -493,8 +494,8 @@ Spriteman.NewBufferRef:
     sta.b SPRITE_ID
 ; insert unique sprite; determine if sprite ID already in use
     jsl table_insert_unique_sprite
-    .INDEX 16
-    .ACCU 16
+    .SoftSetX 16
+    .SoftSetA 16
     cpy #0
     beq @did_insert
     ; value already existed, increment ref and return
@@ -516,17 +517,17 @@ Spriteman.NewBufferRef:
     and #$00FF
 ; get sprite buffer index
     jsl Spriteman.AllocRawBuffer
-    .ACCU 8
-    .INDEX 8
+    .SoftSetA 8
+    .SoftSetX 8
     txa
     ; write buffer index to spritemem, and set count to 1
-    rep #$10 ; 16b X, 8b A
+    .ForceSetX 16
     ldy.b SPRITE_TABLE_INDEX
     sta.w loword(spriteTableValue.1.spritemem),Y
     lda #1
     sta.w loword(spriteTableValue.1.count),Y
 ; copy sprite data into buffer.
-    rep #$30
+    .ForceSetAX 16, 16
     ldx.b SPRITE_DEF_PTR
     lda.l SpriteDefs + entityspriteinfo_t.mode,X
     and #$000F
@@ -534,13 +535,13 @@ Spriteman.NewBufferRef:
     tax
     jsr (_newbufferref_upload_methods,X)
 ; now, see if we need to swizzle, by checking 'mode' and 'palette'
-    rep #$30
+    .ForceSetAX 16, 16
     ldx.b SPRITE_DEF_PTR
     lda.l SpriteDefs + entityspriteinfo_t.mode,X
     bit #SPRITEALLOCMODE_SWIZZLE
     beq @no_swizzle
         ; check if palette mode needs swizzle
-        rep #$20 ; 16b A
+        .ForceSetA 16
         lda.b SPRITE_ID
         rol
         rol
@@ -557,7 +558,7 @@ Spriteman.NewBufferRef:
         lda.b TEMP
         jsl SpritePaletteSwizzle_B7F
 @no_swizzle:
-    rep #$30
+    .ForceSetAX 16, 16
     ldx.b SPRITE_TABLE_INDEX
     rtl
 
@@ -566,8 +567,8 @@ _newbufferref_upload_methods:
     .dw _newbufferref_upload_lz4
 
 _newbufferref_upload_direct:
-    .ACCU 16
-    .INDEX 16
+    .SoftSetA 16
+    .SoftSetX 16
     ldx.b SPRITE_DEF_PTR
     ; size = ntiles * 128
     lda.l SpriteDefs + entityspriteinfo_t.ntiles,X
@@ -587,7 +588,7 @@ _newbufferref_upload_direct:
     lda.l SpriteDefs + entityspriteinfo_t.sprite_addr,X
     sta.l DMA0_SRCL
     ; srcH = sprite_bank
-    sep #$20 ; 8b A
+    .ForceSetA 8
     lda.l SpriteDefs + entityspriteinfo_t.sprite_bank,X
     sta.l DMA0_SRCH
     ; WMADDH = $7F
@@ -605,8 +606,8 @@ _newbufferref_upload_direct:
     rts
 
 _newbufferref_upload_lz4:
-    .ACCU 16
-    .INDEX 16
+    .SoftSetA 16
+    .SoftSetX 16
     ldx.b SPRITE_DEF_PTR
     lda.l SpriteDefs + entityspriteinfo_t.ntiles,X
     and #$00FF
@@ -639,8 +640,8 @@ _newbufferref_upload_lz4:
 ; Decrement reference
 ; Assumes data bank is $7E
 Spriteman.UnrefBuffer:
-    .INDEX 16
-    sep #$20 ; 8b A
+    .SoftSetX 16
+    .ForceSetA 8
     dec.w loword(spriteTableValue.1.count),X
     beq @remove
         ; --X->count > 0
@@ -649,9 +650,9 @@ Spriteman.UnrefBuffer:
     stx.b $00
     lda.w loword(spriteTableValue.1.spritemem),X
     tax
-    sep #$30
+    .ForceSetAX 8, 8
     jsl Spriteman.FreeRawBuffer
-    rep #$30 ; 16b AXY
+    .ForceSetAX 16, 16
     ldx.b $00
     lda.w loword(spriteTableKey),X
     jsl table_remove_sprite
@@ -664,9 +665,9 @@ Spriteman.UnrefBuffer:
 ;     Y - number of tiles
 ; Only the third and fourth bitplanes are modified
 SpritePaletteSwizzle_B7F:
-    .INDEX 16
-    .ACCU 16
-    sep #$20
+    .SoftSetX 16
+    .SoftSetA 16
+    .ForceSetA 8
     cmp #PALETTE_SWIZZLE_B_AB
     beql _Swizzle_B7F_B_AB@entry
     cmp #PALETTE_SWIZZLE_A_A
@@ -676,15 +677,15 @@ SpritePaletteSwizzle_B7F:
     rtl
 
 _Swizzle_B7F_A_A:
-    .INDEX 16
-    .ACCU 8
+    .SoftSetX 16
+    .SoftSetA 8
 @loop:
-    rep #$20
+    .ForceSetA 16
     txa
     clc
     adc #32
     tax
-    sep #$20
+    .ForceSetA 8
 @entry:
     .REPT 8 INDEX i
         lda.l $7F0000+2*i+16,X
@@ -695,8 +696,8 @@ _Swizzle_B7F_A_A:
     rtl
 
 _Swizzle_B7F_B_AB:
-    .INDEX 16
-    .ACCU 8
+    .SoftSetX 16
+    .SoftSetA 8
 ; This differs a bit from the other swizzle functions.
 ; First, we use the D register as a temp register.
 ; Because we have to save the D register, a unique entry is used.
@@ -704,12 +705,12 @@ _Swizzle_B7F_B_AB:
     phd
     bra @loop_entry
 @loop:
-    rep #$20
+    .ForceSetA 16
     txa
     clc
     adc #32
     tax
-    sep #$20
+    .ForceSetA 8
 @loop_entry:
     .REPT 8 INDEX i
         lda.l $7F0000+2*i+17,X
@@ -725,15 +726,15 @@ _Swizzle_B7F_B_AB:
     rtl
 
 _Swizzle_B7F_AB_B:
-    .INDEX 16
-    .ACCU 8
+    .SoftSetX 16
+    .SoftSetA 8
 @loop:
-    rep #$20
+    .ForceSetA 16
     txa
     clc
     adc #32
     tax
-    sep #$20
+    .ForceSetA 8
 @entry:
     .REPT 8 INDEX i
         lda.l $7F0000+2*i+17,X
@@ -751,8 +752,8 @@ _Swizzle_B7F_AB_B:
 ;     Y - number of tiles
 ; Only the third and fourth bitplanes are modified
 SpritePaletteOpaqueify_7F:
-    rep #$10
-    sep #$20
+    .ForceSetX 16
+    .ForceSetA 8
     stz.b $00
     stz.b $01
     stz.b $02
@@ -816,12 +817,12 @@ SpritePaletteOpaqueify_7F:
     .ENDR
     dey
     beq @loop_end
-    rep #$20
+    .ForceSetA 16
     txa
     clc
     adc #32
     tax
-    sep #$20
+    .ForceSetA 8
     jmp @loop_begin
 @loop_end:
     rtl

@@ -16,8 +16,8 @@
 ; DEFAULT
 
 _entity_zombie_default_init:
-    .ACCU 16
-    .INDEX 16
+    .SoftSetA 16
+    .SoftSetX 16
     ; upload head
     phy
     php
@@ -28,7 +28,7 @@ _entity_zombie_default_init:
     and #$00FF
     tax
     jsl Spriteman.WriteSpriteToRawSlot
-    rep #$20
+    .ForceSetA 16
     pla
     pla
     pla
@@ -37,10 +37,10 @@ _entity_zombie_default_init:
     rtl
 
 _entity_zombie_default_tick:
-    .ACCU 16
-    .INDEX 16
+    .SoftSetA 16
+    .SoftSetX 16
 ; get movement target
-    sep #$30
+    .ForceSetAX 8, 8
     jsl Entity.Enemy.PathfindTargetPlayer
     lda.b entityTargetFound
     beq @no_target
@@ -49,14 +49,14 @@ _entity_zombie_default_tick:
         .Convert8To16_SIGNED 0, 0
         ; .ShiftRight_SIGN 1, 0
         sta.b $02
-        sep #$20
+        .ForceSetA 8
         lda.l CosTable8,X
         .Convert8To16_SIGNED 0, 0
         ; .ShiftRight_SIGN 1, 0
         sta.b $00
         jmp @end_target
     @no_target:
-        rep #$20
+        .ForceSetA 16
         stz.b $00
         stz.b $02
     @end_target:
@@ -110,9 +110,9 @@ _entity_zombie_default_tick:
 ; update animation
     jsr _zombie_update_walk_animation
 ; load & set gfx
-    rep #$20
+    .ForceSetA 16
     lda #0
-    sep #$30
+    .ForceSetAX 8, 8
     ; determine palette
     ldx #%00100001
     lda.w loword(entity_damageflash),Y
@@ -150,7 +150,7 @@ _entity_zombie_default_tick:
     lda.b $00
     sta.w objectData.1.tileid,X
     ; inc object index
-    rep #$30
+    .ForceSetAX 16, 16
     phy
     .SetCurrentObjectS_Inc
     .SetCurrentObjectS_Inc
@@ -158,8 +158,8 @@ _entity_zombie_default_tick:
     rtl
 
 _entity_zombie_default_free:
-    .ACCU 16
-    .INDEX 16
+    .SoftSetA 16
+    .SoftSetX 16
     rtl
 
 ; HEADLESS
@@ -168,23 +168,23 @@ _entity_zombie_default_free:
 .DEFINE _zombie_headless_timer loword(entity_char_custom.8+1)
 
 _entity_zombie_headless_init:
-    .ACCU 16
-    .INDEX 16
+    .SoftSetA 16
+    .SoftSetX 16
     lda #0
     sta.w _zombie_headless_target_angle,Y
     rtl
 
 _entity_zombie_headless_tick:
-    .ACCU 16
-    .INDEX 16
+    .SoftSetA 16
+    .SoftSetX 16
 ; update angle, if needed
-    sep #$30
+    .ForceSetAX 8, 8
     lda.w _zombie_headless_timer,Y
     dec A
     bpl +
-        rep #$30
+        .ForceSetAX 16, 16
         jsl Random.Quick16
-        sep #$30
+        .ForceSetAX 8, 8
         sta.w _zombie_headless_target_angle,Y
         xba
         and #$1F
@@ -198,7 +198,7 @@ _entity_zombie_headless_tick:
     .Convert8To16_SIGNED 0, 0
     .ShiftRight_SIGN 1, 0
     sta.b $02
-    sep #$20
+    .ForceSetA 8
     lda.l CosTable8,X
     .Convert8To16_SIGNED 0, 0
     .ShiftRight_SIGN 1, 0
@@ -241,7 +241,7 @@ _entity_zombie_headless_tick:
     .CMPS_END
     sta.w entity_velocy,Y
 ; move and collide
-    sep #$20
+    .ForceSetA 8
     clc
     lda.w entity_box_x1,Y
     adc #4
@@ -249,12 +249,12 @@ _entity_zombie_headless_tick:
     lda.w entity_box_y1,Y
     adc #4
     sta.w entity_box_y1,Y
-    rep #$20
+    .ForceSetA 16
     lda #8 + 8*$0100
     sta.b $00
-    sep #$30
+    .ForceSetAX 8, 8
     jsl Entity.MoveAndCollide
-    sep #$20
+    .ForceSetA 8
     sec
     lda.w entity_box_x1,Y
     sbc #4
@@ -265,9 +265,9 @@ _entity_zombie_headless_tick:
 ; update animation
     jsr _zombie_update_walk_animation
 ; load & set gfx
-    rep #$20
+    .ForceSetA 16
     lda #0
-    sep #$30
+    .ForceSetAX 8, 8
     ; determine palette
     ldx #%00100001
     lda.w loword(entity_damageflash),Y
@@ -294,15 +294,15 @@ _entity_zombie_headless_tick:
     lda.b $02
     sta.w objectData.1.flags,X
     ; inc object index
-    rep #$30
+    .ForceSetAX 16, 16
     phy
     .SetCurrentObjectS_Inc
     ply
     rtl
 
 _entity_zombie_headless_free:
-    .ACCU 16
-    .INDEX 16
+    .SoftSetA 16
+    .SoftSetX 16
     rtl
 
 ; TABLES
@@ -330,8 +330,8 @@ EntityZombie.FreeTable:
 ; variant dispatch functions
 
 EntityZombie.init:
-    .ACCU 16
-    .INDEX 16
+    .SoftSetA 16
+    .SoftSetX 16
     lda.w entity_variant,Y
     and #$00FF
     asl
@@ -339,8 +339,8 @@ EntityZombie.init:
     jmp (EntityZombie.InitTable,X)
 
 EntityZombie.tick:
-    .ACCU 16
-    .INDEX 16
+    .SoftSetA 16
+    .SoftSetX 16
     lda.w entity_variant,Y
     and #$00FF
     asl
@@ -348,8 +348,8 @@ EntityZombie.tick:
     jmp (EntityZombie.TickTable,X)
 
 EntityZombie.free:
-    .ACCU 16
-    .INDEX 16
+    .SoftSetA 16
+    .SoftSetX 16
     lda.w entity_variant,Y
     and #$00FF
     asl
@@ -359,7 +359,7 @@ EntityZombie.free:
 ; animation functions
 
 _zombie_update_walk_animation:
-    rep #$20
+    .ForceSetA 16
     lda.w entity_velocy,Y
     .ABS_A16_POSTLOAD
     sta.b $00
@@ -381,14 +381,14 @@ _zombie_update_walk_animation:
     sta.w _zombie_walk_timer,Y
     lda #%00100001
     sta.w _zombie_body_flags,Y
-    sep #$20
+    .ForceSetA 8
     lda.w _zombie_walk_frame,Y
     jmp _zombie_set_walk_frame
 @vertical_up_next_frame:
-    .ACCU 16
+    .SoftSetA 16
     lda #0
     sta.w _zombie_walk_timer,Y
-    sep #$20
+    .ForceSetA 8
     lda.w _zombie_walk_frame,Y
     dec A
     bpl +
@@ -400,22 +400,22 @@ _zombie_update_walk_animation:
     lda.w _zombie_walk_frame,Y
     jmp _zombie_set_walk_frame
 @vertical_down:
-    .ACCU 16
+    .SoftSetA 16
     clc
     adc.w _zombie_walk_timer,Y
     cmp #WALK_TIMER_FRAME_DELAY
     bcs @vertical_down_next_frame
     sta.w _zombie_walk_timer,Y
-    sep #$20
+    .ForceSetA 8
     lda #%00100001
     sta.w _zombie_body_flags,Y
     lda.w _zombie_walk_frame,Y
     jmp _zombie_set_walk_frame
 @vertical_down_next_frame:
-    .ACCU 16
+    .SoftSetA 16
     lda #0
     sta.w _zombie_walk_timer,Y
-    sep #$20
+    .ForceSetA 8
     lda.w _zombie_walk_frame,Y
     inc A
     cmp #6
@@ -428,17 +428,17 @@ _zombie_update_walk_animation:
     lda.w _zombie_walk_frame,Y
     jmp _zombie_set_walk_frame
 @not_moving:
-    .ACCU 16
+    .SoftSetA 16
     lda #0
     sta.w _zombie_walk_timer,Y
-    sep #$20
+    .ForceSetA 8
     sta.w _zombie_walk_frame,Y
     lda #%00100001
     sta.w _zombie_body_flags,Y
     lda # 0
     jmp _zombie_set_walk_frame
 @horizontal:
-    .ACCU 16
+    .SoftSetA 16
     lda.w entity_velocx,Y
     beq @not_moving
     .ABS_A16_POSTLOAD
@@ -449,10 +449,10 @@ _zombie_update_walk_animation:
     sta.w _zombie_walk_timer,Y
     jmp @horizontal_update_frame
 @horizontal_next_frame:
-    .ACCU 16
+    .SoftSetA 16
     lda #0
     sta.w _zombie_walk_timer,Y
-    sep #$20
+    .ForceSetA 8
     lda.w _zombie_walk_frame,Y
     inc A
     cmp #6
@@ -461,7 +461,7 @@ _zombie_update_walk_animation:
     +:
     sta.w _zombie_walk_frame,Y
 @horizontal_update_frame:
-    sep #$20
+    .ForceSetA 8
     lda #%00100001
     xba
     lda.w entity_velocx+1,Y
@@ -478,7 +478,7 @@ _zombie_update_walk_animation:
     rts
 
 _zombie_set_walk_frame:
-    .ACCU 8
+    .SoftSetA 8
     ; don't upload frame if it is active
     cmp.w _zombie_body_frame,Y
     bne +
@@ -489,7 +489,7 @@ _zombie_set_walk_frame:
     phy
     php
     pea bankbyte(spritedata.enemy_zombie) * $0101
-    rep #$20
+    .ForceSetA 16
     and #$00FF
     xba
     lsr
@@ -503,7 +503,7 @@ _zombie_set_walk_frame:
     and #$00FF
     tax
     jsl Spriteman.WriteSpriteToRawSlot
-    rep #$20
+    .ForceSetA 16
     pla
     pla
     pla
@@ -519,9 +519,12 @@ _zombie_set_walk_frame:
 .DEFINE BASE_HEALTH_MAIN 20
 .DEFINE BASE_HEALTH_BODY 12
 
-entity_zombie_init:
-    .ACCU 16
-    .INDEX 16
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "entity_zombie_init", "IEntityInit"
+    .SoftSetA 16
+    .SoftSetX 16
     inc.w currentRoomEnemyCount
     ; default info
     lda.w entity_variant,Y
@@ -532,7 +535,7 @@ entity_zombie_init:
     sta.w entity_health,Y
     lda #0
     sta.w _zombie_walk_timer,Y
-    sep #$30
+    .ForceSetAX 8, 8
     sta.w _zombie_walk_frame,Y
     sta.w _zombie_body_flags,Y
     lda #$FF
@@ -545,26 +548,28 @@ entity_zombie_init:
     txa
     sta.w _zombie_gfxptr.2,Y
     ; call init function
-    rep #$30
+    .ForceSetAX 16, 16
     lda #ENTITY_FLAGS_NEAREST_ENEMY_TARGET
     sta.w loword(entity_flags),Y
     jsl EntityZombie.init
     rts
+.endproc
 
-entity_zombie_tick:
-    .ACCU 16
-    .INDEX 16
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "entity_zombie_tick", "IEntityTick"
 ; call tick function
     jsl EntityZombie.tick
 ; check signal
-    sep #$30 ; 8B AXY
+    .ForceSetAX 8, 8
     lda #ENTITY_SIGNAL_KILL
     and.w entity_signal,Y
     beq @not_kill
         ; put blood splatter
         phy
         jsl Entity.PutSplatter
-        sep #$30
+        .ForceSetAX 8, 8
         ply
         ; check variant ($FF indicates true kill)
         ldx.w entity_variant,Y
@@ -572,17 +577,20 @@ entity_zombie_tick:
         cmp #$FF
         bne @not_headless
             ; We have perished
-            jsl Entity.Free
+            .PushContext
+            .ForceSetAX 16, 16
+            .call "Entity.Free"
             rts
+            .PopContextSoft
         @not_headless:
         ; replace with new variant
         xba
         lda #ENTITY_TYPE_ENEMY_ZOMBIE
-        rep #$30
+        .ForceSetAX 16, 16
         jsl Entity.Replace
     @not_kill:
     ; set box
-    sep #$30
+    .ForceSetAX 8, 8
     lda.w entity_box_x1,Y
     clc
     adc #16
@@ -599,8 +607,8 @@ entity_zombie_tick:
     lda #0
     sta.w entity_signal,Y
     ; put shadow
-    sep #$20
-    rep #$10
+    .ForceSetA 8
+    .ForceSetX 16
     ldx.w objectIndex
     inx
     inx
@@ -611,23 +619,28 @@ entity_zombie_tick:
     jsl Entity.Shadow.PutSmall
     plx
     ; Check collision with player
-    sep #$20
+    .ForceSetA 8
     jsl Entity.Enemy.TickContactDamage
     ; end
     rts
+.endproc
 
-entity_zombie_free:
-    .ACCU 16
-    .INDEX 16
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "entity_zombie_free", "IEntityFree"
+    .SoftSetA 16
+    .SoftSetX 16
     dec.w currentRoomEnemyCount
     ; call free function
     jsl EntityZombie.free
     ; free sprites
-    sep #$30
+    .ForceSetAX 8, 8
     ldx.w _zombie_gfxptr.1,Y
     .spriteman_free_raw_slot_lite
     ldx.w _zombie_gfxptr.2,Y
     .spriteman_free_raw_slot_lite
     rts
+.endproc
 
 .ENDS

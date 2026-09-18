@@ -4,7 +4,7 @@
 .SECTION "PlayerItem" FREE
 
 Item.reset_items:
-    sep #$30
+    .ForceSetAX 8, 8
     stz.w playerData.playerItemCount
     ldx #0
     -:
@@ -16,7 +16,7 @@ Item.reset_items:
 
 ; Add item in 'A' to player items
 Item.add:
-    sep #$30
+    .ForceSetAX 8, 8
     ; add to list
     ldx.w playerData.playerItemCount
     sta.w playerData.playerItemList,X
@@ -25,11 +25,11 @@ Item.add:
     tax
     inc.w playerData.playerItemStackNumber,X
     ; set flags
-    rep #$20
+    .ForceSetA 16
     lda #PLAYER_FLAG_INVALIDATE_ITEM_CACHE
     tsb.w playerData.flags
     ; call pickup code
-    rep #$30
+    .ForceSetAX 16, 16
     stz.w playerData.tear_timer
     txa
     and #$00FF
@@ -42,7 +42,7 @@ Item.add:
 
 ; Remove item 'A' from player items
 Item.remove:
-    sep #$30
+    .ForceSetAX 8, 8
     ; search and remove from list
     ldx #PLAYER_MAX_ITEM_COUNT-1
     @loop:
@@ -67,7 +67,7 @@ Item.remove:
     dec.w playerData.playerItemStackNumber,X
     dec.w playerData.playerItemCount
     ; set flags
-    rep #$20
+    .ForceSetA 16
     lda #PLAYER_FLAG_INVALIDATE_ITEM_CACHE
     tsb.w playerData.flags
     rtl
@@ -78,7 +78,7 @@ Item.remove:
 ;    - setting correct charge
 ;    - swapping/creating item pedastals
 Item.set_active:
-    sep #$30
+    .ForceSetAX 8, 8
     cmp.w playerData.current_active_item
     ; bne +
     ;     rtl
@@ -86,7 +86,7 @@ Item.set_active:
     sta.w playerData.current_active_item
     ; get pointer to item
 Item.update_active_palette:
-    rep #$30
+    .ForceSetAX 16, 16
     lda.w playerData.current_active_item
     and #$00FF
     asl
@@ -97,7 +97,7 @@ Item.update_active_palette:
     ; Don't copy here; sprite changes depending on active status
     ; Battery charge handler will upload sprite instead.
     ; upload palette
-    rep #$30
+    .ForceSetAX 16, 16
     lda.l bankaddr(Item.items) | itemdef_t.palette_ptr,X
     tax
     .REPT 16 INDEX i
@@ -140,7 +140,7 @@ Item.tear_rate_base_table:
 .DEFINE PLAYER_SPEED_MAXIMUM 48
 .DEFINE PLAYER_SPEED_MINIMUM 12
 Item.check_and_recalculate:
-    rep #$20
+    .ForceSetA 16
     lda #PLAYER_FLAG_INVALIDATE_ITEM_CACHE
     trb.w playerData.flags
     bne + ; flag wasn't set, return
@@ -150,9 +150,9 @@ Item.check_and_recalculate:
     jsl Familiars.RefreshFamiliars
     ; reset stats to base
     jsl Player.reset_stats
-    rep #$20
+    .ForceSetA 16
     stz.w playerData.tearflags
-    sep #$10
+    .ForceSetX 8
 ; TEAR RATE
     lda #PLAYER_STATBASE_TEAR_RATE_INDEX
     .ADDMULTITEM ITEMID_SAD_ONION, P_IMM, 4
@@ -215,7 +215,7 @@ _health_up_pickup:
     rts
 
 _pickup_map:
-    sep #$20
+    .ForceSetA 8
     lda #$FF
     sta.l numTilesToUpdate
     rts
@@ -458,7 +458,7 @@ Item.poolsize:
     .dw Item.pool.devil@end - Item.pool.devil
 
 Item.try_use_active:
-    rep #$30
+    .ForceSetAX 16, 16
     lda.w playerData.current_active_item
     and #$00FF
     bne @has_item
@@ -469,7 +469,7 @@ Item.try_use_active:
     lda.l Item.items,X
     tax
     stx.b $00
-    sep #$20
+    .ForceSetA 8
     lda.l bankaddr(Item.items) | itemdef_t.charge_use,X
     sta.b $02
     lda.w playerData.current_active_charge
@@ -485,7 +485,7 @@ Item.try_use_active:
 
 ; Returns A=1 if active item does not have full charge
 Item.can_add_charge:
-    rep #$30
+    .ForceSetAX 16, 16
     lda.w playerData.current_active_item
     and #$00FF
     bne @has_item
@@ -497,7 +497,7 @@ Item.can_add_charge:
     lda.l Item.items,X
     tax
     stx.b $00
-    sep #$20
+    .ForceSetA 8
     lda.l bankaddr(Item.items) | itemdef_t.charge_max,X
     sta.b $02
     lda.w playerData.current_active_charge
@@ -511,12 +511,12 @@ Item.can_add_charge:
 
 ; Add `A` charge to current active item
 Item.add_charge_amount:
-    rep #$30
+    .ForceSetAX 16, 16
     sta.b $04
     lda.w playerData.current_active_item
     and #$00FF
     bne @has_item
-        sep #$20
+        .ForceSetA 8
         lda #0
         rtl
 @has_item:
@@ -525,7 +525,7 @@ Item.add_charge_amount:
     lda.l Item.items,X
     tax
     stx.b $00
-    sep #$20
+    .ForceSetA 8
     lda.l bankaddr(Item.items) | itemdef_t.charge_max,X
     sta.b $02
     lda.w playerData.current_active_charge
@@ -538,7 +538,7 @@ Item.add_charge_amount:
 
 ; Add single `charge_use` charge to current active item
 Item.add_charge_battery:
-    rep #$30
+    .ForceSetAX 16, 16
     lda.w playerData.current_active_item
     and #$00FF
     bne @has_item
@@ -550,7 +550,7 @@ Item.add_charge_battery:
     lda.l Item.items,X
     tax
     stx.b $00
-    sep #$20
+    .ForceSetA 8
     lda.l bankaddr(Item.items) | itemdef_t.charge_max,X
     sta.b $02
     lda.l bankaddr(Item.items) | itemdef_t.charge_use,X
@@ -564,11 +564,11 @@ Item.add_charge_battery:
     rtl
 
 _use_deck_of_cards:
-    rep #$30
+    .ForceSetAX 16, 16
     jsl Random.Room.Update8
-    .ACCU 16
+    .SoftSetA 16
     sta.l DIVU_DIVIDEND
-    sep #$30
+    .ForceSetAX 8, 8
     lda #(CONSUMABLEID_TAROT_LAST - CONSUMABLEID_TAROT_FIRST) + 1
     sta.l DIVU_DIVISOR
     .REPT 8
@@ -587,7 +587,7 @@ Item.PickItemFromPool:
     .DEFINE POOLSIZE $03
     .DEFINE TOTALWEIGHT $05
     phb
-    sep #$30
+    .ForceSetAX 8, 8
     ldy #$7E
     phy
     plb ; BANK = $7E
@@ -596,7 +596,7 @@ Item.PickItemFromPool:
     tax
     lda.l Item.poolsize,X
     sta.b POOLSIZE
-    rep #$30
+    .ForceSetAX 16, 16
     txa
     asl
     tax
@@ -679,7 +679,7 @@ Item.PickItemFromPool:
     lda #tempTileData
     sta.b ITEMWEIGHTS
 
-    sep #$20
+    .ForceSetA 8
     ldy #0
     @loop_determine_weight:
         lda [POOLPTR],Y

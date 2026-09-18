@@ -4,13 +4,13 @@
 .SECTION "Hooks" FREE
 
 Hook.PlayerDamage:
-    sep #$30
+    .ForceSetAX 8, 8
     ; fish head
     .PlayerHasTrinketEffect TRINKET_FISH_HEAD
     beq +
         lda #2
         jsl HelperFly.Add
-        sep #$30
+        .ForceSetAX 8, 8
     +:
     rtl
 

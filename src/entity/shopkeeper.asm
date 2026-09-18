@@ -5,12 +5,13 @@
 .BANK $02 SLOT "ROM"
 .SECTION "Entity Shopkeeper" SUPERFREE
 
-true_entity_shopkeeper_tick:
-    .ACCU 16
-    .INDEX 16
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefinel "true_entity_shopkeeper_tick"
     lda #0
     ; check signal
-    sep #$30 ; 8B AXY
+    .ForceSetAX 8, 8
     lda #ENTITY_SIGNAL_KILL
     and.w entity_signal,Y
     beq +
@@ -18,11 +19,14 @@ true_entity_shopkeeper_tick:
         lda.l devil_deal_flags
         ora #DEVILFLAG_BOMBED_SHOPKEEPER
         sta.l devil_deal_flags
-        jsl Entity.Free
+        .PushContext
+        .SetAX 16, 16
+        .call "Entity.Free"
         rtl
+        .PopContextSoft
     +:
 ; draw
-    rep #$10
+    .ForceSetX 16
     .REPT 4 INDEX i
         ldx.w loword(entity_custom.{i+1}),Y
         lda.w loword(spriteTableValue + spritetab_t.spritemem),X
@@ -56,7 +60,7 @@ true_entity_shopkeeper_tick:
     sta.w objectData.2.flags,X
     sta.w objectData.3.flags,X
     sta.w objectData.4.flags,X
-    rep #$30
+    .ForceSetAX 16, 16
     phy
     .SetCurrentObjectS_Inc
     .SetCurrentObjectS_Inc
@@ -74,12 +78,14 @@ true_entity_shopkeeper_tick:
     adc #16
     sta.w loword(entity_ysort),Y
     rtl
+.endproc
 
-true_entity_shopkeeper_init:
-    .ACCU 16
-    .INDEX 16
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefinel "true_entity_shopkeeper_init"
     ; set hp
-    rep #$30
+    .SetAX 16, 16
     lda #1
     sta.w entity_health,Y
     ; load palette
@@ -87,7 +93,7 @@ true_entity_shopkeeper_init:
     ldy #loword(palettes.shopkeeper)
     lda #8
     jsl Palette.find_or_upload_opaque
-    rep #$30
+    .ForceSetAX 16, 16
     ply
     txa
     sta.w _palette,Y
@@ -99,46 +105,51 @@ true_entity_shopkeeper_init:
         lda #sprite.shopkeepers.{i}
         ora.b $10
         jsl Spriteman.NewSpriteRef
-        rep #$30
+        .ForceSetAX 16, 16
         ply
         txa
         sta.w loword(entity_custom.{i+1}),Y
     .ENDR
     rtl
+.endproc
 
 .ENDS
 
 .BANK ROMBANK_ENTITYCODE SLOT "ROM"
 .SECTION "Entity Shopkeeper Hooks" FREE
 
-entity_shopkeeper_init:
-    .ACCU 16
-    .INDEX 16
-    jsl true_entity_shopkeeper_init
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "entity_shopkeeper_init", "IEntityInit"
+    .call "true_entity_shopkeeper_init"
     rts
+.endproc
 
-entity_shopkeeper_free:
-    .ACCU 16
-    .INDEX 16
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "entity_shopkeeper_free", "IEntityFree"
     ; free sprite
     .REPT 4 INDEX i
         phy
         ldx.w loword(entity_custom.{i+1}),Y
         jsl Spriteman.UnrefSprite
-        rep #$30
+        .ForceSetAX 16, 16
         ply
     .ENDR
     ; free palette
     ldx.w _palette,Y
     jsl Palette.free
     rts
+.endproc
 
-entity_shopkeeper_tick:
-    .ACCU 16
-    .INDEX 16
-    pla
-    phk
-    pha
-    jml true_entity_shopkeeper_tick
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "entity_shopkeeper_tick", "IEntityTick"
+    .call "true_entity_shopkeeper_tick"
+    rts
+.endproc
 
 .ENDS

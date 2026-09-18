@@ -10,7 +10,7 @@ _save_key:
 
 ; Return A==1 if save key does not match
 _Save.CheckKey:
-    sep #$20
+    .ForceSetA 8
     .REPT 16 INDEX i
         lda.l _save_key+i
         cmp.l saveCheck+i
@@ -24,19 +24,19 @@ _Save.CheckKey:
 
 Save.Init:
     jsl _Save.CheckKey
-    .ACCU 8
+    .SoftSetA 8
     cmp #0
     beq +
         jsl _Save.ClearAll
     +:
-    rep #$30
+    .ForceSetAX 16, 16
     lda #0
     sta.l currentSaveSlot
     rtl
 
 _Save.ClearAll:
     ; init seed timers with random noise from RAM
-    rep #$30
+    .ForceSetAX 16, 16
     ldx #0
     lda #0
 @loop_seed_low:
@@ -54,27 +54,27 @@ _Save.ClearAll:
     bne @loop_seed_high
     sta.l seed_timer_high
     ; clear each save slot
-    rep #$20
+    .ForceSetA 16
     lda #0
     jsl Save.EraseSlot
-    rep #$20
+    .ForceSetA 16
     lda #1
     jsl Save.EraseSlot
-    rep #$20
+    .ForceSetA 16
     lda #2
     jsl Save.EraseSlot
     ; clear each save state
-    sep #$20
+    .ForceSetA 8
     lda #0
     jsl Save.EraseSaveState
-    sep #$20
+    .ForceSetA 8
     lda #1
     jsl Save.EraseSaveState
-    sep #$20
+    .ForceSetA 8
     lda #2
     jsl Save.EraseSaveState
     ; finally, copy save key:
-    sep #$20
+    .ForceSetA 8
     .REPT 16 INDEX i
         lda.l _save_key+i
         sta.l saveCheck+i
@@ -84,7 +84,7 @@ _Save.ClearAll:
 ; Get State of given save state
 Save.IsSavestateInUse:
     ; set up bank
-    sep #$20
+    .ForceSetA 8
     clc
     adc #$21
     phb
@@ -98,7 +98,7 @@ Save.IsSavestateInUse:
 
 ; erase slot A
 Save.EraseSlot:
-    rep #$30
+    .ForceSetAX 16, 16
     and #$00FF
     .MultiplyStatic $0800
     tax
@@ -109,7 +109,7 @@ Save.EraseSlot:
 ; erase save state A
 Save.EraseSaveState:
     ; set up bank
-    sep #$20
+    .ForceSetA 8
     clc
     adc #$21
     phb
@@ -125,14 +125,14 @@ Save.EraseSaveState:
 ; write into save state A
 Save.WriteSaveState:
 ; set up bank
-    sep #$20
+    .ForceSetA 8
     clc
     adc #$21
     phb
     pha
     plb
 ; copy seed
-    rep #$30
+    .ForceSetAX 16, 16
     lda.l gameSeed.low
     sta.w savestate.0.seed_game.low
     lda.l gameSeed.high
@@ -156,7 +156,7 @@ Save.WriteSaveState:
         dex
         bpl @loop_copy_trinket
 ; copy player data
-    sep #$20
+    .ForceSetA 8
     lda.l playerData.money
     sta.w savestate.0.player_money
     lda.l playerData.keys
@@ -198,15 +198,15 @@ Save.WriteSaveState:
 ; copy current room slot
     lda.l currentRoomSlot
     sta.w savestate.0.room_current_slot
-    rep #$20
+    .ForceSetA 16
     lda.l currentFloorIndex
     sta.w savestate.0.floor_current_index
-    sep #$20
+    .ForceSetA 8
 ; copy rooms
     lda.l numUsedMapSlots
     sta.w savestate.0.num_rooms
     sta.b $10
-    rep #$30
+    .ForceSetAX 16, 16
     stz.b $11
     lda #0
     sta.b $12
@@ -217,7 +217,7 @@ Save.WriteSaveState:
         ldy.b $14
         jsl Save.WriteRoom
         ; inc
-        rep #$30
+        .ForceSetAX 16, 16
         lda.b $12
         clc
         adc #_sizeof_roominfo_t
@@ -244,7 +244,7 @@ Save.WriteSaveState:
         ldx.b $12
         jsl Save.WriteRoomEntities
         ; inc
-        rep #$30
+        .ForceSetAX 16, 16
         lda.b $12
         clc
         adc #_sizeof_roominfo_t
@@ -258,7 +258,7 @@ Save.WriteSaveState:
     sta.w $0002,Y
     sta.w $0004,Y
 ; copy roomslots
-    sep #$20
+    .ForceSetA 8
     lda.l roomslot_star
     sta.w savestate.0.roomslot_star
     lda.l roomslot_boss
@@ -272,7 +272,7 @@ Save.WriteSaveState:
     lda.l roomslot_secret2
     sta.w savestate.0.roomslot_secret2
 ; end
-    sep #$20
+    .ForceSetA 8
     lda #SAVESTATE_STATE_IN_USE
     sta.w savestate.0.state
     plb
@@ -283,7 +283,7 @@ Save.WriteSaveState:
 ; This serializes most of a room's data into the save slot.
 ; This function does NOT serialize entities, however.
 Save.WriteRoom:
-    rep #$30
+    .ForceSetAX 16, 16
 ; room def
     lda.l roomSlotTiles.1.roomDefinition,X
     sta.w savestate.0.rooms.1.definition,Y
@@ -302,7 +302,7 @@ Save.WriteRoom:
     .ENDR
 ; room type
     ldx.b $00
-    sep #$20
+    .ForceSetA 8
     lda.l roomSlotRoomType,X
     sta.w savestate.0.rooms.1.roomtype,Y
 ; room location
@@ -329,7 +329,7 @@ _end_write_entities:
 ; $14 is CURRENT ROOM INDEX
 ; $16 is LAST STORED ENTITY'S ROOM INDEX
 Save.WriteRoomEntities:
-    rep #$20
+    .ForceSetA 16
     lda #ENTITY_STORE_COUNT
     sta.b $02
 @loop:
@@ -407,14 +407,14 @@ Save.WriteRoomEntities:
 ; Read data from save state
 Save.ReadSaveState:
 ; set up bank
-    sep #$20
+    .ForceSetA 8
     clc
     adc #$21
     phb
     pha
     plb
 ; copy seed
-    rep #$30
+    .ForceSetAX 16, 16
     lda.w savestate.0.seed_game.low
     sta.l gameSeed.low
     lda.w savestate.0.seed_game.high
@@ -438,7 +438,7 @@ Save.ReadSaveState:
         dex
         bpl @loop_copy_trinket
 ; copy player data
-    sep #$20
+    .ForceSetA 8
     lda.w savestate.0.player_money
     sta.l playerData.money
     lda.w savestate.0.player_keys
@@ -491,19 +491,19 @@ Save.ReadSaveState:
 ; copy current room slot
     lda.w savestate.0.room_current_slot
     sta.l currentRoomSlot
-    rep #$30
+    .ForceSetAX 16, 16
     lda.w savestate.0.floor_current_index
     sta.l currentFloorIndex
     asl
     tax
     lda.l FloorDefinitions,X
     sta.l currentFloorPointer
-    sep #$20
+    .ForceSetA 8
 ; copy rooms
     lda.w savestate.0.num_rooms
     sta.l numUsedMapSlots
     sta.b $10
-    rep #$30
+    .ForceSetAX 16, 16
     stz.b $11
     lda #0
     sta.b $12
@@ -514,7 +514,7 @@ Save.ReadSaveState:
         ldy.b $14
         jsl Save.ReadRoom
         ; inc
-        rep #$30
+        .ForceSetAX 16, 16
         lda.b $12
         clc
         adc #_sizeof_roominfo_t
@@ -604,7 +604,7 @@ Save.ReadSaveState:
         jmp @loop_copy_entities
 @end_copy_entities:
 ; copy roomslots
-    sep #$20
+    .ForceSetA 8
     lda.w savestate.0.roomslot_star
     sta.l roomslot_star
     lda.w savestate.0.roomslot_boss
@@ -618,7 +618,7 @@ Save.ReadSaveState:
     lda.w savestate.0.roomslot_secret2
     sta.l roomslot_secret2
 ; end
-    sep #$20
+    .ForceSetA 8
     lda #SAVESTATE_STATE_EMPTY
     sta.w savestate.0.state
     plb
@@ -629,7 +629,7 @@ Save.ReadSaveState:
 ; This deserializes most of a room's data into the save slot.
 ; This function does NOT deserialize entities, however.
 Save.ReadRoom:
-    rep #$30
+    .ForceSetAX 16, 16
 ; room def
     lda.w savestate.0.rooms.1.definition,Y
     sta.l roomSlotTiles.1.roomDefinition,X
@@ -656,7 +656,7 @@ Save.ReadRoom:
     .ENDR
 ; room type
     ldx.b $00
-    sep #$20
+    .ForceSetA 8
     lda.w savestate.0.rooms.1.roomtype,Y
     sta.l roomSlotRoomType,X
 ; room location

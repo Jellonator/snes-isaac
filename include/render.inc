@@ -148,7 +148,7 @@
 
 ; Copy memory from ROM into the next available VQUEUE BIN buffer
 .MACRO .CopyROMToVQueueBin ARGS METHOD, ROMADDR, NBYTES
-    rep #$20 ; 16 bit A
+    .ForceSetA 16
     lda #NBYTES
     sta.l DMA0_SIZE
     .IF METHOD == P_IMM
@@ -162,7 +162,7 @@
     sbc #NBYTES
     sta.w vqueueBinOffset
     sta.l WMADDL
-    sep #$20 ; 8 bit A
+    .ForceSetA 8
     .IF METHOD == P_IMM
         lda #bankbyte(ROMADDR)
     .ELSE
@@ -184,14 +184,14 @@
 ; Clear a section of WRAM
 ; Included in render.inc since it is similar to other methods here
 .MACRO .ClearWRam ARGS ADDRL, NBYTES
-    rep #$20 ; 16 bit A
+    .ForceSetA 16
     lda #NBYTES
     sta.w DMA0_SIZE
     lda #loword(EmptyData)
     sta.w DMA0_SRCL
     lda #loword(ADDRL)
     sta.w WMADDL
-    sep #$20 ; 8 bit A
+    .ForceSetA 8
     lda #bankbyte(EmptyData)
     sta.w DMA0_SRCH
     lda #bankbyte(ADDRL)
@@ -366,10 +366,10 @@
     ; eor #$FFFF
     ; sec
     ; adc #1
-    sep #$20 ; 8b A
+    .ForceSetA 8
     plx
     sta.w objectData.1.pos_x,X
-    rep #$20 ; 16b A
+    .ForceSetA 16
     bra @@@@@\.\@end
 @@@@@\.\@pos:
     lda.l SpriteIndexToExtMaskX,X
@@ -378,10 +378,10 @@
     and.w objectDataExt,Y
     sta.w objectDataExt,Y
     lda $03,S
-    sep #$20 ; 8b A
+    .ForceSetA 8
     plx
     sta.w objectData.1.pos_x,X
-    rep #$20 ; 16b A
+    .ForceSetA 16
 @@@@@\.\@end:
     pla
     ply

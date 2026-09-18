@@ -10,12 +10,13 @@
 
 .DEFINE _entityid $10
 
-true_entity_tile_tick:
-    .ACCU 16
-    .INDEX 16
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefinel "true_entity_tile_tick"
     sty.b _entityid
     lda #0
-    sep #$20
+    .ForceSetA 8
     ; tile ID 2
     ldx.w _entity_spriteptr,Y
     lda.w loword(spriteTableValue + spritetab_t.spritemem),X
@@ -51,12 +52,12 @@ true_entity_tile_tick:
     +:
     lda.b $02
     sta.w objectData.1.flags,X
-    rep #$30
+    .ForceSetAX 16, 16
     .SetCurrentObjectS_Inc
     ; set box and mask
     ldy.b _entityid
     .EntityEasySetBox 16 14
-    sep #$20
+    .ForceSetA 8
     lda #ENTITY_MASK_TEAR | ENTITY_MASK_BOMBABLE
     sta.w entity_mask,Y
     ; check signal
@@ -71,8 +72,11 @@ true_entity_tile_tick:
         sta.w _entity_hits,Y
         jmp @not_damaged
     @destroy:
-        jsl Entity.Free
+        .PushContext
+        .SetAX 16, 16
+        .call "Entity.Free"
         rtl
+        .PopContextSoft
     @not_damaged:
     lda #0
     sta.w entity_signal,Y
@@ -81,7 +85,7 @@ true_entity_tile_tick:
     adc #8
     sta.w loword(entity_ysort),Y
     ; damage entities in hitbox
-    sep #$30
+    .ForceSetAX 8, 8
     lda.w entity_box_y1,Y
     and #$F0
     sta.b $02
@@ -118,11 +122,11 @@ true_entity_tile_tick:
         cmp.w entity_box_y2,X
         bcs +
             ; burn them
-            rep #$20
+            .ForceSetA 16
             lda.w entity_health,Y
             dec A
             sta.w entity_health,Y
-            sep #$20
+            .ForceSetA 8
             php
             lda.w entity_signal,Y
             ora #ENTITY_SIGNAL_DAMAGE
@@ -138,7 +142,7 @@ true_entity_tile_tick:
     ; Set X to a pointer to memory shared between sprite owners
     ; Since the allocated buffer is at least two tiles, we can use unused
     ; data in spriteAllocTabActive
-    rep #$30
+    .ForceSetAX 16, 16
     ldy.b _entityid
     ldx.w _entity_bufferptr,Y
     lda.w loword(spriteTableValue.1.spritemem),X
@@ -146,7 +150,7 @@ true_entity_tile_tick:
     tax
     inx
     lda #0
-    sep #$20
+    .ForceSetA 8
     ; get frame index
     lda.w tickCounter
     lsr
@@ -157,14 +161,16 @@ true_entity_tile_tick:
     cmp.w loword(spriteAllocTabActive),X
     beq @skip_upload
         sta.w loword(spriteAllocTabActive),X
-        rep #$30
+        .ForceSetAX 16, 16
         jsl entity_tile_set_frame
 @skip_upload:
     rtl
+.endproc
 
-entity_tile_set_frame:
-    .ACCU 16
-    .INDEX 16
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "entity_tile_set_frame"
     pea $7F7F
     xba
     lsr
@@ -186,20 +192,22 @@ entity_tile_set_frame:
     tax
     jsl Spriteman.WriteSpriteToRawSlot
     ldy.b _entityid
-    rep #$30
+    .ForceSetAX 16, 16
     pla
     pla
     pla
     rtl
+.endproc
 
 .ENDS
 
 .BANK ROMBANK_ENTITYCODE SLOT "ROM"
 .SECTION "Entity Tile Hooks" FREE
 
-entity_tile_init:
-    .ACCU 16
-    .INDEX 16
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "entity_tile_init", "IEntityInit"
     sty.b _entityid
     lda #$7FFF
     sta.w entity_health,Y
@@ -209,7 +217,7 @@ entity_tile_init:
     ldy #loword(palettes.tilesprite_fire_normal)
     lda #8
     jsl Palette.find_or_upload_transparent
-    rep #$30
+    .ForceSetAX 16, 16
     ldy.b _entityid
     txa
     sta.w _entity_paletteptr,Y
@@ -218,7 +226,7 @@ entity_tile_init:
     ; allocate sprite ram
     ora #sprite.tilesprite_fire
     jsl Spriteman.NewBufferRef
-    rep #$30
+    .ForceSetAX 16, 16
     ldy.b _entityid
     txa
     sta.w _entity_bufferptr,Y
@@ -226,7 +234,7 @@ entity_tile_init:
     lda.b tempDP
     ora #sprite.tilesprite_fire_dummy
     jsl Spriteman.NewSpriteRefEmpty
-    rep #$30
+    .ForceSetAX 16, 16
     ldy.b _entityid
     sta.b tempDP+2
     txa
@@ -238,33 +246,36 @@ entity_tile_init:
         jsl entity_tile_set_frame
 @dont_upload_sprite:
     rts
+.endproc
 
-entity_tile_free:
-    .ACCU 16
-    .INDEX 16
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "entity_tile_free", "IEntityFree"
     sty.b _entityid
     ; Free sprite tile
     lda.w _entity_spriteptr,Y
     tax
     jsl Spriteman.UnrefSprite
     ; free palette
-    rep #$30
+    .ForceSetAX 16, 16
     ldy.b _entityid
     ldx.w _entity_paletteptr,Y
     jsl Palette.free
     ; free buffer
-    rep #$30
+    .ForceSetAX 16, 16
     ldy.b _entityid
     ldx.w _entity_bufferptr,Y
     jsl Spriteman.UnrefBuffer
     rts
+.endproc
 
-entity_tile_tick:
-    .ACCU 16
-    .INDEX 16
-    pla
-    phk
-    pha
-    jml true_entity_tile_tick
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "entity_tile_tick", "IEntityTick"
+    .call "true_entity_tile_tick"
+    rts
+.endproc
 
 .ENDS

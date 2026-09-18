@@ -1,4 +1,5 @@
 .include "base.inc"
+.include "palettes.inc"
 
 .BANK $02 SLOT "ROM"
 .SECTION "Entity Tile" SUPERFREE

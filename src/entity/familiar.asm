@@ -1,4 +1,5 @@
 .include "base.inc"
+.include "palettes.inc"
 
 .BANK ROMBANK_ENTITYCODE SLOT "ROM"
 .SECTION "Entity Familiar" FREE

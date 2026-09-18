@@ -1,4 +1,5 @@
 .include "base.inc"
+.include "palettes.inc"
 
 .SECTION "RenderInterrupt" BANK ROMBANK_BASE SLOT "ROM" ORGA $8000 SEMIFREE
 

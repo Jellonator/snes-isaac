@@ -1,4 +1,5 @@
 .include "base.inc"
+.include "palettes.inc"
 
 .BANK $00 SLOT "ROM"
 .SECTION "Entity Enemy Cube Extra" SUPERFREE

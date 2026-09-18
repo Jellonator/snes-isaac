@@ -1,4 +1,5 @@
 .include "base.inc"
+.include "palettes.inc"
 
 .BANK $01 SLOT "ROM"
 .SECTION "LevelCode" FREE

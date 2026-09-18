@@ -1,4 +1,5 @@
 .include "base.inc"
+.include "palettes.inc"
 
 .DEFINE _item_gfxptr_pedastal loword(entity_char_custom.1)
 .DEFINE _item_gfxptr_item loword(entity_char_custom.2)

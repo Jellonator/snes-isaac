@@ -12,10 +12,12 @@
 ; Objects which need a full 16-color (or, 12-color) may do so by allocating all
 ; three subpalettes for a row.
 .include "base.inc"
+.include "palettes.inc"
 
 .SECTION "PaletteHandling" BANK ROMBANK_BASE SLOT "ROM" ORGA $8000 SEMIFREE
 
-; Initialize all palette data to default
+; Initialize all palette data to default.
+; This will clear all slots, except those which contain default palettes.
 Palette.init_data:
     .ForceSetAX 16, 16
     lda #$8080
@@ -77,7 +79,7 @@ Palette.alloc_opaque:
     lda.w isRoomTransitioning
     bpl @skip
     jsl Transition.ForceFreeBackedUpPalettes
-    jmp Palette.alloc_transparent
+    jmp Palette.alloc_opaque
 @skip:
     ; no palettes available, or 0 colors required: do nothing and return *a* palette
     ldx #3*8+2
@@ -90,7 +92,7 @@ Palette.alloc_opaque:
 @found:
     ; we found a palette with available slots, now allocate subpalettes
     ; Note: X points to the first empty subpalette
-    lda #PALLETE_ALLOC_8A
+    lda #PALETTE_ALLOC_8A
     sta.b $01
     inc.w paletteRefCount,X
     dec.b $00
@@ -98,7 +100,7 @@ Palette.alloc_opaque:
     ; maybe increment next subpalette(s)
     ldy.w paletteRefCount+2,X
     bne +
-        lda #PALLETE_ALLOC_8B
+        lda #PALETTE_ALLOC_8B
         tsb.b $01
         inc.w paletteRefCount+2,X
         dec.b $00
@@ -106,7 +108,7 @@ Palette.alloc_opaque:
     +
     ldy.w paletteRefCount+4,X
     bne +
-        lda #PALLETE_ALLOC_8C
+        lda #PALETTE_ALLOC_8C
         tsb.b $01
         inc.w paletteRefCount+4,X
         dec.b $00
@@ -180,7 +182,7 @@ Palette.alloc_transparent:
 @found:
     ; we found a palette with available slots, now allocate subpalettes
     ; Note: X points to the first empty subpalette
-    lda #PALLETE_ALLOC_8A
+    lda #PALETTE_ALLOC_8A
     sta.b $01
     inc.w paletteRefCount,X
     dec.b $00
@@ -188,7 +190,7 @@ Palette.alloc_transparent:
     ; maybe increment next subpalette(s)
     ldy.w paletteRefCount+2,X
     bne +
-        lda #PALLETE_ALLOC_8B
+        lda #PALETTE_ALLOC_8B
         tsb.b $01
         inc.w paletteRefCount+2,X
         dec.b $00
@@ -196,7 +198,7 @@ Palette.alloc_transparent:
     +
     ldy.w paletteRefCount+4,X
     bne +
-        lda #PALLETE_ALLOC_8C
+        lda #PALETTE_ALLOC_8C
         tsb.b $01
         inc.w paletteRefCount+4,X
         dec.b $00
@@ -233,13 +235,13 @@ Palette.free:
     bne +
         ; de-allocate subpalettes
         lda.w paletteAllocMode,X
-        bit #PALLETE_ALLOC_8B
+        bit #PALETTE_ALLOC_8B
         beq ++
             stz.w palettePtr+2,X
             stz.w paletteRefCount+2,X
             stz.w paletteAllocMode+2,X
         ++:
-        bit #PALLETE_ALLOC_8C
+        bit #PALETTE_ALLOC_8C
         beq ++
             stz.w palettePtr+4,X
             stz.w paletteRefCount+4,X

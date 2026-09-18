@@ -1,5 +1,6 @@
 .include "base.inc"
 .include "spriteslot.inc"
+.include "palettes.inc"
 
 .BANK $01 SLOT "ROM"
 .SECTION "SpriteSlotManager"
@@ -661,7 +662,7 @@ Spriteman.UnrefBuffer:
 ; Swizzle a sprite that is located in bank 7F according to palette
 ; Parameters:
 ;     X - pointer to sprite
-;     A - swizzle mode (0-7); see PALLETE_ALLOC_
+;     A - swizzle mode (0-7); see PALETTE_ALLOC_*
 ;     Y - number of tiles
 ; Only the third and fourth bitplanes are modified
 SpritePaletteSwizzle_B7F:

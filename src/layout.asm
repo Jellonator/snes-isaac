@@ -1,4 +1,5 @@
 .include "base.inc"
+.include "palettes.inc"
 
 .BASE $00
 

@@ -1,4 +1,5 @@
 .include "base.inc"
+.include "palettes.inc"
 
 ; steal state and timer, since they are serialized
 .define pickup_price entity_state

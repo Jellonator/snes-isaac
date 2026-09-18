@@ -1,5 +1,6 @@
 .include "base.inc"
 .include "mapgenerator.inc"
+.include "palettes.inc"
 
 .BANK $01 SLOT "ROM"
 .SECTION "GAME" FREE

@@ -123,10 +123,10 @@ _duke_state_funcs:
     clc
     adc.w entity_posy,Y
     sta.w entity_posy,Y
-    lda BOSS_WIDTH + BOSS_HEIGHT * $0100
+    lda #BOSS_WIDTH + BOSS_HEIGHT * $0100
     sta.b $00
     .ForceSetAX 8, 8
-    jsl Entity.KeepInOuterBounds
+    .call "Entity.KeepInOuterBounds"
 ; load & set gfx
     .ForceSetA 8
     .ForceSetX 16

@@ -1062,11 +1062,11 @@ _directtargetposition_y_is_zero:
 .SoftSetBank D_BANK_MIRROR_LOWRAM
 .IgnoreDirect
 .procimpll "Entity.KeepInBounds"
-    lda.w entity_posx,Y
+    lda.w entity_posx + 1,Y
     cmp #ROOM_LEFT
     bcs @skip_left
         lda #ROOM_LEFT
-        sta.w entity_posx,Y
+        sta.w entity_posx + 1,Y
         jmp @skip_right
     @skip_left:
     clc
@@ -1076,13 +1076,13 @@ _directtargetposition_y_is_zero:
         lda #ROOM_RIGHT
         sec
         sbc.b $00
-        sta.w entity_posx,Y
+        sta.w entity_posx + 1,Y
     @skip_right:
-    lda.w entity_posy,Y
+    lda.w entity_posy + 1,Y
     cmp #ROOM_TOP
     bcs @skip_top
         lda #ROOM_TOP
-        sta.w entity_posy,Y
+        sta.w entity_posy + 1,Y
         jmp @skip_bottom
     @skip_top:
     clc
@@ -1092,7 +1092,7 @@ _directtargetposition_y_is_zero:
         lda #ROOM_BOTTOM
         sec
         sbc.b $01
-        sta.w entity_posy,Y
+        sta.w entity_posy + 1,Y
     @skip_bottom:
     rtl
 .endproc
@@ -1103,11 +1103,11 @@ _directtargetposition_y_is_zero:
 .SoftSetBank D_BANK_MIRROR_LOWRAM
 .IgnoreDirect
 .procimpll "Entity.KeepInOuterBounds"
-    lda.w entity_posx,Y
+    lda.w entity_posx + 1,Y
     cmp #ROOM_LEFT-16
     bcs @skip_left
         lda #ROOM_LEFT-16
-        sta.w entity_posx,Y
+        sta.w entity_posx + 1,Y
         jmp @skip_right
     @skip_left:
     clc
@@ -1117,13 +1117,13 @@ _directtargetposition_y_is_zero:
         lda #ROOM_RIGHT+16
         sec
         sbc.b $00
-        sta.w entity_posx,Y
+        sta.w entity_posx + 1,Y
     @skip_right:
-    lda.w entity_posy,Y
+    lda.w entity_posy + 1,Y
     cmp #ROOM_TOP-16
     bcs @skip_top
         lda #ROOM_TOP-16
-        sta.w entity_posy,Y
+        sta.w entity_posy + 1,Y
         jmp @skip_bottom
     @skip_top:
     clc
@@ -1133,7 +1133,7 @@ _directtargetposition_y_is_zero:
         lda #ROOM_BOTTOM+16
         sec
         sbc.b $01
-        sta.w entity_posy,Y
+        sta.w entity_posy + 1,Y
     @skip_bottom:
     rtl
 .endproc

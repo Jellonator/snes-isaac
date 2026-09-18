@@ -4,12 +4,12 @@
 ; steal state and timer, since they are serialized
 .define pickup_price entity_state
 .define consumable_type entity_timer
-.define has_put_text loword(entity_custom.1)
+.define has_put_text loword(entity_custom.3 + 1)
 .define pickup_prevention_timer loword(entity_custom.2) ; top byte is pickup prevention flag
 .define anim_timer loword(entity_custom.3)
 .define loaded_sprite loword(entity_custom.4)
 .define loaded_palette loword(entity_custom.4 + 1)
-.define sprite_tile entity_health
+.define sprite_tile loword(entity_custom.1)
 
 .SoftSetAX 16, 16
 .SoftSetBank $7E
@@ -516,17 +516,20 @@ PickupTable_RoomReward:
 .SoftSetBank $7E
 .SoftSetDirect $0000
 .procdefinel "true_entity_pickup_tick"
+    lda #0
+    .ForceSetA 8
     phy
-    ldx.w anim_timer,Y
-    cpx #SPAWN_ANIM_FRAMES-1
+    lda.w anim_timer,Y
+    cmp #SPAWN_ANIM_FRAMES-1
     bcs +
-        inx
-        txa
+        inc A
         sta.w anim_timer,Y
     +:
+    tax
     lda.l _spawn_anim_y,X
     sta.b $00
     ; tile ID
+    .ForceSetA 16
     lda.w sprite_tile,Y
     ldx.w objectIndex
     sta.w objectData.1.tileid,X
@@ -568,6 +571,13 @@ PickupTable_RoomReward:
         .setupcall_in "IVariantHandler"
         jsr (_variant_handlers,X)
         .setupcall_out "IVariantHandler"
+        ; if we freed, then quit early
+        .ForceSetA 8
+        lda.w entity_type,Y
+        cmp #ENTITY_TYPE_PICKUP
+        beq +
+            rtl
+        +:
         jmp @skip_pickup
     @not_standing_on_pickup:
         ; disable pickup prevention flag
@@ -639,6 +649,50 @@ PickupTable_RoomReward:
         lda #deft(TILE_TEXT_UINUMBER_BASE+10,5) | T_HIGHP
         sta.l vqueueMiniOps.3.data,X
 @no_put_price_text:
+; indicate that this pickup may be bombed
+    .SetAX 8, 8
+    lda.w has_put_text,Y
+    bne @skip_movement
+    lda #ENTITY_MASK_BOMBABLE
+    sta.w loword(entity_mask),Y
+    lda #0
+    sta.w entity_signal,Y
+; perform movement
+    .SetAX 16, 16
+    lda.w entity_velocx,Y
+    ora.w entity_velocy,Y
+    beq @skip_movement
+        .SetAX 8, 8
+        lda #16
+        sta.b $00
+        sta.b $01
+        .call "Entity.MoveAndCollide"
+        .SetAX 16, 16
+        lda.w entity_velocx,Y
+        .ShiftRight_SIGN 4, FALSE
+        bne @continue_friction_x
+            sta.w entity_velocx,Y
+            jmp @end_friction_x
+    @continue_friction_x:
+        sta.b $00
+        lda.w entity_velocx,Y
+        sec
+        sbc.b $00
+        sta.w entity_velocx,Y
+    @end_friction_x:
+        lda.w entity_velocy,Y
+        .ShiftRight_SIGN 4, FALSE
+        bne @continue_friction_y
+            sta.w entity_velocy,Y
+            jmp @end_friction_y
+    @continue_friction_y:
+        sta.b $00
+        lda.w entity_velocy,Y
+        sec
+        sbc.b $00
+        sta.w entity_velocy,Y
+    @end_friction_y:
+@skip_movement:
     rtl
 .endproc
 
@@ -751,7 +805,7 @@ PickupTable_RoomReward:
     +:
     lda #30
     sta.w pickup_prevention_timer,Y
-    .ForceSetAX 16, 16
+    .ForceSetX 16
     lda #SPAWN_ANIM_FRAMES-1
     ldx.b entityExecutionContext
     cpx #ENTITY_CONTEXT_STANDARD

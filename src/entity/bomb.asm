@@ -204,24 +204,26 @@ _ExplosionTileHandlerTable:
                     beql @no_ent_{ix}_{iy} ; no entities found; skip
                     lda.w entity_mask,Y
                     and #ENTITY_MASK_BOMBABLE & $FF
-                    beq @skip_ent_{ix}_{iy}_{i}
+                    beql @skip_ent_{ix}_{iy}_{i}
                         lda.b RIGHT
                         cmp.w entity_box_x1,Y
-                        bcc @skip_ent_{ix}_{iy}_{i}
+                        bccl @skip_ent_{ix}_{iy}_{i}
                         lda.b LEFT
                         cmp.w entity_box_x2,Y
-                        bcs @skip_ent_{ix}_{iy}_{i}
+                        bcsl @skip_ent_{ix}_{iy}_{i}
                         lda.b BOTTOM
                         cmp.w entity_box_y1,Y
-                        bcc @skip_ent_{ix}_{iy}_{i}
+                        bccl @skip_ent_{ix}_{iy}_{i}
                         lda.b TOP
                         cmp.w entity_box_y2,Y
-                        bcs @skip_ent_{ix}_{iy}_{i}
+                        bcsl @skip_ent_{ix}_{iy}_{i}
+                            ; decrease health
                             .ForceSetA 16
                             lda.w entity_health,Y
                             sec
                             sbc #EXPLOSION_DAMAGE
                             sta.w entity_health,Y
+                            ; set signal
                             .ForceSetA 8
                             php
                             lda.w entity_signal,Y
@@ -231,11 +233,37 @@ _ExplosionTileHandlerTable:
                                 ora #ENTITY_SIGNAL_KILL
                             @skip_kill_{ix}_{iy}_{i}:
                             sta.w entity_signal,Y
+                            ; clear bombable from mask (to prevent double hits)
                             lda.w entity_mask,Y
                             and #$FF ~ ENTITY_MASK_BOMBABLE
                             sta.w entity_mask,Y
+                            ; set entity flash
                             lda #ENTITY_FLASH_TIME
                             sta.w loword(entity_damageflash),Y
+                            ; apply velocity
+                            ldx.b Y_STORE
+                            .call "Entity.DirectTargetEntity"
+                            .ASSERT (D_FLAG_A == 8) && (D_FLAG_X == 8)
+                            lda.b entityTargetAngle
+                            clc
+                            adc #128
+                            tax
+                            lda.l SinTable8,X
+                            .Convert8To16_SIGNED FALSE, FALSE
+                            .ShiftLeft_SIGN 2
+                            clc
+                            adc.w entity_velocy,Y
+                            sta.w entity_velocy,Y
+                            .SetA 8
+                            lda.l CosTable8,X
+                            .Convert8To16_SIGNED FALSE, FALSE
+                            .ShiftLeft_SIGN 2
+                            clc
+                            adc.w entity_velocx,Y
+                            sta.w entity_velocx,Y
+                            ; load tile into X register again
+                            ldx.b TILE
+                            .SetA 8
                     @skip_ent_{ix}_{iy}_{i}:
                 .ENDR
                 @no_ent_{ix}_{iy}:

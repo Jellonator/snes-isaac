@@ -151,9 +151,9 @@ _drop_trinket_x:
         .ForceSetAX 16, 16
         .PushBank
         .ForceSetBank $7E
-        .SoftSetDirect $0000
         lda #entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_TRINKET)
         .call "Entity.Create"
+        .PopBank
         .ForceSetAX 8, 8
         plx
         lda.w playerData.trinketslot,X
@@ -165,6 +165,8 @@ _drop_trinket_x:
         sta.w entity_posx,Y
         lda.w player_posy
         sta.w entity_posy,Y
+        .PushBank
+        .ForceSetBank $7E
         .call "Entity.Init"
         .PopBank
         .ForceSetAX 8, 8

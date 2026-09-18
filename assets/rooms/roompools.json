@@ -32,7 +32,7 @@
     {
         "id": "type_start",
         "rooms": [
-            "empty.tmx"
+            "test/pits.tmx"
         ]
     },
     {

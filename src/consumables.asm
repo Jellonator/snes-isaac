@@ -360,9 +360,9 @@ Consumable.pickup:
         sta.w entity_posy,Y
         .call "Entity.Init"
         .ForceSetAX 16, 16
+        .PopBank
         pla
         sta.b entityExecutionContext
-        .PopBank
 @skip_drop:
     ; set current consumable
     .ForceSetAX 8, 8

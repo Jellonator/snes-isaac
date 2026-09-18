@@ -1,14 +1,74 @@
 .include "base.inc"
 .include "palettes.inc"
+.include "rng.inc"
 
 .BANK $01 SLOT "ROM"
 .SECTION "LevelCode" FREE
+
+.SoftSetAX 8, 16
+.SoftSetBank D_BANK_MIRROR_LOWRAM
+; input: A = tile type
+; output: A = tile variant
+.procdefines "_determine_tile_variant"
+    cmp #BLOCK_HOLE
+    beq @hole
+    lda #0
+    rts
+@hole:
+    stz.b $0B
+    ; right
+    phx
+    ldx.b $0C
+    lda.l RoomTileToXTable,X
+    plx
+    cmp #ROOM_TILE_WIDTH - 1
+    beq @skip_right
+    lda.l roomSlotTiles.1.tileTypeTable + 1,X
+    bne @skip_right
+        lda #$01
+        tsb.b $0B
+    @skip_right:
+    ; down
+    lda.b $0C
+    cmp #ROOM_TILE_COUNT - ROOM_TILE_WIDTH
+    bcs @skip_down
+    lda.l roomSlotTiles.1.tileTypeTable + ROOM_TILE_WIDTH,X
+    bne @skip_down
+        lda #$02
+        tsb.b $0B
+    @skip_down:
+    ; left
+    phx
+    ldx.b $0C
+    lda.l RoomTileToXTable,X
+    plx
+    cmp #0
+    beq @skip_left
+    lda.l roomSlotTiles.1.tileTypeTable - 1,X
+    bne @skip_left
+        lda #$04
+        tsb.b $0B
+    @skip_left:
+    ; up
+    lda.b $0C
+    cmp #ROOM_TILE_WIDTH
+    bcc @skip_up
+    lda.l roomSlotTiles.1.tileTypeTable - ROOM_TILE_WIDTH,X
+    bne @skip_up
+        lda #$08
+        tsb.b $0B
+    @skip_up:
+    ;end
+    lda.b $0B
+    rts
+.endproc
 
 ; Initialize a room slot from a room definition
 ; Push order:
 ;   tile position           [db] $08
 ;   room slot index         [db] $07
 ;   room definition address [dl] $04
+.SoftSetBank D_BANK_MIRROR_LOWRAM
 InitializeRoomSlot:
     .ForceSetAX 16, 16
     ; Put room definition address into ZP so that it can be used with
@@ -38,18 +98,16 @@ InitializeRoomSlot:
     lda [$0A],Y
     ; Copy tile data, applying variants
     ldy #roomdefinition_t.tileData
-@tile_copy_loop: ; do {
-    lda [$0A],Y
-    ; lda #5
-    sta.l roomSlotTiles.1.tileTypeTable,X
-    ; TODO: proper variant handling
-    lda #0
-    sta.l roomSlotTiles.1.tileVariantTable,X
-    ; while (++Y != ROOM_TILE_COUNT);
-    iny
-    inx
-    cpy #roomdefinition_t.tileData+ROOM_TILE_COUNT
-    bne @tile_copy_loop
+    @tile_copy_loop: ; do {
+        lda [$0A],Y
+        sta.l roomSlotTiles.1.tileTypeTable,X
+        lda #0
+        sta.l roomSlotTiles.1.tileVariantTable,X
+        ; while (++Y != ROOM_TILE_COUNT);
+        iny
+        inx
+        cpy #roomdefinition_t.tileData+ROOM_TILE_COUNT
+        bne @tile_copy_loop
     ; set extra tiles
     lda #BLOCK_HOLE
     sta.l roomSlotTiles.1.tileTypeTable,X
@@ -58,6 +116,21 @@ InitializeRoomSlot:
     lda #0
     sta.l roomSlotTiles.1.tileVariantTable,X
     sta.l roomSlotTiles.1.tileVariantTable+1,X
+; set tile variants
+    ldx.b $0D
+    lda #ROOM_TILE_COUNT
+    sta.b $0A
+    stz.b $0C
+@variant_set_loop:
+        lda.l roomSlotTiles.1.tileTypeTable,X
+        .call "_determine_tile_variant"
+        .ASSERT (D_FLAG_A == 8) && (D_FLAG_X == 16)
+        sta.l roomSlotTiles.1.tileVariantTable,X
+        ; next
+        inx
+        inc.b $0C
+        dec.b $0A
+        bne @variant_set_loop
     ; Clear entity store table
     ldx.b $0D
     lda #0
@@ -66,7 +139,7 @@ InitializeRoomSlot:
     .ENDR
     ; set room rng
     .ForceSetAX 16, 16
-    jsl Random.Stage.Update32
+    .call "Random.Stage.Update32"
     sta.l roomSlotTiles.1.rng,X
     tya
     sta.l roomSlotTiles.1.rng+2,X
@@ -738,6 +811,8 @@ BlockVariantAddresses:
 .REPT 256 INDEX i
     .IF i == BLOCK_REGULAR
         .dw BlockEmptyVariants
+    .ELIF i == BLOCK_HOLE
+        .dw BlockHoleVariants
     .ELIF i == BLOCK_ROCK
         .dw BlockRockVariants
     .ELIF i == BLOCK_ROCK_TINTED
@@ -751,13 +826,30 @@ BlockVariantAddresses:
     .ELIF i == BLOCK_METAL
         .dw BlockMetalVariants
     .ELSE
-        .dw BlockEmptyVariants
+        .dw BlockUndefinedVariants
     .ENDIF
 .ENDR
 
 BlockEmptyVariants:
     .dw deft($20, 1)
     .dw deft($A4, 3) ; 1: rubble
+BlockHoleVariants: ;            | U L D R
+    .dw deft($12E, 2)           ; 0 0 0 0
+    .dw deft($148, 2)           ; 0 0 0 1
+    .dw deft($12C, 2)           ; 0 0 1 0
+    .dw deft($108, 2)           ; 0 0 1 1
+    .dw deft($148, 2) | T_FLIPH ; 0 1 0 0
+    .dw deft($14A, 2)           ; 0 1 0 1
+    .dw deft($108, 2) | T_FLIPH ; 0 1 1 0
+    .dw deft($10A, 2)           ; 0 1 1 1
+    .dw deft($14C, 2)           ; 1 0 0 0
+    .dw deft($10C, 2)           ; 1 0 0 1
+    .dw deft($14E, 2)           ; 1 0 1 0
+    .dw deft($128, 2)           ; 1 0 1 1
+    .dw deft($10C, 2) | T_FLIPH ; 1 1 0 0
+    .dw deft($10E, 2)           ; 1 1 0 1
+    .dw deft($128, 2) | T_FLIPH ; 1 1 1 0
+    .dw deft($12A, 2)           ; 1 1 1 1
 BlockRockVariants:
     .dw deft($A0, 3)
 BlockRockTintedVariants:
@@ -774,6 +866,8 @@ BlockSpikeVariants:
     .dw deft($44, 3) ; 2: retracted
 BlockLogVariants:
     .dw deft($60, 3)
+BlockUndefinedVariants:
+    .dw deft($00, 0)
 
 EmptyRoomTiles:
 ; row 0

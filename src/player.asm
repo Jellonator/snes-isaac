@@ -2474,6 +2474,9 @@ PlayerMoveLeft:
     sta.b TempTileY2
 ; Get Tile Index
     .BranchIfTileXYOOB TempTileX, TempTileY, @end
+    lda.b TempTileY2
+    cmp #ROOM_TILE_HEIGHT
+    bcs @end
     .TileXYToIndexA TempTileX, TempTileY, TempTemp1
     tay
     .TileXYToIndexA TempTileX, TempTileY2, TempTemp2
@@ -2481,11 +2484,18 @@ PlayerMoveLeft:
 ; Determine if tile is solid
     .ForceSetA 8
     lda [currentRoomTileTypeTableAddress],Y ; top
+    beq @solid
     txy
     ora [currentRoomTileTypeTableAddress],y ; bottom
+    bmi @solid
+    lda [currentRoomTileTypeTableAddress],y ; bottom
+    beq @solid
+@end:
     .ForceSetA 16
-    bpl @end
+    rts
 ; get position that player would be when flush against wall
+@solid:
+    .ForceSetA 16
     lda TempTileX
     .IndexToPosition_A
     clc
@@ -2494,7 +2504,6 @@ PlayerMoveLeft:
     .AMAXU P_ABS, player_posx
     stz.w player_velocx
     sta.w player_posx
-@end:
     rts
 
 PlayerMoveRight:
@@ -2520,6 +2529,9 @@ PlayerMoveRight:
     sta.b TempTileY2
 ; Get Tile Index
     .BranchIfTileXYOOB TempTileX, TempTileY, @end
+    lda.b TempTileY2
+    cmp #ROOM_TILE_HEIGHT
+    bcs @end
     .TileXYToIndexA TempTileX, TempTileY, TempTemp1
     tay
     .TileXYToIndexA TempTileX, TempTileY2, TempTemp2
@@ -2527,11 +2539,18 @@ PlayerMoveRight:
 ; Determine if tile is solid
     .ForceSetA 8
     lda [currentRoomTileTypeTableAddress],Y ; top
+    beq @solid
     txy
     ora [currentRoomTileTypeTableAddress],y ; bottom
+    bmi @solid
+    lda [currentRoomTileTypeTableAddress],y ; bottom
+    beq @solid
+@end:
     .ForceSetA 16
-    bpl @end
+    rts
 ; get position that player would be when flush against wall
+@solid:
+    .ForceSetA 16
     lda.b TempTileX
     .IndexToPosition_A
     clc
@@ -2540,7 +2559,6 @@ PlayerMoveRight:
     .AMINU P_ABS, player_posx
     stz.w player_velocx
     sta.w player_posx
-@end:
     rts
 
 PlayerMoveVertical:
@@ -2593,18 +2611,28 @@ PlayerMoveUp:
     sta.b TempTileX2
 ; Get Tile Index
     .BranchIfTileXYOOB TempTileX, TempTileY, @end
+    lda.b TempTileX2
+    cmp #ROOM_TILE_WIDTH
+    bcs @end
     .TileXYToIndexA TempTileX, TempTileY, TempTemp1
     tay
     .TileXYToIndexA TempTileX2, TempTileY, TempTemp2
     tax
 ; Determine if tile is solid
     .ForceSetA 8
-    lda [currentRoomTileTypeTableAddress],Y ; top
+    lda [currentRoomTileTypeTableAddress],Y ; left
+    beq @solid
     txy
-    ora [currentRoomTileTypeTableAddress],y ; bottom
+    ora [currentRoomTileTypeTableAddress],y ; right
+    bmi @solid
+    lda [currentRoomTileTypeTableAddress],y ; right
+    beq @solid
+@end:
     .ForceSetA 16
-    bpl @end
+    rts
 ; get position that player would be when flush against wall
+@solid:
+    .ForceSetA 16
     lda TempTileY
     .IndexToPosition_A
     clc
@@ -2613,7 +2641,6 @@ PlayerMoveUp:
     .AMAXU P_ABS, player_posy
     stz.w player_velocy
     sta.w player_posy
-@end:
     rts
 
 PlayerMoveDown:
@@ -2639,18 +2666,28 @@ PlayerMoveDown:
     sta TempTileX2
 ; Get Tile Index
     .BranchIfTileXYOOB TempTileX, TempTileY, @end
+    lda.b TempTileX2
+    cmp #ROOM_TILE_WIDTH
+    bcs @end
     .TileXYToIndexA TempTileX, TempTileY, TempTemp1
     tay
     .TileXYToIndexA TempTileX2, TempTileY, TempTemp2
     tax
 ; Determine if tile is solid
     .ForceSetA 8
-    lda [currentRoomTileTypeTableAddress],Y ; top
+    lda [currentRoomTileTypeTableAddress],Y ; left
+    beq @solid
     txy
-    ora [currentRoomTileTypeTableAddress],y ; bottom
+    ora [currentRoomTileTypeTableAddress],y ; right
+    bmi @solid
+    lda [currentRoomTileTypeTableAddress],y ; right
+    beq @solid
+@end:
     .ForceSetA 16
-    bpl @end
+    rts
 ; get position that player would be when flush against wall
+@solid:
+    .ForceSetA 16
     lda TempTileY
     .IndexToPosition_A
     clc
@@ -2659,7 +2696,6 @@ PlayerMoveDown:
     .AMINU P_ABS, player_posy
     stz.w player_velocy
     sta.w player_posy
-@end:
     rts
 
 .MACRO .PlayerDiscoverRoomHelper ARGS is_current

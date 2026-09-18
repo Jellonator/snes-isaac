@@ -208,6 +208,7 @@ _pathfind_main:
         tay
         lda (tile),Y
         bmil @skiptile ; Skip if this tile is solid (can not be entered)
+        beql @skiptile ; $00 = pit = can't be crossed
         .REPT 8 INDEX i
             .IF i == 0
                 .DEFINE i_offs -1

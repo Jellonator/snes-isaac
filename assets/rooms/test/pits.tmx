@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.11" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="12" height="8" tilewidth="16" tileheight="16" infinite="0" nextlayerid="3" nextobjectid="17">
+ <properties>
+  <property name="down" type="bool" value="true"/>
+  <property name="left" type="bool" value="true"/>
+  <property name="right" type="bool" value="true"/>
+  <property name="up" type="bool" value="true"/>
+ </properties>
+ <tileset firstgid="1" source="../Isaac.tsx"/>
+ <tileset firstgid="65" source="../Objects.tsx"/>
+ <layer id="1" name="Tiles" width="12" height="8">
+  <data encoding="csv">
+2,2,2,1,1,1,1,1,1,2,2,2,
+2,1,1,1,1,1,1,1,1,2,17,2,
+2,1,2,2,2,1,1,2,1,2,2,2,
+1,1,2,2,2,1,1,2,1,1,1,1,
+1,1,2,2,2,1,1,2,1,1,1,1,
+17,1,17,17,17,1,1,17,1,17,2,17,
+17,1,2,2,2,1,1,2,1,2,2,2,
+17,1,1,1,1,1,1,1,1,17,2,17
+</data>
+ </layer>
+ <objectgroup id="2" name="Objects"/>
+</map>

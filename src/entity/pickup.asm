@@ -73,10 +73,17 @@ _variant_free:
     .dw _handle_null     ; 9 - consumable
     .dw _free_trinket    ; A - trinket
 
-.DEFINE SPAWN_ANIM_FRAMES 17
+.DEFINE SPAWN_ANIM_FRAMES 22
 
 _spawn_anim_y:
-    .db 0, -2, -3, -4, -4, -4, -4, -3, -3, -3, -2, -1, 0, -1, -2, -1, 0
+    ; rise: 5
+    .db -2, -3, -4, -5, -5,
+    ; peak: 6
+    .db -6, -6, -6, -6, -6, -6
+    ; fall: 5
+    .db -5, -5, -4, -3, -1
+    ; bounce: 6
+    .db 0, -1, -2, -2, -1, 0
 
 ; Note: prices are in DECIMAL MODE
 PickupVariantPrices:

@@ -616,7 +616,7 @@ _zombie_set_walk_frame:
     inx
     stx.w objectIndex
     pea $0405
-    jsl Entity.Shadow.PutSmall
+    .call "Entity.Shadow.PutSmall"
     plx
     ; Check collision with player
     .ForceSetA 8

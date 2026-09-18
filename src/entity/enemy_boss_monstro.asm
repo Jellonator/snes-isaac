@@ -156,7 +156,7 @@
     .ENDR
     ldy $08
     pea (MONSTRO_HEIGHT - 14) + ($100*10)
-    jsl Entity.Shadow.PutBig
+    .call "Entity.Shadow.PutBig"
     plx
 ; add to partition
     .ForceSetAX 8, 8

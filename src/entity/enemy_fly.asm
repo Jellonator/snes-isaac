@@ -181,7 +181,7 @@
     inx
     stx.w objectIndex
     pea $0404
-    jsl Entity.Shadow.PutSmall
+    .call "Entity.Shadow.PutSmall"
     plx
     ; Check collision with player
     jsl Entity.Enemy.TickContactDamage

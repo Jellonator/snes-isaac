@@ -18,7 +18,10 @@
 .DEFINE BROTHER_BOBBY_TEAR_DAMAGE 8
 .DEFINE BROTHER_BOBBY_TEAR_SPEED $0100
 
-entity_familiar_init:
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "entity_familiar_init", "IEntityInit"
     .SoftSetA 16
     .SoftSetX 16
     sty.b $10
@@ -103,10 +106,12 @@ entity_familiar_init:
     pla
     ldy.b $10
     rts
+.endproc
 
-entity_familiar_tick:
-    .SoftSetA 16
-    .SoftSetX 16
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "entity_familiar_tick", "IEntityTick"
     ; friction
     lda.w entity_velocx,Y
     .ShiftRight_SIGN 1, 0
@@ -245,7 +250,7 @@ entity_familiar_tick:
     ; put shadow
     .ForceSetA 8
     pea $0405
-    jsl Entity.Shadow.PutSmall
+    .call "Entity.Shadow.PutSmall"
     .ForceSetAX 16, 16
     pla
     ; set box and flags
@@ -298,8 +303,12 @@ entity_familiar_tick:
 @end_fire_tear:
     ; end
     rts
+.endproc
 
-entity_familiar_free:
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefines "entity_familiar_free", "IEntityFree"
     .SoftSetA 16
     .SoftSetX 16
     ; free sprites
@@ -321,6 +330,7 @@ entity_familiar_free:
     jsl Palette.free
     ; end
     rts
+.endproc
 
 .ENDS
 

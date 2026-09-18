@@ -194,7 +194,7 @@ _duke_state_funcs:
     .ENDR
     ldy.b _tmp_entityid
     pea (BOSS_HEIGHT - 8) + ($100*0)
-    jsl Entity.Shadow.PutMedium
+    .call "Entity.Shadow.PutMedium"
     plx
 ; set some flags
     .ForceSetA 8

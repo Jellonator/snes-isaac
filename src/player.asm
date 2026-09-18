@@ -948,7 +948,9 @@ PlayerUpdate:
 ; movement
     .ForceSetAX 16, 16
     lda.w playerData.stat_speed
-    sta $00 ; $00 = speed
+    sta.b $00 ; $00 = speed
+    lda.w playerData.stat_accel
+    sta.b $02 ; $02 = accel
     ; check (LEFT OR RIGHT) AND (UP OR DOWN)
     ; if so, multiply speed by 3/4; aka (A+A+A) >> 2
     lda.w joy1held
@@ -960,10 +962,12 @@ PlayerUpdate:
     lda.b $00
     asl
     clc
-    adc $00
+    adc.b $00
     lsr
     lsr
-    sta $00 ; $00 = speed * 0.75
+    sta.b $00 ; $00 = speed * 0.75
+    ; Accel is not adjust here. The movement feels slightly less responsive
+    ; when accel is adjusted for diagonals.
 @skip_slow:
 ; Y MOVEMENT
     lda.w joy1held
@@ -971,43 +975,47 @@ PlayerUpdate:
     bne @down
     bit #JOY_UP
     bne @up
-    ; Y stop
+    ; not pressing up/down, brake
     lda.w player_velocy
     cmp #0
     bpl @slowup
-    ; slowdown
-    lda.w player_velocy
-    clc
-    adc.w playerData.stat_accel
-    .AMIN P_IMM, $00
-    jmp @endy
-@slowup:
-    ; slowup
-    lda.w player_velocy
-    sec
-    sbc.w playerData.stat_accel
-    .AMAX P_IMM, $00
-    jmp @endy
-@down:
-    ; up
-    lda.w player_velocy
-    clc
-    adc.w playerData.stat_accel
-    .AMIN P_DIR, $00
-    .AMAX P_IMM $00
-    jmp @endy
-@up:
-    ; up
-    lda.w player_velocy
-    sec
-    sbc.w playerData.stat_accel
-    eor #$FFFF
-    inc A
-    .AMIN P_DIR, $00
-    eor #$FFFF
-    inc A
-    .AMIN P_IMM $00
-@endy:
+    ; moving down; brake
+        clc
+        adc.b $02
+    ; stop at 0 velocity
+        .AMIN P_IMM, 0
+        jmp @endy
+    @slowup:
+    ; moving up; brake
+        sec
+        sbc.b $02
+    ; stop at 0 velocity
+        .AMAX P_IMM, 0
+        jmp @endy
+    @down:
+    ; pressing down - add accel
+        lda.w player_velocy
+        clc
+        bpl +
+            adc.b $02
+        +:
+        adc.b $02
+    ; don't move faster than top speed
+        .AMIN P_DIR, $00
+        jmp @endy
+    @up:
+    ; pressing up - subtract accel
+        lda.w player_velocy
+        sec
+        bmi +
+            sbc.b $02
+        +:
+        sbc.b $02
+    ; don't move faster than top speed
+        .NEG_A16
+        .AMIN P_DIR, $00
+        .NEG_A16
+    @endy:
     sta.w player_velocy
 ; X MOVEMENT
     lda.w joy1held
@@ -1015,43 +1023,47 @@ PlayerUpdate:
     bne @right
     bit #JOY_LEFT
     bne @left
-    ; X stop
+    ; not pressing left/right, brake
     lda.w player_velocx
     cmp #0
     bpl @slowleft ; If speed.x > 0
-    ; slowright
-    lda.w player_velocx
-    clc
-    adc.w playerData.stat_accel
-    .AMIN P_IMM, $00
-    jmp @endx
-@slowleft:
-    ; slowleft
-    lda.w player_velocx
-    sec
-    sbc.w playerData.stat_accel
-    .AMAX P_IMM, $00
-    jmp @endx
-@right:
-    ; right
-    lda.w player_velocx
-    clc
-    adc.w playerData.stat_accel
-    .AMIN P_DIR, $00
-    .AMAX P_IMM $00
-    jmp @endx
-@left:
-    ; left
-    lda.w player_velocx
-    sec
-    sbc.w playerData.stat_accel
-    eor #$FFFF
-    inc A
-    .AMIN P_DIR, $00
-    eor #$FFFF
-    inc A
-    .AMIN P_IMM $00
-@endx:
+    ; moving right - brake
+        clc
+        adc.b $02
+    ; stop at 0 velocity
+        .AMIN P_IMM, 0
+        jmp @endx
+    @slowleft:
+    ; moving left - brake
+        sec
+        sbc.b $02
+    ; stop at 0 velocity
+        .AMAX P_IMM, 0
+        jmp @endx
+    @right:
+    ; right - add accel
+        lda.w player_velocx
+        clc
+        bpl +
+            adc.b $02
+        +:
+        adc.b $02
+    ; don't move faster than top speed
+        .AMIN P_DIR, $00
+        jmp @endx
+    @left:
+    ; left - subtract accel
+        lda.w player_velocx
+        sec
+        bmi +
+            sbc.b $02
+        +:
+        sbc.b $02
+        .NEG_A16
+    ; don't move faster than top speed
+        .AMIN P_DIR, $00
+        .NEG_A16
+    @endx:
     sta.w player_velocx
 ; Determine collision bounds
 .DEFINE PLAYER_ROOM_BOUND_LEFT (ROOM_LEFT - 4)*256
@@ -2230,7 +2242,10 @@ _player_handle_shoot_brimstone:
     stz.w playerData.tear_timer
     rts
 
-PlayerRender:
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procdefinel "PlayerRender"
     .ForceSetA 8
     .ForceSetX 16
     ; update render data
@@ -2264,9 +2279,10 @@ PlayerRender:
     .ForceSetX 16
     ldy #ENTITY_INDEX_PLAYER
     pea $0405
-    jsl Entity.Shadow.PutSmall
+    .call "Entity.Shadow.PutSmall"
     plx
     rtl
+.endproc
 
 PlayerShootTear:
     .ForceSetAX 16, 16

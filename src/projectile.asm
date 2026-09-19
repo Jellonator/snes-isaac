@@ -475,25 +475,39 @@ Projectile.SetSizeFromDamage:
     +:
     jsl Entity.GetCollisionAt ; Y = new entity
     cpy #0
-    beq @skipCollisionHandler
+    beql @skipCollisionHandler
         ; found object:
         ; update veloc
         .ForceSetAX 16, 16
         ldx.b PROJECTILE_TMP_IDX
-        ; lda.w entity_velocx,X
-        ; .ShiftRight_SIGN 1, FALSE
+        cpy #ENTITY_CHARACTER_MAX_INDEX+2
+        bcs @non_character_add_veloc
+    ;character_add_veloc
+        ; add X velocity
         lda.w entity_velocx,X
         .ShiftRight_SIGN 3, FALSE
         clc
         adc.w entity_velocx,Y
         sta.w entity_velocx,Y
-        ; lda.w entity_velocy,X
-        ; .ShiftRight_SIGN 1, FALSE
+        ; add Y velocity
         lda.w entity_velocy,X
         .ShiftRight_SIGN 3, FALSE
         clc
         adc.w entity_velocy,Y
         sta.w entity_velocy,Y
+        jmp @end_character_add_veloc
+    @non_character_add_veloc:
+        ; add X velocity
+        lda.w entity_velocx,X
+        clc
+        adc.w entity_velocx,Y
+        sta.w entity_velocx,Y
+        ; add Y velocity
+        lda.w entity_velocy,X
+        clc
+        adc.w entity_velocy,Y
+        sta.w entity_velocy,Y
+    @end_character_add_veloc:
         ; reduce HP
         lda.w entity_health,Y
         sta.b $00

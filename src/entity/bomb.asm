@@ -340,8 +340,43 @@ _ExplosionTileHandlerTable:
         .call "Entity.Free"
         rtl
     @timer_continue:
-    ;
+; perform movement
     .ForceSetAX 16, 16
+    lda.w entity_velocx,Y
+    ora.w entity_velocy,Y
+    beq @skip_movement
+        .SetAX 8, 8
+        lda #4
+        sta.b $00
+        sta.b $01
+        .call "Entity.MoveAndCollide"
+        .SetAX 16, 16
+        lda.w entity_velocx,Y
+        .ShiftRight_SIGN 4, FALSE
+        bne @continue_friction_x
+            sta.w entity_velocx,Y
+            jmp @end_friction_x
+    @continue_friction_x:
+        sta.b $00
+        lda.w entity_velocx,Y
+        sec
+        sbc.b $00
+        sta.w entity_velocx,Y
+    @end_friction_x:
+        lda.w entity_velocy,Y
+        .ShiftRight_SIGN 4, FALSE
+        bne @continue_friction_y
+            sta.w entity_velocy,Y
+            jmp @end_friction_y
+    @continue_friction_y:
+        sta.b $00
+        lda.w entity_velocy,Y
+        sec
+        sbc.b $00
+        sta.w entity_velocy,Y
+    @end_friction_y:
+@skip_movement:
+    .SetAX 16, 16
     phy
     ; tile ID
     lda.w entity_timer,Y
@@ -356,15 +391,32 @@ _ExplosionTileHandlerTable:
     sta.w objectData.1.tileid,X
     ; X position
     .ForceSetA 8
-    lda.w entity_posx + 1,Y
+    lda.w entity_box_x1,Y
+    sec
+    sbc #4
     sta.w objectData.1.pos_x,X
+    clc
+    adc #12
+    sta.w entity_box_x2,Y
     ; Y position
-    lda.w entity_posy + 1,Y
+    lda.w entity_box_y1,Y
+    sec
+    sbc #6
     sta.w objectData.1.pos_y,X
+    clc
+    adc #10
     sta.w loword(entity_ysort),Y
+    adc #4
+    sta.w entity_box_y2,Y
     .ForceSetAX 16, 16
     .SetCurrentObjectS_Inc
     ply
+    ; set mask
+    .SetAX 8, 8
+    lda #ENTITY_MASK_TEAR
+    sta.w loword(entity_mask),Y
+    lda #0
+    sta.w entity_signal,Y
     rtl
     .UNDEFINE Y_STORE
     .UNDEFINE TILE
@@ -386,6 +438,13 @@ _ExplosionTileHandlerTable:
     .ForceSetA 8
     lda #120
     sta.w entity_timer,Y
+    lda.w entity_box_x1,Y
+    sec
+    sbc #4
+    sta.w entity_box_x1,Y
+    lda.w entity_box_y1,Y
+    sbc #4
+    sta.w entity_box_y1,Y
     rts
 .endproc
 

@@ -34,20 +34,20 @@ _item_pedastal_get_variant_from_pool:
     .SoftSetX 16
     .SetA 8
     lda.w entity_variant,Y
-    and #ENTITY_ITEMPEDASTAL_POOLFLAG
-    ; clear variant of self, so that this entity doesn't mess with pool
     pha
+    ; clear variant of self, so that this entity doesn't mess with pool
     lda #0
     sta.w entity_variant,Y
-    pla
     ; get item from pool
+    lda $01,S
     phy
+    and #ENTITY_ITEMPEDASTAL_POOLFLAG
     jsl Item.PickItemFromPool
     .ForceSetAX 8, 16
     ply
     sta.w entity_variant,Y
     ; maybe set price
-    lda.b $00
+    pla
     and #ENTITY_ITEMPEDASTAL_COSTFLAG
     cmp #ENTITY_ITEMPEDASTAL_PRICED
     beq @price_with_money

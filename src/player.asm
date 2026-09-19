@@ -886,8 +886,9 @@ _update_player_head_facing:
     sty.w playerData.facingdir_head
     rts
 
+.ClearContext
 PlayerUpdate:
-    .ForceSetAX 16, 16
+    .SetAX 16, 16
     lda #0
     sta.l ENTITY_INDEX_PLAYER+entity_flags
 ; check hp
@@ -895,9 +896,9 @@ PlayerUpdate:
     bpl +
         jsl _PlayerHandleDamaged
     +:
-    .ForceSetA 8
+    .SetA 8
     stz.w player_signal
-    .ForceSetAX 16, 16
+    .SetAX 16, 16
     stz.w player_damageflag
     dec.w playerData.invuln_timer
     bpl +
@@ -907,14 +908,14 @@ PlayerUpdate:
     jsl Item.check_and_recalculate
 ; bombs
     ; check bomb timer
-    .ForceSetA 8
+    .SetA 8
     lda.w playerData.bomb_wait_timer
     bne @cant_place_bomb
         ; check bomb count
         lda.w playerData.bombs
         beq @end_place_bomb
         ; check bomb button
-        .ForceSetAX 16, 16
+        .SetAX 16, 16
         lda.w joy1press
         bit #JOY_L
         beq @end_place_bomb
@@ -922,17 +923,22 @@ PlayerUpdate:
         .PushBank
         .ForceSetBank $7E
         lda #entityvariant(ENTITY_TYPE_BOMB, 0)
-        .call "Entity.CreateAndInit"
-        .PopBank
+        .call "Entity.Create"
         .SetAX 16, 16
         lda.w player_posx
+        clc
+        adc #$0100 * 8
         sta.w entity_posx,Y
         lda.w player_posy
+        clc
+        adc #$0100 * 8
         sta.w entity_posy,Y
-        .ForceSetA 8
+        .call "Entity.Init"
+        .PopBank
+        .SetA 8
         lda #PLAYER_BOMB_PLACE_TIMER
         sta.w playerData.bomb_wait_timer
-        .ForceSetA 16
+        .SetA 16
         sep #$08
         lda.w playerData.bombs
         sec

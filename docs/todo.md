@@ -23,7 +23,7 @@
 ## ITEMS
 
 - [X] Active Items
-- [ ] Proper item pools;
+- [X] Proper item pools;
     Item pools need to add no data to save games. My proposal:
     Items which are on the current floor will be excluded from the pool.
     Items which are in the player's inventory, and are not marked as duplicable,
@@ -61,7 +61,7 @@
         and devil deals can have their own tilesets and palettes).
 - [X] Player costumes
     * [ ] sprite overlay
-- [ ] Bomb adds velocity to hit objects
+- [X] Bomb adds velocity to hit objects
 - [ ] Bombs receive velocity from projectiles
 - [ ] Pickups have collision, can push each other
 - [ ] Find empty spots for newly dropped pickups

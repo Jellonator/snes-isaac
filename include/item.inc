@@ -1,19 +1,20 @@
-; ITEMS
-.DEFINE ITEMID_NULL 0
-.DEFINE ITEMID_SAD_ONION 1
-.DEFINE ITEMID_SPOON_BENDER 2
-.DEFINE ITEMID_GROWTH_HORMONES 3
-.DEFINE ITEMID_BROTHER_BOBBY 4
-.DEFINE ITEMID_WIRE_COAT_HANGER 5
-.DEFINE ITEMID_DINNER 6
-.DEFINE ITEMID_CHOCOLATE_MILK 7
-.DEFINE ITEMID_POLYPHEMUS 8
-.DEFINE ITEMID_MAP 9
-.DEFINE ITEMID_COMPASS 10
-.DEFINE ITEMID_DECK_OF_CARDS 11
-.DEFINE ITEMID_BRIMSTONE 12
-.DEFINE ITEMID_PURSE 13
-.DEFINE ITEM_COUNT 14
+; ITEM IDS
+.ENUMID 0
+.ENUMID ITEMID_NULL
+.ENUMID ITEMID_SAD_ONION
+.ENUMID ITEMID_SPOON_BENDER
+.ENUMID ITEMID_GROWTH_HORMONES
+.ENUMID ITEMID_BROTHER_BOBBY
+.ENUMID ITEMID_WIRE_COAT_HANGER
+.ENUMID ITEMID_DINNER
+.ENUMID ITEMID_CHOCOLATE_MILK
+.ENUMID ITEMID_POLYPHEMUS
+.ENUMID ITEMID_MAP
+.ENUMID ITEMID_COMPASS
+.ENUMID ITEMID_DECK_OF_CARDS
+.ENUMID ITEMID_BRIMSTONE
+.ENUMID ITEMID_PURSE
+.ENUMID ITEM_COUNT
 
 ; ITEM FLAGS
 
@@ -21,19 +22,33 @@
 .DEFINE ITEMFLAG_ACTIVE $01
 ; Indicates that an item has double the heart cost in a devil deal
 .DEFINE ITEMFLAG_COST_TWO_HEARTS $02
+; Indicates that this item should not appear if the player already has it
+.DEFINE ITEMFLAG_NONSTACKING $04
 
 ; ITEM DEFINITION
 .STRUCT itemdef_t
+    ; which item sprite to use
     sprite_index db
+    ; which palette to use
     palette_ptr dw
+    ; how many colors the palette uses
     palette_depth db
+    ; item flags
     flags db
+    ; subroutine to call when this item is picked up
     on_pickup dw
+    ; subroutine to call when this (active) item is used
     on_use dw
+    ; how much this item costs (decimal)
     shop_price db
+    ; how much charge this (active) item can store
     charge_max db
+    ; how much charge this (active) item requires to use
     charge_use db
+    ; how much charge this (active) item starts out with
     charge_init db
+    ; the name of this item
     name ds 32
+    ; the tagline for this item
     tagline ds 32
 .ENDST

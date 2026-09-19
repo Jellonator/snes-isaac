@@ -502,8 +502,8 @@ ShiftLeftTable16:
 
 .ENDS
 
-.bank $20
-.SECTION "ExtraData2"
+.bank $00
+.SECTION "ExtraData2" SUPERFREE
 
 DefaultBackgroundTileData:
 .REPT 32 INDEX iy ; 32 tiles

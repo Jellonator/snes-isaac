@@ -32,50 +32,19 @@
 _item_pedastal_get_variant_from_pool:
     .SoftSetA 16
     .SoftSetX 16
+    .SetA 8
     lda.w entity_variant,Y
-    sta.b $00
     and #ENTITY_ITEMPEDASTAL_POOLFLAG
-    cmp #ENTITY_ITEMPEDASTAL_POOL_BOSS
-    beq @pool_boss
-    cmp #ENTITY_ITEMPEDASTAL_POOL_SHOP
-    beq @pool_shop
-    cmp #ENTITY_ITEMPEDASTAL_POOL_DEVIL
-    beq @pool_devil
-@pool_item_room:
-    lda #Item.pool.item_room@end - Item.pool.item_room
-    ldx #loword(Item.pool.item_room)
-    jmp @begin
-@pool_boss:
-    lda #Item.pool.boss@end - Item.pool.boss
-    ldx #loword(Item.pool.boss)
-    jmp @begin
-@pool_shop:
-    lda #Item.pool.shop@end - Item.pool.shop
-    ldx #loword(Item.pool.shop)
-    jmp @begin
-@pool_devil:
-    lda #Item.pool.devil@end - Item.pool.devil
-    ldx #loword(Item.pool.devil)
-    jmp @begin
-@begin:
+    ; clear variant of self, so that this entity doesn't mess with pool
     pha
-    phy
-    php
-    jsl Random.Room.Update16
-    sta.l DIVU_DIVIDEND
-    plp
-    ply
+    lda #0
+    sta.w entity_variant,Y
     pla
-    sta.l DIVU_DIVISOR
-    .REPT 8
-        nop
-    .ENDR
-    txa
-    clc
-    adc.l DIVU_REMAINDER
-    tax
-    lda.l bankaddr(Item.pool.item_room),X
-    .ForceSetA 8
+    ; get item from pool
+    phy
+    jsl Item.PickItemFromPool
+    .ForceSetAX 8, 16
+    ply
     sta.w entity_variant,Y
     ; maybe set price
     lda.b $00

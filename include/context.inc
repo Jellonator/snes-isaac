@@ -121,14 +121,47 @@
     .RefreshFlags
 .ENDM
 
-; Set the 'B' register to the given value
-.MACRO .SetBank ARGS p_b
-    .ASSERT ((p_b >= $00) && (p_b <= $FF))
-    ; Technically not the fastest method, but this guarantees A is kept
-    .IF (p_b != D_BANK) && (p_b != D_UNK)
+.DEFINE SETBANKMODE_PEA 0
+.DEFINE SETBANKMODE_A 1
+.DEFINE SETBANKMODE_X 2
+.DEFINE SETBANKMODE_Y 3
+
+.MACRO .__SET_BANK ARGS p_b, mode
+    .IF NARGS == 1
         pea p_b * $0101
         plb
         plb
+    .ELIF mode == SETBANKMODE_PEA
+        pea p_b * $0101
+        plb
+        plb
+    .ELIF mode == SETBANKMODE_A
+        .ASSERT D_FLAG_A == 8
+        lda #p_b
+        pha
+        plb
+    .ELIF mode == SETBANKMODE_X
+        .ASSERT D_FLAG_X == 8
+        ldx #p_b
+        phx
+        plb
+    .ELIF mode == SETBANKMODE_Y
+        .ASSERT D_FLAG_X == 8
+        ldy #p_b
+        phy
+        plb
+    .ELSE
+        .FAIL
+    .ENDIF
+.ENDM
+
+; Set the 'B' register to the given value
+.MACRO .SetBank ARGS p_b, mode
+    .ASSERT ((p_b >= $00) && (p_b <= $FF))
+    .IF NARGS == 1
+        .__SET_BANK p_b
+    .ELSE
+        .__SET_BANK p_b, mode
     .ENDIF
     .REDEFINE D_BANK p_b
 .ENDM
@@ -203,10 +236,11 @@
 ; Guaranteed to generate instructions to update the bank
 .MACRO .ForceSetBank ARGS p_b
     ; .ASSERT (p_b >= $00) && (p_b <= $FF)
-    ; Technically not the fastest method, but this guarantees A is kept
-    pea p_b * $0101
-    plb
-    plb
+    .IF NARGS == 1
+        .__SET_BANK p_b
+    .ELSE
+        .__SET_BANK p_b, mode
+    .ENDIF
     .REDEFINE D_BANK p_b
 .ENDM
 

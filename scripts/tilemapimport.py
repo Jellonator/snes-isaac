@@ -17,11 +17,10 @@ json_tilemaps = json.load(open(TILEMAPS_IN))
 
 out_inc = open("include/tilemaps.inc", 'w')
 
-maxbank="63"
-minbank="32"
+minbank = "$00"
 
 out_inc.write(".BANK {} SLOT \"ROM\"\n".format(minbank))
-out_inc.write(".SECTION \"IMPORTED_TILEMAPS\" SEMISUPERFREE BANKS {}-{}\n".format(maxbank,minbank))
+out_inc.write(".SECTION \"IMPORTED_TILEMAPS\" SUPERFREE\n")
 
 for json_tilemap in json_tilemaps:
     name = json_tilemap["name"]

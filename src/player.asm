@@ -442,6 +442,7 @@ PlayerInit:
     jsl UI.update_key_display
     jsl UI.update_money_display
     jsl Consumable.update_display_no_overlay
+    jsl Trinket.Init
     jsl Trinket.update_display
     .ForceSetAX 8, 8
     stz.w player_signal
@@ -451,7 +452,6 @@ PlayerInit:
     sta.w playerData.healthSlots.3
     jsl UI.update_all_hearts
     jsl Item.reset_items
-    jsl Trinket.Init
     jsl Player.reset_stats
     .ForceSetAX 8, 8
     stz.w playerData.walk_frame

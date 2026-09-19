@@ -74,7 +74,7 @@ def getTilesetForGid(map: pytiled_parser.TiledMap, gid: int) -> Tuple[pytiled_pa
 for room in rooms:
     room_id = room.replace('.tmx', '').replace('/', '_')
     out_inc.write(".BANK {} SLOT \"ROM\"\n".format(minbank))
-    out_inc.write(".SECTION \"IMPORTED_ROOM_{}\" SEMISUPERFREE BANKS {}-{}\n".format(room_id,maxbank,minbank))
+    out_inc.write(".SECTION \"IMPORTED_ROOM_{}\"\n".format(room_id))
     room_ref = "RoomDefinition.{}".format(room_id)
     roomPathToId[room] = room_ref
     room_path = os.path.join("assets/rooms", room)

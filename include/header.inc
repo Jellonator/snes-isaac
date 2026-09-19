@@ -15,7 +15,7 @@
     BANKSIZE $10000
     BANKS $40
 .ENDRO
-; ROM starts at $80, NOT $00
+; ROM starts at $C0, NOT $00
 ; This only really matters since we're using FASTROM
 .BASE $C0
 

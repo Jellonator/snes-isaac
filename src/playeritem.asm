@@ -1,5 +1,6 @@
 .include "base.inc"
 .include "palettes.inc"
+.include "rng.inc"
 
 .BANK $01 SLOT "ROM"
 .SECTION "PlayerItem" FREE
@@ -249,7 +250,7 @@ _pickup_map:
     sprite_index: .db 1
     palette_ptr: .dw palettes.item_spoon_bender
     palette_depth: .db 8
-    flags: .db 0
+    flags: .db ITEMFLAG_NONSTACKING
     on_pickup: .dw _pickup_empty
     on_use: .dw _use_empty
     shop_price: .db $15
@@ -309,7 +310,7 @@ _pickup_map:
     sprite_index: .db 6
     palette_ptr: .dw palettes.item_chocolate_milk
     palette_depth: .db 8
-    flags: .db 0
+    flags: .db ITEMFLAG_NONSTACKING
     on_pickup: .dw _pickup_empty
     on_use: .dw _use_empty
     shop_price: .db $15
@@ -333,7 +334,7 @@ _pickup_map:
     sprite_index: .db 8
     palette_ptr: .dw palettes.item_map
     palette_depth: .db 8
-    flags: .db 0
+    flags: .db ITEMFLAG_NONSTACKING
     on_pickup: .dw _pickup_map
     on_use: .dw _use_empty
     shop_price: .db $15
@@ -345,7 +346,7 @@ _pickup_map:
     sprite_index: .db 9
     palette_ptr: .dw palettes.item_compass
     palette_depth: .db 16
-    flags: .db 0
+    flags: .db ITEMFLAG_NONSTACKING
     on_pickup: .dw _pickup_map
     on_use: .dw _use_empty
     shop_price: .db $15
@@ -372,7 +373,7 @@ _pickup_map:
     sprite_index: .db 11
     palette_ptr: .dw palettes.item_brimstone
     palette_depth: .db 8
-    flags: .db ITEMFLAG_COST_TWO_HEARTS
+    flags: .db ITEMFLAG_COST_TWO_HEARTS | ITEMFLAG_NONSTACKING
     on_pickup: .dw _pickup_empty
     on_use: .dw _use_empty
     shop_price: .db $30
@@ -384,7 +385,7 @@ _pickup_map:
     sprite_index: .db 12
     palette_ptr: .dw palettes.item_purse
     palette_depth: .db 12
-    flags: .db 0
+    flags: .db ITEMFLAG_NONSTACKING
     on_pickup: .dw _pickup_empty
     on_use: .dw _use_empty
     shop_price: .db $15
@@ -583,37 +584,47 @@ _use_deck_of_cards:
     rts
 
 ; Choose a random item from pool ID 'A'
+; Returns selected item in register 'A' in 8-bit mode
+.ClearContext
 Item.PickItemFromPool:
     .DEFINE POOLPTR $00
     .DEFINE POOLSIZE $03
-    .DEFINE TOTALWEIGHT $05
-    phb
+    ; item count per item.
+    ; top bit indicates that it is in player inventory.
+    .DEFINE ITEMCOUNTS loword(tempData_7E)
+    .PushBank
     .ForceSetAX 8, 8
-    ldy #$7E
-    phy
-    plb ; BANK = $7E
+    .SetBank $7E, SETBANKMODE_Y
     ldy #bankbyte(Item.pools)
     sty.b POOLPTR+2
-    tax
-    lda.l Item.poolsize,X
-    sta.b POOLSIZE
-    .ForceSetAX 16, 16
-    txa
     asl
     tax
+    .SetAX 16, 16
+    lda.l Item.poolsize,X
+    sta.b POOLSIZE
     lda.l Item.pools,X
     sta.b POOLPTR
 ; copy item count to buffer
-    ldx #$FE
+    .SetAX 8, 8
+    ldx #$00
     @loop_init_counts:
         lda.w playerData.playerItemStackNumber,X
-        sta.w loword(tempData_7E),X
-        dex
-        dex
-        bpl @loop_init_counts
+        beq +
+            ora #$80
+        +:
+        sta.w ITEMCOUNTS,X
+        inx
+        bne @loop_init_counts
+; increment item count for held item
+    ldx.w playerData.current_active_item
+    lda.w ITEMCOUNTS,X
+    inc A
+    ora #$80
+    sta.w ITEMCOUNTS,X
 ; search for items serialized to other rooms, and add to count
-    .DEFINE ROOMCOUNT $07
-    .DEFINE ROOMPTR $09
+    .SetAX 16, 16
+    .DEFINE ROOMCOUNT $05
+    .DEFINE ROOMPTR $07
     lda.w numUsedMapSlots
     and #$00FF
     sta.b ROOMCOUNT
@@ -629,13 +640,14 @@ Item.PickItemFromPool:
             and #$00FF
             beq @end_iterate_room ; encountered null item, end
             cmp #ENTITY_TYPE_ITEM_PEDASTAL
-            beq @end_iterate_room_entity ; not an item pedastal, end
+            bne @end_iterate_room_entity ; not an item pedastal, end
             lda (ROOMPTR),Y
             and #$FF00
             xba
             tax
-            inc.w loword(tempData_7E),X ; assume we won't ever overflow to the next item
+            inc.w ITEMCOUNTS,X ; assume we won't ever overflow to the next item
         @end_iterate_room_entity:
+        ; increment entity, check for end of entity table
         iny
         iny
         iny
@@ -645,85 +657,150 @@ Item.PickItemFromPool:
         cpy #roominfo_t.entityStoreTable + (_sizeof_entitystore_t * ENTITY_STORE_COUNT)
         blsu @loop_iterate_room_entity
     @end_iterate_room:
+        ; go to next room
         lda.b ROOMPTR
         adc #_sizeof_roominfo_t
         sta.b ROOMPTR
         dec.b ROOMCOUNT
-        bpl @loop_iterate_room
+        bne @loop_iterate_room
     .UNDEFINE ROOMCOUNT
     .UNDEFINE ROOMPTR
 ; search current room's entities and add to count
     ldx.w numEntities
     beq @end_iterate_entities
     @loop_iterate_entities:
+        ; get entity from execution order
         lda.w entityExecutionOrder-1,X
         and #$00FF
         tay
+        ; check if entity is item pedastal
         lda.w entity_type,Y
         and #$00FF
         cmp #ENTITY_TYPE_ITEM_PEDASTAL
-        bne @skip_iterate_entity
+        bne @continue_iterate_entity
+        ; increment count for this variant
         phx
         lda.w entity_variant,Y
         and #$00FF
         tax
-        inc.w loword(tempData_7E),X
+        inc.w ITEMCOUNTS,X
         plx
-    @skip_iterate_entity:
+    @continue_iterate_entity:
         dex
         bne @loop_iterate_entities
     @end_iterate_entities:
 ; determine item pool and weights
-    .DEFINE ITEMWEIGHTS $07
+    .DEFINE ITEMWEIGHTS $05
+    .DEFINE WEIGHTSUM $08
+    .DEFINE MINCOUNT $09
+    ; NOTE: division uses an 8-bit divisor.
+    ; So, the sum-of-weights must be, at most, 255.
+    ; Therefore, the weight of each item must be 0 or 1
+    ; we use offset of $0700 to prevent overwriting room transition visual data
+    lda #tempTileData + $0700
+    sta.b ITEMWEIGHTS
+    lda #0 ; set top byte to 0 for later
+    .SetA 8
+    stz.b WEIGHTSUM
     lda #$7F
     sta.b ITEMWEIGHTS + 2
-    lda #tempTileData
-    sta.b ITEMWEIGHTS
-
-    .ForceSetA 8
+    sta.b MINCOUNT
     ldy #0
-    @loop_determine_weight:
+    lda #0
+    @loop_determine_highcount:
+        ; get item count
         lda [POOLPTR],Y
-        tax ; X = item id
-        lda.w loword(tempData_7E),X
-
-
-        sta [ITEMWEIGHTS],Y
+        tax
+        lda.w ITEMCOUNTS,X
+        ; set max of item count
+        and #$7F
+        .AMINU P_DIR, MINCOUNT
+        sta.b MINCOUNT
+        ; increment
         iny
         cpy.b POOLSIZE
-        bleu @loop_determine_weight
-
-; ; write weight 0 for all items
-;     lda #0
-;     ldx #$FF*2
-;     @loop_clear_weights:
-;         sta.w loword(tempData_7E),X
-;         dex
-;         dex
-;         bne @loop_clear_weights
-; ; add weight for all items in pool
-;     ldx.b POOLPTR
-;     @loop_gather_items
-;         lda.l bankaddr(Item.pools),X
-;         and #$00FF
-;         beq @end_gather_items
-;         asl
-;         tay
-;         lda #$10
-;         sta.w loword(tempData_7E),Y
-;     @end_gather_items:
-; ; sum weights
-;     ldx #$FF*2
-;     clc
-;     lda #0
-;     @loop_sum_item_weights:
-;         adc.w loword(tempData_7E),X
-;         dex
-;         dex
-;         bne @loop_sum_item_weights
-;     sta.b TOTALWEIGHT
-; ; end
+        bleu @loop_determine_highcount
+    ldy #0
+    @loop_determine_weight:
+        ; get item flags
+        .SetA 16
+        lda [POOLPTR],Y
+        and #$00FF
+        asl
+        tax
+        lda.l Item.items,X
+        tax
+        lda #0 ; make sure top byte is 0
+        .SetA 8
+        lda.l bankaddr(Item.items) + itemdef_t.flags,X
+        and #(ITEMFLAG_ACTIVE | ITEMFLAG_NONSTACKING)
+        bne @determine_weight_nonstacking
+    ;determine_weight_stacking
+        lda [POOLPTR],Y
+        tax
+        lda.w ITEMCOUNTS,X
+        and #$7F
+        cmp.b MINCOUNT
+        bgru @determine_weight_zero ; count is greater than 'mincount', set to zero
+        lda #1
+        jmp @determine_weight_setvalue
+    @determine_weight_nonstacking:
+        .SoftSetA 8
+        lda [POOLPTR],Y
+        tax
+        lda.w ITEMCOUNTS,X
+        bne @determine_weight_zero ; count is non-zero, set to zero
+        lda #1
+        jmp @determine_weight_setvalue
+    @determine_weight_zero:
+        lda #0
+    @determine_weight_setvalue:
+        sta [ITEMWEIGHTS],Y
+        clc
+        adc.b WEIGHTSUM
+        sta.b WEIGHTSUM
+        iny
+        cpy.b POOLSIZE
+        blsu @loop_determine_weight
+; return default item if weight sum is 0
+    lda.b WEIGHTSUM
+    bne +
+        lda #ITEMID_DINNER
+        plb
+        rtl
+    +:
+; get random value
+    .SetA 16
+    .call "Random.Stage.Update16"
+    sta.l DIVU_DIVIDEND
+    .SetA 8
+    lda.b WEIGHTSUM
+    sta.l DIVU_DIVISOR
+    ldy #0 ; +3 = 3
+    nop ; +2 = 5
+    nop ; +2 = 7
+    nop ; +2 = 9
+    nop ; +2 = 11
+    nop ; +2 = 13
+    lda.l DIVU_REMAINDER ; +4 = 17
+; loop through items until A is zero
+    @loop_determine_item:
+        ; check if subtracted would result in negative number
+        cmp [ITEMWEIGHTS],Y
+        bcc @finish_determine_item
+        ; subtract weight
+        sec
+        sbc [ITEMWEIGHTS],Y
+        iny
+        cpy.b POOLSIZE
+        bleu @loop_determine_item
+; passthrough, return default item
+    lda #ITEMID_DINNER
     plb
+    rtl
+@finish_determine_item:
+    lda [POOLPTR],Y
+    .PopBank
     rtl
 
 .ENDS

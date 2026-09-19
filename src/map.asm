@@ -1231,11 +1231,11 @@ _transition_ground_func_table:
 
 .DEFINE objectBufferFullX ($7F0000 | (tempTileData + $0000))
 .DEFINE objectBufferFullY ($7F0000 | (tempTileData + $0002))
-.DEFINE objectBufferTile  ($7F0000 | (tempTileData + $200))
-.DEFINE objectBufferFlags ($7F0000 | (tempTileData + $201))
-.DEFINE objectBufferS     ($7F0000 | (tempTileData + $202))
+.DEFINE objectBufferTile  ($7F0000 | (tempTileData + $0200))
+.DEFINE objectBufferFlags ($7F0000 | (tempTileData + $0201))
+.DEFINE objectBufferS     ($7F0000 | (tempTileData + $0202))
 
-.DEFINE paletteDataBackup ($7E0000 | tempTileData + $400)
+.DEFINE paletteDataBackup ($7F0000 | (tempTileData + $0400))
 
 .DEFINE HORIZONTAL_OFFSET $20
 .DEFINE VERTICAL_OFFSET $22
@@ -1463,8 +1463,8 @@ _copy_objects_to_object_buffer:
     rts
 
 .DEFINE paletteDataBackup.ptr (paletteDataBackup + 0)
-.DEFINE paletteDataBackup.refCount (paletteDataBackup + 64)
-.DEFINE paletteDataBackup.allocMode (paletteDataBackup + 128)
+.DEFINE paletteDataBackup.refCount (paletteDataBackup + $40)
+.DEFINE paletteDataBackup.allocMode (paletteDataBackup + $80)
 
 ; Backup palette data
 _palettedata_backup:

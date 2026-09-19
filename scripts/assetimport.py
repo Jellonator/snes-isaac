@@ -21,14 +21,13 @@ json_splats = json.load(open("assets/splats.json"))
 
 out_inc = open("include/assets.inc", 'w')
 
-maxbank="63"
-minbank="32"
+minbank="$00"
 
 MASK_MODE_INTERLACE = "interlace"
 MASK_MODE_NONE = ""
 
 out_inc.write(".BANK {} SLOT \"ROM\"\n".format(minbank))
-out_inc.write(".SECTION \"IMPORTED_PALETTES\" SEMISUPERFREE BANKS {}-{}\n".format(maxbank,minbank))
+out_inc.write(".SECTION \"IMPORTED_PALETTES\" SUPERFREE\n")
 
 for palette in json_palettes:
     name = palette["name"]
@@ -220,7 +219,7 @@ for sprite in json_sprites:
     if not split_frames:
         # section header
         out_inc.write(".BANK {} SLOT \"ROM\"\n".format(minbank))
-        out_inc.write(".SECTION \"IMPORTED_SPRITE_{}\" SEMISUPERFREE BANKS {}-{}\n".format(sprite_number,maxbank,minbank))
+        out_inc.write(".SECTION \"IMPORTED_SPRITE_{}\" SUPERFREE\n".format(sprite_number))
         sprite_number += 1
         # section data
         out_inc.write("spritedata.{}:\n".format(name))
@@ -252,7 +251,7 @@ for sprite in json_sprites:
                     num_frames_larger += 1
                 # section header
                 out_inc.write(".BANK {} SLOT \"ROM\"\n".format(minbank))
-                out_inc.write(".SECTION \"IMPORTED_SPRITE_{}\" SEMISUPERFREE BANKS {}-{}\n".format(sprite_number,maxbank,minbank))
+                out_inc.write(".SECTION \"IMPORTED_SPRITE_{}\" SUPERFREE\n".format(sprite_number))
                 sprite_number += 1
                 # section data
                 out_inc.write("spritedata.{}.{}:\n".format(name, current_frame))

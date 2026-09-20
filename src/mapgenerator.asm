@@ -639,7 +639,7 @@ _CmpRoomsByAvailableEndpointTiles:
 
 ; Initialize the tile at X
 ; Parameters:
-;     roomtype: db $03,S
+;     roomtype: db $04,S
 .InvalidateContext
 .SoftSetAX 8, 8
 .SoftSetBank $7E
@@ -648,10 +648,6 @@ _CmpRoomsByAvailableEndpointTiles:
     pha ; >1
 ; set up map data
     lda $04+1,S
-    cmp #ROOMTYPE_START
-    ; bne + ; start becomes normal room
-    ;     lda #ROOMTYPE_NORMAL
-    ; +:
     sta.w mapTileTypeTable,X
     stz.w mapTileFlagsTable,X
     lda.w numUsedMapSlots
@@ -682,10 +678,6 @@ _CmpRoomsByAvailableEndpointTiles:
     pha ; >1
 ; set up map data
     lda $04+1,S
-    cmp #ROOMTYPE_START
-    ; bne + ; start becomes normal room
-    ;     lda #ROOMTYPE_NORMAL
-    ; +:
     sta.w mapTileTypeTable,X
     stz.w mapTileFlagsTable,X
     lda $05+1,S

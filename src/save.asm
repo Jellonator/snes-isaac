@@ -7,7 +7,7 @@
 
 ; boring, I know
 _save_key:
-    .db "ISAAC SAVE $0001"
+    .db "ISAAC SAVE v0001"
         ;----------------; 16B
 
 ; Return A==1 if save key does not match

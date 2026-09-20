@@ -43,10 +43,6 @@
 .DEFINE MAP_MAX_SIZE (MAP_MAX_WIDTH*MAP_MAX_HEIGHT)
 .DEFINE MAX_MAP_SLOTS 32
 
-; Pre-defined map slots
-.DEFINE MAPSLOT_DEVIL (MAX_MAP_SLOTS-1)
-.DEFINE MAPSLOT_ERROR (MAX_MAP_SLOTS-2)
-
 ; MAP TILE POSITION STRUCT
 .STRUCT maptilepos_t
     value db ; lower 4 bits for X, upper 4 bits for Y

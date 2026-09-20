@@ -352,12 +352,9 @@ _Room_Spawn_Devildoor:
     phb
     .ChangeDataBank $7E
 ; initialize room slot
-    lda #MAPSLOT_DEVIL
-    pha
     lda #ROOMTYPE_DEVIL
     pha
-    jsl MapGen.InitializeRoomXIntoSlot
-    pla
+    jsl MapGen.InitializeRoomX
     pla
     ldx.b $30
     jsl MapGen.SetupRoomX

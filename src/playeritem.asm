@@ -659,6 +659,7 @@ Item.PickItemFromPool:
     @end_iterate_room:
         ; go to next room
         lda.b ROOMPTR
+        clc
         adc #_sizeof_roominfo_t
         sta.b ROOMPTR
         dec.b ROOMCOUNT

@@ -643,15 +643,30 @@ Save.ReadRoom:
     lda.w savestate.0.rooms.1.rng.high,Y
     sta.l roomSlotTiles.1.rng.high,X
 ; tiles
+    ; copy tiles
     .REPT (ROOM_TILE_COUNT/2) INDEX i
         lda.w savestate.0.rooms.1.tiles + i*2,Y
         sta.l roomSlotTiles.1.tileTypeTable + i*2,X
     .ENDR
-    lda #0
-    .REPT (ROOM_TILE_COUNT/2) INDEX i
-        sta.l roomSlotTiles.1.tileVariantTable + i*2,X
-    .ENDR
+    ; determine variants
+    .SetA 8
+    lda #ROOM_TILE_COUNT
+    sta.b $0A
+    stz.b $0C
+    phx
+    @variant_set_loop:
+        lda.l roomSlotTiles.1.tileTypeTable,X
+        .call "Map.DetermineTileVariant"
+        .ASSERT (D_FLAG_A == 8) && (D_FLAG_X == 16)
+        sta.l roomSlotTiles.1.tileVariantTable,X
+        ; next
+        inx
+        inc.b $0C
+        dec.b $0A
+        bne @variant_set_loop
+    plx
 ; clear entities
+    .SetA 16
     lda #0
     .REPT ENTITY_STORE_COUNT INDEX i
         sta.l roomSlotTiles.1.entityStoreTable.{i+1}.type,X

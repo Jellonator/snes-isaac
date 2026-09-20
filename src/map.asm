@@ -5,15 +5,19 @@
 .BANK $01 SLOT "ROM"
 .SECTION "LevelCode" FREE
 
-.SoftSetAX 8, 16
-.SoftSetBank D_BANK_MIRROR_LOWRAM
-; input: A = tile type
+; input:
+;   A = tile type
+;   X = room pointer
+;   $0C = tile index
 ; output: A = tile variant
-.procdefines "_determine_tile_variant"
+.SoftSetAX 8, 16
+.IgnoreBank
+.IgnoreDirect
+.procimpll "Map.DetermineTileVariant"
     cmp #BLOCK_HOLE
     beq @hole
     lda #0
-    rts
+    rtl
 @hole:
     stz.b $0B
     ; right
@@ -58,9 +62,9 @@
         lda #$08
         tsb.b $0B
     @skip_up:
-    ;end
+    ; end
     lda.b $0B
-    rts
+    rtl
 .endproc
 
 ; Initialize a room slot from a room definition
@@ -123,7 +127,7 @@ InitializeRoomSlot:
     stz.b $0C
 @variant_set_loop:
         lda.l roomSlotTiles.1.tileTypeTable,X
-        .call "_determine_tile_variant"
+        .call "Map.DetermineTileVariant"
         .ASSERT (D_FLAG_A == 8) && (D_FLAG_X == 16)
         sta.l roomSlotTiles.1.tileVariantTable,X
         ; next

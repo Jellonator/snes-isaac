@@ -84,3 +84,16 @@
     cmp #$F0
     bcs label
 .ENDM
+
+; PROCEDURE DEFS
+
+; input:
+;   A = tile type
+;   X = room pointer
+;   $0C = tile index
+; output: A = tile variant
+.SoftSetAX 8, 16
+.IgnoreBank
+.IgnoreDirect
+.procheaderl "Map.DetermineTileVariant"
+.endproc

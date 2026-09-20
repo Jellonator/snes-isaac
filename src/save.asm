@@ -3,6 +3,8 @@
 .BANK $01 SLOT "ROM"
 .SECTION "MENU" FREE
 
+.DEFINE FIRST_BANK_OFFSET $20
+
 ; boring, I know
 _save_key:
     .db "ISAAC SAVE $0001"
@@ -86,7 +88,7 @@ Save.IsSavestateInUse:
     ; set up bank
     .ForceSetA 8
     clc
-    adc #$21
+    adc #FIRST_BANK_OFFSET
     phb
     pha
     plb
@@ -111,7 +113,7 @@ Save.EraseSaveState:
     ; set up bank
     .ForceSetA 8
     clc
-    adc #$21
+    adc #FIRST_BANK_OFFSET
     phb
     pha
     plb
@@ -127,7 +129,7 @@ Save.WriteSaveState:
 ; set up bank
     .ForceSetA 8
     clc
-    adc #$21
+    adc #FIRST_BANK_OFFSET
     phb
     pha
     plb
@@ -409,7 +411,7 @@ Save.ReadSaveState:
 ; set up bank
     .ForceSetA 8
     clc
-    adc #$21
+    adc #FIRST_BANK_OFFSET
     phb
     pha
     plb

@@ -120,4 +120,4 @@ with entities shuffled together and stable-sorted by some kind of priority syste
   64B - room RNG
 3072B - tiles
 = 3686B total without entities
-reserve 4KB for entities (682 total - 21 per room-ish) 
+reserve 4KB for entities (682 total - 21 per room-ish)

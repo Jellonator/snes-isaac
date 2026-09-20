@@ -28,7 +28,7 @@
     HIROM
     CARTRIDGETYPE $02 ; ROM + SRAM
     ROMSIZE $0C       ; 4MB ROM
-    SRAMSIZE $05      ; 32KB SRAM
+    SRAMSIZE $03      ; 8KB SRAM
     COUNTRY $01       ; $01 = U.S.
     LICENSEECODE $00
     VERSION $00

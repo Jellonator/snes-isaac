@@ -193,68 +193,162 @@
     sta.l MDMAEN
 .ENDM
 
-; Set the S flag in the high table of the current objectIndex
-.MACRO .SetCurrentObjectS
-    ldx.w objectIndex
-    lda.l SpriteIndexToExtMaskS+2,X
-    tay
-    lda.l SpriteIndexToExtMaskS,X
-    ora.w objectDataExt,Y
-    sta.w objectDataExt,Y
+; Load object index into X
+.MACRO .OX_Get
+    .SetX 16
+    ldx.b objectIndex
 .ENDM
 
-; Set the S flag in the high table of the current objectIndex
-; Increments objectIndex
-.MACRO .SetCurrentObjectS_Inc
-    .SetCurrentObjectS
-    inx
-    inx
-    inx
-    inx
-    stx.w objectIndex
+; Load object index into X
+.MACRO .OY_Get
+    .SetX 16
+    ldy.b objectIndex
 .ENDM
 
-; Set the X flag in the high table of the current objectIndex
-.MACRO .SetCurrentObjectX
-    ldx.w objectIndex
-    lda.l SpriteIndexToExtMaskX+2,X
-    tay
-    lda.l SpriteIndexToExtMaskX,X
-    ora.w objectDataExt,Y
-    sta.w objectDataExt,Y
+.MACRO .__OX_INC_LO
+    inx
+    inx
+    inx
+    inx
+    stx.b objectIndex
 .ENDM
 
-
-; Set the X flag in the high table of the current objectIndex
-; Increments objectIndex
-.MACRO .SetCurrentObjectX_Inc
-    .SetCurrentObjectX
-    inx
-    inx
-    inx
-    inx
-    stx.w objectIndex
+.MACRO .__OY_INC_LO
+    iny
+    iny
+    iny
+    iny
+    sty.b objectIndex
 .ENDM
 
-; Set the X and S flags in the high table of the current objectIndex
-.MACRO .SetCurrentObjectXS
-    ldx.w objectIndex
-    lda.l SpriteIndexToExtMaskXS+2,X
-    tay
-    lda.l SpriteIndexToExtMaskXS,X
-    ora.w objectDataExt,Y
-    sta.w objectDataExt,Y
+.MACRO .__OX_PUSH_HI ISOLATED
+    ; write buffer when it is filled
+    bcc + ; 2 cycles
+        ldx.b objectHiIndex   ; 3.50 / 8
+        sta.w objectDataExt,X ; 5.00 / 8
+        inx                   ; 1.50 / 8
+        inx                   ; 1.50 / 8
+        stx.b objectHiIndex   ; 3.50 / 8
+        ldx.b objectIndex     ; 3.50 / 8
+        lda #$8000            ; 2.25 / 8
+        ; ≈ 2.6 (amortized)
+    +:
 .ENDM
 
-; Set the X and S flags in the high table of the current objectIndex
-; Increments objectIndex
-.MACRO .SetCurrentObjectXS_Inc
-    .SetCurrentObjectXS
-    inx
-    inx
-    inx
-    inx
-    stx.w objectIndex
+.MACRO .__OY_PUSH_HI ISOLATED
+    ; write buffer when it is filled
+    bcc + ; 2 cycles
+        ldy.b objectHiIndex   ; 3.50 / 8
+        sta.w objectDataExt,Y ; 5.00 / 8
+        iny                   ; 1.50 / 8
+        iny                   ; 1.50 / 8
+        sty.b objectHiIndex   ; 3.50 / 8
+        ldy.b objectIndex     ; 3.50 / 8
+        lda #$8000            ; 2.25 / 8
+        ; ≈ 2.6 (amortized)
+    +:
+.ENDM
+
+; Increment to next object.
+; X MUST be set to current object index
+.MACRO .OX_Next
+    .SetAX 16, 16
+    .__OX_INC_LO
+    lda.b objectHiBuffer
+    lsr
+    lsr
+    .__OX_PUSH_HI
+    sta.b objectHiBuffer
+.ENDM
+
+; Increment to next object, with S flag set to 1
+; X MUST be set to current object index
+.MACRO .OX_Next_S
+    .SetAX 16, 16
+    .__OX_INC_LO
+    lda.b objectHiBuffer
+    lsr
+    sec
+    ror
+    .__OX_PUSH_HI
+    sta.b objectHiBuffer
+.ENDM
+
+; Increment to next object, with X flag set to 1
+; X MUST be set to current object index
+.MACRO .OX_Next_X
+    .SetAX 16, 16
+    .__OX_INC_LO
+    lda.b objectHiBuffer
+    sec
+    ror
+    lsr
+    .__OX_PUSH_HI
+    sta.b objectHiBuffer
+.ENDM
+
+; Increment to next object, with X and S flag set to 1
+; X MUST be set to current object index
+.MACRO .OX_Next_XS
+    .SetAX 16, 16
+    .__OX_INC_LO
+    lda.b objectHiBuffer
+    sec
+    ror
+    sec
+    ror
+    .__OX_PUSH_HI
+    sta.b objectHiBuffer
+.ENDM
+
+; Increment to next object, with S flag set to 0, and X set to C flag
+; X MUST be set to current object index
+.MACRO .OX_Next_PARAMX
+    .SetAX 16, 16
+    .__OX_INC_LO
+    lda.b objectHiBuffer
+    ror
+    lsr
+    .__OX_PUSH_HI
+    sta.b objectHiBuffer
+.ENDM
+
+; Increment to next object, with S flag set to 1, and X set to C flag
+; X MUST be set to current object index
+.MACRO .OX_Next_S_PARAMX
+    .SetAX 16, 16
+    .__OX_INC_LO
+    lda.b objectHiBuffer
+    ror
+    sec
+    ror
+    .__OX_PUSH_HI
+    sta.b objectHiBuffer
+.ENDM
+
+; Increment to next object.
+; Y MUST be set to current object index
+.MACRO .OY_Next
+    .SetAX 16, 16
+    .__OY_INC_LO
+    lda.b objectHiBuffer
+    lsr
+    lsr
+    .__OY_PUSH_HI
+    sta.b objectHiBuffer
+.ENDM
+
+; Increment to next object, with S flag set to 1
+; Y MUST be set to current object index
+.MACRO .OY_Next_S
+    .SetAX 16, 16
+    .__OY_INC_LO
+    lda.b objectHiBuffer
+    lsr
+    sec
+    ror
+    .__OY_PUSH_HI
+    sta.b objectHiBuffer
 .ENDM
 
 ; get position of sprite object in X
@@ -345,16 +439,6 @@
 @@@@@\.\@end:
     pla
     ply
-.ENDM
-
-; Increment objectIndex
-.MACRO .IncrementObjectIndex
-    ldx.w objectIndex
-    inx
-    inx
-    inx
-    inx
-    stx.w objectIndex
 .ENDM
 
 ; Store current vqueue operation pointer in A

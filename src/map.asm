@@ -1251,6 +1251,7 @@ _transition_ground_func_table:
 
 _transition_update_and_upload_sprites:
 ; first, clear sprite table
+    .ForceSetAX 16, 16
     jsl ClearSpriteTable
 ; now, update sprite table
     .ForceSetAX 16, 16
@@ -1550,6 +1551,7 @@ TransitionRoomIndex:
     .ForceSetA 8
     lda #1
     sta.w isRoomTransitioning
+    jsl FinalizeSpriteTable
     wai
 ; disable BG1 (temporarily), and copy character data of current room to BG1
     .DisableRENDER
@@ -1888,6 +1890,7 @@ TransitionRoomIndex:
     .ForceSetA 8
     lda #ENTITY_CONTEXT_STANDARD
     sta.b entityExecutionContext
+    jsl FinalizeSpriteTable
 ; add new sprites to sprite table
     .ForceSetAX 16, 16
     lda $04,S

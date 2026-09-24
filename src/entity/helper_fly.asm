@@ -246,7 +246,7 @@ _target_player_base_angle:
     and #$01
     clc
     adc #$AE
-    ldx.w objectIndex
+    .OX_Get
     sta.w objectData.1.tileid,X
     ; FLAG
     lda #%00100000
@@ -273,11 +273,7 @@ _target_player_base_angle:
     sta.w loword(entity_ysort),Y
     sbc #12
     sta.w objectData.1.pos_y,X
-    inx
-    inx
-    inx
-    inx
-    stx.w objectIndex
+    .OX_Next
     rts
 .endproc
 

@@ -25,6 +25,11 @@
     ; Indicates in what context the entity's code is being executed.
     ; See `ENTITY_CONTEXT_` enum for more info.
     entityExecutionContext dw
+    ; active indices into objectData
+    objectIndex dw
+    objectIndexShadow dw
+    objectHiBuffer dw
+    objectHiIndex dw
 ; long pointers to current room's doors
     mapDoorNorth dl
     mapDoorEast dl
@@ -107,8 +112,6 @@
 ; OAM data
     objectData INSTANCEOF object_t 128
     objectDataExt dsb 32 ; 2 bits per object: Xs
-    objectIndex dw
-    objectIndexShadow dw
 ; Palette allocation data
     ; pointer to currently loaded palette
     palettePtr dsw 32

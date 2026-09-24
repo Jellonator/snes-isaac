@@ -43,29 +43,17 @@ _big_projectile_update_sprite:
     ;     lda #%00101110
     ;     sta.w objectData.1.flags,Y
     ; +:
-    phx
-    php
-    .ForceSetAX 16, 16
-    .SetCurrentObjectS
-    plp
-    .SoftSetX 16
-    .SoftSetA 8
-    plx
-    ldy.w objectIndex
-    iny
-    iny
-    iny
-    iny
+    .OY_Next_S
     ; special handling for projectile shadows
-    sty.w objectIndex
-    cpy.w objectIndexShadow
+    .SetAX 8, 16
+    cpy.b objectIndexShadow
     bcs @skipShadow
-        ldy.w objectIndexShadow
+        ldy.b objectIndexShadow
         dey
         dey
         dey
         dey
-        sty.w objectIndexShadow
+        sty.b objectIndexShadow
         lda.w entity_posy+1,X
         sta.w objectData.1.pos_y,Y
         lda.w entity_posx+1,X
@@ -82,7 +70,7 @@ _projectile_update_sprite:
     .ForceSetA 8
     .ForceSetX 16
     tyx
-    ldy.w objectIndex
+    .OY_Get
     lda.w loword(projectile_size),X
     cmp #8
     bcc +
@@ -105,20 +93,17 @@ _projectile_update_sprite:
     ;     lda #%00101110
     ;     sta.w objectData.1.flags,Y
     ; +:
-    iny
-    iny
-    iny
-    iny
+    .OY_Next
+    .SetAX 8, 16
     ; special handling for projectile shadows
-    sty.w objectIndex
-    cpy.w objectIndexShadow
+    cpy.b objectIndexShadow
     bcs @skipShadow
-        ldy.w objectIndexShadow
+        ldy.b objectIndexShadow
         dey
         dey
         dey
         dey
-        sty.w objectIndexShadow
+        sty.b objectIndexShadow
         lda.w entity_posy+1,X
         sta.w objectData.1.pos_y,Y
         lda.w entity_posx+1,X

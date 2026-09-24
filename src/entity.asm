@@ -1196,15 +1196,15 @@ _directtargetposition_y_is_zero:
 .SoftSetBank D_BANK_MIRROR_LOWRAM
 .IgnoreDirect
 .procimpll "Entity.Shadow.PutSmall"
-    ldx.w objectIndexShadow
-    cpx.w objectIndex
+    ldx.b objectIndexShadow
+    cpx.b objectIndex
     bcc @skipShadow
     @inner:
         dex
         dex
         dex
         dex
-        stx.w objectIndexShadow
+        stx.b objectIndexShadow
         lda.w entity_posy+1,Y
         clc
         adc $04,S
@@ -1230,14 +1230,14 @@ _directtargetposition_y_is_zero:
 .SoftSetBank D_BANK_MIRROR_LOWRAM
 .IgnoreDirect
 .procimpll "Entity.Shadow.PutMedium"
-    lda.w objectIndexShadow
+    lda.b objectIndexShadow
     sec
     sbc #8
-    cmp.w objectIndex
+    cmp.b objectIndex
     bcc @skipShadow
         .SetA 8
         tax
-        stx.w objectIndexShadow
+        stx.b objectIndexShadow
         lda.w entity_posy+1,Y
         clc
         adc $04,S
@@ -1301,14 +1301,14 @@ _directtargetposition_y_is_zero:
 .SoftSetBank D_BANK_MIRROR_LOWRAM
 .IgnoreDirect
 .procimpll "Entity.Shadow.PutBig"
-    lda.w objectIndexShadow
+    lda.b objectIndexShadow
     sec
     sbc #12
-    cmp.w objectIndex
+    cmp.b objectIndex
     bcc @skipShadow
         .SetA 8
         tax
-        stx.w objectIndexShadow
+        stx.b objectIndexShadow
         lda.w entity_posy+1,Y
         clc
         adc $04,S

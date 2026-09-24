@@ -408,7 +408,8 @@ _Game.Loop:
         jsr Pause.Update
     +:
     ; End update code
-    .ForceSetAX 16, 16
+    jsl FinalizeSpriteTable ; sets AX to 16,16
+    .SoftSetAX 16, 16
     stz.w blockVQueueMutex
     wai
     jmp _Game.Loop

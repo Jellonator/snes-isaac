@@ -220,7 +220,7 @@
     lda.l SpriteSlotIndexTable,X
     sta.b $01
     ; write data
-    ldx.w objectIndex
+    .OX_Get
     lda.b $01
     sta.w objectData.2.tileid,X
     lda.w entity_posx + 1,Y
@@ -243,15 +243,13 @@
     sta.w objectData.1.tileid,X
     ; inc object index
     .ForceSetAX 16, 16
-    phy
-    .SetCurrentObjectS_Inc
-    .SetCurrentObjectS_Inc
-    ply
+    .OX_Next_S
+    .OX_Next_S
     ; put shadow
-    .ForceSetA 8
+    .SetAX 8, 16
     pea $0405
     .call "Entity.Shadow.PutSmall"
-    .ForceSetAX 16, 16
+    .SetAX 16, 16
     pla
     ; set box and flags
     .EntityEasySetBox 16, 16

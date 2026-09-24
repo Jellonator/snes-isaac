@@ -387,7 +387,7 @@ _ExplosionTileHandlerTable:
     @frame2:
         lda #BOMB2
     @frame_end:
-    ldx.w objectIndex
+    .OX_Get
     sta.w objectData.1.tileid,X
     ; X position
     .ForceSetA 8
@@ -408,8 +408,8 @@ _ExplosionTileHandlerTable:
     sta.w loword(entity_ysort),Y
     adc #4
     sta.w entity_box_y2,Y
-    .ForceSetAX 16, 16
-    .SetCurrentObjectS_Inc
+    .SetAX 16, 16
+    .OX_Next_S
     ply
     ; set mask
     .SetAX 8, 8

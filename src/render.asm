@@ -142,14 +142,14 @@ Render.UpdateHDMA:
     asl
     asl
     asl
-    sta.b renderDP+$1E
+    sta.b renderDP+$00
     lda #162
     sec
-    sbc.b renderDP+$1E
-    sta.b renderDP+$1E
+    sbc.b renderDP+$00
+    sta.b renderDP+$00
     lsr
     sta.l hdmaPaletteBuffer.7.lines
-    lda.b renderDP+$1E
+    lda.b renderDP+$00
     inc A
     lsr
     sta.l hdmaPaletteBuffer.39.lines
@@ -1244,9 +1244,12 @@ Render.HDMAEffect.BrimstoneOmnidirectional:
 ClearSpriteTable:
     .SoftSetA 16
     .SoftSetX 16
-    stz.w objectIndex
+    stz.b objectIndex
     lda #512
-    sta.w objectIndexShadow
+    sta.b objectIndexShadow
+    lda #$8000
+    sta.b objectHiBuffer
+    stz.b objectHiIndex
     .REPT 32/2 INDEX i
         stz.w objectDataExt + (i*2)
     .ENDR
@@ -1257,8 +1260,26 @@ ClearSpriteTable:
     .ENDR
     rtl
 
+FinalizeSpriteTable:
+    .ForceSetAX 16, 16
+    lda.b objectHiBuffer
+    cmp #$8000
+    beq +
+        ; push empty bits to hi buffer until full
+        -:
+            lsr
+            lsr
+        bcc -
+        ldx.b objectHiIndex
+        ; last block may overlap with shadows
+        ora.l objectDataExt,X
+        sta.l objectDataExt,X
+    +:
+    rtl
+
 UploadSpriteTable:
-    .ForceSetA 16
+    .SoftSetAX 16, 16
+    jsl FinalizeSpriteTable
     lda #0
     sta.l OAMADDR
     lda #512+32

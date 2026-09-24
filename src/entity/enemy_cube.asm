@@ -437,7 +437,7 @@ _funclist_state:
 ; draw
     .ForceSetA 8
     .ForceSetX 16
-    ldx.w objectIndex
+    .OX_Get
     ; x pos
     lda.w entity_box_x1,Y
     sec
@@ -493,7 +493,7 @@ _funclist_state:
     .ENDR
     .ForceSetAX 16, 16
     .REPT 4
-        .SetCurrentObjectS_Inc
+        .OX_Next_S
     .ENDR
     ldy.b _tmp_entityid
 ; insert hitbox

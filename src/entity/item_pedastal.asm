@@ -190,14 +190,14 @@ _draw_normal:
     lda.w loword(spriteTableValue + spritetab_t.spritemem),X
     tax
     lda.l SpriteSlotIndexTable,X
-    ldx.w objectIndex
+    .OX_Get
     sta.w objectData.1.tileid,X
     ; tile ID 2
     ldx.w _item_gfxptr_pedastal,Y
     lda.w loword(spriteTableValue + spritetab_t.spritemem),X
     tax
     lda.l SpriteSlotIndexTable,X
-    ldx.w objectIndex
+    .OX_Get
     sta.w objectData.2.tileid,X
     ; X position
     lda.w entity_posx + 1,Y
@@ -234,11 +234,8 @@ _draw_normal:
     ora #%00100001
     sta.w objectData.1.flags,X
     ; increment object index
-    .ForceSetAX 16, 16
-    phy
-    .SetCurrentObjectS_Inc
-    .SetCurrentObjectS_Inc
-    ply
+    .OX_Next_S
+    .OX_Next_S
     rts
 
 _draw_no_pedastal:
@@ -252,7 +249,7 @@ _draw_no_pedastal:
     lda.w loword(spriteTableValue + spritetab_t.spritemem),X
     tax
     lda.l SpriteSlotIndexTable,X
-    ldx.w objectIndex
+    .OX_Get
     sta.w objectData.1.tileid,X
     ; X position
     lda.w entity_posx + 1,Y
@@ -269,10 +266,7 @@ _draw_no_pedastal:
     ora #%00100001
     sta.w objectData.1.flags,X
     ; increment object index
-    .ForceSetAX 16, 16
-    phy
-    .SetCurrentObjectS_Inc
-    ply
+    .OX_Next_S
     rts
 
 _set_text_with_hearts:
@@ -562,7 +556,7 @@ true_item_pedastal_tick_pickup:
     lda.w loword(spriteTableValue + spritetab_t.spritemem),X
     tax
     lda.l SpriteSlotIndexTable,X
-    ldx.w objectIndex
+    .OX_Get
     sta.w objectData.1.tileid,X
     ; X position
     lda.w player_box_x1
@@ -577,13 +571,7 @@ true_item_pedastal_tick_pickup:
     ora #%00100001
     sta.w objectData.1.flags,X
     ; increment index
-    .ForceSetAX 16, 16
-    phy
-    php
-    .SetCurrentObjectS_Inc
-    ; rtl
-    plp
-    ply
+    .OX_Next_S
 
 true_item_pedastal_tick_empty:
     .SoftSetA 8
@@ -599,7 +587,7 @@ true_item_pedastal_tick_empty:
     lda.w loword(spriteTableValue + spritetab_t.spritemem),X
     tax
     lda.l SpriteSlotIndexTable,X
-    ldx.w objectIndex
+    .OX_Get
     sta.w objectData.1.tileid,X
     ; X position
     lda.w entity_posx + 1,Y
@@ -610,8 +598,7 @@ true_item_pedastal_tick_empty:
     ; flags
     lda #%00100001
     sta.w objectData.1.flags,X
-    .ForceSetAX 16, 16
-    .SetCurrentObjectS_Inc
+    .OX_Next_S
 @skip:
     rtl
 

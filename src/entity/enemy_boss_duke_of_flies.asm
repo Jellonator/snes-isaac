@@ -130,7 +130,7 @@ _duke_state_funcs:
 ; load & set gfx
     .ForceSetA 8
     .ForceSetX 16
-    ldx.w objectIndex
+    .OX_Get
     ; X pos
     lda.w entity_posx + 1,Y
     clc
@@ -187,10 +187,10 @@ _duke_state_funcs:
         .ENDR
     .ENDR
     ; inc object index
-    ; (there's probably a more efficient way to do this but idc)
+    ; TODO: reduce code size
     .ForceSetAX 16, 16
     .REPT 9 INDEX i
-        .SetCurrentObjectS_Inc
+        .OX_Next_S
     .ENDR
     ldy.b _tmp_entityid
     pea (BOSS_HEIGHT - 8) + ($100*0)

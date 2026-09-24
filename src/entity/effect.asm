@@ -254,7 +254,7 @@ EntityEffectTypes:
     sta.b PALETTE
     lda #0
     ; draw
-    .ForceSetA 8
+    .SetA 8
     @loop:
         ldx.b TILE
         lda.l bankaddr(EntityEffectTypes) + entityeffect_tile_t.tile,X
@@ -263,7 +263,7 @@ EntityEffectTypes:
         lda (ARRAY),Y
         tax
         lda.l SpriteSlotIndexTable,X
-        ldy.w objectIndex
+        .OY_Get
         sta.w objectData.1.tileid,Y
         ldx.b TILE
         lda.l bankaddr(EntityEffectTypes) + entityeffect_tile_t.offx,X
@@ -285,10 +285,9 @@ EntityEffectTypes:
         stx.b TILE
         ; increment object
         ; TODO: optimize?
-        .ForceSetA 16
-        .SetCurrentObjectS_Inc
+        .OY_Next_S
         lda #0
-        .ForceSetA 8
+        .SetA 8
         jmp @loop
 @end:
     ldy.b STORE_Y

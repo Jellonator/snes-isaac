@@ -2258,7 +2258,7 @@ _player_handle_shoot_brimstone:
     lda.w playerData.invuln_timer
     bit #$08
     bnel @invis_frame
-        ldx.w objectIndex
+        .OX_Get
         lda.w player_posx+1
         sta.w objectData.1.pos_x,X
         sta.w objectData.2.pos_x,X
@@ -2276,9 +2276,8 @@ _player_handle_shoot_brimstone:
         sta.w objectData.1.flags,X
         lda.w playerData.body_flags
         sta.w objectData.2.flags,X
-        .ForceSetAX 16, 16
-        .SetCurrentObjectS_Inc
-        .SetCurrentObjectS_Inc
+        .OX_Next_S
+        .OX_Next_S
 @invis_frame:
     ; put shadow
     .ForceSetA 8

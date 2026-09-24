@@ -92,7 +92,7 @@
 ; load & set gfx
     .ForceSetA 8
     .ForceSetX 16
-    ldx.w objectIndex
+    .OX_Get
     ; X pos
     lda.w entity_posx + 1,Y
     clc
@@ -152,7 +152,7 @@
     ; (there's probably a more efficient way to do this but idc)
     .ForceSetAX 16, 16
     .REPT 12 INDEX i
-        .SetCurrentObjectS_Inc
+        .OX_Next_S
     .ENDR
     ldy $08
     pea (MONSTRO_HEIGHT - 14) + ($100*10)

@@ -124,8 +124,8 @@ DefaultUiData:
     .ENDR
     ; row 28-32
     .dsw 32*5, 0
-
     @end:
+
 MapTiles:
     .dw 0 ; empty
     .dw deft($08, 6) | T_HIGHP ; normal
@@ -137,40 +137,6 @@ MapTiles:
     .dw deft($0E, 6) | T_HIGHP ; secret
     .dw deft($08, 6) | T_HIGHP ; start
     .dw 0 ; devil
-SpriteIndexToExtMaskXS:
-    .REPT 128 / 4 INDEX i
-        .db %00000011 0 i 0
-        .db %00001100 0 i 0
-        .db %00110000 0 i 0
-        .db %11000000 0 i 0
-    .ENDR
-SpriteIndexToExtMaskX:
-    .REPT 128 / 4 INDEX i
-        .db %00000001 0 i 0
-        .db %00000100 0 i 0
-        .db %00010000 0 i 0
-        .db %01000000 0 i 0
-    .ENDR
-SpriteIndexToExtMaskS:
-    .REPT 128 / 4 INDEX i
-        .db %00000010 0 i 0
-        .db %00001000 0 i 0
-        .db %00100000 0 i 0
-        .db %10000000 0 i 0
-    .ENDR
-
-SpriteIndexToExtMaskXS_16:
-    .REPT 8 INDEX i
-        .dw (%00000011 << (i * 2))
-    .ENDR
-SpriteIndexToExtMaskX_16:
-    .REPT 8 INDEX i
-        .dw (%00000001 << (i * 2))
-    .ENDR
-SpriteIndexToExtMaskS_16:
-    .REPT 8 INDEX i
-        .dw (%00000010 << (i * 2))
-    .ENDR
 
 ;-------------;
 ; MATH TABLES ;

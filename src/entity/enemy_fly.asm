@@ -141,7 +141,7 @@
     lda.w loword(spriteTableValue + spritetab_t.spritemem),X
     tax
     lda.l SpriteSlotIndexTable,X
-    ldx.w objectIndex
+    .OX_Get
     sta.w objectData.1.tileid,X
     lda.w entity_posx + 1,Y
     sta.w objectData.1.pos_x,X
@@ -168,18 +168,9 @@
     sta.w entity_signal,Y
     ; inc object index
     .ForceSetAX 16, 16
-    phy
-    .SetCurrentObjectS
-    ply
+    .OX_Next_S
     ; put shadow
-    .ForceSetA 8
-    .ForceSetX 16
-    ldx.w objectIndex
-    inx
-    inx
-    inx
-    inx
-    stx.w objectIndex
+    .SetAX 8, 16
     pea $0404
     .call "Entity.Shadow.PutSmall"
     plx

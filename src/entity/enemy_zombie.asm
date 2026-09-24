@@ -132,7 +132,7 @@ _entity_zombie_default_tick:
     lda.l SpriteSlotIndexTable,X
     sta.b $01
     ; write data
-    ldx.w objectIndex
+    .OX_Get
     lda.b $01
     sta.w objectData.2.tileid,X
     lda.w entity_posx + 1,Y
@@ -150,11 +150,8 @@ _entity_zombie_default_tick:
     lda.b $00
     sta.w objectData.1.tileid,X
     ; inc object index
-    .ForceSetAX 16, 16
-    phy
-    .SetCurrentObjectS_Inc
-    .SetCurrentObjectS_Inc
-    ply
+    .OX_Next_S
+    .OX_Next_S
     rtl
 
 _entity_zombie_default_free:
@@ -284,7 +281,7 @@ _entity_zombie_headless_tick:
     lda.l SpriteSlotIndexTable,X
     sta.b $01
     ; write data
-    ldx.w objectIndex
+    .OX_Get
     lda.b $01
     sta.w objectData.1.tileid,X
     lda.w entity_posx + 1,Y
@@ -294,10 +291,7 @@ _entity_zombie_headless_tick:
     lda.b $02
     sta.w objectData.1.flags,X
     ; inc object index
-    .ForceSetAX 16, 16
-    phy
-    .SetCurrentObjectS_Inc
-    ply
+    .OX_Next_S
     rtl
 
 _entity_zombie_headless_free:
@@ -607,19 +601,12 @@ _zombie_set_walk_frame:
     lda #0
     sta.w entity_signal,Y
     ; put shadow
-    .ForceSetA 8
-    .ForceSetX 16
-    ldx.w objectIndex
-    inx
-    inx
-    inx
-    inx
-    stx.w objectIndex
+    .SetAX 8, 16
     pea $0405
     .call "Entity.Shadow.PutSmall"
     plx
     ; Check collision with player
-    .ForceSetA 8
+    .SetA 8
     jsl Entity.Enemy.TickContactDamage
     ; end
     rts

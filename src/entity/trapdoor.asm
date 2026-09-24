@@ -6,11 +6,10 @@
 true_entity_trapdoor_tick:
     ; rtl
     .ForceSetAX 16, 16
-    phy
     lda #0
     ; tile ID
     lda #$20A4
-    ldx.w objectIndex
+    .OX_Get
     sta.w objectData.1.tileid,X
     ; X position
     .ForceSetA 8
@@ -20,10 +19,8 @@ true_entity_trapdoor_tick:
     lda.w entity_posy + 1,Y
     sta.w objectData.1.pos_y,X
     sta.w loword(entity_ysort),Y
-    .ForceSetAX 16, 16
-    .SetCurrentObjectS_Inc
-    ply
-    .ForceSetA 8
+    .OX_Next_S
+    .SetAX 8, 16
     lda.w entity_timer,Y
     beq +
         dec A

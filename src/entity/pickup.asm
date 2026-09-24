@@ -518,7 +518,6 @@ PickupTable_RoomReward:
 .procdefinel "true_entity_pickup_tick"
     lda #0
     .ForceSetA 8
-    phy
     lda.w anim_timer,Y
     cmp #SPAWN_ANIM_FRAMES-1
     bcs +
@@ -531,7 +530,7 @@ PickupTable_RoomReward:
     ; tile ID
     .ForceSetA 16
     lda.w sprite_tile,Y
-    ldx.w objectIndex
+    .OX_Get
     sta.w objectData.1.tileid,X
     ; X position
     .ForceSetA 8
@@ -543,9 +542,7 @@ PickupTable_RoomReward:
     adc.b $00
     sta.w objectData.1.pos_y,X
     sta.w loword(entity_ysort),Y
-    .ForceSetAX 16, 16
-    .SetCurrentObjectS_Inc
-    ply
+    .OX_Next_S
 ; collision detection
     .EntityEasySetBox 16 16
     ; decrement pickup prevention timer

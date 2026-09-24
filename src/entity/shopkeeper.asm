@@ -27,13 +27,13 @@
         .PopContextSoft
     +:
 ; draw
-    .ForceSetX 16
+    .SetX 16
     .REPT 4 INDEX i
         ldx.w loword(entity_custom.{i+1}),Y
         lda.w loword(spriteTableValue + spritetab_t.spritemem),X
         tax
         lda.l SpriteSlotIndexTable,X
-        ldx.w objectIndex
+        .OX_Get
         sta.w objectData.{i+1}.tileid,X
     .ENDR
     lda.w entity_box_x1,Y
@@ -61,13 +61,10 @@
     sta.w objectData.2.flags,X
     sta.w objectData.3.flags,X
     sta.w objectData.4.flags,X
-    .ForceSetAX 16, 16
-    phy
-    .SetCurrentObjectS_Inc
-    .SetCurrentObjectS_Inc
-    .SetCurrentObjectS_Inc
-    .SetCurrentObjectS_Inc
-    ply
+    .OX_Next_S
+    .OX_Next_S
+    .OX_Next_S
+    .OX_Next_S
 ; set public entity info
     .EntityEasySetBox 16 16
     lda #ENTITY_MASK_BOMBABLE

@@ -23,7 +23,7 @@
     lda.w loword(spriteTableValue + spritetab_t.spritemem),X
     tax
     lda.l SpriteSlotIndexTable,X
-    ldx.w objectIndex
+    .OX_Get
     sta.w objectData.1.tileid,X
     ; X position
     lda.w entity_posx + 1,Y
@@ -53,8 +53,8 @@
     +:
     lda.b $02
     sta.w objectData.1.flags,X
-    .ForceSetAX 16, 16
-    .SetCurrentObjectS_Inc
+    .OX_Next_S
+    .SetAX 16, 16
     ; set box and mask
     ldy.b _entityid
     .EntityEasySetBox 16 14

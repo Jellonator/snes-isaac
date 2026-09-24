@@ -348,7 +348,8 @@ _player_tick:
     _e_null,\
     _player_tick,\
     _e_null,\
-    ENTITY_SPAWNGROUP_NEVER
+    ENTITY_SPAWNGROUP_NEVER,\
+    ENTITY_TYPE_FLAG_REDUCESPAWN
 
 ._DefineEntity ENTITY_TYPE_PROJECTILE,\
     projectile_entity_init,\
@@ -361,21 +362,21 @@ _player_tick:
     entity_pickup_tick,\
     entity_pickup_free,\
     ENTITY_SPAWNGROUP_ONCE,\
-    ENTITY_TYPE_FLAG_SERIALIZE
+    ENTITY_TYPE_FLAG_SERIALIZE | ENTITY_TYPE_FLAG_REDUCESPAWN
 
 ._DefineEntity ENTITY_TYPE_ITEM_PEDASTAL,\
     item_pedastal_init,\
     item_pedastal_tick,\
     item_pedastal_free,\
     ENTITY_SPAWNGROUP_ONCE,\
-    ENTITY_TYPE_FLAG_SERIALIZE
+    ENTITY_TYPE_FLAG_SERIALIZE | ENTITY_TYPE_FLAG_REDUCESPAWN
 
 ._DefineEntity ENTITY_TYPE_TRAPDOOR,\
     entity_trapdoor_init,\
     entity_trapdoor_tick,\
     entity_trapdoor_free,\
     ENTITY_SPAWNGROUP_ONCE,\
-    ENTITY_TYPE_FLAG_SERIALIZE
+    ENTITY_TYPE_FLAG_SERIALIZE | ENTITY_TYPE_FLAG_BLOCKSPAWN
 
 ._DefineEntity ENTITY_TYPE_BOMB,\
     entity_bomb_init,\
@@ -395,14 +396,14 @@ _player_tick:
     entity_shopkeeper_tick,\
     entity_shopkeeper_free,\
     ENTITY_SPAWNGROUP_ONCE,\
-    ENTITY_TYPE_FLAG_SERIALIZE
+    ENTITY_TYPE_FLAG_SERIALIZE | ENTITY_TYPE_FLAG_REDUCESPAWN
 
 ._DefineEntity ENTITY_TYPE_TILE,\
     entity_tile_init,\
     entity_tile_tick,\
     entity_tile_free,\
     ENTITY_SPAWNGROUP_ONCE,\
-    ENTITY_TYPE_FLAG_SERIALIZE
+    ENTITY_TYPE_FLAG_SERIALIZE | ENTITY_TYPE_FLAG_REDUCESPAWN
 
 ._DefineEntity ENTITY_TYPE_ENEMY_ATTACK_FLY,\
     entity_basic_fly_init,\

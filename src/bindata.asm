@@ -271,19 +271,28 @@ GameTileBoundaryCheck:
         .dsb 16, $81
     .ENDR
 
-RoomTileToXTable:
-    .REPT 8
-        .REPT 12 INDEX i
-            .db i
+RoomTileToGameTileTable:
+    .REPT 8 INDEX iy
+        .REPT 12 INDEX ix
+            .db ix | (iy << 4)
         .ENDR
     .ENDR
     .db 0
     .db 0
 
-RoomTileToYTable:
+RoomTileToWorldXTable:
+    .REPT 8
+        .REPT 12 INDEX i
+            .db i * 16 + ROOM_LEFT
+        .ENDR
+    .ENDR
+    .db 0
+    .db 0
+
+RoomTileToWorldYTable:
     .REPT 8 INDEX i
         .REPT 12
-            .db i
+            .db i * 16 + ROOM_TOP
         .ENDR
     .ENDR
     .db 0

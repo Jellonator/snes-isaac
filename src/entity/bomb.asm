@@ -33,21 +33,9 @@ _bomb_tile_poop:
     ; put splotch
     .ForceSetA 8
     tyx
-    lda.l RoomTileToXTable,X
-    asl
-    asl
-    asl
-    asl
-    clc
-    adc #32
+    lda.l RoomTileToWorldXTable,X
     sta.b $07
-    lda.l RoomTileToYTable,X
-    asl
-    asl
-    asl
-    asl
-    clc
-    adc #64
+    lda.l RoomTileToWorldYTable,X
     sta.b $06
     phy
     php

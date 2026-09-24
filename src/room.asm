@@ -254,20 +254,38 @@ _Room_Close_Devil_Doors:
 
 _Room_Spawn_Reward:
     .ForceSetAX 16, 16
+    ; use seed to get entityvariant
     jsl Random.Room.Update8
     and #$00FF
     asl
     tax
     lda.l PickupTable_RoomReward,X
     beq @no_spawn
-    .PushBank
-    .ForceSetBank $7E
-    .call "Entity.CreateAndInit"
-    .PopBank
-    .SetAX 16, 16
-    lda #120 * $0100
-    sta.w entity_posx,Y
-    sta.w entity_posy,Y
+    ; change context
+        .PushBank
+        .ForceSetBank $7E
+    ; save entity type for later
+        .pha "reward_type"
+    ; get entity spawn position
+        .SetAX 8, 8
+        .pea $7F7F
+        .call "Room.GetPositionNear"
+    ; create entity
+        .SetAX 16, 16
+        lda stk(reward_type),S
+        .call "Entity.Create"
+        .SetAX 8, 8
+    ; set entity position
+        pla
+        sta.w entity_posy+1,Y
+        pla
+        sta.w entity_posx+1,Y
+        .PullSoft 2
+        .SetAX 16, 16
+        .call "Entity.Init"
+    ; pull context
+        .pla
+        .PopBank
 @no_spawn:
     rts
 
@@ -579,5 +597,164 @@ GetDevilDealChance:
     +:
     .ForceSetAX 8, 8
     rtl
+
+.SetDirect $0000
+.SetBank $7E
+.SoftSetAX 8, 8
+.procimpll "Room.GetPositionNear"
+    .procparam "posx", 1
+    .procparam "posy", 1
+    .DEFINE priority loword(tempData_7E)
+    ldy #ROOM_TILE_COUNT
+    @loop_init_priority:
+        dey
+        ; de-prioritize if in a wall/gap (top bit, highest prio)
+        lda [currentRoomTileTypeTableAddress],Y
+        beq @init_priority_low ; $00  => hole, low prio
+        bmi @init_priority_low ; $80+ => wall, low prio
+            lda #$00
+            jmp @init_priority_set
+        @init_priority_low:
+            lda #$80
+        @init_priority_set:
+        sta.w priority,Y
+    ; add distance to center (lower 4 bits, low prio)
+        tyx
+        lda.l RoomTileToWorldXTable,X
+        clc
+        adc #7
+        sec
+        sbc stk(posx),S
+        .ABS_A8_POSTSBC
+        and #$F0
+        sta.b $00
+        ; y position now
+        lda.l RoomTileToWorldYTable,X
+        clc
+        adc #7
+        sec
+        sbc stk(posy),S
+        .ABS_A8_POSTSBC
+        and #$F0
+        clc
+        adc.b $00
+        .AMINU P_IMM, $F0
+        .DivideStatic 16
+        ora.w priority,Y
+        sta.w priority,Y
+    ; loop
+        cpy #0
+        bne @loop_init_priority
+; lower priority for tiles with entities on top of them (middle 3 bits, mid prio)
+    ldx.w numEntities
+    beq @end_loop_entities
+    @loop_entities:
+    ; get entity from execution order
+        lda.w entityExecutionOrder-1,X
+        tay
+        .phx "entity_id"
+    ; check flags
+        ldx.w entity_type,Y
+        lda.l EntityDef_Flags,X
+        bit #ENTITY_TYPE_FLAG_BLOCKSPAWN | ENTITY_TYPE_FLAG_REDUCESPAWN
+        beq @loop_entities_continue
+        ; get tile position
+        lda.w entity_box_x1,Y
+        clc
+        adc.w entity_box_x2,Y
+        ror
+        .DivideStatic 16
+        .pha "entitypos"
+        lda.w entity_box_y1,Y
+        clc
+        adc.w entity_box_y2,Y
+        ror
+        and #$F0
+        ora stk(entitypos),S
+        .phx
+        tax
+        lda.l GameTileToRoomTileIndexTable,X
+        sta stk(entitypos),S
+        .plx
+        ; lda.w entity_box_x1,Y
+        ; .DivideStatic 16
+        ; sta.b $00
+        ; sta.b $01
+        ; lda.w entity_box_x2,Y
+        ; dec A
+        ; .DivideStatic 16
+        ; cmp.b $00
+        ; sta.b $02
+        ; sta.b $03
+        ; lda.w entity_box_y1,Y
+        ; and #$F0
+        ; tsb.b $00
+        ; tsb.b $02
+        ; lda.w entity_box_y2,Y
+        ; dec A
+        ; and #$F0
+        ; tsb.b $01
+        ; tsb.b $03
+        ; ; convert tile positions to tile indices
+        ; ldx.b $00
+        ; lda.l GameTileToRoomTileIndexTable,X
+        ; sta.b $00
+        ; ldx.b $01
+        ; lda.l GameTileToRoomTileIndexTable,X
+        ; sta.b $01
+        ; ldx.b $02
+        ; lda.l GameTileToRoomTileIndexTable,X
+        ; sta.b $02
+        ; ldx.b $03
+        ; lda.l GameTileToRoomTileIndexTable,X
+        ; sta.b $03
+        lda.l EntityDef_Flags,X
+        bit #ENTITY_TYPE_FLAG_BLOCKSPAWN
+        beq @reduce_spawn
+        ; completely de-prioritize this tile
+            plx
+            lda #$FF
+            sta.w priority,X
+            jmp @loop_entities_continue
+        @reduce_spawn:
+        ; reduce priority by $10 for each tile
+            .plx
+            ; check if middle three bits are $70, and skip if so
+            lda.w priority,X
+            and #$70
+            cmp #$70
+            beq @loop_entities_continue
+            lda.w priority,X
+            clc
+            adc #$10
+            sta.w priority,X
+    ; loop
+    @loop_entities_continue:
+        .plx
+        dex
+        bne @loop_entities
+@end_loop_entities:
+    ; find highest priority tile (smallest value)
+    lda #$FF
+    ldx #ROOM_TILE_COUNT
+    @loop_find_min:
+        dex
+    ; compare
+        cmp.w priority,X
+        bleu @loop_find_min_continue
+        ; set to current tile
+            lda.l RoomTileToWorldXTable,X
+            sta stk(posx),S
+            lda.l RoomTileToWorldYTable,X
+            sta stk(posy),S
+            lda.w priority,X
+    ; loop
+    @loop_find_min_continue:
+        cpx #0
+        bne @loop_find_min
+    ; end
+    .UNDEFINE priority
+    rtl
+.endproc
 
 .ENDS

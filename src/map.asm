@@ -23,7 +23,8 @@
     ; right
     phx
     ldx.b $0C
-    lda.l RoomTileToXTable,X
+    lda.l RoomTileToGameTileTable,X
+    and #$0F
     plx
     cmp #ROOM_TILE_WIDTH - 1
     beq @skip_right
@@ -44,7 +45,8 @@
     ; left
     phx
     ldx.b $0C
-    lda.l RoomTileToXTable,X
+    lda.l RoomTileToGameTileTable,X
+    and #$0F
     plx
     cmp #0
     beq @skip_left

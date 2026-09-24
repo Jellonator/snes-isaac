@@ -56,7 +56,7 @@
     tagline: .ASCSTR "Two prayers for the lost", 0
     sprite_ptr: .dl spritedata.tarot_cards_big.5
     sprite_palette: .dw loword(palettes.tarot_cards_hierophant)
-    on_use: .dl _empty_use
+    on_use: .dl _tarot_hierophant
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_lovers INSTANCEOF consumable_t VALUES
@@ -64,7 +64,7 @@
     tagline: .ASCSTR "May you prosper", 0
     sprite_ptr: .dl spritedata.tarot_cards_big.6
     sprite_palette: .dw loword(palettes.tarot_cards_lovers)
-    on_use: .dl _empty_use
+    on_use: .dl _tarot_lovers
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_chariot INSTANCEOF consumable_t VALUES
@@ -104,7 +104,7 @@
     tagline: .ASCSTR "May your future be balanced", 0
     sprite_ptr: .dl spritedata.tarot_cards_big.11
     sprite_palette: .dw loword(palettes.tarot_cards_justice)
-    on_use: .dl _empty_use
+    on_use: .dl _tarot_justice
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_hanged_man INSTANCEOF consumable_t VALUES
@@ -302,6 +302,42 @@ TeleportToRoom:
     jsl Familiars.MoveFamiliarsToPlayer
     rtl
 
+; Create entity 'A' near the player
+CreateEntityNearPlayer:
+; change context
+    .ForceSetAX 16, 16
+    .PushBank
+    .ForceSetBank $7E
+; save entity type for later
+    .pha "reward_type"
+; get entity spawn location
+    .SetAX 8, 8
+    lda.w player_box_x1
+    clc
+    adc #4
+    .pha
+    lda.w player_box_y1
+    adc #4
+    .pha
+    .call "Room.GetPositionNear"
+; create entity
+    .SetAX 16, 16
+    lda stk(reward_type),S
+    .call "Entity.Create"
+    .SetAX 8, 8
+; set entity position
+    .pla
+    sta.w entity_posy+1,Y
+    .pla
+    sta.w entity_posx+1,Y
+; pull context
+    .SetAX 16, 16
+    .call "Entity.Init"
+    .pla
+    .PopBank
+    rtl
+.ASSERT D_STACKOFFS == 0
+
 _tarot_fool:
     .ForceSetAX 8, 8
     lda.l roomslot_start
@@ -330,6 +366,36 @@ _tarot_emperor:
     .ForceSetAX 8, 8
     lda.l roomslot_boss
     jsl TeleportToRoom
+    rts
+
+_tarot_hierophant:
+    .ForceSetAX 16, 16
+    lda #entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_HEART_SOUL)
+    jsl CreateEntityNearPlayer
+    .ForceSetAX 16, 16
+    lda #entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_HEART_SOUL)
+    jsl CreateEntityNearPlayer
+    rts
+
+_tarot_lovers:
+    .ForceSetAX 16, 16
+    lda #entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_HEART_FULL)
+    jsl CreateEntityNearPlayer
+    .ForceSetAX 16, 16
+    lda #entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_HEART_FULL)
+    jsl CreateEntityNearPlayer
+    rts
+
+_tarot_justice:
+    .ForceSetAX 16, 16
+    lda #entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_RANDOM_COIN)
+    jsl CreateEntityNearPlayer
+    .ForceSetAX 16, 16
+    lda #entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_RANDOM_HEART)
+    jsl CreateEntityNearPlayer
+    .ForceSetAX 16, 16
+    lda #entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_RANDOM_BOMB)
+    jsl CreateEntityNearPlayer
     rts
 
 ; Set current consumable to 'A'

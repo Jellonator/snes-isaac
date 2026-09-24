@@ -143,21 +143,9 @@ _projectile_tile_poop:
     ; put splotch
     .ForceSetA 8
     tyx
-    lda.l RoomTileToXTable,X
-    asl
-    asl
-    asl
-    asl
-    clc
-    adc #32
+    lda.l RoomTileToWorldXTable,X
     sta.b $07
-    lda.l RoomTileToYTable,X
-    asl
-    asl
-    asl
-    asl
-    clc
-    adc #64
+    lda.l RoomTileToWorldYTable,X
     sta.b $06
     phy
     php
@@ -179,15 +167,9 @@ _projectile_tile_poop:
         .ForceSetAX 8, 8
         lda 1+$02,S
         tax
-        lda.l RoomTileToXTable,X
-        .MultiplyStatic 16
-        clc
-        adc #ROOM_LEFT
+        lda.l RoomTileToWorldXTable,X
         sta.w entity_box_x1,Y
-        lda.l RoomTileToYTable,X
-        .MultiplyStatic 16
-        clc
-        adc #ROOM_TOP
+        lda.l RoomTileToWorldYTable,X
         sta.w entity_box_y1,Y
         .ForceSetAX 16, 16
         .call "Entity.Init"
@@ -202,15 +184,9 @@ _projectile_tile_poop:
         .ForceSetAX 8, 8
         lda 1+$02,S
         tax
-        lda.l RoomTileToXTable,X
-        .MultiplyStatic 16
-        clc
-        adc #ROOM_LEFT
+        lda.l RoomTileToWorldXTable,X
         sta.w entity_box_x1,Y
-        lda.l RoomTileToYTable,X
-        .MultiplyStatic 16
-        clc
-        adc #ROOM_TOP
+        lda.l RoomTileToWorldYTable,X
         sta.w entity_box_y1,Y
         .ForceSetAX 16, 16
         .call "Entity.Init"

@@ -104,6 +104,7 @@ PickupRandomizerTables:
     .dw PickupTable_Any
     .dw PickupTable_Coin
     .dw PickupTable_Heart
+    .dw PickupTable_Bomb
 
 PickupTable_Shop:
     .ChanceTableBegin 256
@@ -128,6 +129,11 @@ PickupTable_Heart:
     .ChanceTableBegin 256
     .ChanceTableDW  50, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_HEART_SOUL)
     .ChanceTableRestDW  entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_HEART_FULL)
+    .ChanceTableEnd
+
+PickupTable_Bomb:
+    .ChanceTableBegin 256
+    .ChanceTableRestDW  entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_BOMB)
     .ChanceTableEnd
 
 PickupTable_Any:
@@ -819,6 +825,10 @@ PickupTable_RoomReward:
     lda.l _variant_sprite_tileflag,X
     ora #%00100000 * $0100
     sta.w sprite_tile,Y
+    ; setup box
+    ; necessary so that, if we spawn multiple pickups on the same frame,
+    ; they won't overlap.
+    .EntityEasySetBox 16 16
     ; initialize pickup by type
     .ForceSetAX 16, 16
     lda.w entity_variant,Y

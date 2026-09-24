@@ -115,6 +115,7 @@
 .DEFINE ENTITY_PICKUP_RANDOM_ANY $81
 .DEFINE ENTITY_PICKUP_RANDOM_COIN $82
 .DEFINE ENTITY_PICKUP_RANDOM_HEART $83
+.DEFINE ENTITY_PICKUP_RANDOM_BOMB $84
 
 ; ENTITY ITEM PEDASTAL POOL VARIANTS
 .DEFINE ENTITY_ITEMPEDASTAL_POOL_ITEMROOM 0
@@ -157,6 +158,10 @@
 ; if set, then entity should be serialized when room is unloaded.
 ; in general, only set this for entities with ENTITY_SPAWNGROUP_ONCE
 .DEFINE ENTITY_TYPE_FLAG_SERIALIZE $01
+; if set, then spawned pickups will try to avoid landing on the same tile as this entity
+.DEFINE ENTITY_TYPE_FLAG_REDUCESPAWN $02
+; if set, then spawned pickups will not spawn on the same tile as this entity
+.DEFINE ENTITY_TYPE_FLAG_BLOCKSPAWN $04
 
 ; Custom entity data
 .STRUCT entitycustomdata_t

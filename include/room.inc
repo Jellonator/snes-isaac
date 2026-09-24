@@ -164,3 +164,21 @@
 .DEFINE ROOM_LOAD_CONTEXT_SAVELOAD $02
 .DEFINE ROOM_LOAD_CONTEXT_TRANSITION $03
 .DEFINE ROOM_LOAD_CONTEXT_TELEPORT $04
+
+;;;;;;;;;;;;;;;;;;;;;;;;;
+; PROCEDURE DEFINITIONS ;
+;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; Get an available location near the given position.
+; * The returned position shall not be occupied by a solid tile
+; * Positions with nearby entities have lowered priority
+; Arguments:
+;   posx [db]
+;   posy [db]
+; Returns position on the stack
+; The provided and returned position are for a centered 16x16 entity
+.SoftSetAX 8, 8
+.SetDirect $0000
+.SetBank $7E
+.procheaderl "Room.GetPositionNear"
+.endproc

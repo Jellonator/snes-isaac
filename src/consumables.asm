@@ -323,16 +323,12 @@ CreateEntityNearPlayer:
 ; create entity
     .SetAX 16, 16
     lda stk(reward_type),S
-    .call "Entity.Create"
-    .SetAX 8, 8
-; set entity position
-    .pla
-    sta.w entity_posy+1,Y
-    .pla
-    sta.w entity_posx+1,Y
+    .call "Entity.CreateAndInit"
 ; pull context
     .SetAX 16, 16
-    .call "Entity.Init"
+    pla
+    .PullSoft 1
+    .PullSoft 1
     .pla
     .PopBank
     rtl

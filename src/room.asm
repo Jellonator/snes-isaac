@@ -273,17 +273,10 @@ _Room_Spawn_Reward:
     ; create entity
         .SetAX 16, 16
         lda stk(reward_type),S
-        .call "Entity.Create"
-        .SetAX 8, 8
-    ; set entity position
-        pla
-        sta.w entity_posy+1,Y
-        pla
-        sta.w entity_posx+1,Y
-        .PullSoft 2
-        .SetAX 16, 16
-        .call "Entity.Init"
+        .call "Entity.CreateAndInit"
     ; pull context
+        .SetAX 16, 16
+        .pla
         .pla
         .PopBank
 @no_spawn:
@@ -294,13 +287,11 @@ _Room_Spawn_Boss_Reward:
     lda #ENTITY_TYPE_ITEM_PEDASTAL | ($0100 * ENTITY_ITEMPEDASTAL_POOL_BOSS)
     .PushBank
     .ForceSetBank $7E
+    .pea $7898
     .call "Entity.CreateAndInit"
+    .SetA 16
+    .pla
     .PopBank
-    .SetAX 16, 16
-    lda #120 * $0100
-    sta.w entity_posx,Y
-    lda #(120 + 32) * $0100
-    sta.w entity_posy,Y
     rts
 
 _Room_Spawn_Trapdoor:
@@ -308,13 +299,11 @@ _Room_Spawn_Trapdoor:
     lda #ENTITY_TYPE_TRAPDOOR
     .PushBank
     .ForceSetBank $7E
+    .pea $7878
     .call "Entity.CreateAndInit"
+    .SetA 16
+    .pla
     .PopBank
-    .SetAX 16, 16
-    lda #120 * $0100
-    sta.w entity_posx,Y
-    lda #(120) * $0100
-    sta.w entity_posy,Y
     rts
 
 _room_spawn_devildoor_cancel:

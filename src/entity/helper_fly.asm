@@ -330,28 +330,25 @@ HelperFly.Tick: ; TOPROC
     +:
     ; spawn a fly
     dec.w playerData.helperFlyBufferCount
-    .ForceSetAX 16, 16
-    lda #entityvariant(ENTITY_TYPE_HELPER_FLY, 0)
-    phb
-    .PushContext
+    .PushBank
     .SetBank $7E
-    .SoftSetDirect $0000
-    .SoftSetAX 16, 16
+    lda.w player_box_x1
+    adc #8
+    pha
+    lda.w player_box_y1
+    adc #8
+    pha
+    .SetAX 16, 16
+    lda #entityvariant(ENTITY_TYPE_HELPER_FLY, 0)
     .call "Entity.CreateAndInit"
-    .PopContextSoft
-    plb
-    ; set position and velocity
-    .ForceSetAX 16, 16
+    ; set velocity
+    .SetAX 16, 16
+    pla
     lda.w player_velocx
     sta.w entity_velocx,Y
     lda.w player_velocy
     sta.w entity_velocy,Y
-    lda.w player_posx
-    adc #8*$0100
-    sta.w entity_posx,Y
-    lda.w player_posy
-    adc #8*$0100
-    sta.w entity_posy,Y
+    .PopBank
     rtl
 
 .ENDS

@@ -10,17 +10,24 @@ _e_null:
 
 ; Create and initialize an entity of type+variant A
 ; lower byte is type, upper byte is variant
+; Arguments:
+;   posx [db]
+;   posy [db]
+; Since the entity's position can be changed afterwards anyways,
+; setting a proper position may be optional, depending on the entity type.
 ; Returns reference as Y
 .InvalidateA
 .SoftSetX 16
 .SoftSetBank $7E
 .SoftSetDirect $0000
 .procimpll "Entity.CreateAndInit"
+.procparam "p_posx", 1
+.procparam "p_posy", 1
     .SetA 8
     ; first: find next free slot
-    pha
+    .pha
     xba
-    pha
+    .pha
     xba
     ldy #ENTITY_FIRST_CUSTOM_INDEX
     ; for character entities, start from ENTITY_CHARACTER_MAX instead.
@@ -47,23 +54,30 @@ _e_null:
     sta.w loword(entity_health),Y
     .SetA 8
     sta.w loword(entity_damageflash),Y
+    lda stk(p_posx),S
+    sta.w entity_box_x1,Y
+    sta.w entity_box_x2,Y
+    lda stk(p_posy),S
+    sta.w entity_box_y1,Y
+    sta.w entity_box_y2,Y
+    sta.w loword(entity_ysort),Y
     ; init entity data
-    pla
+    .pla
     sta.w entity_variant,Y
-    pla
+    .pla
     sta.w entity_type,Y
     .SetA 16
     .MultiplyStatic 2
     tax
-    phy
-    .PushP
+    .phy
     jsr (EntityDef_InitFunc, X)
-    .PopP
-    ply
+    .ForceSetAX 16, 16
+    .ply
     ; insert into execution order
     lda.l numEntities
     tax
     tya
+    ; okay to use 16b set here, since this will be the final element
     sta.w entityExecutionOrder,X
     txa
     inc A
@@ -77,7 +91,8 @@ _e_null:
 ; Returns reference as Y
 ; Make sure to call Entity.Init afterwards; use this function instead of
 ; Entity.CreateAndInit if you want to set some variables (e.g. entity_state,
-; entity_timer) before running its init function
+; entity_timer) before running its init function.
+; Unlike Entity.Create, this will *not* set the entity's position.
 .InvalidateA
 .SoftSetX 16
 .SoftSetBank $7E
@@ -138,15 +153,23 @@ _e_null:
 .SoftSetBank $7E
 .SoftSetDirect $0000
 .procimpll "Entity.Init"
+    ; set x2,y2 to match x1,y1
+    .SetA 8
+    lda.w entity_box_x1,Y
+    sta.w entity_box_x2,Y
+    lda.w entity_box_y1,Y
+    sta.w entity_box_y2,Y
+    sta.w loword(entity_ysort),Y
+    ; call init function
+    .SetA 16
     lda.w entity_type,Y
     and #$00FF
     .MultiplyStatic 2
     tax
-    phy
-    .PushP
+    .phy
     jsr (EntityDef_InitFunc, X)
-    .PopP
-    ply
+    .ForceSetAX 16, 16
+    .ply
     rtl
 .endproc
 
@@ -160,9 +183,8 @@ _e_null:
     .MultiplyStatic 2
     tax
     phy
-    php
     jsr (EntityDef_FreeFunc,X)
-    plp
+    .ForceSetAX 16, 16
     ply
     ; set type to 0
     .SetA 8
@@ -218,9 +240,8 @@ _e_null:
     .MultiplyStatic 2
     tax
     phy
-    php
     jsr (EntityDef_FreeFunc,X)
-    plp
+    .ForceSetAX 16, 16
     ply
 ; clear info
     .SetA 8
@@ -238,9 +259,8 @@ _e_null:
     .MultiplyStatic 2
     tax
     phy
-    php
     jsr (EntityDef_InitFunc, X)
-    plp
+    .ForceSetAX 16, 16
     ply
 ; return
     rtl
@@ -276,9 +296,8 @@ _e_null:
     .MultiplyStatic 2
     tax
     phy
-    php
     jsr (EntityDef_FreeFunc,X)
-    plp
+    .ForceSetAX 16, 16
     ply
     ; set type to 0
     .SetA 8
@@ -300,24 +319,23 @@ _e_null:
 .SoftSetDirect $0000
 .procimpll "Entity.TickAll"
     .call "Entity.SortExecutionOrder"
-    .SetAX 16, 16
+    .SetAX 8, 8
     ldx.w numEntities
     beq @end
     @loop:
-        phx
-        lda.w entityExecutionOrder-1,X
-        and #$00FF
-        tay
-        lda.w entity_type,Y
-        and #$00FF
-        .MultiplyStatic 2
-        tax
-        php
-        jsr (EntityDef_TickFunc,X)
-        plp
-        plx
-        dex
-        bne @loop
+        phx                             ;  2.5
+        ldy.w entityExecutionOrder-1,X  ;  3.25
+        lda.w entity_type,Y             ;  3.25
+        .SetAX 16, 16                   ;  2.25
+        and #$00FF                      ;  2.25
+        asl                             ;  1.5
+        tax                             ;  1.5
+        jsr (EntityDef_TickFunc,X)      ;  6.5
+        .ForceSetAX 8, 8                ;  2.25
+        plx                             ;  3.25
+        dex                             ;  1.5
+        bne @loop                       ;  2.25
+        ;                               = 32.25
 @end:
     rtl
 .endproc
@@ -503,62 +521,38 @@ EntityDef_Flags:
 .SoftSetBank $7E
 .IgnoreDirect
 .procimpll "Entity.SortExecutionOrder"
+; implemented as a single pass bubble sort.
+; after N-2 frames, where N is the number of entities, all entities will be sorted.
     lda.w numEntities
     cmp #2
-    bcc @noSort
+    bcc @no_sort
 ; sorting logic
     ldy #1
     ; do {
-@outerloop:
-    ; e = entity[i]
-    lda.w entityExecutionOrder,Y
-    ; sta.b $01
-    ; v = entity_y2[e]
-    tax
-    ; xba
+@loop_entities:
+    ; e1 = entity[i]
+    ldx.w entityExecutionOrder,Y
+    ; v = ysort[e1]
     lda.w loword(entity_ysort),X
-    sta.b $02
-    ; j = i - 1;
-    sty.b $00
-    dec.b $00
-    ; while (j >= 0 && && entity_y2[entity[j]] >= v) {
-    @innerloop:
-        ldx.b $00
-        cpx #$FF
-        beq @endinnerloop
-        ; X = entity[j]
-        lda.w entityExecutionOrder,X
-        tax
-        ; A = entity_y2[X]
-        lda.w loword(entity_ysort),X
-        cmp.b $02
-        bcc @endinnerloop
-        beq @endinnerloop
-        ; swap entity[j+1], entity[j];
-        ; txa
-        ldx.b $00
-        lda.w entityExecutionOrder+0,X
-        xba
-        lda.w entityExecutionOrder+1,X
-        sta.w entityExecutionOrder+0,X
-        xba
-        sta.w entityExecutionOrder+1,X
-        ; j -= 1;
-        dec.b $00
-        bra @innerloop
-    ; }
-    @endinnerloop:
-    ; entity[j+1] = entity[i];
-    ; lda.b $01
-    ; ldx.b $00
-    ; sta.w entityExecutionOrder+1,X
+    ; e2 = entity[i-1]
+    ldx.w entityExecutionOrder-1,Y
+    ; if (v < ysort[e2]) {
+    cmp.w loword(entity_ysort),X
+    bcs @no_swap
+        ; swap entity[i], entity[i-1]
+        txa
+        ldx.w entityExecutionOrder,Y
+        sta.w entityExecutionOrder,Y
+        txa
+        sta.w entityExecutionOrder-1,Y
+    @no_swap:
     ; i += 1;
     iny
     ; } while (i < COUNT);
     cpy.w numEntities
-    bcc @outerloop
+    bcc @loop_entities
 ; end
-@noSort:
+@no_sort:
     rtl
 .endproc
 

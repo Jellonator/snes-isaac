@@ -306,24 +306,21 @@ _ExplosionTileHandlerTable:
         jsl Splat.explode_big
         plb
         ; create graphic
-        .ForceSetAX 16, 16
+        .ForceSetAX 8, 8
         ldy.b Y_STORE
-        lda.w entity_posx,Y
+        lda.w entity_box_x1,Y
+        clc
+        adc #8
         pha
-        lda.w entity_posy,Y
+        lda.w entity_box_y1,Y
+        clc
+        adc #8
         pha
+        .SetAX 16, 16
         lda #entityvariant(ENTITY_TYPE_EFFECT, ENTITY_EFFECT_EXPLOSION)
         .call "Entity.CreateAndInit"
-        .ForceSetAX 16, 16
+        .SetAX 16, 16
         pla
-        clc
-        adc #8*$0100
-        sta.w entity_posy,Y
-        pla
-        clc
-        adc #8*$0100
-        sta.w entity_posx,Y
-        .ForceSetAX 16, 16
         ldy.b Y_STORE
         .call "Entity.Free"
         rtl

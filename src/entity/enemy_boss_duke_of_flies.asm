@@ -242,23 +242,19 @@ _duke_state_funcs:
     bcs @end_spawn
     jmp @continue
     @do_spawn:
-        .ForceSetAX 16, 16
+        .SetAX 8, 8
         phy
-        php
+        lda.w entity_box_x1,Y
+        pha
+        lda.w entity_box_y1,Y
+        pha
+        .SetAX 16, 16
         lda #ENTITY_TYPE_ENEMY_ATTACK_FLY
         .call "Entity.CreateAndInit"
-        tyx
-        plp
+        .SetAX 8, 8
         ply
-        .ForceSetA 8
-        lda.w entity_posx+1,Y
-        clc
-        adc #16
-        sta.w entity_posx+1,X
-        lda.w entity_posy+1,Y
-        clc
-        adc #36
-        sta.w entity_posy+1,X
+        ply
+        ply
         jmp @continue
     @end_spawn:
         .ForceSetA 8

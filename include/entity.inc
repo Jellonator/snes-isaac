@@ -511,7 +511,6 @@
 .SoftSetBank $7E
 .SoftSetDirect $0000
 .procheaderl "Entity.TickAll"
-    .SoftSetAX 16, 16
 .endproc
 
 .SoftSetAX 8, 8

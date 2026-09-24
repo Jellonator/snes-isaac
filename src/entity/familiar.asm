@@ -340,8 +340,7 @@ Familiars.RefreshFamiliars:
     .PushBank
     .ForceSetBank $7E
     .ForceSetA 16
-    lda.b entityExecutionContext
-    pha
+    pei (entityExecutionContext)
     lda #ENTITY_CONTEXT_FAMILIAR
     sta.b entityExecutionContext
 ; determine number of each familiar type needed

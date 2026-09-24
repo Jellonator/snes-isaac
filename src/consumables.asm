@@ -341,8 +341,7 @@ Consumable.pickup:
     lda.w playerData.current_consumable
     beq @skip_drop
         .ForceSetAX 16, 16
-        lda.b entityExecutionContext
-        pha
+        pei (entityExecutionContext)
         lda #ENTITY_CONTEXT_INIT_DROP
         sta.b entityExecutionContext
         lda #entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_CONSUMABLE)

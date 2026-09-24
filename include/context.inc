@@ -10,6 +10,8 @@
 .DEFINE D_BANK -1
 ; Current value of the DIRECT PAGE register
 .DEFINE D_DIRECT $0000
+; Current offset of the stack pointer
+.DEFINE D_STACKOFFS 0
 
 ; Indicates that a register's value is currently unknown
 ; For a procedure's input, indicates that the register value is not important.
@@ -30,19 +32,27 @@
 ; banks $00-3F, $80-BF
 .DEFINE D_BANK_MIRROR_IO $10001
 
+; This procedure may be called from any bank
 .DEFINE PROC_CALL_LONG 1
+; This procedure may only be called from matching banks
 .DEFINE PROC_CALL_SHORT 2
 
+; This procedure is a fully-defined procedure
 .DEFINE PROC_TYPE_PROCEDURE 1
+; This procedure is an interface
 .DEFINE PROC_TYPE_INTERFACE 2
 
-.DEFINE _CONTEXT_STACK_SIZE 0
-
+; Returns true if the given bank/metabank can access IO registers in $0000-$7FFF
 .FUNCTION is_bank_io(bank) (bank == D_BANK_MIRROR_IO) || ((bank >= $00) && (bank <= $3F)) || ((bank >= $80) && (bank <= $BF))
+; Returns true if the given bank/metabank can access loram in $0000-$1FFF
 .FUNCTION is_bank_lowram(bank) (bank == D_BANK_MIRROR_LOWRAM) || is_bank_io(bank) || (bank == $7E)
+; Returns true if the given bank is specific (not a metabank)
 .FUNCTION is_bank_specific(bank) (bank >= $00) && (bank <= $FF)
+; Returns true if the given direct page is specific
 .FUNCTION is_direct_specific(dp) (dp >= $0000) && (dp <= $FFFF)
+; Returns true if the given flag value is specific
 .FUNCTION is_flag_specific(flag) (flag >= 0)
+; returns true if the IN and OUT values are compatible
 .FUNCTION is_valid_inout_pair(inflag, outflag) ((inflag != D_IGNORE) && (outflag != D_IGNORE)) || ((inflag == D_IGNORE) && (outflag == D_IGNORE))
 
 ; Returns true if the flag 'flag' is compatible with base flags 'base'
@@ -53,6 +63,165 @@
 .FUNCTION is_compatible_outflag(flag, base) (base == flag) || ((base == D_PARAMETER) && (flag >= 0)) || ((base == D_UNK) && ((flag == D_IGNORE) || (flag >= 0)))
 .FUNCTION is_compatible_bank_inflag(flag, base) is_compatible_inflag(flag, base) || ((flag == D_BANK_MIRROR_IO) && is_bank_io(base)) || ((flag == D_BANK_MIRROR_LOWRAM) && is_bank_lowram(base))
 .FUNCTION is_compatible_bank_outflag(flag, base) is_compatible_outflag(flag, base) || ((base == D_BANK_MIRROR_IO) && is_bank_io(flag)) || ((base == D_BANK_MIRROR_LOWRAM) && is_bank_lowram(flag))
+
+.DEFINE _STACKELEM_COUNT 0
+
+.MACRO .__STACKPUSH ARGS count, name
+    .ASSERT (NARGS == 1) || (NARGS == 2)
+    ; push stack offset
+    .REDEFINE D_STACKOFFS (D_STACKOFFS - count)
+    ; track size of this value
+    .DEFINE _STACKVALUE_{_STACKELEM_COUNT}_SIZE count
+    ; create define for this element's name
+    .IF NARGS == 2
+        .DEFINE _STACKVALUE_{_STACKELEM_COUNT}_NAME name
+        ; set define for this variable's position, which is DP + 1
+        ; we *also* add a huge number to this value, to ensure it can not be
+        ; accidentally used directly as a stack parameter
+        .DEFINE {name} (D_STACKOFFS + $10000001)
+    .ENDIF
+    ; increment stack element count
+    .REDEFINE _STACKELEM_COUNT (_STACKELEM_COUNT + 1)
+.ENDM
+
+; Get the offset for the given named stack value
+.FUNCTION stk(parameter) (parameter - $10000000) - D_STACKOFFS
+
+.MACRO .__STACKPOP ARGS count
+    ; decrement stack count
+    .REDEFINE _STACKELEM_COUNT (_STACKELEM_COUNT - 1)
+    ; assert that this is the correct element
+    .ASSERT count == _STACKVALUE_{_STACKELEM_COUNT}_SIZE
+    ; remove defines
+    .UNDEFINE _STACKVALUE_{_STACKELEM_COUNT}_SIZE
+    .IFDEF _STACKVALUE_{_STACKELEM_COUNT}_NAME
+        .DEFINE __TEMP__ _STACKVALUE_{_STACKELEM_COUNT}_NAME
+        .UNDEFINE {__TEMP__}
+        .UNDEFINE __TEMP__
+        .UNDEFINE _STACKVALUE_{_STACKELEM_COUNT}_NAME
+    .ENDIF
+    ; pop stack offset
+    .REDEFINE D_STACKOFFS (D_STACKOFFS + count)
+.ENDM
+
+; Context-aware pea
+.MACRO .pea ARGS value, name
+    .ASSERT (NARGS == 1) || (NARGS == 2)
+    pea value
+    .IF NARGS == 2
+        .__STACKPUSH 2, name
+    .ELSE
+        .__STACKPUSH 2
+    .ENDIF
+.ENDM
+
+; Context-aware pei
+.MACRO .pei ARGS value, name
+    .ASSERT (NARGS == 1) || (NARGS == 2)
+    pei (value)
+    .IF NARGS == 2
+        .__STACKPUSH 2, name
+    .ELSE
+        .__STACKPUSH 2
+    .ENDIF
+.ENDM
+
+; Context-aware per
+.MACRO .per ARGS value, name
+    .ASSERT (NARGS == 1) || (NARGS == 2)
+    per value
+    .IF NARGS == 2
+        .__STACKPUSH 2, name
+    .ELSE
+        .__STACKPUSH 2
+    .ENDIF
+.ENDM
+
+; Context-aware phk
+.MACRO .phk ARGS name
+    .ASSERT NARGS <= 1
+    phk
+    .IF NARGS == 1
+        .__STACKPUSH 1, name
+    .ELSE
+        .__STACKPUSH 1
+    .ENDIF
+.ENDM
+
+; Context-aware soft push (generates no instructions)
+.MACRO .PushSoft ARGS size, name
+    .ASSERT NARGS <= 2
+    .ASSERT size > 0
+    .IF NARGS == 2
+        .__STACKPUSH size, name
+    .ELSE
+        .__STACKPUSH size
+    .ENDIF
+.ENDM
+
+; Context-aware soft pull (generates no instructions)
+.MACRO .PullSoft ARGS size
+    .ASSERT NARGS == 1
+    .ASSERT size > 0
+    .__STACKPOP size
+.ENDM
+
+; Context-aware pha
+.MACRO .pha ARGS name
+    .ASSERT NARGS <= 1
+    .ASSERT (D_FLAG_A == 8) || (D_FLAG_A == 16)
+    pha
+    .IF NARGS == 1
+        .__STACKPUSH (D_FLAG_A / 8), name
+    .ELSE
+        .__STACKPUSH (D_FLAG_A / 8)
+    .ENDIF
+.ENDM
+
+; Context-aware pla
+.MACRO .pla
+    .ASSERT (D_FLAG_A == 8) || (D_FLAG_A == 16)
+    pla
+    .__STACKPOP (D_FLAG_A / 8)
+.ENDM
+
+; Context-aware phx
+.MACRO .phx ARGS name
+    .ASSERT NARGS <= 1
+    .ASSERT (D_FLAG_X == 8) || (D_FLAG_X == 16)
+    phx
+    .IF NARGS == 1
+        .__STACKPUSH (D_FLAG_X / 8), name
+    .ELSE
+        .__STACKPUSH (D_FLAG_X / 8)
+    .ENDIF
+.ENDM
+
+; Context-aware plx
+.MACRO .plx
+    .ASSERT (D_FLAG_X == 8) || (D_FLAG_X == 16)
+    plx
+    .__STACKPOP (D_FLAG_X / 8)
+.ENDM
+
+; Context-aware phy
+.MACRO .phy ARGS name
+    .ASSERT NARGS <= 1
+    .ASSERT (D_FLAG_X == 8) || (D_FLAG_X == 16)
+    phy
+    .IF NARGS == 1
+        .__STACKPUSH (D_FLAG_X / 8), name
+    .ELSE
+        .__STACKPUSH (D_FLAG_X / 8)
+    .ENDIF
+.ENDM
+
+; Context-aware ply
+.MACRO .ply
+    .ASSERT (D_FLAG_X == 8) || (D_FLAG_X == 16)
+    ply
+    .__STACKPOP (D_FLAG_X / 8)
+.ENDM
 
 ; Update INDEX and ACCU without inserting instructions
 .MACRO .RefreshFlags
@@ -121,9 +290,18 @@
     .RefreshFlags
 .ENDM
 
+; Set the bank via `pea : plb : plb`.
+; Not the fastest, but guarantees registers aren't clobbered.
+; This is the default.
 .DEFINE SETBANKMODE_PEA 0
+; Set the bank via `lda : pha : plb`.
+; Faster, but clobbers A register, A must be in 8-bit mode.
 .DEFINE SETBANKMODE_A 1
+; Set the bank via `ldx : phx : plb`.
+; Faster, but clobbers X register, X must be in 8-bit mode.
 .DEFINE SETBANKMODE_X 2
+; Set the bank via `ldy : phy : plb`.
+; Faster, but clobbers Y register, X must be in 8-bit mode.
 .DEFINE SETBANKMODE_Y 3
 
 .MACRO .__SET_BANK ARGS p_b, mode
@@ -264,6 +442,8 @@
     .RefreshFlags
 .ENDM
 
+; Reset register and flag values to their defaults.
+; i.e., direct page is $0000, and the rest are unknown.
 .MACRO .ClearContext
     .REDEFINE D_DIRECT $0000
     .REDEFINE D_BANK D_UNK
@@ -390,6 +570,8 @@
 ; A later .PopContextSoft will fail
 .DEFINE PUSH_FLAGS 4
 
+.DEFINE _CONTEXT_STACK_SIZE 0
+
 ; Push the current context to the context stack.
 ; Accepts `PUSH_*` macros as parameter flags.
 ; Note that the `PUSH_*` macros are a method that can be used to preserve
@@ -399,12 +581,15 @@
     .IF NARGS == 1
         .DEFINE _CONTEXT_STACK_INFO_{_CONTEXT_STACK_SIZE} pushflags
         .IF (pushflags & PUSH_BANK) != 0
+            .__STACKPUSH 1
             phb
         .ENDIF
         .IF (pushflags & PUSH_DIRECT) != 0
+            .__STACKPUSH 1
             phd
         .ENDIF
         .IF (pushflags & PUSH_FLAGS) != 0
+            .__STACKPUSH 1
             php
         .ENDIF
     .ELSE
@@ -447,6 +632,7 @@
     .REDEFINE _CONTEXT_STACK_SIZE (_CONTEXT_STACK_SIZE - 1)
     ; set bank
     .IF (_CONTEXT_STACK_INFO_{_CONTEXT_STACK_SIZE} & PUSH_BANK) != 0
+        .__STACKPOP 1
         plb
         .IF (_CONTEXT_STACK_BANK_{_CONTEXT_STACK_SIZE} == D_BANK) && is_bank_specific(_CONTEXT_STACK_INFO_{_CONTEXT_STACK_SIZE})
             .PRINT "Earlier .PushContext may not need PUSH_BANK flag\n"
@@ -465,6 +651,7 @@
     .ENDIF
     ; set direct page
     .IF (_CONTEXT_STACK_INFO_{_CONTEXT_STACK_SIZE} & PUSH_DIRECT) != 0
+        .__STACKPOP 1
         pld
         .IF (_CONTEXT_STACK_DIRECT_{_CONTEXT_STACK_SIZE} == D_DIRECT) && (D_DIRECT >= 0)
             .PRINT "Earlier .PushContext may not need PUSH_DIRECT flag\n"
@@ -477,6 +664,7 @@
     .ENDIF
     ; set flags
     .IF (_CONTEXT_STACK_INFO_{_CONTEXT_STACK_SIZE} & PUSH_FLAGS) != 0
+        .__STACKPOP 1
         plp
         .IF (_CONTEXT_STACK_FLAG_A_{_CONTEXT_STACK_SIZE} == D_FLAG_A) && _CONTEXT_STACK_FLAG_X_{_CONTEXT_STACK_SIZE} == D_FLAG_X))
             .PRINT "Earlier .PushContext may not need PUSH_FLAGS flag\n"
@@ -505,43 +693,54 @@
 .ENDM
 
 .DEFINE _CBANK_STACK_SIZE 0
+; Context-aware bank push
 .MACRO .PushBank
+    .__STACKPUSH 1
     phb
     .DEFINE _CBANK_VALUE_{_CBANK_STACK_SIZE} D_BANK
     .REDEFINE _CBANK_STACK_SIZE (_CBANK_STACK_SIZE + 1)
 .ENDM
 
+; Context-aware bank pop
 .MACRO .PopBank
     .ASSERT _CBANK_STACK_SIZE > 0
     .REDEFINE _CBANK_STACK_SIZE (_CBANK_STACK_SIZE - 1)
     .REDEFINE D_BANK _CBANK_VALUE_{_CBANK_STACK_SIZE}
     .UNDEFINE _CBANK_VALUE_{_CBANK_STACK_SIZE}
     plb
+    .__STACKPOP 1
 .ENDM
 
 .DEFINE _CDIRECT_STACK_SIZE 0
+; Context aware DP push
 .MACRO .PushDirect
+    .__STACKPUSH 1
     phd
     .DEFINE _CDIRECT_VALUE_{_CDIRECT_STACK_SIZE} D_DIRECT
     .REDEFINE _CDIRECT_STACK_SIZE (_CDIRECT_STACK_SIZE + 1)
 .ENDM
 
+; Context aware DP pop
 .MACRO .PopDirect
     .ASSERT _CDIRECT_STACK_SIZE > 0
     .REDEFINE _CDIRECT_STACK_SIZE (_CDIRECT_STACK_SIZE - 1)
     .REDEFINE D_DIRECT _CDIRECT_VALUE_{_CDIRECT_STACK_SIZE}
     .UNDEFINE _CDIRECT_VALUE_{_CDIRECT_STACK_SIZE}
     pld
+    .__STACKPOP 1
 .ENDM
 
 .DEFINE _CFLAGS_STACK_SIZE 0
+; Context aware flag push
 .MACRO .PushP
+    .__STACKPUSH 1
     php
     .DEFINE _CFLAGS_VALUE_A_{_CFLAGS_STACK_SIZE} D_FLAG_A
     .DEFINE _CFLAGS_VALUE_X_{_CFLAGS_STACK_SIZE} D_FLAG_X
     .REDEFINE _CFLAGS_STACK_SIZE (_CFLAGS_STACK_SIZE + 1)
 .ENDM
 
+; Context aware flag pop
 .MACRO .PopP
     .ASSERT _CFLAGS_STACK_SIZE > 0
     .REDEFINE _CFLAGS_STACK_SIZE (_CFLAGS_STACK_SIZE - 1)
@@ -550,10 +749,13 @@
     .UNDEFINE _CFLAGS_VALUE_A_{_CFLAGS_STACK_SIZE}
     .UNDEFINE _CFLAGS_VALUE_X_{_CFLAGS_STACK_SIZE}
     plp
+    .__STACKPOP 1
     .RefreshFlags
 .ENDM
 
-; Define a procedure without its implementation
+; Define a procedure without its implementation.
+; This is useful for declaring procedures in header files, so they can
+; be accessed from other assemblies.
 .MACRO .procheader ARGS name, callconvention, interface
     .IFDEF _IN_CONTEXT_FUNC_DEF
         .FAIL ".procheader can not be used within another procedure definition"
@@ -618,7 +820,10 @@
     .ENDIF
 .ENDM
 
-; Define a procedure interface. These can not have an implementation
+; Define a procedure interface. These can not have an implementation.
+; This is useful for declaring a calling convention that other procedures must
+; implement, e.g. for dynamic dispatch.
+; Implementing procedures must only be compatible with the interface.
 .MACRO .procinterface ARGS name, callconvention
     .IFDEF _IN_CONTEXT_FUNC_DEF
         .FAIL ".procheader can not be used within another procedure definition"
@@ -650,9 +855,47 @@
     .procinterface name, PROC_CALL_SHORT
 .ENDM
 
-; Implement a procedure that was previously defined with .procheader
-.MACRO .procimpl ARGS name, callconvention
+.MACRO .__begin_proc_impl ARGS name
     .DEFINE _IN_CONTEXT_FUNC_IMPL
+    .DEFINE _PARAM_COUNT 0
+    .IF {name}_CALL_ == PROC_CALL_SHORT
+        .DEFINE _PARAM_OFFSET 2
+    .ELIF {name}_CALL_ == PROC_CALL_LONG
+        .DEFINE _PARAM_OFFSET 3
+    .ENDIF
+    .ASSERT D_STACKOFFS == 0
+{name}:
+.ENDM
+
+.MACRO .__pushprocparams ARGS size, index
+    .IF index < _PARAM_COUNT
+        .__pushprocparams size, (index + 1)
+        .DEFINE __TEMP__ _PARAM_{index}_NAME
+        .REDEFINE {__TEMP__} ( {__TEMP__} + size )
+        .UNDEFINE __TEMP__
+    .ENDIF
+.ENDM
+
+; Define a stack parameter for this procedure, with the given name and size (in bytes).
+; This will create a define with the given name to use with `stk`.
+; Parameters should be defined in push-order; that is, the order in which
+; parameters should be pushed to the stack.
+.MACRO .procparam ARGS name, size
+    ; check that we are in a function implementation
+    .ASSERT defined(_IN_CONTEXT_FUNC_IMPL)
+    ; create define for this parameter
+    .DEFINE {name} (_PARAM_OFFSET + $10000001)
+    .DEFINE _PARAM_{_PARAM_COUNT}_NAME name
+    ; push other parameters back
+    .__pushprocparams size, 0
+    ; increment parameter count
+    .REDEFINE _PARAM_COUNT (_PARAM_COUNT + 1)
+.ENDM
+
+; Implement a procedure that was previously defined with .procheader
+; Only one implementation may exist for any procedure.
+.MACRO .procimpl ARGS name, callconvention
+    .DEFINE _FUNC_CONTEXT_NAME name
 ; check that procedure is defined
     .IF !defined({name}_PROC_)
         .PRINT "Procedure ", name, " is not defined\n"
@@ -674,8 +917,7 @@
         .FAIL
     .ENDIF
 ; procedure definition
-    .DEFINE _FUNC_CONTEXT_NAME name
-{name}:
+    .__begin_proc_impl name
 .ENDM
 
 .MACRO .procimpll ARGS name
@@ -708,7 +950,7 @@
         .procheader name, callconvention
     .ENDIF
     ; define function (simplified .procimpl)
-    {name}:
+    .__begin_proc_impl name
 .ENDM
 
 ; Define a procedure which can be called from any bank.
@@ -729,8 +971,24 @@
     .ENDIF
 .ENDM
 
+.MACRO .__undef_param
+    .IF _PARAM_COUNT > 0
+        .REDEFINE _PARAM_COUNT (_PARAM_COUNT - 1)
+        .DEFINE __TEMP__ _PARAM_{_PARAM_COUNT}_NAME
+        .UNDEFINE {__TEMP__}
+        .UNDEFINE __TEMP__
+        .UNDEFINE _PARAM_{_PARAM_COUNT}_NAME
+        .__undef_param
+    .ENDIF
+.ENDM
+
 ; End procedure definition
 .MACRO .endproc
+    .ASSERT D_STACKOFFS == 0
+    .IF !defined(_IN_CONTEXT_FUNC_DEF) && !defined(_IN_CONTEXT_FUNC_IMPL)
+        .PRINT ".endproc used without opening procedure macro\n"
+        .FAIL 1
+    .ENDIF
     .IF defined(_IN_CONTEXT_FUNC_DEF)
         ; define 'out' flags for procedure.
         .DEFINE {_FUNC_CONTEXT_NAME}_OUT_FLAG_A_ D_FLAG_A
@@ -738,16 +996,17 @@
         .DEFINE {_FUNC_CONTEXT_NAME}_OUT_BANK_ D_BANK
         .DEFINE {_FUNC_CONTEXT_NAME}_OUT_DIRECT_ D_DIRECT
         .UNDEFINE _IN_CONTEXT_FUNC_DEF
-    .ELIF defined(_IN_CONTEXT_FUNC_IMPL)
+    .ENDIF
+    .IF defined(_IN_CONTEXT_FUNC_IMPL)
         ; check that out flags match
         .IF ({_FUNC_CONTEXT_NAME}_OUT_FLAG_A_ != D_FLAG_A) || ({_FUNC_CONTEXT_NAME}_OUT_FLAG_X_ != D_FLAG_X) || ({_FUNC_CONTEXT_NAME}_OUT_BANK_ != D_BANK) || ({_FUNC_CONTEXT_NAME}_OUT_DIRECT_ != D_DIRECT)
             .PRINT "Mismatched out flags for ", _FUNC_CONTEXT_NAME, "\n"
             .FAIL
         .ENDIF
+        .__undef_param
         .UNDEFINE _IN_CONTEXT_FUNC_IMPL
-    .ELSE
-        .PRINT ".endproc used without opening procedure macro"
-        .FAIL 1
+        .UNDEFINE _PARAM_COUNT
+        .UNDEFINE _PARAM_OFFSET
     .ENDIF
 ; check that either IN and OUT flags are both D_IGNORE, or neither
     .IF !is_valid_inout_pair({_FUNC_CONTEXT_NAME}_IN_FLAG_A_, {_FUNC_CONTEXT_NAME}_OUT_FLAG_A_)

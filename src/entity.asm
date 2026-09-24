@@ -1196,6 +1196,8 @@ _directtargetposition_y_is_zero:
 .SoftSetBank D_BANK_MIRROR_LOWRAM
 .IgnoreDirect
 .procimpll "Entity.Shadow.PutSmall"
+    .procparam "p_offset_x", 1
+    .procparam "p_offset_y", 1
     ldx.b objectIndexShadow
     cpx.b objectIndex
     bcc @skipShadow
@@ -1207,11 +1209,11 @@ _directtargetposition_y_is_zero:
         stx.b objectIndexShadow
         lda.w entity_posy+1,Y
         clc
-        adc $04,S
+        adc stk(p_offset_y),S
         sta.w objectData.1.pos_y,X
         lda.w entity_posx+1,Y
         clc
-        adc $05,S
+        adc stk(p_offset_x),S
         sta.w objectData.1.pos_x,X
         lda #$A0
         sta.w objectData.1.tileid,X
@@ -1230,6 +1232,8 @@ _directtargetposition_y_is_zero:
 .SoftSetBank D_BANK_MIRROR_LOWRAM
 .IgnoreDirect
 .procimpll "Entity.Shadow.PutMedium"
+    .procparam "p_offset_x", 1
+    .procparam "p_offset_y", 1
     lda.b objectIndexShadow
     sec
     sbc #8
@@ -1240,12 +1244,12 @@ _directtargetposition_y_is_zero:
         stx.b objectIndexShadow
         lda.w entity_posy+1,Y
         clc
-        adc $04,S
+        adc stk(p_offset_y),S
         sta.w objectData.1.pos_y,X
         sta.w objectData.2.pos_y,X
         lda.w entity_posx+1,Y
         clc
-        adc $05,S
+        adc stk(p_offset_x),S
         clc
         sta.w objectData.1.pos_x,X
         adc #16
@@ -1301,6 +1305,8 @@ _directtargetposition_y_is_zero:
 .SoftSetBank D_BANK_MIRROR_LOWRAM
 .IgnoreDirect
 .procimpll "Entity.Shadow.PutBig"
+    .procparam "p_offset_x", 1
+    .procparam "p_offset_y", 1
     lda.b objectIndexShadow
     sec
     sbc #12
@@ -1311,13 +1317,13 @@ _directtargetposition_y_is_zero:
         stx.b objectIndexShadow
         lda.w entity_posy+1,Y
         clc
-        adc $04,S
+        adc stk(p_offset_y),S
         .REPT 3 INDEX i
             sta.w objectData.{i+1}.pos_y,X
         .ENDR
         lda.w entity_posx+1,Y
         clc
-        adc $05,S
+        adc stk(p_offset_x),S
         clc
         .REPT 3 INDEX i
             .IF i > 0

@@ -206,27 +206,27 @@ _CmpRoomsByAvailableEndpointTiles:
 .SoftSetBank $7E
 .IgnoreDirect
 .procdefines "_IsTileAdjacent"
-    pha
+    .pha "tilepos"
     stz.b $03
     .BranchIfTileOnRightBorderA +
         inc A
         cmp.b $02
         beq @eq
     +:
-    lda $01,S
+    lda stk(tilepos),S
     .BranchIfTileOnLeftBorderA +
         dec A
         cmp.b $02
         beq @eq
     +:
-    lda $01,S
+    lda stk(tilepos),S
     .BranchIfTileOnBottomBorderA +
         clc
         adc #$10
         cmp.b $02
         beq @eq
     +:
-    lda $01,S
+    lda stk(tilepos),S
     .BranchIfTileOnTopBorderA +
         sec
         sbc #$10
@@ -237,7 +237,7 @@ _CmpRoomsByAvailableEndpointTiles:
     rts
 @eq:
     inc.b $03
-    pla
+    .pla
     rts
 .endproc
 
@@ -645,24 +645,25 @@ _CmpRoomsByAvailableEndpointTiles:
 .SoftSetBank $7E
 .IgnoreDirect
 .procdefinel "MapGen.InitializeRoomX"
-    pha ; >1
+    .procparam "p_roomtype", 1
+    .pha ; >1
 ; set up map data
-    lda $04+1,S
+    lda stk(p_roomtype),S
     sta.w mapTileTypeTable,X
     stz.w mapTileFlagsTable,X
     lda.w numUsedMapSlots
     sta.w loword(mapTileSlotTable),X
     inc.w numUsedMapSlots
 ; set up room slot data
-    phx ; >1
+    .phx "mappos" ; >1
     tax ; X now contains tile slot
-    lda $01,S
+    lda stk(mappos),S
     sta.w loword(roomSlotMapPos),X
-    lda $04+2,S
+    lda stk(p_roomtype),S
     sta.w loword(roomSlotRoomType),X
-    plx ; <1
+    .plx ; <1
 ; end
-    pla ; <1
+    .pla ; <1
     rtl
 .endproc
 
@@ -675,23 +676,25 @@ _CmpRoomsByAvailableEndpointTiles:
 .SoftSetBank $7E
 .IgnoreDirect
 .procimpll "MapGen.InitializeRoomXIntoSlot"
-    pha ; >1
+    .procparam "p_slot", 1
+    .procparam "p_roomtype", 1
+    .pha ; >1
 ; set up map data
-    lda $04+1,S
+    lda stk(p_roomtype),S
     sta.w mapTileTypeTable,X
     stz.w mapTileFlagsTable,X
-    lda $05+1,S
+    lda stk(p_slot),S
     sta.w loword(mapTileSlotTable),X
 ; set up room slot data
-    phx ; >1
+    .phx "mappos"; >1
     tax ; X now contains tile slot
-    lda $01,S
+    lda stk(mappos),S
     sta.w loword(roomSlotMapPos),X
-    lda $04+2,S
+    lda stk(p_roomtype),S
     sta.w loword(roomSlotRoomType),X
-    plx ; <1
+    .plx ; <1
 ; end
-    pla ; <1
+    .pla ; <1
     rtl
 .endproc
 
@@ -781,14 +784,12 @@ _CmpRoomsByAvailableEndpointTiles:
 .SoftSetBank $7E
 .IgnoreDirect
 .procimpll "MapGen.SetupRoomX"
-    phy ; >1
-    pha ; >1
     lda.w loword(mapTileSlotTable),X
-    phx ; >1 $02,S contains tile position [db]
-    pha ; >1 $01,S contains room slot [db]
+    .phx "tilepos" ; >1 $02,S contains tile position [db]
+    .pha "roomslot" ; >1 $01,S contains room slot [db]
 ; First, determine door mask
     stz TempDoorMask
-    lda $02,s
+    lda stk(tilepos),s
     tay
     .BranchIfTileOnLeftBorderA +
         dex
@@ -797,7 +798,7 @@ _CmpRoomsByAvailableEndpointTiles:
             ora #DOOR_DEF_LEFT
             sta TempDoorMask
     +:
-    lda $02,s
+    lda stk(tilepos),s
     .BranchIfTileOnRightBorderA +
         inc A
         tax
@@ -810,7 +811,7 @@ _CmpRoomsByAvailableEndpointTiles:
             lda #DOOR_TYPE_NORMAL | DOOR_OPEN | DOOR_METHOD_FINISH_ROOM
             sta.w loword(mapDoorHorizontal),Y
     +:
-    lda $02,s
+    lda stk(tilepos),s
     .BranchIfTileOnTopBorderA +
         sec
         sbc #MAP_MAX_WIDTH
@@ -820,7 +821,7 @@ _CmpRoomsByAvailableEndpointTiles:
             ora #DOOR_DEF_UP
             sta TempDoorMask
     +:
-    lda $02,s
+    lda stk(tilepos),s
     .BranchIfTileOnBottomBorderA +
         clc
         adc #MAP_MAX_WIDTH
@@ -834,7 +835,7 @@ _CmpRoomsByAvailableEndpointTiles:
             lda #DOOR_TYPE_NORMAL | DOOR_OPEN | DOOR_METHOD_FINISH_ROOM
             sta.w loword(mapDoorVertical),Y
     +:
-    lda $01,s
+    lda stk(roomslot),s
     tax
     lda TempDoorMask
     sta.w loword(roomSlotDoorMask),X
@@ -924,17 +925,18 @@ _CmpRoomsByAvailableEndpointTiles:
     @end:
     ; select room from pool
     .call "_PushRandomRoomFromPool" ; >3
+    .PushSoft 3
     ; initialize room
     jsl InitializeRoomSlot
     .InvalidateAX
     .SetA 16
     pla ; <2
     pla ; <2
+    .PullSoft 3
+    .PullSoft 1
     .SetAX 8, 8
 ; end
-    plx ; <1
-    pla ; <1
-    ply ; <1
+    .plx ; <1
     rtl
 .endproc
 
@@ -1185,8 +1187,10 @@ _CmpRoomsByAvailableEndpointTiles:
     ldy.w numUsedMapSlots
 @loop_setup_tiles:
     ldx.w loword(roomSlotMapPos-1),Y
+    phy
     .call "MapGen.SetupRoomX"
     .ForceSetAX 8, 8
+    ply
     dey
     bne @loop_setup_tiles
 ; setup special door rooms

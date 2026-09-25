@@ -534,54 +534,6 @@
 
 .ENDM
 
-; RNG
-
-; Begin chance table, with 'x' chance units (usually 256)
-.MACRO .ChanceTableBegin ARGS x
-    .DEFINE _ChanceTableV x
-.ENDM
-
-; Add 'probability' chances for 'value', 16b
-.MACRO .ChanceTableDW ARGS probability, value
-    .REDEFINE _ChanceTableV (_ChanceTableV - probability)
-    .REPT probability
-        .dw value
-    .ENDR
-.ENDM
-
-; Add 'probability' chances for 'value', 8b
-.MACRO .ChanceTableDB ARGS probability, value
-    .REDEFINE _ChanceTableV (_ChanceTableV - probability)
-    .REPT probability
-        .db value
-    .ENDR
-.ENDM
-
-; Set remaining changes to 'value', 16b
-.MACRO .ChanceTableRestDW ARGS value
-    .IF _ChanceTableV < 0
-        .ERROR "Chance table is overfilled"
-    .ENDIF
-    .REPT max(0, _ChanceTableV)
-        .dw value
-    .ENDR
-.ENDM
-
-; Set remaining changes to 'value', 8b
-.MACRO .ChanceTableRestDB ARGS value
-    .IF _ChanceTableV < 0
-        .ERROR "Chance table is overfilled"
-    .ENDIF
-    .REPT max(0, _ChanceTableV)
-        .db value
-    .ENDR
-.ENDM
-
-; End chance table
-.MACRO .ChanceTableEnd
-    .UNDEFINE _ChanceTableV
-.ENDM
-
 ; Reset all registers and state to know values
 .MACRO .ClearCPU
     clc

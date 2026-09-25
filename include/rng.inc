@@ -87,3 +87,67 @@
 .procheaderl "Random.InitFromTimer"
     .SoftSetA 16
 .endproc
+
+; Pick a random value from a table
+; struct table_t:
+;   dw weight
+;   dw value
+; Arguments:
+;   table_t *table [DB:XXXX] - table to read
+;   dw weightmask [A] - integer that is a power of two minus 1
+; Returns:
+;   dw value [A]
+.SoftSetAX 16, 16
+.SoftSetDirect $0000
+.ParameterBank
+.procheaderl "Random.Room.PickFromTable"
+.endproc
+
+; TABLE GENERATORS
+
+; Begin chance table, with 'x' chance units (usually 256)
+.MACRO .ChanceTableBegin ARGS x
+    .DEFINE _ChanceTableV x
+.ENDM
+
+; Add 'probability' chances for 'value', 16b
+.MACRO .ChanceTableDW ARGS probability, value
+    .REDEFINE _ChanceTableV (_ChanceTableV - probability)
+    .REPT probability
+        .dw value
+    .ENDR
+.ENDM
+
+; Add 'probability' chances for 'value', 8b
+.MACRO .ChanceTableDB ARGS probability, value
+    .REDEFINE _ChanceTableV (_ChanceTableV - probability)
+    .REPT probability
+        .db value
+    .ENDR
+.ENDM
+
+; Set remaining changes to 'value', 16b
+.MACRO .ChanceTableRestDW ARGS value
+    .IF _ChanceTableV < 0
+        .ERROR "Chance table is overfilled"
+    .ENDIF
+    .REPT max(0, _ChanceTableV)
+        .dw value
+    .ENDR
+.ENDM
+
+; Set remaining changes to 'value', 8b
+.MACRO .ChanceTableRestDB ARGS value
+    .IF _ChanceTableV < 0
+        .ERROR "Chance table is overfilled"
+    .ENDIF
+    .REPT max(0, _ChanceTableV)
+        .db value
+    .ENDR
+.ENDM
+
+; End chance table
+.MACRO .ChanceTableEnd
+    .ASSERT _ChanceTableV == 0
+    .UNDEFINE _ChanceTableV
+.ENDM

@@ -1,5 +1,6 @@
 .include "base.inc"
 .include "palettes.inc"
+.include "rng.inc"
 
 ; steal state and timer, since they are serialized
 .define pickup_price entity_state
@@ -107,64 +108,52 @@ PickupRandomizerTables:
     .dw PickupTable_Bomb
 
 PickupTable_Shop:
-    .ChanceTableBegin 256
-    .ChanceTableDW  $20, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_BOMB)
-    .ChanceTableDW  $20, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_KEY)
-    .ChanceTableDW  $20, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_HEART_FULL)
-    .ChanceTableDW  $20, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_HEART_SOUL)
-    .ChanceTableDW  $20, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_BATTERY)
-    .ChanceTableDW  $20, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_CONSUMABLE)
-    .ChanceTableDW  $20, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_TRINKET)
-    .ChanceTableRestDW  entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_HEART_FULL)
-    .ChanceTableEnd
+    .dw   $20, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_BOMB)
+    .dw   $20, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_KEY)
+    .dw   $20, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_HEART_FULL)
+    .dw   $20, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_HEART_SOUL)
+    .dw   $20, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_BATTERY)
+    .dw   $20, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_CONSUMABLE)
+    .dw   $20, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_TRINKET)
+    .dw $FFFF, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_HEART_FULL)
 
 PickupTable_Coin:
-    .ChanceTableBegin 256
-    .ChanceTableDW   5, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_DIME)
-    .ChanceTableDW  25, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_NICKEL)
-    .ChanceTableRestDW  entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_PENNY)
-    .ChanceTableEnd
+    .dw     5, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_DIME)
+    .dw    25, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_NICKEL)
+    .dw $FFFF, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_PENNY)
 
 PickupTable_Heart:
-    .ChanceTableBegin 256
-    .ChanceTableDW  50, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_HEART_SOUL)
-    .ChanceTableRestDW  entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_HEART_FULL)
-    .ChanceTableEnd
+    .dw    50, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_HEART_SOUL)
+    .dw $FFFF, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_HEART_FULL)
 
 PickupTable_Bomb:
-    .ChanceTableBegin 256
-    .ChanceTableRestDW  entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_BOMB)
-    .ChanceTableEnd
+    .dw $FFFF, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_BOMB)
 
 PickupTable_Any:
-    .ChanceTableBegin 256
-    .ChanceTableDW  48, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_PENNY)
-    .ChanceTableDW   3, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_NICKEL)
-    .ChanceTableDW   1, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_DIME)
-    .ChanceTableDW  50, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_BOMB)
-    .ChanceTableDW  50, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_KEY)
-    .ChanceTableDW  38, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_HEART_FULL)
-    .ChanceTableDW   5, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_HEART_SOUL)
-    .ChanceTableDW  10, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_BATTERY)
-    .ChanceTableDW  14, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_CONSUMABLE)
-    .ChanceTableDW   7, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_TRINKET)
-    .ChanceTableRestDW  entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_PENNY)
-    .ChanceTableEnd
+    .dw    48, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_PENNY)
+    .dw     3, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_NICKEL)
+    .dw     1, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_DIME)
+    .dw    50, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_BOMB)
+    .dw    50, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_KEY)
+    .dw    38, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_HEART_FULL)
+    .dw     5, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_HEART_SOUL)
+    .dw    10, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_BATTERY)
+    .dw    14, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_CONSUMABLE)
+    .dw     7, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_TRINKET)
+    .dw $FFFF, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_PENNY)
 
 PickupTable_RoomReward:
-    .ChanceTableBegin 256
-    .ChanceTableDW  48, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_PENNY)
-    .ChanceTableDW   3, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_NICKEL)
-    .ChanceTableDW   1, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_DIME)
-    .ChanceTableDW  50, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_BOMB)
-    .ChanceTableDW  50, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_KEY)
-    .ChanceTableDW  38, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_HEART_FULL)
-    .ChanceTableDW   5, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_HEART_SOUL)
-    .ChanceTableDW  10, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_BATTERY)
-    .ChanceTableDW  14, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_CONSUMABLE)
-    .ChanceTableDW   7, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_TRINKET)
-    .ChanceTableRestDW 0
-    .ChanceTableEnd
+    .dw    48, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_PENNY)
+    .dw     3, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_NICKEL)
+    .dw     1, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_DIME)
+    .dw    50, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_BOMB)
+    .dw    50, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_KEY)
+    .dw    38, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_HEART_FULL)
+    .dw     5, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_HEART_SOUL)
+    .dw    10, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_BATTERY)
+    .dw    14, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_CONSUMABLE)
+    .dw     7, entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_VARIANT_TRINKET)
+    .dw $FFFF, 0
 
 .SoftSetAX 16, 16
 .SoftSetBank $7E
@@ -180,11 +169,14 @@ PickupTable_RoomReward:
     sec
     sbc.w pickup_price,Y
     sta.w playerData.money
-    rep #$08
     .PlayerHasTrinketEffect TRINKET_PENNY_ON_A_STRING
     beq +
-        inc.w playerData.money
+        lda.w playerData.money
+        clc
+        adc #1
+        sta.w playerData.money
     +:
+    rep #$08
     jsl UI.update_money_display
 @skip:
     plp
@@ -720,17 +712,13 @@ PickupTable_RoomReward:
         asl
         tax
         lda.l PickupRandomizerTables,X
-        sta.b $00
-        ; get RNG
-        jsl Random.Room.Update8
-        .SoftSetA 16
-        and #$00FF
-        ; get variant
-        asl
-        clc
-        adc.b $00
         tax
-        lda.l bankaddr(PickupRandomizerTables),X
+        ; pick from table
+        .PushBank
+        .ChangeDataBank bankbyte(PickupRandomizerTables)
+        lda #$00FF
+        .call "Random.Room.PickFromTable"
+        .PopBank
         .ForceSetA 8
         xba
         sta.w entity_variant,Y

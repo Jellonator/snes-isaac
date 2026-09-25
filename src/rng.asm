@@ -179,4 +179,30 @@
     rtl
 .endproc
 
+.SoftSetAX 16, 16
+.SoftSetDirect $0000
+.ParameterBank
+.procimpll "Random.Room.PickFromTable"
+    .pha "mask"
+    .call "Random.Room.Update8"
+    and stk(mask),S
+; check values in table
+@loop:
+; check if subtraction would wrap
+    cmp.w $0000,X
+    bcc @finish
+    sec
+    sbc.w $0000,X
+    inx
+    inx
+    inx
+    inx
+    jmp @loop
+; end
+@finish:
+    .pla
+    lda.w $0002,X
+    rtl
+.endproc
+
 .ENDS

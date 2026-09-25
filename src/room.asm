@@ -1,4 +1,5 @@
 .include "base.inc"
+.include "rng.inc"
 
 .BANK $01 SLOT "ROM"
 .SECTION "RoomCode" FREE
@@ -255,11 +256,13 @@ _Room_Close_Devil_Doors:
 _Room_Spawn_Reward:
     .ForceSetAX 16, 16
     ; use seed to get entityvariant
-    jsl Random.Room.Update8
-    and #$00FF
-    asl
-    tax
-    lda.l PickupTable_RoomReward,X
+    .PushBank
+    .ChangeDataBank bankbyte(PickupTable_RoomReward)
+    lda #$00FF
+    ldx #PickupTable_RoomReward
+    .call "Random.Room.PickFromTable"
+    .PopBank
+    cmp #0
     beq @no_spawn
     ; change context
         .PushBank

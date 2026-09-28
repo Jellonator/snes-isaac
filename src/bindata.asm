@@ -299,16 +299,20 @@ RoomTileToWorldYTable:
     .db 0
 
 InitialPathfindingData:
-.REPT 16*4
-    .db $01 ; down
+.REPT 4
+    .dsb 2, PATH_DIR_DOWNRIGHT ; downright
+    .dsb 12, PATH_DIR_DOWN ; down
+    .dsb 2, PATH_DIR_DOWNLEFT ; downleft
 .ENDR
 .REPT 8
-    .db $02, $02 ; right
-    .db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ; empty
-    .db $03, $03 ; left
+    .dsb 2, PATH_DIR_RIGHT ; right
+    .dsb 12, PATH_DIR_NULL ; empty
+    .dsb 2, PATH_DIR_LEFT ; left
 .ENDR
-.REPT 16*4
-    .db $04 ; up
+.REPT 4
+    .dsb 2, PATH_DIR_UPRIGHT ; upright
+    .dsb 12, PATH_DIR_UP ; up
+    .dsb 2, PATH_DIR_UPLEFT ; upleft
 .ENDR
 
 HitboxWidthToPartitionSize:
@@ -383,87 +387,108 @@ FractionBinToDec:
 
 PathOrthagonal_H:
     .db PATH_DIR_NULL  ; PATH_DIR_NULL
+    .db PATH_DIR_LEFT  ; PATH_DIR_UPLEFT
+    .db PATH_DIR_NULL  ; (invalid: downup)
+    .db PATH_DIR_LEFT  ; PATH_DIR_DOWNLEFT
+    .db 0              ; (invalid)
+    .db PATH_DIR_RIGHT ; PATH_DIR_DOWNRIGHT
+    .db PATH_DIR_NULL  ; (invalid: rightleft)
+    .db PATH_DIR_RIGHT ; PATH_DIR_UPRIGHT
+    .db PATH_DIR_NONE  ; PATH_DIR_NONE
     .db PATH_DIR_DOWN  ; PATH_DIR_DOWN
-    .db PATH_DIR_RIGHT ; PATH_DIR_RIGHT
     .db PATH_DIR_LEFT  ; PATH_DIR_LEFT
     .db PATH_DIR_UP    ; PATH_DIR_UP
-    .db PATH_DIR_LEFT  ; PATH_DIR_UPLEFT
-    .db PATH_DIR_RIGHT ; PATH_DIR_UPRIGHT
-    .db PATH_DIR_LEFT  ; PATH_DIR_DOWNLEFT
-    .db PATH_DIR_RIGHT ; PATH_DIR_DOWNRIGHT
-    .db PATH_DIR_NONE  ; PATH_DIR_NONE
+    .db PATH_DIR_RIGHT ; PATH_DIR_RIGHT
 
 PathOrthagonal_V:
     .db PATH_DIR_NULL  ; PATH_DIR_NULL
+    .db PATH_DIR_UP    ; PATH_DIR_UPLEFT
+    .db PATH_DIR_NULL  ; (invalid: downup)
+    .db PATH_DIR_DOWN  ; PATH_DIR_DOWNLEFT
+    .db 0              ; (invalid)
+    .db PATH_DIR_DOWN  ; PATH_DIR_DOWNRIGHT
+    .db PATH_DIR_NULL  ; (invalid: rightleft)
+    .db PATH_DIR_UP    ; PATH_DIR_UPRIGHT
+    .db PATH_DIR_NONE  ; PATH_DIR_NONE
     .db PATH_DIR_DOWN  ; PATH_DIR_DOWN
-    .db PATH_DIR_RIGHT ; PATH_DIR_RIGHT
     .db PATH_DIR_LEFT  ; PATH_DIR_LEFT
     .db PATH_DIR_UP    ; PATH_DIR_UP
-    .db PATH_DIR_UP    ; PATH_DIR_UPLEFT
-    .db PATH_DIR_UP    ; PATH_DIR_UPRIGHT
-    .db PATH_DIR_DOWN  ; PATH_DIR_DOWNLEFT
-    .db PATH_DIR_DOWN  ; PATH_DIR_DOWNRIGHT
-    .db PATH_DIR_NONE  ; PATH_DIR_NONE
+    .db PATH_DIR_RIGHT ; PATH_DIR_RIGHT
 
 PathValid:
     .db 0 ; PATH_DIR_NULL
+    .db 1 ; PATH_DIR_UPLEFT
+    .db 0 ; invalid (downup)
+    .db 1 ; PATH_DIR_DOWNLEFT
+    .db 0 ; invalid
+    .db 1 ; PATH_DIR_DOWNRIGHT
+    .db 0 ; invalid (rightleft)
+    .db 1 ; PATH_DIR_UPRIGHT
+    .db 0 ; PATH_DIR_NONE
     .db 1 ; PATH_DIR_DOWN
-    .db 1 ; PATH_DIR_RIGHT
     .db 1 ; PATH_DIR_LEFT
     .db 1 ; PATH_DIR_UP
-    .db 1 ; PATH_DIR_UPLEFT
-    .db 1 ; PATH_DIR_UPRIGHT
-    .db 1 ; PATH_DIR_DOWNLEFT
-    .db 1 ; PATH_DIR_DOWNRIGHT
-    .db 0 ; PATH_DIR_NONE
+    .db 1 ; PATH_DIR_RIGHT
 
 Path_X:
     .db  0 ; PATH_DIR_NULL
+    .db -1 ; PATH_DIR_UPLEFT
+    .db  0 ; invalid (downup)
+    .db -1 ; PATH_DIR_DOWNLEFT
+    .db  0 ; invalid
+    .db  1 ; PATH_DIR_DOWNRIGHT
+    .db  0 ; invalid (rightleft)
+    .db  1 ; PATH_DIR_UPRIGHT
+    .db  0 ; PATH_DIR_NONE
     .db  0 ; PATH_DIR_DOWN
-    .db  1 ; PATH_DIR_RIGHT
     .db -1 ; PATH_DIR_LEFT
     .db  0 ; PATH_DIR_UP
-    .db -1 ; PATH_DIR_UPLEFT
-    .db  1 ; PATH_DIR_UPRIGHT
-    .db -1 ; PATH_DIR_DOWNLEFT
-    .db  1 ; PATH_DIR_DOWNRIGHT
-    .db  0 ; PATH_DIR_NONE
+    .db  1 ; PATH_DIR_RIGHT
 
 Path_Y:
     .db  0 ; PATH_DIR_NULL
+    .db -1 ; PATH_DIR_UPLEFT
+    .db  0 ; invalid (downup)
+    .db  1 ; PATH_DIR_DOWNLEFT
+    .db  0 ; invalid
+    .db  1 ; PATH_DIR_DOWNRIGHT
+    .db  0 ; invalid (rightleft)
+    .db -1 ; PATH_DIR_UPRIGHT
+    .db  0 ; PATH_DIR_NONE
     .db  1 ; PATH_DIR_DOWN
-    .db  0 ; PATH_DIR_RIGHT
     .db  0 ; PATH_DIR_LEFT
     .db -1 ; PATH_DIR_UP
-    .db -1 ; PATH_DIR_UPLEFT
-    .db -1 ; PATH_DIR_UPRIGHT
-    .db  1 ; PATH_DIR_DOWNLEFT
-    .db  1 ; PATH_DIR_DOWNRIGHT
-    .db  0 ; PATH_DIR_NONE
+    .db  0 ; PATH_DIR_RIGHT
 
 Path_Angle:
     .db $00 ; PATH_DIR_NULL
+    .db $A0 ; PATH_DIR_UPLEFT
+    .db $00 ; invalid (downup)
+    .db $60 ; PATH_DIR_DOWNLEFT
+    .db $00 ; invalid
+    .db $20 ; PATH_DIR_DOWNRIGHT
+    .db $00 ; invalid (rightleft)
+    .db $E0 ; PATH_DIR_UPRIGHT
+    .db $00 ; PATH_DIR_NONE
     .db $40 ; PATH_DIR_DOWN
-    .db $00 ; PATH_DIR_RIGHT
     .db $80 ; PATH_DIR_LEFT
     .db $C0 ; PATH_DIR_UP
-    .db $A0 ; PATH_DIR_UPLEFT
-    .db $E0 ; PATH_DIR_UPRIGHT
-    .db $60 ; PATH_DIR_DOWNLEFT
-    .db $20 ; PATH_DIR_DOWNRIGHT
-    .db $00 ; PATH_DIR_NONE
+    .db $00 ; PATH_DIR_RIGHT
 
 Path_TileOffset:
     .db $00 ; PATH_DIR_NULL
+    .db $EF ; PATH_DIR_UPLEFT
+    .db $00 ; invalid (downup)
+    .db $0F ; PATH_DIR_DOWNLEFT
+    .db $00 ; invalid
+    .db $11 ; PATH_DIR_DOWNRIGHT
+    .db $00 ; invalid (rightleft)
+    .db $F1 ; PATH_DIR_UPRIGHT
+    .db $00 ; PATH_DIR_NONE
     .db $10 ; PATH_DIR_DOWN
-    .db $01 ; PATH_DIR_RIGHT
     .db $FF ; PATH_DIR_LEFT
     .db $F0 ; PATH_DIR_UP
-    .db $EF ; PATH_DIR_UPLEFT
-    .db $F1 ; PATH_DIR_UPRIGHT
-    .db $0F ; PATH_DIR_DOWNLEFT
-    .db $11 ; PATH_DIR_DOWNRIGHT
-    .db $00 ; PATH_DIR_NONE
+    .db $01 ; PATH_DIR_RIGHT
 
 ShiftLeftTable8:
     .REPT 8 INDEX i

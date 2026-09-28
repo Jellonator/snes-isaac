@@ -815,7 +815,7 @@ updateAllDoorsInRoom:
 
 BlockVariantAddresses:
 .REPT 256 INDEX i
-    .IF i == BLOCK_REGULAR
+    .IF i == BLOCK_GROUND
         .dw BlockEmptyVariants
     .ELIF i == BLOCK_HOLE
         .dw BlockHoleVariants

@@ -51,12 +51,13 @@
 .define projectile_damage (private_base_entity_combined_state_timer - 2)
 
 ; pathfinding data
-; we offset by $10 to prevent extra cycles from page wraps in pathfinding code
+; we offset by $20 to prevent extra cycles from page wraps in pathfinding code
 .DEFINE pathfind_nearest_enemy_id $001A20
 .DEFINE pathfind_player_data $001B20
 .DEFINE pathfind_enemy_data $001C20
 
 ; data buffers
+.DEFINE tempData_shared $001900
 .DEFINE tempData_7E $7EFF00
 
 .DEFINE currentRoomInfoAddress currentRoomTileTypeTableAddress

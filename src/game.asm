@@ -334,7 +334,7 @@ _Game.Loop:
         cmp #2
         beq @do_path_enemy_nearest
             jsl HelperFly.Tick
-        jmp @end
+            jmp @end
         @do_path_player:
             jsl Pathing.UpdatePlayer
             jmp @end

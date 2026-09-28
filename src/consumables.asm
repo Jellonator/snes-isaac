@@ -215,9 +215,6 @@ Consumable.consumables:
         .dw Consumable.definitions.null
     .ENDR
 
-_empty_use:
-    rts
-
 ; Teleport to room at location A
 TeleportToRoom:
 ; TODO: better transition
@@ -338,6 +335,7 @@ _tarot_fool:
     .ForceSetAX 8, 8
     lda.l roomslot_start
     jsl TeleportToRoom
+_empty_use: ; put here to save 1 byte
     rts
 
 _tarot_star:

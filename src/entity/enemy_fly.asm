@@ -59,7 +59,7 @@
         .PushContext
         .ForceSetAX 16, 16
         .call "Entity.Free"
-        rts
+        .EntityTickEnd
         .PopContextSoft
     +:
 ; move
@@ -178,7 +178,7 @@
     jsl Entity.Enemy.TickContactDamage
 @no_player_col:
     ; end
-    rts
+    .EntityTickEnd
 .endproc
 
 .SoftSetAX 16, 16

@@ -99,15 +99,18 @@ enemycube_frame_index_bottom_right:
 
 enemycube_midframes_by_direction:
     .db  0 ; PATH_DIR_NULL
+    .db  0 ; PATH_DIR_UPLEFT
+    .db  0 ; invalid (downup)
+    .db  0 ; PATH_DIR_DOWNLEFT
+    .db  0 ; invalid
+    .db  0 ; PATH_DIR_DOWNRIGHT
+    .db  0 ; invalid (rightleft)
+    .db  0 ; PATH_DIR_UPRIGHT
+    .db  0 ; PATH_DIR_NONE
     .db  8 ; PATH_DIR_DOWN
-    .db  4 ; PATH_DIR_RIGHT
     .db  4 ; PATH_DIR_LEFT
     .db 12 ; PATH_DIR_UP
-    .db  0 ; PATH_DIR_UPLEFT
-    .db  0 ; PATH_DIR_UPRIGHT
-    .db  0 ; PATH_DIR_DOWNLEFT
-    .db  0 ; PATH_DIR_DOWNRIGHT
-    .db  0 ; PATH_DIR_NONE
+    .db  4 ; PATH_DIR_RIGHT
 
 ; set frame to A
 .SoftSetAX 16, 16
@@ -281,7 +284,7 @@ _state_idle:
         .InsertHitboxLite_Y
         tay
         ; set direction, properly
-        lda.b $16
+        lda.b $16 ; TODO: fix sprites
         sta.w _current_direction,Y
         lda #STATE_MOVE_START
         sta.w entity_state,Y
@@ -421,12 +424,13 @@ _funclist_state:
         .PushContext
         .ForceSetAX 16, 16
         .call "Entity.Free"
-        rts
+        .EntityTickEnd
         .PopContextSoft
     +:
 ; AI
     lda.w loword(entity_damageflash),Y
-    bne @no_tick
+    cmp #ENTITY_FLASH_TIME - 1
+    beq @no_tick
     .ForceSetAX 8, 8
     lda #1
     bit.w tickCounter
@@ -515,7 +519,7 @@ _funclist_state:
     jsl Entity.Enemy.TickContactDamage
 @no_player_col:
     ; end
-    rts
+    .EntityTickEnd
 .endproc
 
 .SoftSetAX 16, 16

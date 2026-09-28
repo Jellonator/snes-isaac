@@ -1617,7 +1617,7 @@ _player_handle_brimstone_damage_tick:
             bcs @skip_tile
             tay
             lda [currentRoomTileTypeTableAddress],Y
-            bpl @skip_tile
+            bmi @skip_tile
                 .ForceSetAX 16, 16
                 and #$00FF
                 asl
@@ -2093,7 +2093,7 @@ _player_render_brimstone_homing:
             bcs @skip_tile
             tay
             lda [currentRoomTileTypeTableAddress],Y
-            bpl @skip_tile
+            bmi @skip_tile
                 phx
                 .ForceSetAX 16, 16
                 and #$00FF
@@ -2489,12 +2489,9 @@ PlayerMoveLeft:
 ; Determine if tile is solid
     .ForceSetA 8
     lda [currentRoomTileTypeTableAddress],Y ; top
-    beq @solid
     txy
-    ora [currentRoomTileTypeTableAddress],y ; bottom
-    bmi @solid
-    lda [currentRoomTileTypeTableAddress],y ; bottom
-    beq @solid
+    and [currentRoomTileTypeTableAddress],y ; bottom
+    bpl @solid
 @end:
     .ForceSetA 16
     rts
@@ -2544,12 +2541,9 @@ PlayerMoveRight:
 ; Determine if tile is solid
     .ForceSetA 8
     lda [currentRoomTileTypeTableAddress],Y ; top
-    beq @solid
     txy
-    ora [currentRoomTileTypeTableAddress],y ; bottom
-    bmi @solid
-    lda [currentRoomTileTypeTableAddress],y ; bottom
-    beq @solid
+    and [currentRoomTileTypeTableAddress],y ; bottom
+    bpl @solid
 @end:
     .ForceSetA 16
     rts
@@ -2626,12 +2620,9 @@ PlayerMoveUp:
 ; Determine if tile is solid
     .ForceSetA 8
     lda [currentRoomTileTypeTableAddress],Y ; left
-    beq @solid
     txy
-    ora [currentRoomTileTypeTableAddress],y ; right
-    bmi @solid
-    lda [currentRoomTileTypeTableAddress],y ; right
-    beq @solid
+    and [currentRoomTileTypeTableAddress],y ; right
+    bpl @solid
 @end:
     .ForceSetA 16
     rts
@@ -2681,12 +2672,9 @@ PlayerMoveDown:
 ; Determine if tile is solid
     .ForceSetA 8
     lda [currentRoomTileTypeTableAddress],Y ; left
-    beq @solid
     txy
-    ora [currentRoomTileTypeTableAddress],y ; right
-    bmi @solid
-    lda [currentRoomTileTypeTableAddress],y ; right
-    beq @solid
+    and [currentRoomTileTypeTableAddress],y ; right
+    bpl @solid
 @end:
     .ForceSetA 16
     rts

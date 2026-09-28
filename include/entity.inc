@@ -407,6 +407,16 @@
     bmi addr
 .ENDM
 
+; Macro to place at the end of every entity tick procedure
+.MACRO .EntityTickEnd
+    .PRINT "BANK: ", HEX bank(), "\n"
+    .IF bank() == ROMBANK_ENTITYCODE
+        jmp Entity.Tickall.Return
+    .ELSE
+        jml Entity.Tickall.Return
+    .ENDIF
+.ENDM
+
 ; ENTITY INTERFACES
 
 ; Called during entity initialization

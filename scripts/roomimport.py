@@ -13,8 +13,8 @@ total_room_data_size = 0
 MAX_POOL_SIZE = 255
 
 tiledIdsToGameIds = {
-    -1: "BLOCK_REGULAR",
-    0x00: "BLOCK_REGULAR",
+    -1: "BLOCK_GROUND",
+    0x00: "BLOCK_GROUND",
     0x01: "BLOCK_HOLE",
     0x08: "BLOCK_POOP",
     0x10: "BLOCK_ROCK",

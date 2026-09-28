@@ -136,7 +136,7 @@ _projectile_tile_poop:
     .ForceSetA 8
     lda #0
     sta [currentRoomTileVariantTableAddress],Y
-    lda #BLOCK_REGULAR
+    lda #BLOCK_GROUND
     sta [currentRoomTileTypeTableAddress],Y
     .ForceSetA 16
     jsl HandleTileChanged
@@ -219,7 +219,8 @@ ProjectileTileHandleTrampoline:
 _projectile_delete:
     .ForceSetAX 16, 16
     ldy.b PROJECTILE_TMP_IDX
-    .tailcall "Entity.Free"
+    .call "Entity.Free"
+    .EntityTickEnd
 .PopContextSoft
 
 .MACRO ._tear_size_damage_macro ARGS size, damage
@@ -414,7 +415,7 @@ Projectile.SetSizeFromDamage:
     +:
     ; continuing on...
     lda [currentRoomTileTypeTableAddress],Y
-    bpl @skipTileHandler
+    bmi @skipTileHandler
     .ForceSetAX 16, 16
     and #$00FF
     asl
@@ -521,7 +522,7 @@ Projectile.SetSizeFromDamage:
     adc #4
     sta.w entity_box_y2,Y
     jsr _projectile_update_sprite
-    rtl
+    .EntityTickEnd
 .endproc
 
 ; Create a new projectile, whose position and velocity inherits from entity [Y]
@@ -681,8 +682,7 @@ Projectile.AddAngleVelocity:
 .SoftSetBank $7E
 .SoftSetDirect $00
 .procdefines "projectile_entity_tick", "IEntityFree"
-    .call "projectile_tick__"
-    rts
+    .tailcall "projectile_tick__"
 .endproc
 
 .SoftSetAX 16, 16

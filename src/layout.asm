@@ -197,7 +197,8 @@
     private_base_entity_velocx dsw ENTITY_TOTAL_MAX
     ; This entity's Y velocity, in Q8.8 format
     private_base_entity_velocy dsw ENTITY_TOTAL_MAX
-; Common entity data
+; Memory reservations
+    _tempdata_shared_reserve ds 256
     ; pathfinding data
     _pathfind_nearest_enemy_id_reserve ds 256
     _pathfind_player_data_reserve ds 256

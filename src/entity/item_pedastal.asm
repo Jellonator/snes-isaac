@@ -484,7 +484,7 @@ true_item_pedastal_tick_base:
         .SoftSetX 16
         jsr _do_item_pickup
 @no_player_col:
-    rtl
+    .EntityTickEnd
 
 _do_item_pickup:
     ; set state
@@ -575,7 +575,8 @@ true_item_pedastal_tick_pickup:
     sta.w objectData.1.flags,X
     ; increment index
     .OX_Next_S
-
+    .SetAX 8, 16
+    ; fallthrough to empty handler
 true_item_pedastal_tick_empty:
     .SoftSetA 8
     .SoftSetX 16
@@ -603,7 +604,7 @@ true_item_pedastal_tick_empty:
     sta.w objectData.1.flags,X
     .OX_Next_S
 @skip:
-    rtl
+    .EntityTickEnd
 
 _item_pedastal_free_gfx:
     .ForceSetA 16
@@ -779,10 +780,7 @@ item_pedastal_free:
 item_pedastal_tick:
     .SoftSetA 16
     .SoftSetX 16
-    pla
-    phk
-    pha
-    .ForceSetA 8
+    .SetA 8
     lda.w _item_state,Y
     cmp #STATE_PICKUP
     bne +

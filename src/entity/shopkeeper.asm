@@ -23,7 +23,7 @@
         .PushContext
         .SetAX 16, 16
         .call "Entity.Free"
-        rtl
+        .EntityTickEnd
         .PopContextSoft
     +:
 ; draw
@@ -75,7 +75,7 @@
     clc
     adc #16
     sta.w loword(entity_ysort),Y
-    rtl
+    .EntityTickEnd
 .endproc
 
 .SoftSetAX 16, 16
@@ -146,8 +146,7 @@
 .SoftSetBank $7E
 .SoftSetDirect $0000
 .procdefines "entity_shopkeeper_tick", "IEntityTick"
-    .call "true_entity_shopkeeper_tick"
-    rts
+    .tailcall "true_entity_shopkeeper_tick"
 .endproc
 
 .ENDS

@@ -114,7 +114,7 @@ _target_player_base_angle:
             ; alright, now we do damage and unalive self
             .SetAX 16, 16
             .call "Entity.Free"
-            rts
+            .EntityTickEnd
         @end_collision_check:
         jmp @end_targetting
     @no_target_entity:
@@ -274,7 +274,7 @@ _target_player_base_angle:
     sbc #12
     sta.w objectData.1.pos_y,X
     .OX_Next
-    rts
+    .EntityTickEnd
 .endproc
 
 .SoftSetAX 16, 16

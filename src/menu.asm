@@ -72,9 +72,6 @@ _MenuLayout_Main:
     selection dw
 .ENDE
 
-_empty_func:
-    rts
-
 _Menu.StateEnterTable:
     .dw _menu_start_init ; start
     .dw _menu_main_init ; main
@@ -89,6 +86,7 @@ _Menu.Tick:
     .ForceSetAX 16, 16
     ldx.b menuState
     jsr (_Menu.StateTickTable,X)
+_empty_func: ; placed here to save 1 byte
     rts
 
 ; Set state to A

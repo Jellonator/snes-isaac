@@ -152,16 +152,48 @@ _clear_enemy_nearest:
 .DEFINE q_start $2A
 .DEFINE q_end $2C
 .DEFINE q_count $2E
+.DEFINE stack_store $2E ; q_count is not used once we store stack
 
 Pathing.UpdatePlayer:
     jsr _clear_player
 ; set bank and direct page
+    ; DB = $7E
     phb
     .ChangeDataBank $7E
     .ForceSetAX 16, 16
+    ; set direct page to refer to pathfinding data
     phd
     pea pathfind_player_data - $20
     pld
+; setup queue
+    ldx #loword(tempData_shared | $FF)
+    stx.b q_start
+    stx.b q_end
+    .ForceSetAX 8, 8
+; begin
+    ; push player's tile to queue
+    lda.w player_posx+1
+    adc #8
+    .DivideStatic 16
+    sta.b q_count ; q_count used as temp variable
+    lda.w player_posy+1
+    adc #8
+    and #$F0
+    ora.b q_count
+    sta.b (q_end)
+    dec.b q_end
+    ; indicate player's central tile
+    tax
+    lda #PATH_DIR_NONE
+    sta.b $20,X
+    lda #1
+    sta.b q_count
+; Main pathfinding routine
+_pathfind_main:
+    .ForceSetAX 16, 16
+; store stack address
+    tsc
+    sta.b stack_store
 ; setup tile addresses
     lda.l currentRoomTileTypeTableAddress
     sta.b tile
@@ -176,39 +208,37 @@ Pathing.UpdatePlayer:
     sec
     sbc #24
     sta.b tile_up
-; setup queue
-    ldx #loword(tempData_7E | $FF)
-    stx.b q_start
-    stx.b q_end
+; set stack address to q_end
+    lda.b q_end
+    tcs
+; begin loop
     .ForceSetAX 8, 8
-; begin
-    lda.w player_posx+1
-    adc #8
-    .DivideStatic 16
-    sta.b q_count
-    lda.w player_posy+1
-    adc #8
-    and #$F0
-    ora.b q_count
-    sta.b (q_end)
-    dec.b q_end
-    tax
-    lda #PATH_DIR_NONE
-    sta.b $20,X
-    lda #1
-    sta.b q_count
-; Main pathfinding routine
-_pathfind_main:
-    .SoftSetA 8
-    .SoftSetX 8
+    lda #0
+    sta $00,S
+    jmp @loop
+; end is placed here, to be closer to start of loop
+    @end:
+        .PushContext
+        .SetA 16
+        lda.b stack_store
+        tcs
+        pld
+        plb
+        rtl
+        .PopContextSoft
+; nexttile is placed here, to be closer to start of loop
+    @nexttile:
+        .SoftSetAX 8, 8
+        dec.b q_start
     @loop:
+        .SoftSetAX 8, 8
         lda.b (q_start)
-        tax
-        lda.l GameTileToRoomTileIndexTable,X
+        beq @end ; value is 0, end
+        tax ; X = tile position
+        lda.l GameTileToRoomTileIndexTable,X ; A = tile index
         tay
         lda (tile),Y
-        bmil @skiptile ; Skip if this tile is solid (can not be entered)
-        beql @skiptile ; $00 = pit = can't be crossed
+        bpl @nexttile ; Skip if this tile is solid (can not be entered)
         .REPT 8 INDEX i
             .IF i == 0
                 .DEFINE i_offs -1
@@ -236,48 +266,37 @@ _pathfind_main:
                 .DEFINE i_dir PATH_DIR_UPLEFT
             .ENDIF
             lda.b $20+i_offs,X
-            bne + ; If found tile is non-zero, skip it
-            ; if diagonal tile, then check adjacent tiles for clearance
+            bne + ; If path is already calculated, then pass
+            ; if diagonal tile, then check if adjacent tiles had path calculated
             .IF i == 4
                 lda (tile_up),Y
-                ora (tile_left),Y
-                bmi +
+                and (tile_left),Y
+                bpl +
             .ELIF i == 5
                 lda (tile_up),Y
-                ora (tile_right),Y
-                bmi +
+                and (tile_right),Y
+                bpl +
             .ELIF i == 6
                 lda (tile_down),Y
-                ora (tile_left),Y
-                bmi +
+                and (tile_left),Y
+                bpl +
             .ELIF i == 7
                 lda (tile_down),Y
-                ora (tile_right),Y
-                bmi +
+                and (tile_right),Y
+                bpl +
             .ENDIF
-                ; A is already 0
-                .IF i_dir == 1
-                    inc A
-                .ELIF i_dir > 1
-                    lda #i_dir
-                .ENDIF
+                lda #i_dir
                 sta.b $20+i_offs,X
                 lda.l OffsetTable+i_offs,X
-                sta.b (q_end)
-                dec.b q_end
-                inc.b q_count
+                pha
+                lda #0
+                sta $00,S
             +:
             .UNDEFINE i_dir
             .UNDEFINE i_offs
         .ENDR
-    @skiptile:
-        dec.b q_start
-        dec.b q_count
-        bnel @loop
-; end
-    pld
-    plb
-    rtl
+    ; loop iterate
+        jmp @nexttile
 
 Pathing.UpdateEnemy:
     jsr _clear_enemy
@@ -289,7 +308,7 @@ Pathing.UpdateEnemy:
     pea pathfind_enemy_data - $20
     pld
 ; setup queue
-    ldx #loword(tempData_7E | $FF)
+    ldx #loword(tempData_shared | $FF)
     stx.b q_start
     stx.b q_end
     .ForceSetAX 8, 8
@@ -302,8 +321,8 @@ Pathing.UpdateEnemy:
 @loop_entities:
         ldx.b tile
         ldy.w entityExecutionOrder-1,X
-        lda.w entity_mask,Y
-        and #ENTITY_MASK_TEAR
+        lda.w loword(entity_flags),Y
+        and #ENTITY_FLAGS_NEAREST_ENEMY_TARGET
         beq @skip_entity
         ; get index
         lda.w entity_box_x1,Y
@@ -321,6 +340,10 @@ Pathing.UpdateEnemy:
         ; put in queue
         sta.b (q_end)
         tax
+        ; skip if entity is OOB
+        lda.l GameTileBoundaryCheck,X
+        bmi @skip_entity
+        ; finish putting into queue
         lda #PATH_DIR_NONE
         sta.b $20,X
         inc.b q_count
@@ -329,21 +352,6 @@ Pathing.UpdateEnemy:
         dec.b tile
         bne @loop_entities
 @end_entities:
-; setup tile addresses
-    .ForceSetAX 16, 16
-    lda.l currentRoomTileTypeTableAddress
-    sta.b tile
-    dec A
-    sta.b tile_left
-    inc A
-    inc A
-    sta.b tile_right
-    clc
-    adc #12-1
-    sta.b tile_down
-    sec
-    sbc #24
-    sta.b tile_up
 ; main
     .ForceSetAX 8, 8
     lda.b q_count
@@ -398,6 +406,10 @@ Pathing.UpdateEnemyNearest:
         ; put in queue
         sta.b (q_end)
         tax
+        ; skip if out of bounds
+        lda.l GameTileBoundaryCheck,X
+        bmi @skip_entity
+        ; finish putting into queue
         tya
         sta.b $20,X
         inc.b q_count

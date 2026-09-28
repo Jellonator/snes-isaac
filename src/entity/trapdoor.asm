@@ -4,7 +4,6 @@
 .SECTION "Entity Trapdoor" SUPERFREE
 
 true_entity_trapdoor_tick:
-    ; rtl
     .ForceSetAX 16, 16
     lda #0
     ; tile ID
@@ -25,7 +24,7 @@ true_entity_trapdoor_tick:
     beq +
         dec A
         sta.w entity_timer,Y
-        rtl
+        .EntityTickEnd
     +:
     ; collision detection
     .EntityEasySetBox 16 16
@@ -33,7 +32,7 @@ true_entity_trapdoor_tick:
         ; TODO: handle next floor
         jsl Floor.Next
     @no_player_col:
-    rtl
+    .EntityTickEnd
 
 .ENDS
 
@@ -57,9 +56,6 @@ entity_trapdoor_free:
 entity_trapdoor_tick:
     .SoftSetA 16
     .SoftSetX 16
-    pla
-    phk
-    pha
     jml true_entity_trapdoor_tick
 
 .ENDS

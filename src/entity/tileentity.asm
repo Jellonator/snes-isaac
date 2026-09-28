@@ -76,7 +76,7 @@
         .PushContext
         .SetAX 16, 16
         .call "Entity.Free"
-        rtl
+        .EntityTickEnd
         .PopContextSoft
     @not_damaged:
     lda #0
@@ -165,7 +165,7 @@
         .ForceSetAX 16, 16
         jsl entity_tile_set_frame
 @skip_upload:
-    rtl
+    .EntityTickEnd
 .endproc
 
 .SoftSetAX 16, 16
@@ -275,8 +275,7 @@
 .SoftSetBank $7E
 .SoftSetDirect $0000
 .procdefines "entity_tile_tick", "IEntityTick"
-    .call "true_entity_tile_tick"
-    rts
+    .tailcall "true_entity_tile_tick"
 .endproc
 
 .ENDS

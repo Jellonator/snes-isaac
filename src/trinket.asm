@@ -50,9 +50,6 @@ Trinket.trinkets:
     .dw Trinket.definitions.roller_skates
     .dw Trinket.definitions.fish_head
 
-_pickup_empty:
-    rts
-
 ; Clear trinket data
 Trinket.Init:
     .ForceSetA 16
@@ -173,6 +170,7 @@ _drop_trinket_x:
         pla
         sta.b entityExecutionContext
 @skip_drop:
+_pickup_empty: ; here to save 1 byte
     rts
 .InvalidateContext
 

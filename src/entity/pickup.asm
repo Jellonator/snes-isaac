@@ -181,7 +181,7 @@ PickupTable_RoomReward:
 @skip:
     plp
     ply
-    rts
+    ; rts - save one byte by just falling through to _handle_null
 .endproc
 
 .SoftSetAX 16, 16
@@ -571,7 +571,7 @@ PickupTable_RoomReward:
         lda.w entity_type,Y
         cmp #ENTITY_TYPE_PICKUP
         beq +
-            rtl
+            .EntityTickEnd
         +:
         jmp @skip_pickup
     @not_standing_on_pickup:
@@ -688,7 +688,7 @@ PickupTable_RoomReward:
         sta.w entity_velocy,Y
     @end_friction_y:
 @skip_movement:
-    rtl
+    .EntityTickEnd
 .endproc
 
 .SoftSetAX 8, 16
@@ -918,8 +918,7 @@ PickupTable_RoomReward:
 .SoftSetBank $7E
 .SoftSetDirect $0000
 .procdefines "entity_pickup_tick", "IEntityTick"
-    .call "true_entity_pickup_tick"
-    rts
+    .tailcall "true_entity_pickup_tick"
 .endproc
 
 .ENDS

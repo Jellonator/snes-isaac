@@ -26,7 +26,7 @@ _bomb_tile_poop:
     .ForceSetA 8
     lda #0
     sta [currentRoomTileVariantTableAddress],Y
-    lda #BLOCK_REGULAR
+    lda #BLOCK_GROUND
     sta [currentRoomTileTypeTableAddress],Y
     .ForceSetA 16
     jsl HandleTileChanged
@@ -48,9 +48,9 @@ _bomb_tile_rock:
     .SoftSetX 16
     .SoftSetA 16
     .ForceSetA 8
-    lda #BLOCK_REGULAR_VARIANT_RUBBLE
+    lda #BLOCK_GROUND_VARIANT_RUBBLE
     sta [currentRoomTileVariantTableAddress],Y
-    lda #BLOCK_REGULAR
+    lda #BLOCK_GROUND
     sta [currentRoomTileTypeTableAddress],Y
     .ForceSetA 16
     jsl HandleTileChanged
@@ -323,7 +323,7 @@ _ExplosionTileHandlerTable:
         pla
         ldy.b Y_STORE
         .call "Entity.Free"
-        rtl
+        .EntityTickEnd
     @timer_continue:
 ; perform movement
     .ForceSetAX 16, 16
@@ -402,7 +402,7 @@ _ExplosionTileHandlerTable:
     sta.w loword(entity_mask),Y
     lda #0
     sta.w entity_signal,Y
-    rtl
+    .EntityTickEnd
     .UNDEFINE Y_STORE
     .UNDEFINE TILE
     .UNDEFINE TOP
@@ -444,8 +444,7 @@ _ExplosionTileHandlerTable:
 .SoftSetBank $7E
 .SoftSetDirect $0000
 .procdefines "entity_bomb_tick"
-    .call "true_entity_bomb_tick"
-    rts
+    .tailcall "true_entity_bomb_tick"
 .endproc
 
 .ENDS

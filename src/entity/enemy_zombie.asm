@@ -574,7 +574,7 @@ _zombie_set_walk_frame:
             .PushContext
             .ForceSetAX 16, 16
             .call "Entity.Free"
-            rts
+            .EntityTickEnd
             .PopContextSoft
         @not_headless:
         ; replace with new variant
@@ -609,7 +609,7 @@ _zombie_set_walk_frame:
     .SetA 8
     jsl Entity.Enemy.TickContactDamage
     ; end
-    rts
+    .EntityTickEnd
 .endproc
 
 .SoftSetAX 16, 16

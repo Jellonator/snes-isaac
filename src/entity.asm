@@ -5,9 +5,6 @@
 .ORG 0
 .SECTION "Entity"
 
-_e_null:
-    rts
-
 ; Create and initialize an entity of type+variant A
 ; lower byte is type, upper byte is variant
 ; Arguments:
@@ -321,7 +318,7 @@ _e_null:
     .call "Entity.SortExecutionOrder"
     .SetAX 8, 8
     ldx.w numEntities
-    beq @end
+    beq Entity.Tickall.Return@end
     @loop:
         phx                             ;  2.5
         ldy.w entityExecutionOrder-1,X  ;  3.25
@@ -330,20 +327,26 @@ _e_null:
         and #$00FF                      ;  2.25
         asl                             ;  1.5
         tax                             ;  1.5
-        jsr (EntityDef_TickFunc,X)      ;  6.5
+        jmp (EntityDef_TickFunc,X)      ;  4.5
+    Entity.Tickall.Return:
         .ForceSetAX 8, 8                ;  2.25
         plx                             ;  3.25
         dex                             ;  1.5
-        bne @loop                       ;  2.25
-        ;                               = 32.25
+        bne Entity.TickAll@loop         ;  2.25
+        ;                               = 30.75
 @end:
     rtl
 .endproc
 
 ; ENTITY DEFINITIONS
 
+
 _player_tick:
     jsl PlayerRender
+_tick_null: ; empty tick handler here to save 1 byte
+    .EntityTickEnd
+
+_e_null:
     rts
 
 .MACRO ._DefineEntity ARGS index, initf, tickf, freef, spawngroup, flags
@@ -358,7 +361,7 @@ _player_tick:
 
 ._DefineEntity 0,\
     _e_null,\
-    _e_null,\
+    _tick_null,\
     _e_null,\
     ENTITY_SPAWNGROUP_NEVER
 
@@ -479,7 +482,7 @@ EntityDef_TickFunc:
     .IFDEF _Array_EntityDef_TickFunc.{index}
         .DW _Array_EntityDef_TickFunc.{index}
     .ELSE
-        .DW _e_null
+        .DW _tick_null
     .ENDIF
 .ENDR
 
@@ -907,8 +910,7 @@ _directtargetposition_y_is_zero:
     clc ; none of the loop instructions, except 'adc', should change this
     @loop_right:
         lda [currentRoomTileTypeTableAddress],Y
-        bmi @found_tile_right
-        beq @found_tile_right
+        bpl @found_tile_right
         dec.b TILES_Y
         bmi @end_horizontal_movement
         tya
@@ -942,8 +944,7 @@ _directtargetposition_y_is_zero:
     clc ; none of the loop instructions, except 'adc', should change this
     @loop_left:
         lda [currentRoomTileTypeTableAddress],Y
-        bmi @found_tile_left
-        beq @found_tile_left
+        bpl @found_tile_left
         dec.b TILES_Y
         bmi @end_horizontal_movement
         tya
@@ -994,8 +995,7 @@ _directtargetposition_y_is_zero:
     clc ; none of the loop instructions, except 'adc', should change this
     @loop_down:
         lda [currentRoomTileTypeTableAddress],Y
-        bmi @found_tile_down
-        beq @found_tile_down
+        bpl @found_tile_down
         dec.b TILES_X
         bmi @end_vertical_movement
         iny
@@ -1027,8 +1027,7 @@ _directtargetposition_y_is_zero:
     clc ; none of the loop instructions, except 'adc', should change this
     @loop_up:
         lda [currentRoomTileTypeTableAddress],Y
-        bmi @found_tile_up
-        beq @found_tile_up
+        bpl @found_tile_up
         dec.b TILES_X
         bmi @end_vertical_movement
         iny

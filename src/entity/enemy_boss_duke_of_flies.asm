@@ -376,7 +376,7 @@ _duke_state_funcs:
     sta.w loword(entity_ysort),Y
     adc #BOSS_HEIGHT - BOSS_CENTER_Y
     sta.w entity_box_y2,Y
-    rts
+    .EntityTickEnd
 .endproc
 
 .SoftSetAX 16, 16

@@ -602,8 +602,7 @@ GetDevilDealChance:
         dey
         ; de-prioritize if in a wall/gap (top bit, highest prio)
         lda [currentRoomTileTypeTableAddress],Y
-        beq @init_priority_low ; $00  => hole, low prio
-        bmi @init_priority_low ; $80+ => wall, low prio
+        bpl @init_priority_low ; <$80 => wall/hole, low prio
             lda #$00
             jmp @init_priority_set
         @init_priority_low:

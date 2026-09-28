@@ -300,7 +300,7 @@
     sta.w entity_timer,Y
 @end_fire_tear:
     ; end
-    rts
+    .EntityTickEnd
 .endproc
 
 .SoftSetAX 16, 16

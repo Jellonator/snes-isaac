@@ -208,12 +208,10 @@ Item.check_and_recalculate:
     jml Costume.player_recalculate
     ; rtl
 
-_use_empty:
-_pickup_empty:
-    rts
-
 _health_up_pickup:
     jsl Player.health_up
+_use_empty: ; here to save 1 byte
+_pickup_empty:
     rts
 
 _pickup_map:

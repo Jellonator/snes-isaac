@@ -302,7 +302,7 @@ EntityEffectTypes:
             ; kill
             .ForceSetAX 16, 16
             .call "Entity.Free"
-            rtl
+            .EntityTickEnd
     @no_kill:
         .ForceSetA 16
         lda.w effect_frame_ptr,Y
@@ -313,7 +313,7 @@ EntityEffectTypes:
         jsr _load_frame
 @no_advance_frame:
     .ForceSetAX 16, 16
-    rtl
+    .EntityTickEnd
     .UNDEFINE STORE_Y
     .UNDEFINE ARRAY
     .UNDEFINE POSX
@@ -440,8 +440,7 @@ _load_frame:
 .SoftSetBank $7E
 .SoftSetDirect $0000
 .procdefines "entity_effect_tick", "IEntityFree"
-    .call "true_entity_effect_tick"
-    rts
+    .tailcall "true_entity_effect_tick"
 .endproc
 
 .ENDS

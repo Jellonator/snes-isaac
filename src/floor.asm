@@ -235,7 +235,7 @@ _Floor_Update_Graphics:
     tiledata: .dl spritedata.stage.caves
     ground: .dl spritedata.stage.caves_ground
     groundPalette: .dw 2 * $0400
-    roompoolMain: .dw RoomPoolDefinitions@floor_basement
+    roompoolMain: .dw RoomPoolDefinitions@floor_caves
     roompoolBoss: .dw RoomPoolDefinitions@boss_basement
 .ENDST
 

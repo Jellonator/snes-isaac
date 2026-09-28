@@ -18,6 +18,15 @@
         ]
     },
     {
+        "id": "floor_caves",
+        "rooms": [
+            "caves/dime_reward.tmx",
+            "caves/pitmaze1.tmx",
+            "caves/pitmaze2.tmx",
+            "caves/zombies1.tmx"
+        ]
+    },
+    {
         "id": "boss_basement",
         "rooms": [
             "basement_boss/monstro1.tmx"

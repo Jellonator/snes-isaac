@@ -502,7 +502,7 @@ PickupTable_RoomReward:
     jsl Spriteman.UnrefSprite
     .ForceSetAX 16, 16
     ply
-    lda.w loaded_palette,Y
+    ldx.w loaded_palette,Y
     phy
     jsl Palette.free
     .ForceSetAX 16, 16

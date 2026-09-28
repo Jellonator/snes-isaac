@@ -415,6 +415,7 @@ Projectile.SetSizeFromDamage:
     +:
     ; continuing on...
     lda [currentRoomTileTypeTableAddress],Y
+    beq @skipTileHandler
     bmi @skipTileHandler
     .ForceSetAX 16, 16
     and #$00FF

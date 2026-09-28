@@ -19,10 +19,13 @@
     lda #0
     rtl
 @hole:
+    lda #0
+    xba
     stz.b $0B
     ; right
     phx
-    ldx.b $0C
+    lda.b $0C
+    tax
     lda.l RoomTileToGameTileTable,X
     and #$0F
     plx
@@ -44,7 +47,8 @@
     @skip_down:
     ; left
     phx
-    ldx.b $0C
+    lda.b $0C
+    tax
     lda.l RoomTileToGameTileTable,X
     and #$0F
     plx
@@ -123,6 +127,7 @@ InitializeRoomSlot:
     sta.l roomSlotTiles.1.tileVariantTable,X
     sta.l roomSlotTiles.1.tileVariantTable+1,X
 ; set tile variants
+    .SetAX 8, 16
     ldx.b $0D
     lda #ROOM_TILE_COUNT
     sta.b $0A

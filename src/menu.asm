@@ -166,10 +166,8 @@ _Menu.UploadBG2:
     stx.b $00
     .VQueueOpToA
     tax
-    lda.w vqueueNumOps
-    clc
-    adc #16
-    sta.w vqueueNumOps
+    .VQueueOpAddA 16
+    .VQueueOpStoreA
     lda #MENU_BG2_TILE_BASE_ADDR
     clc
     adc.b menuBG2Offset
@@ -177,43 +175,38 @@ _Menu.UploadBG2:
     .REPT 16 INDEX i
         ; SRC ADDR
         lda.b $00
-        sta.l vqueueOps.{i+1}.aAddr,X
+        sta.l vqueueOp_SrcAddr.{i},X
         clc
         adc #16*2
         sta.b $00
         ; VRAM ADDR
         lda.b $02
-        sta.l vqueueOps.{i+1}.vramAddr,X
+        sta.l vqueueOp_DestAddr.{i},X
         clc
         adc #16*2
         sta.b $02
         ; rest
         lda #16*2
-        sta.l vqueueOps.{i+1}.numBytes,X
-        .ForceSetA 8
-        lda #bankbyte(_MenuBackgroundData)
-        sta.l vqueueOps.{i+1}.aAddr+2,X
-        lda #VQUEUE_MODE_VRAM
-        sta.l vqueueOps.{i+1}.mode,X
-        .ForceSetA 16
+        sta.l vqueueOp_Size.{i},X
+        lda #joinword(VQUEUE_MODE_VRAM, bankbyte(_MenuBackgroundData))
+        sta.l vqueueOp_ModeBank.{i},X
     .ENDR
     rts
 
 ; Clear BG1
 _Menu.ClearBG1:
     .ForceSetAX 16, 16
-    .VQueueOpToA
-    tax
-    inc.w vqueueNumOps
+    .VQueueOpToX
     lda #MENU_BG1_TILE_BASE_ADDR
     clc
     adc.b menuBG1Offset
-    sta.l vqueueOps.1.vramAddr,X
+    sta.l vqueueOp_DestAddr,X
     lda #32*32*2
-    sta.l vqueueOps.1.numBytes,X
-    .ForceSetA 8
-    lda #VQUEUE_MODE_VRAM_CLEAR
-    sta.l vqueueOps.1.mode,X
+    sta.l vqueueOp_Size,X
+    lda #joinword(VQUEUE_MODE_VRAM_CLEAR, 0)
+    sta.l vqueueOp_ModeBank,X
+    .VQueueOpIncX
+    .VQueueOpStoreX
     rts
 
 ; put text at Y into position X
@@ -264,20 +257,17 @@ _Menu.PutTextBG1:
     @loop_end:
     plb
     ; create vqueue entry
-    .VQueueOpToA
-    tax
-    inc.w vqueueNumOps
+    .VQueueOpToX
     lda.b $06
-    sta.l vqueueOps.1.numBytes,X
+    sta.l vqueueOp_Size,X
     lda.w vqueueBinOffset
-    sta.l vqueueOps.1.aAddr,X
+    sta.l vqueueOp_SrcAddr,X
     lda.b $00
-    sta.l vqueueOps.1.vramAddr,X
-    .ForceSetA 8
-    lda #$7F
-    sta.l vqueueOps.1.aAddr+2,X
-    lda #VQUEUE_MODE_VRAM
-    sta.l vqueueOps.1.mode,X
+    sta.l vqueueOp_DestAddr,X
+    lda #joinword(VQUEUE_MODE_VRAM, $7F)
+    sta.l vqueueOp_ModeBank,X
+    .VQueueOpIncX
+    .VQueueOpStoreX
     ; end
     rts
 

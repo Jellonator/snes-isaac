@@ -548,47 +548,36 @@ Player.set_head_frame:
 ; upload
     ; inc ops
     .ForceSetAX 16, 16
-    lda.l vqueueNumOps
-    asl
-    asl
-    asl
+    .VQueueOpToA
     tax
-    lda.l vqueueNumOps
-    inc A
-    inc A
-    sta.l vqueueNumOps
+    .VQueueOpAddA 2
+    .VQueueOpStoreA
     ; mode[] = VQUEUE_MODE_VRAM
-    .ForceSetA 8
-    lda #VQUEUE_MODE_VRAM
-    sta.l vqueueOps.1.mode,X
-    sta.l vqueueOps.2.mode,X
-    ; set aAddr bank
-    lda #$7F
-    sta.l vqueueOps.1.aAddr+2,X
-    sta.l vqueueOps.2.aAddr+2,X
+    lda #joinword(VQUEUE_MODE_VRAM, $7F)
+    sta.l vqueueOp_ModeBank.0,X
+    sta.l vqueueOp_ModeBank.1,X
     ; aAddr[0] = playerSpriteBuffer + frame×128
     ; aAddr[1] = playerSpriteBuffer + frame×128 + 64
-    .ForceSetAX 16, 16
     lda.w playerData.active_head_frame
     and #$00FF
     xba
     lsr
     clc
     adc #loword(playerSpriteBuffer)
-    sta.l vqueueOps.1.aAddr,X
+    sta.l vqueueOp_SrcAddr.0,X
     clc
     adc #64
-    sta.l vqueueOps.2.aAddr,X
+    sta.l vqueueOp_SrcAddr.1,X
     ; vAddr[0] = SPRITE1_BASE_ADDR + $0000
     ; vAddr[1] = SPRITE1_BASE_ADDR + $0100
     lda #SPRITE1_BASE_ADDR
-    sta.l vqueueOps.1.vramAddr,X
+    sta.l vqueueOp_DestAddr.0,X
     lda #SPRITE1_BASE_ADDR + $0100
-    sta.l vqueueOps.2.vramAddr,X
+    sta.l vqueueOp_DestAddr.1,X
     ; numBytes[] = 64
     lda #64
-    sta.l vqueueOps.1.numBytes,X
-    sta.l vqueueOps.2.numBytes,X
+    sta.l vqueueOp_Size.0,X
+    sta.l vqueueOp_Size.1,X
 ; end upload
     rtl
 
@@ -603,24 +592,14 @@ Player.set_body_frame:
 ; upload
     ; inc ops
     .ForceSetAX 16, 16
-    lda.l vqueueNumOps
-    asl
-    asl
-    asl
+    .VQueueOpToA
     tax
-    lda.l vqueueNumOps
-    inc A
-    inc A
-    sta.l vqueueNumOps
+    .VQueueOpAddA 2
+    .VQueueOpStoreA
     ; mode[] = VQUEUE_MODE_VRAM
-    .ForceSetA 8
-    lda #VQUEUE_MODE_VRAM
-    sta.l vqueueOps.1.mode,X
-    sta.l vqueueOps.2.mode,X
-    ; set aAddr bank
-    lda #$7F
-    sta.l vqueueOps.1.aAddr+2,X
-    sta.l vqueueOps.2.aAddr+2,X
+    lda #joinword(VQUEUE_MODE_VRAM, $7F)
+    sta.l vqueueOp_ModeBank.0,X
+    sta.l vqueueOp_ModeBank.1,X
     ; aAddr[0] = playerSpriteBuffer + frame×128
     ; aAddr[1] = playerSpriteBuffer + frame×128 + 64
     .ForceSetAX 16, 16
@@ -630,20 +609,20 @@ Player.set_body_frame:
     lsr
     clc
     adc #loword(playerSpriteBuffer)
-    sta.l vqueueOps.1.aAddr,X
+    sta.l vqueueOp_SrcAddr.0,X
     clc
     adc #64
-    sta.l vqueueOps.2.aAddr,X
+    sta.l vqueueOp_SrcAddr.1,X
     ; vAddr[0] = SPRITE1_BASE_ADDR + $0020
     ; vAddr[1] = SPRITE1_BASE_ADDR + $0120
     lda #SPRITE1_BASE_ADDR + $0020
-    sta.l vqueueOps.1.vramAddr,X
+    sta.l vqueueOp_DestAddr.0,X
     lda #SPRITE1_BASE_ADDR + $0120
-    sta.l vqueueOps.2.vramAddr,X
+    sta.l vqueueOp_DestAddr.1,X
     ; numBytes[] = 64
     lda #64
-    sta.l vqueueOps.1.numBytes,X
-    sta.l vqueueOps.2.numBytes,X
+    sta.l vqueueOp_Size.0,X
+    sta.l vqueueOp_Size.1,X
 ; end upload
     rtl
 

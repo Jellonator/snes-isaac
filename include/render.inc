@@ -47,16 +47,6 @@
 ; Vqueue - clear mem
 .DEFINE VQUEUE_MODE_VRAM_CLEAR 4
 
-; VQUEUE OPERATION
-; Defines structure for VQueue operation
-; An operation copies some amount of memory to VRAM
-.STRUCT vqueueop_t SIZE 8
-    vramAddr dw
-    aAddr dl
-    numBytes dw
-    mode db
-.ENDST
-
 ; VQUEUE MINI OPERATION
 ; Used directly with DMA transfer to VADDR and VDATA
 ; i.e., copy single words to VRAM
@@ -446,19 +436,59 @@
 
 ; Store current vqueue operation pointer in A
 .MACRO .VQueueOpToA
-    lda.w vqueueNumOps
-    asl
-    asl
-    asl
+    lda.w vqueueOpIndex
+.ENDM
+
+; Store current vqueue operation pointer in X
+.MACRO .VQueueOpToX
+    ldx.w vqueueOpIndex
+.ENDM
+
+; Store current vqueue operation pointer in Y
+.MACRO .VQueueOpToY
+    ldy.w vqueueOpIndex
+.ENDM
+
+; Increment vqueue operation pointer in A by number of elements
+.MACRO .VQueueOpAddA ARGS num, skip_clc
+    .IF num == 1
+        inc A
+        inc A
+    .ELIF num > 1
+        .IF NARGS < 2
+            clc
+        .ELIF skip_clc == FALSE
+            clc
+        .ENDIF
+        adc #num * 2
+    .ENDIF
 .ENDM
 
 ; Increment vqueue operation pointer in X
-; Clobbers A
 .MACRO .VQueueOpIncX
-    txa
-    clc
-    adc #8
-    tax
+    inx
+    inx
+.ENDM
+
+; Increment vqueue operation pointer in Y
+.MACRO .VQueueOpIncY
+    iny
+    iny
+.ENDM
+
+; Store vqueue operation pointer in A
+.MACRO .VQueueOpStoreA
+    sta.w vqueueOpIndex
+.ENDM
+
+; Store vqueue operation pointer in X
+.MACRO .VQueueOpStoreX
+    stx.w vqueueOpIndex
+.ENDM
+
+; Store vqueue operation pointer in Y
+.MACRO .VQueueOpStoreY
+    sty.w vqueueOpIndex
 .ENDM
 
 ; Copy vqueue bin pointer to X

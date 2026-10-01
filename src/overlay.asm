@@ -47,16 +47,9 @@ Overlay.clear:
         rtl
     +:
     ; get vqueue ptr
-    lda.l vqueueNumOps
-    inc A
-    sta.l vqueueNumOps
-    dec A
-    asl
-    asl
-    asl
-    tax
+    .VQueueOpToX
     ; put info
-    .ForceSetAX 16, 16
+    .SetAX 16, 16
     lda.l textLines
     cmp #8
     bcc +
@@ -68,15 +61,16 @@ Overlay.clear:
     asl
     asl
     asl
-    sta.l vqueueOps.1.numBytes,X
+    sta.l vqueueOp_Size,X
     lda #BG1_TILE_BASE_ADDR + 32 * 8
-    sta.l vqueueOps.1.vramAddr,X
-    .ForceSetA 8
-    lda #VQUEUE_MODE_VRAM_CLEAR
-    sta.l vqueueOps.1.mode,X
-    .ForceSetAX 16, 16
+    sta.l vqueueOp_DestAddr,X
+    lda #joinword(VQUEUE_MODE_VRAM_CLEAR, 0)
+    sta.l vqueueOp_ModeBank,X
     lda #0
     sta.l textLines
+    ; increment pointer
+    .VQueueOpIncX
+    .VQueueOpStoreX
     rtl
 
 ; Put string of characters onto overlay
@@ -178,19 +172,12 @@ Overlay.putline:
 ; write to vqueue
     ; get vqueue ptr
     .ForceSetAX 16, 16
-    lda.l vqueueNumOps
-    inc A
-    sta.l vqueueNumOps
-    dec A
-    asl
-    asl
-    asl
-    tax
+    .VQueueOpToX
     ; put info
     lda.l vqueueBinOffset
-    sta.l vqueueOps.1.aAddr,X
+    sta.l vqueueOp_SrcAddr,X
     lda #32*2
-    sta.l vqueueOps.1.numBytes,X
+    sta.l vqueueOp_Size,X
     lda.l textLines
     and #$07
     asl
@@ -200,12 +187,12 @@ Overlay.putline:
     asl
     clc
     adc #BG1_TILE_BASE_ADDR + 32 * 8
-    sta.l vqueueOps.1.vramAddr,X
+    sta.l vqueueOp_DestAddr,X
+    lda #joinword(VQUEUE_MODE_VRAM, $7F)
+    sta.l vqueueOp_ModeBank,X
+    .VQueueOpIncX
+    .VQueueOpStoreX
     .ForceSetA 8
-    lda #$7F
-    sta.l vqueueOps.1.aAddr+2,X
-    lda #VQUEUE_MODE_VRAM
-    sta.l vqueueOps.1.mode,X
     ; increment line
     lda.l textLines
     inc A

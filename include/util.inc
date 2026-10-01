@@ -518,6 +518,8 @@
 
 .FUNCTION longaddr(addr) (bankaddr(addr) + loword(addr))
 
+.FUNCTION joinword(bottom, top) (bottom | (top << 8))
+
 ; Pathing
 
 .MACRO .DefinePathSpeedTable ARGS tblName, speed, is_wide

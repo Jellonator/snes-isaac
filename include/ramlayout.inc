@@ -3,14 +3,9 @@
 
 .FUNCTION MAP_DOOR_MEM_LOC(i) (mapDoorNorth + (i * 3))
 
-.REPT 4 INDEX i
-    .define entity_custom.{i+1} ($7E0000 | (private_entity_custom.{i+1}-2))
-.ENDR
+.DEFINE currentRoomInfoAddress currentRoomTileTypeTableAddress
 
-.REPT 16 INDEX i
-    .define entity_char_custom.{i+1} ($7E0000 | (private_entity_char_custom.{i+1}-2))
-.ENDR
-
+; entity tables
 .define entity_type (private_base_entity_combined_type_variant - 2)
 .define entity_variant (private_base_entity_combined_type_variant - 1)
 .define entity_state (private_base_entity_combined_state_timer - 2)
@@ -31,6 +26,15 @@
 .define entity_flags ($7E0000 | (private_base_entity_flags - 2))
 .define entity_char_max_health ($7E0000 | (private_entity_char_maximum_health-2))
 
+.REPT 4 INDEX i
+    .define entity_custom.{i+1} ($7E0000 | (private_entity_custom.{i+1}-2))
+.ENDR
+
+.REPT 16 INDEX i
+    .define entity_char_custom.{i+1} ($7E0000 | (private_entity_char_custom.{i+1}-2))
+.ENDR
+
+; player data (from entity tables)
 .define player_posx (ENTITY_INDEX_PLAYER + entity_posx)
 .define player_posy (ENTITY_INDEX_PLAYER + entity_posy)
 .define player_velocx (ENTITY_INDEX_PLAYER + entity_velocx)
@@ -62,8 +66,6 @@
 ; data buffers
 .DEFINE tempData_shared $001900
 .DEFINE tempData_7E $7EFF00
-
-.DEFINE currentRoomInfoAddress currentRoomTileTypeTableAddress
 
 .DEFINE spriteAllocTabActive (private_spriteAllocTabActive-1)
 .DEFINE spriteAllocTabSize (private_spriteAllocTabSize-1)

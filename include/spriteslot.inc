@@ -38,7 +38,6 @@
 .SoftSetBank D_BANK_MIRROR_LOWRAM
 .SoftSetDirect $0000
 .procheaderl "Spriteman.WriteSpriteToRawSlot"
-    .SoftSetA 8
 .endproc
 
 ; Allocate a 16x16 sprite slot

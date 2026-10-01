@@ -127,7 +127,7 @@
     ; [paletteAllocMode+1] stores bits for used subpalettes, relative to palette index
     paletteAllocMode dsw 32
 ; VQueue data
-    vqueueNumOps dw
+    vqueueOpIndex dw
     vqueueNumMiniOps dw
     vqueueRegOpIndex dw
     ; offset into `vqueueBinData`, starting at the END.
@@ -323,7 +323,14 @@
     ; single tilemap.
     vqueueBinData ds $2000
     ; List of vqueueOps - These are direct uploads of multiple bytes to VRAM or CGRAM
-    vqueueOps INSTANCEOF vqueueop_t VQUEUE_MAX_SIZE
+    ; Bottom byte is vqueue mode, top byte is bank of data address
+    vqueueOp_ModeBank INSTANCEOF word_t VQUEUE_MAX_SIZE STARTFROM 0
+    ; Target address to write to. Typically VRAM or CGRAM address
+    vqueueOp_DestAddr INSTANCEOF word_t VQUEUE_MAX_SIZE STARTFROM 0
+    ; WRAM address to read from.
+    vqueueOp_SrcAddr INSTANCEOF word_t VQUEUE_MAX_SIZE STARTFROM 0
+    ; Number of bytes to copy.
+    vqueueOp_Size INSTANCEOF word_t VQUEUE_MAX_SIZE STARTFROM 0
     ; List of vqueueMiniOps - These are direct uploads of single words to VRAM
     vqueueMiniOps INSTANCEOF vqueueminiop_t 255
     ; Vqueue register operations. The address and value are both 1B.

@@ -270,34 +270,28 @@ Palette.queue_upload:
             beq @skip_{i}
         .ENDIF
         ; get and increment vqueue
-        lda.l vqueueNumOps
-        inc A
-        sta.l vqueueNumOps
-        dec A
-        .MultiplyStatic 8
-        tax
+        .VQueueOpToX
         ; CGRAM mode
-        .ForceSetA 8
-        lda #VQUEUE_MODE_CGRAM
-        sta.l vqueueOps.1.mode,X
-        lda #bankbyte(palettes.default)
-        sta.l vqueueOps.1.aAddr+2,X
-        ; VRAM addr
+        lda #joinword(VQUEUE_MODE_CGRAM, bankbyte(palettes.default))
+        sta.l vqueueOp_ModeBank,X
+        ; VGRAM addr
         lda.b $00
         asl
         clc
         adc #$80 + i*4
-        sta.l vqueueOps.1.vramAddr,X
+        sta.l vqueueOp_DestAddr,X
         ; num bytes
-        .ForceSetA 16
         lda #8
-        sta.l vqueueOps.1.numBytes,X
+        sta.l vqueueOp_Size,X
         ; addr
         tya
         clc
         adc #8
         tay
-        sta.l vqueueOps.1.aAddr,X
+        sta.l vqueueOp_SrcAddr,X
+        ; increment index
+        .VQueueOpIncX
+        .VQueueOpStoreX
     @skip_{i}:
     .ENDR
     rtl

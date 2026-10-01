@@ -143,36 +143,26 @@ _AddTileToQueue:
     sta.w vqueueMiniOps.1.data,X
 ; Add character data to vqueue
     ; get vqueue index
-    lda.l vqueueNumOps
-    asl
-    asl
-    asl
+    .VQueueOpToA
     tay
-    ; inc vqueue index
-    lda.l vqueueNumOps
-    inc A
-    sta.l vqueueNumOps
-    ; set param, bAddr for vmem
-    .ForceSetA 8
-    lda #VQUEUE_MODE_VRAM
-    sta.w loword(vqueueOps.1.mode),Y
-    ; set aAddr bank
-    lda #$7F
-    sta.w loword(vqueueOps.1.aAddr+2),Y
+    .VQueueOpAddA 1
+    .VQueueOpStoreA
+    ; set bank and mode
+    lda #joinword(VQUEUE_MODE_VRAM, $7F)
+    sta.w vqueueOp_ModeBank,Y
     ; vram_addr = (row * 8 * 3 + column) * 8
-    .ForceSetA 16
     lda.b bytei
     and #$FFF0
     lsr
-    sta.w loword(vqueueOps.1.vramAddr),Y
+    sta.w vqueueOp_DestAddr,Y
     ; aAddr = 2 * vram_addr + groundCharacterData
     asl
     clc
     adc #loword(groundCharacterData)
-    sta.w loword(vqueueOps.1.aAddr),Y
+    sta.w vqueueOp_SrcAddr,Y
     ; numBytes = 16
     lda #16
-    sta.w loword(vqueueOps.1.numBytes),Y
+    sta.w vqueueOp_Size,Y
 @skipThis:
     rts
 

@@ -341,10 +341,8 @@ LoadRoomSlotIntoLevel:
     sta $00
     .VQueueOpToA
     tax
-    lda.w vqueueNumOps
-    clc
-    adc #12
-    sta.w vqueueNumOps
+    .VQueueOpAddA 12
+    .VQueueOpStoreA
     ldy #0
 @loop_op_copy:
     tya
@@ -355,22 +353,17 @@ LoadRoomSlotIntoLevel:
     asl
     clc
     adc.w gameRoomBG2Offset
-    sta.l vqueueOps.1.vramAddr,X
-    lda #VQUEUE_MODE_VRAM
-    sta.l vqueueOps.1.mode,X ; VRAM mode
+    sta.l vqueueOp_DestAddr,X
+    lda #joinword(VQUEUE_MODE_VRAM, $7F)
+    sta.l vqueueOp_ModeBank,X ; VRAM mode, bank is $7F
     lda.w $10
-    sta.l vqueueOps.1.aAddr,X
+    sta.l vqueueOp_SrcAddr,X
     clc
     adc #16*2
     sta.w $10
-    lda.w #$7F
-    sta.l vqueueOps.1.aAddr+2,X
     lda #16*2
-    sta.l vqueueOps.1.numBytes,X
-    txa ; ++X
-    clc
-    adc #_sizeof_vqueueop_t
-    tax
+    sta.l vqueueOp_Size,X
+    .VQueueOpIncX
     iny ; ++Y
     cpy #12
     bne @loop_op_copy
@@ -1067,14 +1060,12 @@ _transition_ground_horizontal:
 ; we need 16 vqueue ops: one for each tile, 16B each
     .VQueueOpToA
     tax
-    lda.w vqueueNumOps
-    clc
-    adc #$10
-    sta.w vqueueNumOps
+    .VQueueOpAddA $10
+    .VQueueOpStoreA
     ; size[*] = $10
     lda #$10
     .REPT 16 INDEX i
-        sta.l vqueueOps.{i+1}.numBytes,X
+        sta.l vqueueOp_Size.{i},X
     .ENDR
     ; vramAddr[i] = BG3_CHARACTER_BASE_ADDR + i * $00C0 + COLUMN * $08
     lda.b COLUMN
@@ -1082,7 +1073,7 @@ _transition_ground_horizontal:
     clc
     adc #BG3_CHARACTER_BASE_ADDR
     .REPT 16 INDEX i
-        sta.l vqueueOps.{i+1}.vramAddr,X
+        sta.l vqueueOp_DestAddr.{i},X
         adc #$00C0 ; assume carry to be clear
     .ENDR
     ; aAddr[i] = #groundCharacterData + i * $0180 + COLUMN * $10
@@ -1091,18 +1082,13 @@ _transition_ground_horizontal:
     clc
     adc #loword(groundCharacterData)
     .REPT 16 INDEX i
-        sta.l vqueueOps.{i+1}.aAddr,X
+        sta.l vqueueOp_SrcAddr.{i},X
         adc #$0180 ; assume carry to be clear
     .ENDR
-    .ForceSetA 8
-    lda #bankbyte(groundCharacterData)
+    ; mode[*] = VQUEUE_MODE_VRAM (also set bank)
+    lda #joinword(VQUEUE_MODE_VRAM, bankbyte(groundCharacterData))
     .REPT 16 INDEX i
-        sta.l vqueueOps.{i+1}.aAddr+2,X
-    .ENDR
-    ; mode[*] = VQUEUE_MODE_VRAM
-    lda #VQUEUE_MODE_VRAM
-    .REPT 16 INDEX i
-        sta.l vqueueOps.{i+1}.mode,X
+        sta.l vqueueOp_ModeBank.{i},X
     .ENDR
 ; create mini ops for tile data
     .ForceSetA 16
@@ -1164,10 +1150,11 @@ _transition_ground_vertical:
 ; create vqueue op for character data
     .VQueueOpToA
     tax
-    inc.w vqueueNumOps
+    .VQueueOpAddA 1
+    .VQueueOpStoreA
     ; size = $0180
     lda #$0180
-    sta.l vqueueOps.1.numBytes,X
+    sta.l vqueueOp_Size,X
     ; vramAddr = BG3_CHARACTER_BASE_ADDR + ROW * $00C0 (= 3 * $40)
     lda.b ROW
     asl
@@ -1177,19 +1164,16 @@ _transition_ground_vertical:
     pha
     clc
     adc #BG3_CHARACTER_BASE_ADDR
-    sta.l vqueueOps.1.vramAddr,X
+    sta.l vqueueOp_DestAddr,X
     ; aAddr = #groundCharacterData + ROW * $0180 (= 3 * $80)
     pla
     asl
     clc
     adc #loword(groundCharacterData)
-    sta.l vqueueOps.1.aAddr,X
-    .ForceSetA 8
-    lda #bankbyte(groundCharacterData)
-    sta.l vqueueOps.1.aAddr+2,X
+    sta.l vqueueOp_SrcAddr,X
     ; mode = VQUEUE_MODE_VRAM
-    lda #VQUEUE_MODE_VRAM
-    sta.l vqueueOps.1.mode,X
+    lda #joinword(VQUEUE_MODE_VRAM, bankbyte(groundCharacterData))
+    sta.l vqueueOp_ModeBank,X
 ; create mini ops for tile data
     .ForceSetA 16
     ; X = vqueueNumMiniOps * 4

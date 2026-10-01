@@ -5,7 +5,7 @@
 
 ClearVQueue:
     .ForceSetA 16
-    stz.w vqueueNumOps
+    stz.w vqueueOpIndex
     lda #loword(vqueueBinData_End)
     sta.w vqueueBinOffset
     stz.w vqueueNumMiniOps
@@ -19,13 +19,13 @@ _proc_vqueue_vram:
     .SoftSetDirect $4300
     lda #(%00000001 + ($0100 * $18))
     sta.b lobyte(DMA0_CTL)
-    lda.w vqueueOps.1.vramAddr,Y
+    lda.w vqueueOp_DestAddr,Y
     sta.l VMADDR
-    lda.w vqueueOps.1.aAddr,Y
+    lda.w vqueueOp_SrcAddr,Y
     sta.b lobyte(DMA0_SRCL)
-    lda.w vqueueOps.1.aAddr+2,Y
+    lda.w vqueueOp_ModeBank+1,Y
     sta.b lobyte(DMA0_SRCH)
-    lda.w vqueueOps.1.numBytes,Y
+    lda.w vqueueOp_Size,Y
     sta.b lobyte(DMA0_SIZE)
     ; we can avoid switching to 8b to set MDMAEN here while also avoiding
     ; accidentally overwriting MDMAEN by writing to VTIMEH. Since IRQ is
@@ -43,15 +43,15 @@ _proc_vqueue_cgram:
     .SoftSetDirect $4300
     lda #(%00000000 + ($0100 * $22))
     sta.b lobyte(DMA0_CTL)
-    lda.w vqueueOps.1.vramAddr,Y
+    lda.w vqueueOp_DestAddr,Y
     .ForceSetA 8
     sta.l CGADDR
     .ForceSetA 16
-    lda.w vqueueOps.1.aAddr,Y
+    lda.w vqueueOp_SrcAddr,Y
     sta.b lobyte(DMA0_SRCL)
-    lda.w vqueueOps.1.aAddr+2,Y
+    lda.w vqueueOp_ModeBank+1,Y
     sta.b lobyte(DMA0_SRCH)
-    lda.w vqueueOps.1.numBytes,Y
+    lda.w vqueueOp_Size,Y
     sta.b lobyte(DMA0_SIZE)
     lda #$0100
     sta.l MDMAEN-1
@@ -65,13 +65,13 @@ _proc_vqueue_vram_clear:
     .SoftSetDirect $4300
     lda #(%00001001 + ($0100 * $18))
     sta.b lobyte(DMA0_CTL)
-    lda.w vqueueOps.1.vramAddr,Y
+    lda.w vqueueOp_DestAddr,Y
     sta.l VMADDR
     lda #loword(EmptyData)
     sta.b lobyte(DMA0_SRCL)
     lda.w #bankbyte(EmptyData)
     sta.b lobyte(DMA0_SRCH)
-    lda.w vqueueOps.1.numBytes,Y
+    lda.w vqueueOp_Size,Y
     sta.b lobyte(DMA0_SIZE)
     lda #$0100
     sta.l MDMAEN-1
@@ -88,24 +88,23 @@ ProcessVQueue:
     .ForceSetBank $7F
     .ForceSetAX 16, 16
     .ForceSetDirect $4300, SETDIRECTMODE_A
-    lda.l vqueueNumOps
+    lda.l vqueueOpIndex ; count = index / 2
     beq @process_vqueue_end
+    lsr
     sta.b $08 ; $x8-$x9 are HDMA-only registers, and can be used here
     ; Assume that most vqueue operations are going to use standard increment.
     lda #$80
     sta.l VMAIN
     ldy #0
 @process_vqueue_loop: ; do {
-    lda.w vqueueOps.1.mode,Y
+    lda.w vqueueOp_ModeBank,Y
     and #$00FF
     tax
     jmp (_proc_modes,X)
 @process_vqueue_loop_continue:
-    tya
-    clc
-    adc #_sizeof_vqueueop_t
-    tay
-    ; while (--vqueueNumOps != 0);
+    iny
+    iny
+    ; while (--count != 0);
     dec.b $08
     bne @process_vqueue_loop
 @process_vqueue_end:
@@ -132,7 +131,7 @@ ProcessVQueue:
     .ForceSetDirect $0000, SETDIRECTMODE_A
     .PopBank
     stz.w vqueueRegOpIndex
-    stz.w vqueueNumOps
+    stz.w vqueueOpIndex
     lda.w #loword(vqueueBinData_End)
     sta.w vqueueBinOffset
 ; Process miniqueue

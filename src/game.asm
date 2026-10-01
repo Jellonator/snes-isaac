@@ -525,20 +525,17 @@ Pause.PageStats:
 ; copy tile data into vqueue bin
     .CopyROMToVQueueBin P_IMM tilemap.pause_stat (32*32*2)
     .ForceSetAX 16, 16
-    .VQueueOpToA
-    tax
-    inc.w vqueueNumOps
+    .VQueueOpToX
     lda.w vqueueBinOffset
-    sta.l vqueueOps.1.aAddr,X
+    sta.l vqueueOp_SrcAddr,X
     lda #32*32*2
-    sta.l vqueueOps.1.numBytes,X
+    sta.l vqueueOp_Size,X
     lda #BG1_TILE_BASE_ADDR + $0400
-    sta.l vqueueOps.1.vramAddr,X
-    .ForceSetA 8
-    lda #$7F
-    sta.l vqueueOps.1.aAddr+2,X
-    lda #VQUEUE_MODE_VRAM
-    sta.l vqueueOps.1.mode,X
+    sta.l vqueueOp_DestAddr,X
+    lda #joinword(VQUEUE_MODE_VRAM, $7F)
+    sta.l vqueueOp_ModeBank,X
+    .VQueueOpIncX
+    .VQueueOpStoreX
 ; set speed stat text
     .ForceSetAX 16, 16
     lda.l playerData.stat_speed
@@ -827,20 +824,17 @@ Pause.PageMap:
 ; copy tile data into vqueue bin
     .CopyROMToVQueueBin P_IMM tilemap.pause_map (32*32*2)
     .ForceSetAX 16, 16
-    .VQueueOpToA
-    tax
-    inc.w vqueueNumOps
+    .VQueueOpToX
     lda.w vqueueBinOffset
-    sta.l vqueueOps.1.aAddr,X
+    sta.l vqueueOp_SrcAddr,X
     lda #32*32*2
-    sta.l vqueueOps.1.numBytes,X
+    sta.l vqueueOp_Size,X
     lda #BG1_TILE_BASE_ADDR + $0400
-    sta.l vqueueOps.1.vramAddr,X
-    .ForceSetA 8
-    lda #$7F
-    sta.l vqueueOps.1.aAddr+2,X
-    lda #VQUEUE_MODE_VRAM
-    sta.l vqueueOps.1.mode,X
+    sta.l vqueueOp_DestAddr,X
+    lda #joinword(VQUEUE_MODE_VRAM, $7F)
+    sta.l vqueueOp_ModeBank,X
+    .VQueueOpIncX
+    .VQueueOpStoreX
 ; display map
     .ForceSetAX 16, 16
     lda.w vqueueBinOffset
@@ -1051,20 +1045,17 @@ Pause.PageCheat:
 ; copy tilemap
     .CopyROMToVQueueBin P_IMM tilemap.pause_cheat (32*32*2)
     .ForceSetAX 16, 16
-    .VQueueOpToA
-    tax
-    inc.w vqueueNumOps
+    .VQueueOpToX
     lda.w vqueueBinOffset
-    sta.l vqueueOps.1.aAddr,X
+    sta.l vqueueOp_SrcAddr,X
     lda #32*32*2
-    sta.l vqueueOps.1.numBytes,X
+    sta.l vqueueOp_Size,X
     lda #BG1_TILE_BASE_ADDR + $0400
-    sta.l vqueueOps.1.vramAddr,X
-    .ForceSetA 8
-    lda #$7F
-    sta.l vqueueOps.1.aAddr+2,X
-    lda #VQUEUE_MODE_VRAM
-    sta.l vqueueOps.1.mode,X
+    sta.l vqueueOp_DestAddr,X
+    lda #joinword(VQUEUE_MODE_VRAM, $7F)
+    sta.l vqueueOp_ModeBank,X
+    .VQueueOpIncX
+    .VQueueOpStoreX
 ; set default values
     .ForceSetA 16
     stz.b cheatActionSelect
@@ -1205,28 +1196,24 @@ _cheat_write_text_view:
     sta.b $06
     .VQueueOpToA
     tax
-    inc.w vqueueNumOps
-    inc.w vqueueNumOps
+    .VQueueOpAddA 2
+    .VQueueOpStoreA
     ; put data into vqueue
     lda #32
-    sta.l vqueueOps.1.numBytes,X
-    sta.l vqueueOps.2.numBytes,X
+    sta.l vqueueOp_Size.0,X
+    sta.l vqueueOp_Size.1,X
     lda.b $04
-    sta.l vqueueOps.1.aAddr,X
+    sta.l vqueueOp_SrcAddr.0,X
     clc
     adc #32
-    sta.l vqueueOps.2.aAddr,X
+    sta.l vqueueOp_SrcAddr.1,X
     lda #textpos(12, 42) + BG1_TILE_BASE_ADDR
-    sta.l vqueueOps.1.vramAddr,X
+    sta.l vqueueOp_DestAddr.0,X
     lda #textpos(12, 44) + BG1_TILE_BASE_ADDR
-    sta.l vqueueOps.2.vramAddr,X
-    .ForceSetA 8
-    lda #$7F
-    sta.l vqueueOps.1.aAddr+2,X
-    sta.l vqueueOps.2.aAddr+2,X
-    lda #VQUEUE_MODE_VRAM
-    sta.l vqueueOps.1.mode,X
-    sta.l vqueueOps.2.mode,X
+    sta.l vqueueOp_DestAddr.1,X
+    lda #joinword(VQUEUE_MODE_VRAM, $7F)
+    sta.l vqueueOp_ModeBank.0,X
+    sta.l vqueueOp_ModeBank.1,X
     ; write text to vqueuebin
     .ForceSetAX 16, 16
     lda #32
@@ -1265,34 +1252,28 @@ _cheat_clear_display:
     sta.b $06
     .VQueueOpToA
     tax
-    inc.w vqueueNumOps
-    inc.w vqueueNumOps
-    inc.w vqueueNumOps
+    .VQueueOpAddA 3
+    .VQueueOpStoreA
     ; put data into vqueue
     lda #32
-    sta.l vqueueOps.1.numBytes,X
-    sta.l vqueueOps.2.numBytes,X
+    sta.l vqueueOp_Size.0,X
+    sta.l vqueueOp_Size.1,X
     lda #8
-    sta.l vqueueOps.3.numBytes,X
+    sta.l vqueueOp_Size.2,X
     lda.b $04
-    sta.l vqueueOps.1.aAddr,X
-    sta.l vqueueOps.2.aAddr,X
-    sta.l vqueueOps.3.aAddr,X
+    sta.l vqueueOp_SrcAddr.0,X
+    sta.l vqueueOp_SrcAddr.1,X
+    sta.l vqueueOp_SrcAddr.2,X
     lda #textpos(12, 42) + BG1_TILE_BASE_ADDR
-    sta.l vqueueOps.1.vramAddr,X
+    sta.l vqueueOp_DestAddr.0,X
     lda #textpos(12, 44) + BG1_TILE_BASE_ADDR
-    sta.l vqueueOps.2.vramAddr,X
+    sta.l vqueueOp_DestAddr.1,X
     lda #textpos(18, 40) + BG1_TILE_BASE_ADDR
-    sta.l vqueueOps.3.vramAddr,X
-    .ForceSetA 8
-    lda #$7F
-    sta.l vqueueOps.1.aAddr+2,X
-    sta.l vqueueOps.2.aAddr+2,X
-    sta.l vqueueOps.3.aAddr+2,X
-    lda #VQUEUE_MODE_VRAM
-    sta.l vqueueOps.1.mode,X
-    sta.l vqueueOps.2.mode,X
-    sta.l vqueueOps.3.mode,X
+    sta.l vqueueOp_DestAddr.2,X
+    lda #joinword(VQUEUE_MODE_VRAM, $7F)
+    sta.l vqueueOp_ModeBank.0,X
+    sta.l vqueueOp_ModeBank.1,X
+    sta.l vqueueOp_ModeBank.2,X
     ; write text to vqueuebin
     .ForceSetAX 16, 16
     lda #16

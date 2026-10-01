@@ -1332,21 +1332,20 @@ CopyPalette:
 ;   source address [dw] $04
 CopyPaletteVQueue:
     .ForceSetAX 16, 16
-    .VQueueOpToA
-    tax
-    inc.w vqueueNumOps
+    .VQueueOpToX
     .ForceSetA 16
     lda $04,S
-    sta.l vqueueOps.1.aAddr,X; source address
+    sta.l vqueueOp_SrcAddr,X; source address
     lda $08,S
-    sta.l vqueueOps.1.numBytes,X ; 32 bytes for palette
-    .ForceSetA 8
-    lda $06,S
-    sta.l vqueueOps.1.aAddr+2,X ; source bank
+    sta.l vqueueOp_Size,X ; 32 bytes for palette
+    lda $06-1,S ; purposefully loaded into top byte
+    and #$FF00
+    ora #VQUEUE_MODE_CGRAM
+    sta.l vqueueOp_ModeBank,X ; source bank and mode
     lda $07,S
-    sta.l vqueueOps.1.vramAddr,X ; destination palette
-    lda #VQUEUE_MODE_CGRAM
-    sta.l vqueueOps.1.mode,X
+    sta.l vqueueOp_DestAddr,X ; destination palette
+    .VQueueOpIncX
+    .VQueueOpStoreX
     rtl
 
 ; Copy sprite data to VRAM
@@ -1421,9 +1420,7 @@ CopyVMEM:
 CopySpriteVQueue:
     phb
     .ForceSetAX 16, 16
-    .VQueueOpToA
-    tay
-    inc.w vqueueNumOps
+    .VQueueOpToY
     lda 1+$07,S
     asl ; multiply by 32 bytes per tile
     asl
@@ -1431,17 +1428,18 @@ CopySpriteVQueue:
     asl
     asl
     .ChangeDataBank $7F
-    sta.w loword(vqueueOps.1.numBytes),Y ; number of bytes
+    sta.w loword(vqueueOp_Size),Y ; number of bytes
     lda 1+$04,S
-    sta.w loword(vqueueOps.1.aAddr),Y ; source address
+    sta.w loword(vqueueOp_SrcAddr),Y ; source address
     lda 1+$09,S
-    sta.w loword(vqueueOps.1.vramAddr),Y ; VRAM address
-    .ForceSetA 8
-    lda 1+$06,S
-    sta.w loword(vqueueOps.1.aAddr+2),Y ; source bank
-    lda #VQUEUE_MODE_VRAM
-    sta.w loword(vqueueOps.1.mode),Y
+    sta.w loword(vqueueOp_DestAddr),Y ; VRAM address
+    lda 1+$06-1,S ; purposefully loaded into top byte
+    and #$FF00
+    ora #VQUEUE_MODE_VRAM
+    sta.w loword(vqueueOp_ModeBank),Y ; source bank
     plb
+    .VQueueOpIncY
+    .VQueueOpStoreY
     rtl
 
 ; Copy partial sprite data to VRAM.
@@ -1590,19 +1588,18 @@ _bossbar_no_contributors:
     .ForceSetAX 16, 16
     .VQueueOpToA
     tax
-    inc.w vqueueNumOps
-    inc.w vqueueNumOps
+    .VQueueOpAddA 2
+    .VQueueOpStoreA
     lda #BG1_TILE_BASE_ADDR + textpos(6, 25)
-    sta.l vqueueOps.1.vramAddr,X
+    sta.l vqueueOp_DestAddr.0,X
     lda #BG1_TILE_BASE_ADDR + textpos(6, 26)
-    sta.l vqueueOps.2.vramAddr,X
+    sta.l vqueueOp_DestAddr.1,X
     lda #19*2
-    sta.l vqueueOps.1.numBytes,X
-    sta.l vqueueOps.2.numBytes,X
-    .ForceSetA 8
+    sta.l vqueueOp_Size.0,X
+    sta.l vqueueOp_Size.1,X
     lda #VQUEUE_MODE_VRAM_CLEAR
-    sta.l vqueueOps.1.mode,X
-    sta.l vqueueOps.2.mode,X
+    sta.l vqueueOp_ModeBank.0,X
+    sta.l vqueueOp_ModeBank.1,X
     plb
     rtl
 
@@ -1760,27 +1757,23 @@ BossBar.Update:
     .ForceSetAX 16, 16
     .VQueueOpToA
     tax
-    inc.w vqueueNumOps
-    inc.w vqueueNumOps
+    .VQueueOpAddA 2
+    .VQueueOpStoreA
     lda #BG1_TILE_BASE_ADDR + textpos(6, 25)
-    sta.l vqueueOps.1.vramAddr,X
+    sta.l vqueueOp_DestAddr.0,X
     lda #BG1_TILE_BASE_ADDR + textpos(6, 26)
-    sta.l vqueueOps.2.vramAddr,X
+    sta.l vqueueOp_DestAddr.1,X
     lda #19*2
-    sta.l vqueueOps.1.numBytes,X
-    sta.l vqueueOps.2.numBytes,X
+    sta.l vqueueOp_Size.0,X
+    sta.l vqueueOp_Size.1,X
     lda.w vqueueBinOffset
-    sta.l vqueueOps.1.aAddr,X
+    sta.l vqueueOp_SrcAddr.0,X
     clc
     adc #19*2
-    sta.l vqueueOps.2.aAddr,X
-    .ForceSetA 8
-    lda #VQUEUE_MODE_VRAM
-    sta.l vqueueOps.1.mode,X
-    sta.l vqueueOps.2.mode,X
-    lda #$7F
-    sta.l vqueueOps.1.aAddr+2,X
-    sta.l vqueueOps.2.aAddr+2,X
+    sta.l vqueueOp_SrcAddr.1,X
+    lda #joinword(VQUEUE_MODE_VRAM, $7F)
+    sta.l vqueueOp_ModeBank.0,X
+    sta.l vqueueOp_ModeBank.1,X
 ; end
     plb
     rtl

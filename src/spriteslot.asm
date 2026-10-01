@@ -59,37 +59,35 @@ SPRITE_TABLE_SIZE,SPRITE_TABLE_CELLAR_SIZE,"_sprite"
     .SetAX 16, 16
 ; increment vqueueops; just trust that we aren't already in bank $7F
     .VQueueOpToA
-    inc.w vqueueNumOps
-    inc.w vqueueNumOps
     tay
-; mode[] = VQUEUE_MODE_VRAM
+    .VQueueOpAddA 2
+    .VQueueOpStoreA
     .SetBank $7F
-    lda #VQUEUE_MODE_VRAM
-    sta.w loword(vqueueOps.1.mode),Y ; both param and bAddr
-    sta.w loword(vqueueOps.2.mode),Y
 ; vramaddr[0] = spritemem + SPRITE2_BASE_ADDR
     txa
     asl
     tax
     lda.l SpriteSlotMemTable,X
-    sta.w loword(vqueueOps.1.vramAddr),Y
+    sta.w vqueueOp_DestAddr.0,Y
 ; vramaddr[1] = spritemem + SPRITE2_BASE_ADDR + $100
     clc
     adc #$100
-    sta.w loword(vqueueOps.2.vramAddr),Y
+    sta.w vqueueOp_DestAddr.1,Y
 ; numBytes[] = 2 * 2 * (8 * 8 * 4) / 8 = 128
     lda #64
-    sta.w loword(vqueueOps.1.numBytes),Y
-    sta.w loword(vqueueOps.2.numBytes),Y
+    sta.w vqueueOp_Size.0,Y
+    sta.w vqueueOp_Size.1,Y
 ; memAddr[i] = input[i]
     lda stk(sprite_top_addr),S
-    sta.w loword(vqueueOps.1.aAddr),Y
+    sta.w vqueueOp_SrcAddr.0,Y
     lda stk(sprite_bottom_addr),S
-    sta.w loword(vqueueOps.2.aAddr),Y
-    .SetA 8
-    lda stk(sprite_bank),S
-    sta.w loword(vqueueOps.1.aAddr+2),Y
-    sta.w loword(vqueueOps.2.aAddr+2),Y
+    sta.w vqueueOp_SrcAddr.1,Y
+; mode[] = VQUEUE_MODE_VRAM
+    lda stk(sprite_bank)-1,S ; purposefully loaded to top byte
+    and #$FF00
+    ora #VQUEUE_MODE_VRAM
+    sta.w vqueueOp_ModeBank.0,Y
+    sta.w vqueueOp_ModeBank.1,Y
 ; end
     .PopBank
     rtl
@@ -156,14 +154,12 @@ SpriteSlotMemTable:
     .SetAX 16, 16
     .VQueueOpToA
     tax
-    lda.w vqueueNumOps
-    clc
-    adc #2
-    sta.w vqueueNumOps
+    .VQueueOpAddA 2
+    .VQueueOpStoreA
 ; param[] = 0b00000001, bAddr[] = $18
     lda #VQUEUE_MODE_VRAM
-    sta.l vqueueOps.1.mode,X ; both param and bAddr
-    sta.l vqueueOps.2.mode,X
+    sta.l vqueueOp_ModeBank.0,X ; both param and bAddr
+    sta.l vqueueOp_ModeBank.1,X
 ; vramaddr[0] = spritemem.x * 32 + spritemem.y * 64 + SPRITE2_BASE_ADDR
     lda loword(spriteTableValue.1.spritemem),Y
     and #$00FF
@@ -172,15 +168,15 @@ SpriteSlotMemTable:
     tax
     lda.l SpriteSlotMemTable,X
     .plx
-    sta.l vqueueOps.1.vramAddr,X
+    sta.l vqueueOp_DestAddr.0,X
 ; vramaddr[1] = spritemem * 16 + SPRITE2_BASE_ADDR + $100
     clc
     adc #$100
-    sta.l vqueueOps.2.vramAddr,X
+    sta.l vqueueOp_DestAddr.1,X
     ; numBytes = 2 * 2 * (8 * 8 * 4) / 8 = 128
     lda #64
-    sta.l vqueueOps.1.numBytes,X
-    sta.l vqueueOps.2.numBytes,X
+    sta.l vqueueOp_Size.0,X
+    sta.l vqueueOp_Size.1,X
     ; get Sprite address
     lda.b SPRITE_ID
     and #SPRITEID_MASK_SPRITE
@@ -231,14 +227,14 @@ SpriteSlotMemTable:
     ; aAddr = SpriteDefs[spriteId].addr
     .plx
     lda.b SPRITE_ADDR
-    sta.l vqueueOps.1.aAddr,X
+    sta.l vqueueOp_SrcAddr.0,X
     clc
     adc #64
-    sta.l vqueueOps.2.aAddr,X
+    sta.l vqueueOp_SrcAddr.1,X
     .SetA 8
     lda.b SPRITE_BANK
-    sta.l vqueueOps.1.aAddr+2,X
-    sta.l vqueueOps.2.aAddr+2,X
+    sta.l vqueueOp_ModeBank.0+1,X
+    sta.l vqueueOp_ModeBank.1+1,X
     ldx.b SPRITE_TABLE_INDEX
     rtl
     .InvalidateX

@@ -533,50 +533,48 @@ _Menu.HandleScroll:
     .CMPS_END
 ; store scroll
     ; get vqueue register ops
-    .ForceSetA 16
-    lda.w vqueueNumRegOps
-    asl
+    .SetAX 8, 8
+    lda.w vqueueRegOpIndex
     tax
-    lsr
     clc
     adc #12
-    sta.w vqueueNumRegOps
+    sta.w vqueueRegOpIndex
     ; store values
-    ; .ForceSetA 8
     lda.b currentScrollX
     sta.l vqueueRegOps_Value+$00,X
-    lda #BG2HOFS
+    lda #lobyte(BG2HOFS)
     sta.l vqueueRegOps_Addr+$00,X
     lda.b currentScrollX+1
-    sta.l vqueueRegOps_Value+$02,X
-    lda #BG2HOFS
-    sta.l vqueueRegOps_Addr+$02,X
+    sta.l vqueueRegOps_Value+$01,X
+    lda #lobyte(BG2HOFS)
+    sta.l vqueueRegOps_Addr+$01,X
     lda.b currentScrollX
-    sta.l vqueueRegOps_Value+$04,X
-    lda #BG1HOFS
-    sta.l vqueueRegOps_Addr+$04,X
+    sta.l vqueueRegOps_Value+$02,X
+    lda #lobyte(BG1HOFS)
+    sta.l vqueueRegOps_Addr+$02,X
     lda.b currentScrollX+1
+    sta.l vqueueRegOps_Value+$03,X
+    lda #lobyte(BG1HOFS)
+    sta.l vqueueRegOps_Addr+$03,X
+    lda.b currentScrollY
+    sta.l vqueueRegOps_Value+$04,X
+    lda #lobyte(BG2VOFS)
+    sta.l vqueueRegOps_Addr+$04,X
+    lda.b currentScrollY+1
+    sta.l vqueueRegOps_Value+$05,X
+    lda #lobyte(BG2VOFS)
+    sta.l vqueueRegOps_Addr+$05,X
+    lda.b currentScrollY
     sta.l vqueueRegOps_Value+$06,X
-    lda #BG1HOFS
+    lda #lobyte(BG1VOFS)
     sta.l vqueueRegOps_Addr+$06,X
-    lda.b currentScrollY
-    sta.l vqueueRegOps_Value+$08,X
-    lda #BG2VOFS
-    sta.l vqueueRegOps_Addr+$08,X
     lda.b currentScrollY+1
-    sta.l vqueueRegOps_Value+$0A,X
-    lda #BG2VOFS
-    sta.l vqueueRegOps_Addr+$0A,X
-    lda.b currentScrollY
-    sta.l vqueueRegOps_Value+$0C,X
-    lda #BG1VOFS
-    sta.l vqueueRegOps_Addr+$0C,X
-    lda.b currentScrollY+1
-    sta.l vqueueRegOps_Value+$0E,X
-    lda #BG1VOFS
-    sta.l vqueueRegOps_Addr+$0E,X
+    sta.l vqueueRegOps_Value+$07,X
+    lda #lobyte(BG1VOFS)
+    sta.l vqueueRegOps_Addr+$07,X
     ; BG3 has 75% scroll
     ; .ForceSetA 16
+    .SetAX 16, 16
     lda.b currentScrollX
     .ShiftRight_SIGN 3, 0
     sta.b $00
@@ -591,23 +589,23 @@ _Menu.HandleScroll:
     sec
     sbc.b $02
     sta.b $02
-    ; .ForceSetA 8
+    .ForceSetAX 8, 8
     lda.b $00
-    sta.l vqueueRegOps_Value+$10,X
-    lda #BG3HOFS
-    sta.l vqueueRegOps_Addr+$10,X
+    sta.l vqueueRegOps_Value+$08,X
+    lda #lobyte(BG3HOFS)
+    sta.l vqueueRegOps_Addr+$08,X
     lda.b $01
-    sta.l vqueueRegOps_Value+$12,X
-    lda #BG3HOFS
-    sta.l vqueueRegOps_Addr+$12,X
+    sta.l vqueueRegOps_Value+$09,X
+    lda #lobyte(BG3HOFS)
+    sta.l vqueueRegOps_Addr+$09,X
     lda.b $02
-    sta.l vqueueRegOps_Value+$14,X
-    lda #BG3VOFS
-    sta.l vqueueRegOps_Addr+$14,X
+    sta.l vqueueRegOps_Value+$0A,X
+    lda #lobyte(BG3VOFS)
+    sta.l vqueueRegOps_Addr+$0A,X
     lda.b $03
-    sta.l vqueueRegOps_Value+$16,X
-    lda #BG3VOFS
-    sta.l vqueueRegOps_Addr+$16,X
+    sta.l vqueueRegOps_Value+$0B,X
+    lda #lobyte(BG3VOFS)
+    sta.l vqueueRegOps_Addr+$0B,X
     rts
 
 ; START SCREEN

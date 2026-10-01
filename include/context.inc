@@ -347,12 +347,39 @@
     .REDEFINE D_BANK p_b
 .ENDM
 
-; Set the 'direct' register to the given value
-.MACRO .SetDirect ARGS p_d
-    .ASSERT ((p_d >= $00) && (p_d <= $FFFF))
-    .IF (p_d != D_DIRECT) && (p_d != D_UNK)
+; Set direct page via `pea : pld`.
+; Not the fastest, but guarantees registers aren't clobbered.
+; This is the default.
+.DEFINE SETDIRECTMODE_PEA 0
+; Set direct page via `lda : tcd`.
+; Faster, but clobbers A register, A must be in 16-bit mode.
+.DEFINE SETDIRECTMODE_A 1
+
+.MACRO .__SET_DIRECT ARGS p_d, mode
+    .IF NARGS == 1
         pea p_d
         pld
+    .ELIF mode == SETDIRECTMODE_PEA
+        pea p_d
+        pld
+    .ELIF mode == SETDIRECTMODE_A
+        .ASSERT D_FLAG_A == 16
+        lda #p_d
+        tcd
+    .ELSE
+        .FAIL
+    .ENDIF
+.ENDM
+
+; Set the 'direct' register to the given value
+.MACRO .SetDirect ARGS p_d, mode
+    .ASSERT ((p_d >= $00) && (p_d <= $FFFF))
+    .IF (p_d != D_DIRECT) && (p_d != D_UNK)
+        .IF NARGS == 1
+            .__SET_DIRECT p_d
+        .ELSE
+            .__SET_DIRECT p_d, mode
+        .ENDIF
     .ENDIF
     .REDEFINE D_DIRECT p_d
 .ENDM
@@ -427,10 +454,13 @@
 
 ; Set the 'direct' register to the given value
 ; Guaranteed to generate instructions to update the direct page
-.MACRO .ForceSetDirect ARGS p_d
+.MACRO .ForceSetDirect ARGS p_d, mode
     .ASSERT (p_d >= $00) && (p_d <= $FFFF)
-    pea p_d
-    pld
+    .IF NARGS == 1
+        .__SET_DIRECT p_d
+    .ELSE
+        .__SET_DIRECT p_d, mode
+    .ENDIF
     .REDEFINE D_DIRECT p_d
 .ENDM
 

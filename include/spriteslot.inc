@@ -21,7 +21,7 @@
 .procheaderl "Spriteman.GetRawSlot"
 .endproc
 
-; Frees a sprite slot
+; Free raw sprite slot in [X]
 .SoftSetAX 8, 8
 .SoftSetBank $7E
 .SoftSetDirect $0000
@@ -34,7 +34,6 @@
 ; sprite_bank           [db] $05
 ; spriteTop_location    [dw] $03
 ; spriteBottom_location [dw] $01
-; Assumes data bank is $7E (though any bank $00-$3F, $80-$CF will also work)
 .SoftSetAX 16, 16
 .SoftSetBank D_BANK_MIRROR_LOWRAM
 .SoftSetDirect $0000
@@ -74,14 +73,15 @@
     .SoftSetAX 16, 16
 .endproc
 
-; Increment reference
+; Increment reference to sprite slot
 .SoftSetAX 8, 16
 .SoftSetBank $7E
 .SoftSetDirect $0000
 .procheaderl "Spriteman.IncRef"
 .endproc
 
-; Decrement reference
+; Decrement reference to sprite slot.
+; When the reference count reaches 0, this will free the sprite slot.
 .SoftSetAX 8, 16
 .SoftSetBank $7E
 .SoftSetDirect $0000

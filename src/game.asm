@@ -1598,18 +1598,17 @@ Pause.UpdateScroll:
     asl
     asl
     sta.b $00
-    lda.w vqueueNumRegOps
-    inc.w vqueueNumRegOps
-    inc.w vqueueNumRegOps
-    asl
-    tax
-    lda #BG1VOFS
+    .ForceSetAX 8, 8
+    ldx.w vqueueRegOpIndex
+    inc.w vqueueRegOpIndex
+    inc.w vqueueRegOpIndex
+    lda #lobyte(BG1VOFS)
     sta.l vqueueRegOps_Addr,X
-    sta.l vqueueRegOps_Addr+2,X
+    sta.l vqueueRegOps_Addr+1,X
     lda.b $00
     sta.l vqueueRegOps_Value,X
     lda.b $01
-    sta.l vqueueRegOps_Value+2,X
+    sta.l vqueueRegOps_Value+1,X
     rts
 
 .ENDS

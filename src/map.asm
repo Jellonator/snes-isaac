@@ -2001,20 +2001,19 @@ TransitionRoomIndex:
     jsl Trinket.update_display
     jsl UI.update_charge_display
     jsl Consumable.update_display_no_overlay
-    .ForceSetAX 16, 16
-    lda.w vqueueNumRegOps
-    inc.w vqueueNumRegOps
-    inc.w vqueueNumRegOps
-    asl
+    .ForceSetAX 8, 8
+    lda.w vqueueRegOpIndex
+    inc.w vqueueRegOpIndex
+    inc.w vqueueRegOpIndex
     tax
     lda #%00010111
     sta.l vqueueRegOps_Value,X
-    lda #SCRNDESTM
+    lda #lobyte(SCRNDESTM)
     sta.l vqueueRegOps_Addr,X
     lda #%00000111
-    sta.l vqueueRegOps_Value+2,X
-    lda #SCRNDESTS
-    sta.l vqueueRegOps_Addr+2,X
+    sta.l vqueueRegOps_Value+1,X
+    lda #lobyte(SCRNDESTS)
+    sta.l vqueueRegOps_Addr+1,X
 ; re-enable HDMA
     jsl Render.EnableHDMA
 ; end

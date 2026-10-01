@@ -9,7 +9,7 @@ ClearVQueue:
     lda #loword(vqueueBinData_End)
     sta.w vqueueBinOffset
     stz.w vqueueNumMiniOps
-    stz.w vqueueNumRegOps
+    stz.w vqueueRegOpIndex
     rtl
 
 _proc_vqueue_vram:
@@ -75,8 +75,8 @@ _proc_modes:
     .dw _proc_vqueue_vram_clear
 
 ProcessVQueue:
-    phb
-    .ChangeDataBank $7F
+    .PushBank
+    .ForceSetBank $7F
     .ForceSetAX 16, 16
     lda.l vqueueNumOps
     beq @process_vqueue_end
@@ -100,26 +100,29 @@ ProcessVQueue:
     bne @process_vqueue_loop
 @process_vqueue_end:
 ; Process register queue
-    lda.l vqueueNumRegOps
-    beq @process_reg_end
-    asl
-    sta.b $00
-    .ForceSetA 8
+    .ForceSetDirect $2100, SETDIRECTMODE_A
+    .ForceSetAX 8,8
+    ; write sentinel value of $00
+    ; assume INIDISP will never be written to regops
+    lda.l vqueueRegOpIndex
+    tax
+    lda #0
+    sta.w vqueueRegOps_Addr,X
     ldy #0
 @process_reg_loop:
     ldx.w vqueueRegOps_Addr,Y
+    beq @process_reg_end
     lda.w vqueueRegOps_Value,Y
     sta.b $00,X
     iny
-    iny
-    cpy.b $00
-    bcc @process_reg_loop
+    jmp @process_reg_loop
 @process_reg_end:
 ; Clear vqueue and reset bank
-    plb
     .ForceSetAX 16, 16
+    .ForceSetDirect $0000, SETDIRECTMODE_A
+    .PopBank
+    stz.w vqueueRegOpIndex
     stz.w vqueueNumOps
-    stz.w vqueueNumRegOps
     lda.w #loword(vqueueBinData_End)
     sta.w vqueueBinOffset
 ; Process miniqueue
@@ -139,5 +142,6 @@ ProcessVQueue:
     lda #$01
     sta.w MDMAEN
 @process_mini_end:
+    ; clear reg op queue
     rtl
 .ENDS

@@ -129,7 +129,7 @@
 ; VQueue data
     vqueueNumOps dw
     vqueueNumMiniOps dw
-    vqueueNumRegOps dw
+    vqueueRegOpIndex dw
     ; offset into `vqueueBinData`, starting at the END.
     vqueueBinOffset dw
 ; Room scroll data
@@ -326,9 +326,10 @@
     vqueueOps INSTANCEOF vqueueop_t VQUEUE_MAX_SIZE
     ; List of vqueueMiniOps - These are direct uploads of single words to VRAM
     vqueueMiniOps INSTANCEOF vqueueminiop_t 255
-    ; Vqueue regops. Note that 'addr' is 16B, but 'value' is 8B
-    vqueueRegOps_Addr dsw 64
-    vqueueRegOps_Value dsw 64
+    ; Vqueue register operations. The address and value are both 1B.
+    ; The memory location written to will be `$2100 | Addr`
+    vqueueRegOps_Addr ds 65
+    vqueueRegOps_Value ds 64
 ; Player sprite buffer
     ; 64 sprites × 4 tiles/sprite × 32 bytes/tile = $2000 bytes
     playerSpriteBuffer ds 64 * 4 * 32
@@ -353,7 +354,7 @@
 ; Allocatable sprite buffer data
     ; Sprite buffer. This represents four full pages of sprites.
     ; This provides a buffer for sprites to be allocated, decompressed, and swizzled.
-    private_spriteAllocBuffer ds SPRITE_ALLOC_TILE_SIZE * SPRITE_ALLOC_NUM_TILES
+    private_spriteAllocBuffer ds SPRITE_ALLOC_TILE_SIZE * (SPRITE_ALLOC_NUM_TILES+1)
 .ENDS
 
 .DEFINE vqueueBinData_End (vqueueBinData + _sizeof_vqueueBinData) EXPORT

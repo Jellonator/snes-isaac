@@ -1,5 +1,6 @@
 .include "base.inc"
 .include "palettes.inc"
+.include "spriteslot.inc"
 
 .BANK $00 SLOT "ROM"
 .SECTION "Entity Enemy Cube Extra" SUPERFREE
@@ -147,9 +148,9 @@ enemycube_midframes_by_direction:
         pha
         lda.w _gfxptr.{i+1},Y
         tax
-        jsl Spriteman.WriteSpriteToRawSlot
+        .call "Spriteman.WriteSpriteToRawSlot"
+        .SetAX 16, 16
         ldy.b _tmp_entityid
-        .ForceSetAX 16, 16
         pla
         pla
     .ENDR
@@ -199,7 +200,7 @@ enemycube_midframes_by_direction:
     .ForceSetAX 16, 16
     .PaletteIndex_X_ToSpriteDef_A
     ora #sprite.enemy.isaac_cube
-    jsl Spriteman.NewBufferRef
+    .call "Spriteman.NewBufferRef"
     .ForceSetAX 16, 16
     ldy.b _tmp_entityid
     txa
@@ -530,18 +531,19 @@ _funclist_state:
     sty.b _tmp_entityid
     .REPT 4 INDEX i
         ldx.w _gfxptr.{i+1},Y
-        jsl Spriteman.FreeRawSlot
-        .ForceSetAX 16, 16
+        .SetAX 8, 8
+        .call "Spriteman.FreeRawSlot"
+        .SetAX 16, 16
         ldy.b _tmp_entityid
     .ENDR
     ; free palette
     ldx.w _palette,Y
     jsl Palette.free
     ; free buffer
-    .ForceSetAX 16, 16
+    .ForceSetAX 8, 16
     ldy.b _tmp_entityid
     ldx.w _spritebuffer,Y
-    jsl Spriteman.UnrefBuffer
+    .call "Spriteman.UnrefBuffer"
     rts
 .endproc
 

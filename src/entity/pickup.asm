@@ -3,6 +3,7 @@
 .include "rng.inc"
 .include "trinket.inc"
 .include "consumables.inc"
+.include "spriteslot.inc"
 
 ; steal state and timer, since they are serialized
 .define pickup_price entity_state
@@ -472,7 +473,7 @@ PickupTable_RoomReward:
     .PaletteIndex_X_ToSpriteDef_A
     ora.b $14
     phy
-    jsl Spriteman.NewSpriteRef
+    .call "Spriteman.NewSpriteRef"
     .ForceSetAX 16, 16
     ply
     txa
@@ -495,13 +496,14 @@ PickupTable_RoomReward:
 .SoftSetBank $7E
 .SoftSetDirect $0000
 .procdefines "_free_trinket", "IVariantHandler"
-    .ForceSetAX 16, 16
+    .SetAX 16, 16
     phy
     lda.w loaded_sprite,Y
     and #$00FF
     tax
-    jsl Spriteman.UnrefSprite
-    .ForceSetAX 16, 16
+    .callsetup "Spriteman.UnrefSprite", SETUP_FLAGS
+    .call "Spriteman.UnrefSprite"
+    .SetAX 16, 16
     ply
     ldx.w loaded_palette,Y
     phy

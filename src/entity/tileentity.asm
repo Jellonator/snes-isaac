@@ -1,5 +1,6 @@
 .include "base.inc"
 .include "palettes.inc"
+.include "spriteslot.inc"
 
 .BANK $02 SLOT "ROM"
 .SECTION "Entity Tile" SUPERFREE
@@ -191,7 +192,7 @@
     lda.w loword(spriteTableValue.1.spritemem),X
     and #$00FF
     tax
-    jsl Spriteman.WriteSpriteToRawSlot
+    .call "Spriteman.WriteSpriteToRawSlot"
     ldy.b _entityid
     .ForceSetAX 16, 16
     pla
@@ -226,7 +227,7 @@
     sta.b tempDP
     ; allocate sprite ram
     ora #sprite.tilesprite_fire
-    jsl Spriteman.NewBufferRef
+    .call "Spriteman.NewBufferRef"
     .ForceSetAX 16, 16
     ldy.b _entityid
     txa
@@ -234,7 +235,7 @@
     ; allocate sprite tile
     lda.b tempDP
     ora #sprite.tilesprite_fire_dummy
-    jsl Spriteman.NewSpriteRefEmpty
+    .call "Spriteman.NewSpriteRefEmpty"
     .ForceSetAX 16, 16
     ldy.b _entityid
     sta.b tempDP+2
@@ -257,17 +258,18 @@
     ; Free sprite tile
     lda.w _entity_spriteptr,Y
     tax
-    jsl Spriteman.UnrefSprite
+    .callsetup "Spriteman.UnrefSprite", SETUP_FLAGS
+    .call "Spriteman.UnrefSprite"
     ; free palette
     .ForceSetAX 16, 16
     ldy.b _entityid
     ldx.w _entity_paletteptr,Y
     jsl Palette.free
     ; free buffer
-    .ForceSetAX 16, 16
+    .ForceSetAX 8, 16
     ldy.b _entityid
     ldx.w _entity_bufferptr,Y
-    jsl Spriteman.UnrefBuffer
+    .call "Spriteman.UnrefBuffer"
     rts
 .endproc
 

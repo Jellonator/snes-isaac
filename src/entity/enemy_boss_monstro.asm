@@ -1,4 +1,5 @@
 .include "base.inc"
+.include "spriteslot.inc"
 
 .BANK ROMBANK_ENTITYCODE SLOT "ROM"
 .SECTION "Entity Boss Monstro" FREE
@@ -46,15 +47,17 @@
     .REPT 3 INDEX iy
         .REPT 4 INDEX ix
             ; get slot
-            jsl Spriteman.GetRawSlot
+            .SetAX 8, 8
+            .call "Spriteman.GetRawSlot"
+            .SetAX 16, 16
             txa
             sta.w loword(entity_char_custom.{iy * 4 + ix + 1}),Y
             ; write to slot
             pea bankbyte(spritedata.boss_monstro) * $0101 ; >2
             pea loword(spritedata.boss_monstro) + (64 * ix + 128 * 4 * iy) ; >2
             pea loword(spritedata.boss_monstro) + (64 * ix + 128 * 4 * iy + 64 * 4) ; >2
-            jsl Spriteman.WriteSpriteToRawSlot
-            .ForceSetAX 16, 16
+            .call "Spriteman.WriteSpriteToRawSlot"
+            .SetAX 16, 16
             pla ; <2
             pla ; <2
             pla ; <2
@@ -227,11 +230,12 @@
     dec.w currentRoomEnemyCount
     ; free mem
     .REPT 12 INDEX i
-        phy
+        .phy
         ldx.w loword(entity_char_custom.{i+1}),Y
-        jsl Spriteman.FreeRawSlot
-        .ForceSetAX 16, 16
-        ply
+        .SetAX 8, 8
+        .call "Spriteman.FreeRawSlot"
+        .SetAX 16, 16
+        .ply
     .ENDR
     tya
     jsl BossBar.Remove

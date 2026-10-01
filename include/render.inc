@@ -484,35 +484,6 @@
 .DEFINE T_FLIPV 0x8000  ; flip vertical
 .DEFINE T_FLIPVH 0xC000 ; flip horizontal and vertical
 
-; get next free slot
-; Returns index as X
-; Useful for animated objects which need their own slots
-; Bank needs to be $7E, INDEX and ACCU must be 8
-.MACRO .spriteman_get_raw_slot_lite
-    dec.w loword(spiteTableAvailableSlots)
-    ; ret = *begin->next
-    ldx.w loword(spriteQueueTabNext)+SPRITE_LIST_BEGIN
-    lda.w loword(spriteQueueTabNext),X
-    ; begin->next = begin->next->next (skip X)
-    sta.w loword(spriteQueueTabNext)+SPRITE_LIST_BEGIN
-    ; rtl
-.ENDM
-
-; Free slot in X
-; Bank needs to be $7E, INDEX and ACCU must be 8
-.MACRO .spriteman_free_raw_slot_lite
-    ; TODO: handle when queue is empty
-    inc.w loword(spiteTableAvailableSlots)
-    ; tmp = *end
-    lda.w loword(spriteQueueTabNext)+SPRITE_LIST_END
-    ; *end = X
-    stx.w loword(spriteQueueTabNext)+SPRITE_LIST_END
-    ; tmp->next = X
-    tax
-    lda.w loword(spriteQueueTabNext)+SPRITE_LIST_END
-    sta.w loword(spriteQueueTabNext),X
-.ENDM
-
 .MACRO .GetDecimalAsTilePause ARGS method, data, chari
     .g_instruction lda, method, (data + floor(chari / 2))
     .IF (chari#2) == 0

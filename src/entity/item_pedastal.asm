@@ -2,6 +2,7 @@
 .include "palettes.inc"
 .include "trinket.inc"
 .include "item.inc"
+.include "spriteslot.inc"
 
 .DEFINE _item_gfxptr_pedastal loword(entity_char_custom.1)
 .DEFINE _item_gfxptr_item loword(entity_char_custom.2)
@@ -137,6 +138,7 @@ true_item_pedastal_init:
 
 _item_pedastal_alloc_gfx:
     .ForceSetAX 16, 16
+    .SoftSetBank $7E
     lda.w entity_variant,Y
     and #$00FF
     asl
@@ -166,20 +168,21 @@ _item_pedastal_alloc_gfx:
     .PaletteIndex_X_ToSpriteDef_A
     ora.b $14
     phy
-    jsl Spriteman.NewSpriteRef
-    .ForceSetAX 16, 16
+    .call "Spriteman.NewSpriteRef"
+    .SetAX 16, 16
     ply
     txa
     sta.w _item_gfxptr_item,Y
     ; load sprite for pedastal
     lda #sprite.item_pedastal
     phy
-    jsl Spriteman.NewSpriteRef
-    .ForceSetAX 16, 16
+    .call "Spriteman.NewSpriteRef"
+    .SetAX 16, 16
     ply
     txa
     sta.w _item_gfxptr_pedastal,Y
     rts
+.ClearContext
 
 _draw_normal:
     .SoftSetA 8
@@ -609,21 +612,25 @@ true_item_pedastal_tick_empty:
 
 _item_pedastal_free_gfx:
     .ForceSetA 16
+    .SoftSetBank $7E
     phy
     lda.w _item_gfxptr_item,Y
     tax
-    jsl Spriteman.UnrefSprite
-    .ForceSetAX 16, 16
+    .callsetup "Spriteman.UnrefSprite", SETUP_FLAGS
+    .call "Spriteman.UnrefSprite"
+    .SetAX 16, 16
     ply
     lda.w _item_gfxptr_pedastal,Y
     tax
     phy
-    jsl Spriteman.UnrefSprite
-    .ForceSetAX 16, 16
+    .callsetup "Spriteman.UnrefSprite", SETUP_FLAGS
+    .call "Spriteman.UnrefSprite"
+    .SetAX 16, 16
     ply
     ldx.w _item_palette,Y
     jsl Palette.free
     rts
+.ClearContext
 
 true_item_pedastal_free:
     .SoftSetA 16

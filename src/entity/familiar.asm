@@ -1,6 +1,7 @@
 .include "base.inc"
 .include "palettes.inc"
 .include "item.inc"
+.include "spriteslot.inc"
 
 .BANK ROMBANK_ENTITYCODE SLOT "ROM"
 .SECTION "Entity Familiar" FREE
@@ -57,7 +58,7 @@
     .ForceSetAX 16, 16
     .PaletteIndex_X_ToSpriteDef_A
     ora #sprite.familiar.brother_bobby
-    jsl Spriteman.NewBufferRef
+    .call "Spriteman.NewBufferRef"
     .ForceSetAX 16, 16
     ldy.b $10
     txa
@@ -78,8 +79,8 @@
     lda.w _gfxptr.1,Y
     and #$00FF
     tax
-    jsl Spriteman.WriteSpriteToRawSlot
-    .ForceSetAX 16, 16
+    .call "Spriteman.WriteSpriteToRawSlot"
+    .SetAX 16, 16
     pla
     pla
     pla
@@ -100,8 +101,8 @@
     lda.w _gfxptr.2,Y
     and #$00FF
     tax
-    jsl Spriteman.WriteSpriteToRawSlot
-    .ForceSetAX 16, 16
+    .call "Spriteman.WriteSpriteToRawSlot"
+    .SetAX 16, 16
     pla
     pla
     pla
@@ -317,12 +318,12 @@
     ldx.w _gfxptr.2,Y
     .spriteman_free_raw_slot_lite
     ; free buffer
-    .ForceSetAX 16, 16
+    .SetAX 16, 16
     ldx.w _spritebuffer,Y
     phy
-    php
-    jsl Spriteman.UnrefBuffer
-    plp
+    .SetAX 8, 16
+    .call "Spriteman.UnrefBuffer"
+    .SetAX 16, 16
     ply
     ; free palette
     ldx.w _palette,Y

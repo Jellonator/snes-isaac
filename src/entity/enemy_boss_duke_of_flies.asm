@@ -1,5 +1,6 @@
 .include "base.inc"
 .include "room.inc"
+.include "spriteslot.inc"
 
 .DEFINE BOSS_WIDTH 32
 .DEFINE BOSS_HEIGHT 36
@@ -330,7 +331,7 @@ _duke_state_funcs:
         .REPT 3 INDEX ix
             ; get slot
             .ForceSetAX 8, 8
-            jsl Spriteman.GetRawSlot
+            .call "Spriteman.GetRawSlot"
             .ForceSetAX 16, 16
             txa
             ldy.b _tmp_entityid
@@ -339,7 +340,7 @@ _duke_state_funcs:
             pea bankbyte(spritedata.boss_duke_of_flies) * $0101 ; >2
             pea loword(spritedata.boss_duke_of_flies) + (64 * ix + 128 * 3 * iy) ; >2
             pea loword(spritedata.boss_duke_of_flies) + (64 * ix + 128 * 3 * iy + 64 * 3) ; >2
-            jsl Spriteman.WriteSpriteToRawSlot
+            .call "Spriteman.WriteSpriteToRawSlot"
             .ForceSetAX 16, 16
             pla ; <2
             pla ; <2
@@ -387,12 +388,13 @@ _duke_state_funcs:
     dec.w currentRoomEnemyCount
     ; free mem
     .REPT 9 INDEX i
-        phy
-        php
+        .phy
+        .PushP
         ldx.w loword(entity_char_custom.{i+1}),Y
-        jsl Spriteman.FreeRawSlot
-        plp
-        ply
+        .SetAX 8, 8
+        .call "Spriteman.FreeRawSlot"
+        .PopP
+        .ply
     .ENDR
     ; remove from bossbar
     lda.b _tmp_entityid

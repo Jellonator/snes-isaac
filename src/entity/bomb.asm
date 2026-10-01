@@ -446,7 +446,7 @@ _ExplosionTileHandlerTable:
 .SoftSetAX 16, 16
 .SoftSetBank $7E
 .SoftSetDirect $0000
-.procdefines "entity_bomb_tick"
+.procdefines "entity_bomb_tick", "IEntityTick"
     .tailcall "true_entity_bomb_tick"
 .endproc
 

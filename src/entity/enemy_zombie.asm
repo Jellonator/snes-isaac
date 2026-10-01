@@ -1,4 +1,5 @@
 .include "base.inc"
+.include "spriteslot.inc"
 
 .DEFINE _zombie_gfxptr.1 loword(entity_char_custom.1)
 .DEFINE _zombie_gfxptr.2 loword(entity_char_custom.2)
@@ -16,8 +17,8 @@
 ; DEFAULT
 
 _entity_zombie_default_init:
-    .SoftSetA 16
-    .SoftSetX 16
+    .SoftSetAX 16, 16
+    .SoftSetBank $7E
     ; upload head
     phy
     php
@@ -27,7 +28,7 @@ _entity_zombie_default_init:
     lda.w _zombie_gfxptr.1,Y
     and #$00FF
     tax
-    jsl Spriteman.WriteSpriteToRawSlot
+    .call "Spriteman.WriteSpriteToRawSlot"
     .ForceSetA 16
     pla
     pla
@@ -35,6 +36,7 @@ _entity_zombie_default_init:
     plp
     ply
     rtl
+.ClearContext
 
 _entity_zombie_default_tick:
     .SoftSetA 16
@@ -471,8 +473,10 @@ _zombie_update_walk_animation:
     jmp _zombie_set_walk_frame
     rts
 
+.ClearContext
 _zombie_set_walk_frame:
     .SoftSetA 8
+    .SoftSetBank $7E
     ; don't upload frame if it is active
     cmp.w _zombie_body_frame,Y
     bne +
@@ -496,7 +500,8 @@ _zombie_set_walk_frame:
     lda.w _zombie_gfxptr.2,Y
     and #$00FF
     tax
-    jsl Spriteman.WriteSpriteToRawSlot
+    .SetAX 16, 16
+    .call "Spriteman.WriteSpriteToRawSlot"
     .ForceSetA 16
     pla
     pla
@@ -504,6 +509,7 @@ _zombie_set_walk_frame:
     plp
     ply
     rts
+.ClearContext
 
 .ENDS
 

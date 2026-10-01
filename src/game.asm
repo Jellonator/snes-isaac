@@ -6,6 +6,7 @@
 .include "item.inc"
 .include "floor.inc"
 .include "room.inc"
+.include "spriteslot.inc"
 
 .BANK $01 SLOT "ROM"
 .SECTION "GAME" FREE
@@ -214,11 +215,11 @@ tile_data_loop:
     ; init overlay
     jsl Overlay.init
     ; init hashtables
-    phb
     .ForceSetBank bankbyte(spriteTableKey)
     jsl table_clear_sprite
-    jsl Spriteman.Init
-    plb
+    .ForceSetBank $7E
+    .call "Spriteman.Init"
+    .ForceSetBank $80
     jsl Palette.init_data
     ; Initialize other variables
     .ForceSetAX 8, 8

@@ -1,4 +1,5 @@
 .include "base.inc"
+.include "spriteslot.inc"
 
 .BANK ROMBANK_ENTITYCODE SLOT "ROM"
 .SECTION "Entity Enemy Fly" FREE
@@ -28,16 +29,16 @@
     ; load sprite
     lda #sprite.enemy.attack_fly.0
     phy
-    jsl Spriteman.NewSpriteRef
-    .ForceSetAX 16, 16
+    .call "Spriteman.NewSpriteRef"
+    .SetAX 16, 16
     ply
     txa
     sta.w _fly_fgxptr.1,Y
     ; load frame 2
     lda #sprite.enemy.attack_fly.1
     phy
-    jsl Spriteman.NewSpriteRef
-    .ForceSetAX 16, 16
+    .call "Spriteman.NewSpriteRef"
+    .SetAX 16, 16
     ply
     txa
     sta.w _fly_fgxptr.2,Y
@@ -190,13 +191,14 @@
     sta.w entity_mask,Y
     ldx.w _fly_fgxptr.1,Y
     phy
-    php
-    jsl Spriteman.UnrefSprite
-    plp
+    .callsetup "Spriteman.UnrefSprite", SETUP_FLAGS
+    .call "Spriteman.UnrefSprite"
+    .SetAX 16, 16
     ply
     lda.w _fly_fgxptr.2,Y
     tax
-    jsl Spriteman.UnrefSprite
+    .callsetup "Spriteman.UnrefSprite", SETUP_FLAGS
+    .call "Spriteman.UnrefSprite"
     rts
 .endproc
 

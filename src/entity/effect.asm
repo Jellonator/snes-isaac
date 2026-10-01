@@ -1,5 +1,6 @@
 .include "base.inc"
 .include "palettes.inc"
+.include "spriteslot.inc"
 
 .BANK $02 SLOT "ROM"
 .SECTION "Entity Effect" SUPERFREE
@@ -324,8 +325,8 @@ EntityEffectTypes:
 
 ; Load sprite data in frame stored in `effect_frame_ptr`
 _load_frame:
-    .SoftSetA 16
-    .SoftSetX 16
+    .SoftSetAX 16, 16
+    .SoftSetBank $7E
     .DEFINE COLUMN $00
     .DEFINE ROW $02
     .DEFINE ARRAY $04
@@ -377,8 +378,8 @@ _load_frame:
             lda.b (ARRAY)
             and #$00FF
             tax
-            jsl Spriteman.WriteSpriteToRawSlot
-            .ForceSetAX 16, 16
+            .call "Spriteman.WriteSpriteToRawSlot"
+            .SetAX 16, 16
             clc
             lda $01,S
             adc #8*4*2
@@ -414,6 +415,7 @@ _load_frame:
     .UNDEFINE STORE_Y
     .UNDEFINE COLUMN_ORIGINAL
     .UNDEFINE BYTEWIDTH
+.ClearContext
 
 .ENDS
 

@@ -1,6 +1,7 @@
 .include "base.inc"
 .include "palettes.inc"
 .include "chaintable.inc"
+.include "spriteslot.inc"
 
 .BANK $01 SLOT "ROM"
 .SECTION "SpriteSlotManager"
@@ -8,9 +9,10 @@
 .MakeChainTableStatic loword(spriteTableKey),loword(spriteTablePtr),\
 SPRITE_TABLE_SIZE,SPRITE_TABLE_CELLAR_SIZE,"_sprite"
 
-Spriteman.Init:
-    phb
-    .ChangeDataBank $7E
+.InvalidateAX
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procimpll "Spriteman.Init"
     ; initialize sprite queue
     .ForceSetAX 8, 8
     lda #64
@@ -35,39 +37,33 @@ Spriteman.Init:
     lda #255
     sta.w loword(spriteAllocTabSize) + 1
     ; end
-    plb
     rtl
+.endproc
 
-; Get a sprite slot. a 'raw' sprite slot just refers to a single 16x16px tile
-; in VRAM to which a sprite can be uploaded. This location will always be in
-; the second name table.
-; The actual VRAM location this refers to can be looked up via SpriteSlotMemTable.
-; Add $0100 to get the VRAM location of the second half of the sprite.
-; Assumes data bank is $7E
-; The sprite tile index to write into the object table can be looked up via 
-; SpriteSlotIndexTable.
-Spriteman.GetRawSlot:
-    .ForceSetAX 8, 8
+.SoftSetAX 8, 8
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procimpll "Spriteman.GetRawSlot"
     .spriteman_get_raw_slot_lite
     rtl
+.endproc
 
-; Write character data to a raw sprite slot, allocated with `Spriteman.GetRawSlot`,
-; or `.spriteman_get_raw_slot_lite`.
-; Args:
-; sprite_bank           [db] $05
-; spriteTop_location    [dw] $03
-; spriteBottom_location [dw] $01
-; Assumes data bank is $7E (though any bank $00-$3F, $80-$CF will also work)
-Spriteman.WriteSpriteToRawSlot:
-    phb ; >1
-    .ForceSetAX 16, 16
+.SoftSetAX 16, 16
+.SoftSetBank D_BANK_MIRROR_LOWRAM
+.SoftSetDirect $0000
+.procimpll "Spriteman.WriteSpriteToRawSlot"
+    .procparam "sprite_bank", 1
+    .procparam "sprite_top_addr", 2
+    .procparam "sprite_bottom_addr", 2
+    .PushBank
+    .SetAX 16, 16
 ; increment vqueueops; just trust that we aren't already in bank $7F
     .VQueueOpToA
     inc.w vqueueNumOps
     inc.w vqueueNumOps
     tay
 ; mode[] = VQUEUE_MODE_VRAM
-    .ChangeDataBank $7F
+    .SetBank $7F
     lda #VQUEUE_MODE_VRAM
     sta.w loword(vqueueOps.1.mode),Y ; both param and bAddr
     sta.w loword(vqueueOps.2.mode),Y
@@ -86,24 +82,26 @@ Spriteman.WriteSpriteToRawSlot:
     sta.w loword(vqueueOps.1.numBytes),Y
     sta.w loword(vqueueOps.2.numBytes),Y
 ; memAddr[i] = input[i]
-    lda $03 + 4,S
+    lda stk(sprite_top_addr),S
     sta.w loword(vqueueOps.1.aAddr),Y
-    lda $01 + 4,S
+    lda stk(sprite_bottom_addr),S
     sta.w loword(vqueueOps.2.aAddr),Y
-    .ForceSetA 8
-    lda $05 + 4,S
+    .SetA 8
+    lda stk(sprite_bank),S
     sta.w loword(vqueueOps.1.aAddr+2),Y
     sta.w loword(vqueueOps.2.aAddr+2),Y
 ; end
-    plb ; <1
+    .PopBank
     rtl
+.endproc
 
-; Frees a sprite slot
-; Assumes data bank is $7E
-Spriteman.FreeRawSlot:
-    .ForceSetAX 8, 8
+.SoftSetAX 8, 8
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procimpll "Spriteman.FreeRawSlot"
     .spriteman_free_raw_slot_lite
     rtl
+.endproc
 
 SpriteSlotIndexTable:
     .REPT 64 INDEX i
@@ -118,16 +116,11 @@ SpriteSlotMemTable:
 .DEFINE SPRITEID_MASK_PAL $C000
 .DEFINE SPRITEID_MASK_SPRITE $3FFF
 
-; Allocate a 16x16 sprite slot
-; Loads sprite id stored in A
-; Sprite ID format: ppssssss ssssssss
-;    where `s` is the Sprite index into SpriteDefs, and `p` is the palette swizzle.
-;    The palette format is important for swizzling sprite data before upload.
-; Returns reference in X.
-; Useful for objects which don't need to upload sprites very often.
-; To get the raw slot index, lookup via `spriteTableValue + spritetab_t.spritemem`
-; Assumes data bank is $7E
-Spriteman.NewSpriteRef:
+.SoftSetA 16
+.InvalidateX
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procimpll "Spriteman.NewSpriteRef"
     .DEFINE SPRITE_TABLE_INDEX $20
     .DEFINE SPRITE_ID $22
     .DEFINE SPRITE_DEF_PTR $24
@@ -138,27 +131,29 @@ Spriteman.NewSpriteRef:
     sta.b SPRITE_ID
     ; insert unique sprite; determine if sprite ID already in use
     jsl table_insert_unique_sprite
-    .SoftSetX 16
-    .SoftSetA 16
+    .SoftSetAX 16, 16
     cpy #0
     beq @did_insert
+    .PushContext
+    .SetA 8
     ; value already existed, increment ref and return
     inc.w loword(spriteTableValue.1.count),X
     rtl
+    .PopContextSoft
 @did_insert:
     stx.b SPRITE_TABLE_INDEX
     ; get sprite slot
-    .ForceSetAX 8, 8
+    .SetAX 8, 8
     .spriteman_get_raw_slot_lite
     ; update sprite table
     txa
-    .ForceSetX 16
+    .SetX 16
     ldy.b SPRITE_TABLE_INDEX
     sta.w loword(spriteTableValue.1.spritemem),Y
     lda.b #1
     sta.w loword(spriteTableValue.1.count),Y
 ; write sprite data
-    .ForceSetAX 16, 16
+    .SetAX 16, 16
     .VQueueOpToA
     tax
     lda.w vqueueNumOps
@@ -173,10 +168,10 @@ Spriteman.NewSpriteRef:
     lda loword(spriteTableValue.1.spritemem),Y
     and #$00FF
     asl
-    phx
+    .phx
     tax
     lda.l SpriteSlotMemTable,X
-    plx
+    .plx
     sta.l vqueueOps.1.vramAddr,X
 ; vramaddr[1] = spritemem * 16 + SPRITE2_BASE_ADDR + $100
     clc
@@ -194,7 +189,7 @@ Spriteman.NewSpriteRef:
     asl
     clc
     adc.b TEMP
-    phx
+    .phx
     tax
     stx.b SPRITE_DEF_PTR
     lda.l SpriteDefs + entityspriteinfo_t.sprite_addr,X
@@ -234,31 +229,29 @@ Spriteman.NewSpriteRef:
         sta.b SPRITE_ADDR
 @no_swizzle:
     ; aAddr = SpriteDefs[spriteId].addr
-    plx
+    .plx
     lda.b SPRITE_ADDR
     sta.l vqueueOps.1.aAddr,X
     clc
     adc #64
     sta.l vqueueOps.2.aAddr,X
-    .ForceSetA 8
+    .SetA 8
     lda.b SPRITE_BANK
     sta.l vqueueOps.1.aAddr+2,X
     sta.l vqueueOps.2.aAddr+2,X
     ldx.b SPRITE_TABLE_INDEX
     rtl
+    .InvalidateX
+.endproc
 
-; Allocate a 16x16 sprite slot, without writing to it
-; Uses unique key stored in A
-; Returns reference in X.
-; Useful for sharing a sprite between identically animated objects.
-; Also returns A=1 if this slot was just allocated, 0 otherwise
-; To get the raw slot index, lookup via `spriteTableValue + spritetab_t.spritemem`
-; Assumes data bank is $7E
-Spriteman.NewSpriteRefEmpty:
+.SoftSetA 16
+.InvalidateX
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procimpll "Spriteman.NewSpriteRefEmpty"
     ; insert unique sprite; determine if sprite ID already in use
     jsl table_insert_unique_sprite
-    .SoftSetX 16
-    .SoftSetA 16
+    .SoftSetAX 16, 16
     cpy #0
     beq @did_insert
     ; value already existed, increment ref and return
@@ -268,18 +261,19 @@ Spriteman.NewSpriteRefEmpty:
 @did_insert:
     stx.b SPRITE_TABLE_INDEX
     ; get sprite slot
-    .ForceSetAX 8, 8
+    .SetAX 8, 8
     .spriteman_get_raw_slot_lite
     ; update sprite table
     txa
-    .ForceSetX 16
+    .SetX 16
     ldx.b SPRITE_TABLE_INDEX
     sta.w loword(spriteTableValue.1.spritemem),X
     lda.b #1
     sta.w loword(spriteTableValue.1.count),X
-    .ForceSetAX 16, 16
+    .SetAX 16, 16
     lda #1
     rtl
+.endproc
 
 _newspriteref_upload_modes:
     .dw _newspriteref_upload_direct
@@ -317,19 +311,18 @@ _newspriteref_upload_lz4:
 .UNDEFINE SPRITE_MODE
 .UNDEFINE TEMP
 
-; Increment reference
-; Assumes data bank is $7E
-Spriteman.IncRef:
-    .SoftSetX 16
-    .ForceSetA 8
+.SoftSetAX 8, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procimpll "Spriteman.IncRef"
     inc.w loword(spriteTableValue.1.count),X
     rtl
+.endproc
 
-; Decrement reference
-; Assumes data bank is $7E
-Spriteman.UnrefSprite:
-    .SoftSetX 16
-    .ForceSetA 8
+.SoftSetAX 8, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procimpll "Spriteman.UnrefSprite"
     dec.w loword(spriteTableValue.1.count),X
     beq @remove
         ; --X->count > 0
@@ -338,26 +331,26 @@ Spriteman.UnrefSprite:
     stx.b $00
     lda.w loword(spriteTableValue.1.spritemem),X
     tax
-    .ForceSetAX 8, 8
+    .SetAX 8, 8
     .spriteman_free_raw_slot_lite
-    .ForceSetAX 16, 16
+    .SetAX 16, 16
     ldx.b $00
     lda.w loword(spriteTableKey),X
     jsl table_remove_sprite
     rtl
+    .InvalidateAX
+.endproc
 
 _spriteman_allocbuffer_fail:
     .SoftSetX 8
     .SoftSetA 8
     ldx #$00
     rtl
-; Allocate [A] tiles of sprite *buffer* in RAM
-; Returns buffer INDEX in [X]
-; This buffer can be used for any purpose, but is intended for decompressing,
-; swizzling, or other operations on sprite data that is intended to be uploaded
-; to VRAM on demand. e.g., animated sprites with custom palettes.
-Spriteman.AllocRawBuffer:
-    .ForceSetAX 8, 8
+
+.SoftSetAX 8, 8
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procimpll "Spriteman.AllocRawBuffer"
     ldx #1
 ; search for block with appropriate size
     @loop_search:
@@ -425,10 +418,12 @@ Spriteman.AllocRawBuffer:
 @dont_set_next_prev:
 ; end
     rtl
+.endproc
 
-; Free sprite memory buffer [X]
-Spriteman.FreeRawBuffer:
-    .ForceSetAX 8, 8
+.SoftSetAX 8, 8
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procimpll "Spriteman.FreeRawBuffer"
     cpx #0
     beq @skip_merge_prev
     ; indicate block is inactive
@@ -474,18 +469,12 @@ Spriteman.FreeRawBuffer:
         sta.w loword(spriteAllocTabPrev),X
 @skip_merge_prev:
     rtl
+.endproc
 
-; Automatically get or allocate a sprite buffer in RAM.
-; This is similar to Spriteman.NewSpriteRef, but for loading animated sprites into RAM.
-; Loads sprite id stored in A
-; Sprite ID format: ppssssss ssssssss
-;    where `s` is the Sprite index into SpriteDefs, and `p` is the palette swizzle.
-;    The palette format is important for swizzling sprite data before upload.
-; Returns reference in X.
-; Assumes data bank is $7E.
-; Unlike NewSpriteRef, the loaded sprite may be multiple tiles in size, and
-; will the appropriate amount of RAM.
-Spriteman.NewBufferRef:
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procimpll "Spriteman.NewBufferRef"
     .DEFINE SPRITE_TABLE_INDEX $20
     .DEFINE SPRITE_ID $22
     .DEFINE SPRITE_DEF_PTR $24
@@ -495,8 +484,7 @@ Spriteman.NewBufferRef:
     sta.b SPRITE_ID
 ; insert unique sprite; determine if sprite ID already in use
     jsl table_insert_unique_sprite
-    .SoftSetX 16
-    .SoftSetA 16
+    .SoftSetAX 16, 16
     cpy #0
     beq @did_insert
     ; value already existed, increment ref and return
@@ -517,18 +505,17 @@ Spriteman.NewBufferRef:
     lda.l SpriteDefs + entityspriteinfo_t.ntiles,X
     and #$00FF
 ; get sprite buffer index
-    jsl Spriteman.AllocRawBuffer
-    .SoftSetA 8
-    .SoftSetX 8
+    .SetAX 8, 8
+    .call "Spriteman.AllocRawBuffer"
     txa
     ; write buffer index to spritemem, and set count to 1
-    .ForceSetX 16
+    .SetX 16
     ldy.b SPRITE_TABLE_INDEX
     sta.w loword(spriteTableValue.1.spritemem),Y
     lda #1
     sta.w loword(spriteTableValue.1.count),Y
 ; copy sprite data into buffer.
-    .ForceSetAX 16, 16
+    .SetAX 16, 16
     ldx.b SPRITE_DEF_PTR
     lda.l SpriteDefs + entityspriteinfo_t.mode,X
     and #$000F
@@ -542,7 +529,7 @@ Spriteman.NewBufferRef:
     bit #SPRITEALLOCMODE_SWIZZLE
     beq @no_swizzle
         ; check if palette mode needs swizzle
-        .ForceSetA 16
+        .SetA 16
         lda.b SPRITE_ID
         rol
         rol
@@ -562,14 +549,14 @@ Spriteman.NewBufferRef:
     .ForceSetAX 16, 16
     ldx.b SPRITE_TABLE_INDEX
     rtl
+.endproc
 
 _newbufferref_upload_methods:
     .dw _newbufferref_upload_direct
     .dw _newbufferref_upload_lz4
 
 _newbufferref_upload_direct:
-    .SoftSetA 16
-    .SoftSetX 16
+    .SoftSetAX 16, 16
     ldx.b SPRITE_DEF_PTR
     ; size = ntiles * 128
     lda.l SpriteDefs + entityspriteinfo_t.ntiles,X
@@ -607,8 +594,7 @@ _newbufferref_upload_direct:
     rts
 
 _newbufferref_upload_lz4:
-    .SoftSetA 16
-    .SoftSetX 16
+    .SoftSetAX 16, 16
     ldx.b SPRITE_DEF_PTR
     lda.l SpriteDefs + entityspriteinfo_t.ntiles,X
     and #$00FF
@@ -638,11 +624,10 @@ _newbufferref_upload_lz4:
 .UNDEFINE TEMP
 .UNDEFINE DEST_ADDR
 
-; Decrement reference
-; Assumes data bank is $7E
-Spriteman.UnrefBuffer:
-    .SoftSetX 16
-    .ForceSetA 8
+.SoftSetAX 8, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
+.procimpll "Spriteman.UnrefBuffer"
     dec.w loword(spriteTableValue.1.count),X
     beq @remove
         ; --X->count > 0
@@ -651,13 +636,15 @@ Spriteman.UnrefBuffer:
     stx.b $00
     lda.w loword(spriteTableValue.1.spritemem),X
     tax
-    .ForceSetAX 8, 8
-    jsl Spriteman.FreeRawBuffer
-    .ForceSetAX 16, 16
+    .SetAX 8, 8
+    .call "Spriteman.FreeRawBuffer"
+    .SetAX 16, 16
     ldx.b $00
     lda.w loword(spriteTableKey),X
     jsl table_remove_sprite
+    .InvalidateAX
     rtl
+.endproc
 
 ; Swizzle a sprite that is located in bank 7F according to palette
 ; Parameters:

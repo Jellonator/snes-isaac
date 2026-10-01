@@ -1,6 +1,7 @@
 .include "base.inc"
 .include "palettes.inc"
 .include "room.inc"
+.include "spriteslot.inc"
 
 .define _palette entity_velocx
 
@@ -103,8 +104,8 @@
         phy
         lda #sprite.shopkeepers.{i}
         ora.b $10
-        jsl Spriteman.NewSpriteRef
-        .ForceSetAX 16, 16
+        .call "Spriteman.NewSpriteRef"
+        .SetAX 16, 16
         ply
         txa
         sta.w loword(entity_custom.{i+1}),Y
@@ -133,8 +134,9 @@
     .REPT 4 INDEX i
         phy
         ldx.w loword(entity_custom.{i+1}),Y
-        jsl Spriteman.UnrefSprite
-        .ForceSetAX 16, 16
+        .callsetup "Spriteman.UnrefSprite", SETUP_FLAGS
+        .call "Spriteman.UnrefSprite"
+        .SetAX 16, 16
         ply
     .ENDR
     ; free palette

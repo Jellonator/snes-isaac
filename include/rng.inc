@@ -1,3 +1,6 @@
+.IFNDEF _RNG_INC
+.DEFINE _RNG_INC
+
 ; STAGE RNG
 ; Use stage RNG for generating the level, i.e. in mapgenerator.asm
 
@@ -151,3 +154,5 @@
     .ASSERT _ChanceTableV == 0
     .UNDEFINE _ChanceTableV
 .ENDM
+
+.ENDIF

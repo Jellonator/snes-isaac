@@ -1,3 +1,6 @@
+.IFNDEF _ENTITY_INC
+.DEFINE _ENTITY_INC
+
 ; PROJECTILE SUBTYPES
 .ENUMID 0
 .ENUMID PROJECTILE_TYPE_PLAYER_BASIC
@@ -652,3 +655,5 @@
 .IgnoreDirect
 .procheaderl "Entity.Shadow.PutBig"
 .endproc
+
+.ENDIF

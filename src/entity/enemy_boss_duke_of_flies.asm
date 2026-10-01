@@ -1,4 +1,5 @@
 .include "base.inc"
+.include "room.inc"
 
 .DEFINE BOSS_WIDTH 32
 .DEFINE BOSS_HEIGHT 36

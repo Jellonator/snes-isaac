@@ -1,3 +1,6 @@
+.IFNDEF _PALETTES_INC
+.DEFINE _PALETTES_INC
+
 ; Palette allocation mode
 ; bit 1 indicates that [X+0] is allocated
 ; bit 2 indicates that [X+1] is allocated
@@ -50,3 +53,4 @@
 
 ; PROCEDURE DEFINITIONS
 
+.ENDIF

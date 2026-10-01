@@ -1,3 +1,6 @@
+.IFNDEF _RENDER_INC
+.DEFINE _RENDER_INC
+
 ; SPRITE
 
 ; A sprite object
@@ -524,3 +527,6 @@
     clc
     adc #TILE_TEXT_FONT_BASE + deft(0, 6) + T_HIGHP
 .ENDM
+
+
+.ENDIF

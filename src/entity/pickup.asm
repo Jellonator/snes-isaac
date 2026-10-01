@@ -1,6 +1,8 @@
 .include "base.inc"
 .include "palettes.inc"
 .include "rng.inc"
+.include "trinket.inc"
+.include "consumables.inc"
 
 ; steal state and timer, since they are serialized
 .define pickup_price entity_state
@@ -197,8 +199,7 @@ PickupTable_RoomReward:
 .procdefines "_handle_penny", "IVariantHandler"
     phy
     php
-    sep #$28 ; enable decimal
-    .SoftSetA 8
+    .sep $28 ; enable decimal
     lda.w playerData.money
     sec
     sbc.w pickup_price,Y
@@ -224,7 +225,7 @@ PickupTable_RoomReward:
 .procdefines "_handle_nickle", "IVariantHandler"
     phy
     php
-    sep #$28 ; enable decimal
+    .sep $28 ; enable decimal
     .SoftSetA 8
     lda.w playerData.money
     sec
@@ -251,7 +252,7 @@ PickupTable_RoomReward:
 .procdefines "_handle_dime", "IVariantHandler"
     phy
     php
-    sep #$28 ; enable decimal
+    .sep $28 ; enable decimal
     .SoftSetA 8
     lda.w playerData.money
     sec

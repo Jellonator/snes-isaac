@@ -51,6 +51,10 @@ ROOMPOOL_IN = "assets/rooms/roompools.json"
 
 out_inc = open(ROOMPOOL_OUT, 'w')
 
+out_inc.write(".include \"room.inc\"\n")
+out_inc.write(".include \"block.inc\"\n")
+out_inc.write(".include \"floor.inc\"\n")
+
 json_roompools = json.load(open(ROOMPOOL_IN))
 
 rooms = set()

@@ -1,5 +1,8 @@
 .include "base.inc"
 .include "palettes.inc"
+.include "trinket.inc"
+.include "player.inc"
+.include "item.inc"
 
 .BANK $02 SLOT "ROM"
 .SECTION "Entity Trinket" SUPERFREE

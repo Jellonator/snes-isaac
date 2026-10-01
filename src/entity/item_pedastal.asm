@@ -1,5 +1,7 @@
 .include "base.inc"
 .include "palettes.inc"
+.include "trinket.inc"
+.include "item.inc"
 
 .DEFINE _item_gfxptr_pedastal loword(entity_char_custom.1)
 .DEFINE _item_gfxptr_item loword(entity_char_custom.2)
@@ -430,8 +432,7 @@ true_item_pedastal_tick_base:
         ora #ENTITY_FLAGS_DONT_SERIALIZE
         sta.w loword(entity_flags),Y
         ; reduce money
-        sep #$28
-        .SoftSetA 8
+        .sep $28
         lda.w _item_price,Y
         beq @dont_subtract_money
             lda.w playerData.money

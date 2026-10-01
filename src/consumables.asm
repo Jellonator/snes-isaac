@@ -1,4 +1,7 @@
 .include "base.inc"
+.include "room.inc"
+.include "consumables.inc"
+.include "player.inc"
 
 .BANK $01 SLOT "ROM"
 .SECTION "Pathing" FREE

@@ -1,4 +1,5 @@
 .include "base.inc"
+.include "trinket.inc"
 
 .BANK $01 SLOT "ROM"
 .SECTION "Hooks" FREE

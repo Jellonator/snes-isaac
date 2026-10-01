@@ -1,4 +1,7 @@
 .include "base.inc"
+.include "block.inc"
+.include "room.inc"
+.include "map.inc"
 
 .BANK $00 SLOT "ROM"
 .SECTION "Entity Bomb" SUPERFREE

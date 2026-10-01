@@ -1,4 +1,5 @@
 .include "base.inc"
+.include "ground.inc"
 
 .BANK ROMBANK_GROUNDCODE SLOT "ROM"
 .SECTION "GroundCode" FREE

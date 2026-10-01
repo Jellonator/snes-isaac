@@ -1,3 +1,6 @@
+.IFNDEF _BLOCK_INC
+.DEFINE _BLOCK_INC
+
 ; BLOCK TYPES
 .DEFINE BLOCK_HOLE        $00
 .DEFINE BLOCK_ROCK        $01
@@ -15,3 +18,5 @@
 
 ; regular (empty) block variants
 .DEFINE BLOCK_GROUND_VARIANT_RUBBLE $01
+
+.ENDIF

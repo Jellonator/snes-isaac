@@ -1,3 +1,6 @@
+.IFNDEF _ITEM_INC
+.DEFINE _ITEM_INC
+
 ; ITEM IDS
 .ENUMID 0
 .ENUMID ITEMID_NULL
@@ -52,3 +55,5 @@
     ; the tagline for this item
     tagline ds 32
 .ENDST
+
+.ENDIF

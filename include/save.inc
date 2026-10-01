@@ -1,3 +1,7 @@
+.include "player.inc"
+.include "room.inc"
+.include "map.inc"
+
 .STRUCT savestate_room_t
     roomtype db
     rng INSTANCEOF rng_t

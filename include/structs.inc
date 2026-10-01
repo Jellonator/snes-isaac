@@ -1,3 +1,6 @@
+.IFNDEF _STRUCTS_INC
+.DEFINE _STRUCTS_INC
+
 ; single byte type
 .STRUCT byte_t
     data db
@@ -29,3 +32,5 @@
     low dw
     high dw
 .ENDST
+
+.ENDIF

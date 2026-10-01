@@ -1,5 +1,7 @@
 .include "base.inc"
+.include "room.inc"
 .include "palettes.inc"
+.include "floor.inc"
 
 .BANK hirombankid(FLOOR_DEFINITION_BASE) SLOT "ROM"
 .SECTION "Floor Code" FREE

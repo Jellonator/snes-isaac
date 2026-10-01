@@ -1,5 +1,7 @@
 .include "base.inc"
 .include "rng.inc"
+.include "room.inc"
+.include "map.inc"
 
 .BANK $01 SLOT "ROM"
 .SECTION "RoomCode" FREE

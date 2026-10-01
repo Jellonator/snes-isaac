@@ -1,6 +1,11 @@
 .include "base.inc"
 .include "palettes.inc"
 .include "rng.inc"
+.include "trinket.inc"
+.include "consumables.inc"
+.include "player.inc"
+.include "item.inc"
+.include "room.inc"
 
 .BANK $01 SLOT "ROM"
 .SECTION "PlayerItem" FREE

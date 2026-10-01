@@ -1,3 +1,6 @@
+.IFNDEF _SORT_INC
+.DEFINE _SORT_INC
+
 ; SORTING ALGORITHMS
 ; These are implemented as macros, since its a bit faster and more dynamic
 ; than providing a custom sorting function pointer
@@ -26,7 +29,7 @@
 ; Try to make sure X and Y are maintained by the end of the function
 ; Heap functions assume we are in the correct data bank
 .MACRO .SortHeap_Build ARGS funcname, sort_func, word_size
-    .ASSERT word_size == 8 || word_size == 16
+    .ASSERT (word_size == 8) || (word_size == 16)
 
     ; Sort array at X with size A
     {funcname}:
@@ -174,3 +177,5 @@
         .UNDEFINE CHILD
 
 .ENDM
+
+.ENDIF

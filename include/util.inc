@@ -1,3 +1,6 @@
+.IFNDEF _UTIL_INC
+.DEFINE _UTIL_INC
+
 ; as a general rule, macro labels should begin with @@@@@
 ; that way, these labels don't mess with those in code
 
@@ -496,8 +499,7 @@
         pla
         pla
     .ELSE
-        rep #$21 ; also clears C flag for later adc
-        .SoftSetA 16
+        .rep $21 ; also clears C flag for later adc
         tsc
         adc #NUM
         tcs
@@ -538,8 +540,7 @@
 .MACRO .ClearCPU
     clc
     xce ; disable emulation mode
-    rep #$38 ; disable binary mode
-    .SoftSetAX 16, 16
+    .rep $38 ; disable binary mode
     ldx #$1FFF
     txs ; reset stack pointer
     pea $0000
@@ -578,3 +579,5 @@
     lda.w roomBrightness
     sta.w INIDISP
 .ENDM
+
+.ENDIF

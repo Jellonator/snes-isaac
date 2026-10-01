@@ -1,6 +1,6 @@
 .include "base.inc"
-.include "spriteslot.inc"
 .include "palettes.inc"
+.include "chaintable.inc"
 
 .BANK $01 SLOT "ROM"
 .SECTION "SpriteSlotManager"

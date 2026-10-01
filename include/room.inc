@@ -1,3 +1,8 @@
+.IFNDEF _ROOM_INC
+.DEFINE _ROOM_INC
+
+.include "entity.inc"
+
 ; ROOM SIZING INFO
 .DEFINE ROOM_TILE_WIDTH 12
 .DEFINE ROOM_TILE_HEIGHT 8
@@ -178,7 +183,9 @@
 ; Returns position on the stack
 ; The provided and returned position are for a centered 16x16 entity
 .SoftSetAX 8, 8
-.SetDirect $0000
-.SetBank $7E
+.SoftSetDirect $0000
+.SoftSetBank $7E
 .procheaderl "Room.GetPositionNear"
 .endproc
+
+.ENDIF

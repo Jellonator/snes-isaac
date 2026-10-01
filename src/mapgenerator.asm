@@ -1,6 +1,10 @@
 .include "base.inc"
 .include "mapgenerator.inc"
 .include "rng.inc"
+.include "floor.inc"
+.include "room.inc"
+.include "sort.inc"
+.include "map.inc"
 
 .BANK $01 SLOT "ROM"
 .SECTION "MapGeneratorCode" FREE

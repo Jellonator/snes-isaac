@@ -1,6 +1,11 @@
 .include "base.inc"
 .include "mapgenerator.inc"
 .include "palettes.inc"
+.include "consumables.inc"
+.include "player.inc"
+.include "item.inc"
+.include "floor.inc"
+.include "room.inc"
 
 .BANK $01 SLOT "ROM"
 .SECTION "GAME" FREE

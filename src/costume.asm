@@ -1,4 +1,5 @@
 .include "base.inc"
+.include "item.inc"
 
 .BANK $01 SLOT "ROM"
 .SECTION "Player Costume" FREE

@@ -1,6 +1,10 @@
 .include "base.inc"
 .include "palettes.inc"
 .include "rng.inc"
+.include "block.inc"
+.include "floor.inc"
+.include "room.inc"
+.include "map.inc"
 
 .BANK $01 SLOT "ROM"
 .SECTION "LevelCode" FREE

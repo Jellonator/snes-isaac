@@ -1,5 +1,10 @@
 .include "base.inc"
 .include "palettes.inc"
+.include "save.inc"
+.include "player.inc"
+.include "ground.inc"
+.include "room.inc"
+.include "map.inc"
 
 .BASE $00
 

@@ -1,4 +1,8 @@
 .include "base.inc"
+.include "player.inc"
+.include "item.inc"
+.include "room.inc"
+.include "map.inc"
 
 .DEFINE PLAYER_BOMB_PLACE_TIMER 30
 

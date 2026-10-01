@@ -1,3 +1,8 @@
+.IFNDEF _PLAYER_INC
+.DEFINE _PLAYER_INC
+
+.include "room.inc"
+
 ; HEALTH SLOT TYPES
 .ENUMID 0
 .ENUMID HEALTH_NULL
@@ -110,3 +115,5 @@
     helperFlyActiveCount db
     helperFlyPositionMask db
 .ENDST
+
+.ENDIF

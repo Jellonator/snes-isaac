@@ -67,10 +67,10 @@ Test.smc: Test.link $(OBJECTS)
 Test.link:
 	printf "[objects]$(OBJECTS:%.obj=\n%.obj)" > Test.link
 
-include/roompools.inc: $(PALETTES) $(SPRITES) assets/rooms/roompools.json
+include/roompools.inc: assets/rooms/roompools.json
 	$(PY) scripts/roomimport.py
 
-include/tilemaps.inc: $(PALETTES) $(SPRITES) assets/tilemaps.json
+include/tilemaps.inc: $(TILEMAPS) assets/tilemaps.json
 	mkdir -p include/tilemaps/
 	$(PY) scripts/tilemapimport.py
 

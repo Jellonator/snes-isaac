@@ -1,3 +1,6 @@
+.IFNDEF _MAP_INC
+.DEFINE _MAP_INC
+
 ; DOOR TYPE INFO
 ; Top bit of door mask determines if it is open. This is so that checking if a
 ; door is open is as easy as `lda door`, `bmi addr`
@@ -28,6 +31,9 @@
 .DEFINE DOOR_METHOD_COIN        $30
 .DEFINE DOOR_METHOD_FINISH_ROOM $40
 .DEFINE DOOR_METHOD_DEVIL       $50
+
+; door type used specifically for devil rooms
+.DEFINE DEVILROOM_DOORTYPE (DOOR_TYPE_NORMAL | DOOR_METHOD_DEVIL | DOOR_OPEN)
 
 ; MAPTILE FLAGS
 .DEFINE MAPTILE_EXPLORED $01   ; indicates that player has entered room
@@ -93,3 +99,5 @@
 .IgnoreDirect
 .procheaderl "Map.DetermineTileVariant"
 .endproc
+
+.ENDIF

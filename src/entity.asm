@@ -1,4 +1,6 @@
 .include "base.inc"
+.include "room.inc"
+.include "ground.inc"
 
 ; This bank is entirely relegated to entity functionality
 .BANK ROMBANK_ENTITYCODE SLOT "ROM"

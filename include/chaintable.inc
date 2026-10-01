@@ -1,3 +1,6 @@
+.IFNDEF _CHAINTABLE_INC
+.DEFINE _CHAINTABLE_INC
+
 ; Implementation for 'hash' table using coalesced chaining.
 ; * 'hash' in quotation marks since our hash function is just H(x) = x % N
 ; * keys are assumed to be 16b
@@ -223,3 +226,5 @@
         rtl
 
 .ENDM
+
+.ENDIF

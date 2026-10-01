@@ -1,3 +1,6 @@
+.IFNDEF _GROUND_INC
+.DEFINE _GROUND_INC
+
 ; GROUND DEFS
 
 ; Maximum number of ground operations in one tick
@@ -8,3 +11,5 @@
 .DEFINE GROUND_PALETTE_RED ($01 << 2)
 .DEFINE GROUND_PALETTE_GREY ($02 << 2)
 .DEFINE GROUND_PALETTE_YELLOW ($03 << 2)
+
+.ENDIF

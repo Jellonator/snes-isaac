@@ -1,3 +1,6 @@
+.IFNDEF _REGISTERS_INC
+.DEFINE _REGISTERS_INC
+
 .define INIDISP $2100
 .define OBSEL $2101
 .define OAMADDR $2102
@@ -197,3 +200,5 @@
 .define HDMA7_INDH   $4377
 .define HDMA7_MFTA   $4378
 .define HDMA7_LINE   $437A
+
+.ENDIF

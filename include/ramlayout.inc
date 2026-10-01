@@ -1,3 +1,6 @@
+.IFNDEF _RAMLAYOUT_INC
+.DEFINE _RAMLAYOUT_INC
+
 .FUNCTION MAP_DOOR_MEM_LOC(i) (mapDoorNorth + (i * 3))
 
 .REPT 4 INDEX i
@@ -75,3 +78,5 @@
 .DEFINE hdmaPaletteBuffer_trinket1 longaddr(hdmaPaletteBuffer.8)
 .DEFINE hdmaPaletteBuffer_trinket2 longaddr(hdmaPaletteBuffer.24)
 .DEFINE hdmaPaletteBuffer_item longaddr(hdmaPaletteBuffer.40)
+
+.ENDIF

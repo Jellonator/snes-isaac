@@ -1,3 +1,6 @@
+.IFNDEF _MAPGENERATOR_INC
+.DEFINE _MAPGENERATOR_INC
+
 .InvalidateContext
 .SoftSetAX 8, 8
 .SoftSetBank $7E
@@ -14,12 +17,11 @@
 
 .InvalidateContext
 .procheaderl "MapGen.GenerateMap"
-    .SetAX 8, 8
-    .SetBank $7E
+    .SoftSetAX 8, 8
+    .SoftSetBank $7E
     .InvalidateContext
 .endproc
 
-.DEFINE DEVILROOM_DOORTYPE (DOOR_TYPE_NORMAL | DOOR_METHOD_DEVIL | DOOR_OPEN)
 ; Update doors connected to room 'X', such that:
 ;  * All doors only connect to boss rooms
 ;  * All doors are set to the special devil room type
@@ -47,5 +49,7 @@
 .SoftSetBank $7E
 .IgnoreDirect
 .procheaderl "MapGen.SetupRoomX"
-    .SetAX 8, 8
+    .SoftSetAX 8, 8
 .endproc
+
+.ENDIF

@@ -1,4 +1,8 @@
 .include "base.inc"
+.include "player.inc"
+.include "item.inc"
+.include "room.inc"
+.include "map.inc"
 
 .BANK $01 SLOT "ROM"
 .SECTION "UI" FREE

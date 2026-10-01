@@ -26,6 +26,7 @@ minbank="$00"
 MASK_MODE_INTERLACE = "interlace"
 MASK_MODE_NONE = ""
 
+out_inc.write(".include \"ground.inc\"\n")
 out_inc.write(".BANK {} SLOT \"ROM\"\n".format(minbank))
 out_inc.write(".SECTION \"IMPORTED_PALETTES\" SUPERFREE\n")
 

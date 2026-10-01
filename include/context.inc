@@ -1,3 +1,6 @@
+.IFNDEF _CONTEXT_INC
+.DEFINE _CONTEXT_INC
+
 ; Context management for subroutines
 ; The goal of this is to minimize context switching, primarily sep/rep.
 ; This mostly only saves a few instructions, but there is value in that.
@@ -555,6 +558,32 @@
 .MACRO .SoftSetDirect ARGS p_d
     .ASSERT ((p_d >= $00) && (p_d <= $FFFF)) || (p_d == D_UNK)
     .REDEFINE D_DIRECT p_d
+.ENDM
+
+; Insert a single 'rep' instruction while also updating context
+.MACRO .rep ARGS value
+    rep #value
+    .IF (value & $20) != 0
+        .ACCU 16
+        .REDEFINE D_FLAG_A 16
+    .ENDIF
+    .IF (value & $10) != 0
+        .INDEX 16
+        .REDEFINE D_FLAG_X 16
+    .ENDIF
+.ENDM
+
+; Insert a single 'sep' instruction while also updating context
+.MACRO .sep ARGS value
+    sep #value
+    .IF (value & $20) != 0
+        .ACCU 8
+        .REDEFINE D_FLAG_A 8
+    .ENDIF
+    .IF (value & $10) != 0
+        .INDEX 8
+        .REDEFINE D_FLAG_X 8
+    .ENDIF
 .ENDM
 
 ; If set, a 'phb' instruction will be inserted.
@@ -1196,3 +1225,5 @@
     .ENDIF
     .setupcall_out func
 .ENDM
+
+.ENDIF

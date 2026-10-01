@@ -1,5 +1,6 @@
 .include "base.inc"
 .include "palettes.inc"
+.include "room.inc"
 
 .define _palette entity_velocx
 

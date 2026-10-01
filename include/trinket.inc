@@ -1,3 +1,6 @@
+.IFNDEF _TRINKET_INC
+.DEFINE _TRINKET_INC
+
 ; TRINKET DEFINITION
 .STRUCT trinketdef_t
     sprite_index db
@@ -22,3 +25,5 @@
     lda.w playerData.trinketeffects + floor(trinket / 8)
     and #(1 << (trinket # 8))
 .ENDM
+
+.ENDIF

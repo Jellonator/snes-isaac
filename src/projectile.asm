@@ -1,4 +1,5 @@
 .include "base.inc"
+.include "block.inc"
 
 .MACRO .PositionToIndex_A
     xba

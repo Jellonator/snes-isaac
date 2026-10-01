@@ -1,4 +1,5 @@
 .include "base.inc"
+.include "save.inc"
 
 .BANK $01 SLOT "ROM"
 .SECTION "MENU" FREE

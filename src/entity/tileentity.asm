@@ -5,10 +5,10 @@
 .BANK $02 SLOT "ROM"
 .SECTION "Entity Tile" SUPERFREE
 
-.DEFINE _entity_spriteptr loword(entity_custom.1)
-.DEFINE _entity_hits loword(entity_custom.2)
-.DEFINE _entity_paletteptr loword(entity_custom.3)
-.DEFINE _entity_bufferptr loword(entity_custom.4)
+.DEFINE _entity_spriteptr loword(entity_custom.0)
+.DEFINE _entity_hits loword(entity_custom.1)
+.DEFINE _entity_paletteptr loword(entity_custom.2)
+.DEFINE _entity_bufferptr loword(entity_custom.3)
 
 .DEFINE _entityid $10
 
@@ -25,15 +25,15 @@
     tax
     lda.l SpriteSlotIndexTable,X
     .OX_Get
-    sta.w objectData.1.tileid,X
+    sta.w objectData.0.tileid,X
     ; X position
     lda.w entity_posx + 1,Y
-    sta.w objectData.1.pos_x,X
+    sta.w objectData.0.pos_x,X
     ; Y position
     lda.w entity_posy + 1,Y
     sec
     sbc #4
-    sta.w objectData.1.pos_y,X
+    sta.w objectData.0.pos_y,X
     ; flags
     lda.w _entity_paletteptr,Y
     .PaletteIndexToPaletteSpriteA
@@ -53,7 +53,7 @@
         tsb.b $02
     +:
     lda.b $02
-    sta.w objectData.1.flags,X
+    sta.w objectData.0.flags,X
     .OX_Next_S
     .SetAX 16, 16
     ; set box and mask
@@ -100,7 +100,7 @@
         .IF i > 0
             ldx.b $02
         .ENDIF
-        ldy.w spatial_partition.{i+1},X
+        ldy.w spatial_partition.{i},X
         beql @no_col
         lda.w entity_mask,Y
         bit #ENTITY_MASK_BURNABLE
@@ -147,7 +147,7 @@
     .ForceSetAX 16, 16
     ldy.b _entityid
     ldx.w _entity_bufferptr,Y
-    lda.w loword(spriteTableValue.1.spritemem),X
+    lda.w loword(spriteTableValue.0.spritemem),X
     and #$00FF
     tax
     inx
@@ -178,7 +178,7 @@
     lsr
     sta.b $00
     ldx.w _entity_bufferptr,Y
-    lda.w loword(spriteTableValue.1.spritemem)-1,X
+    lda.w loword(spriteTableValue.0.spritemem)-1,X
     and #$FF00
     lsr
     adc #loword(spriteAllocBuffer)
@@ -189,7 +189,7 @@
     adc #64
     pha
     ldx.w _entity_spriteptr,Y
-    lda.w loword(spriteTableValue.1.spritemem),X
+    lda.w loword(spriteTableValue.0.spritemem),X
     and #$00FF
     tax
     .call "Spriteman.WriteSpriteToRawSlot"

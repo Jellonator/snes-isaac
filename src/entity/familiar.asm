@@ -6,11 +6,11 @@
 .BANK ROMBANK_ENTITYCODE SLOT "ROM"
 .SECTION "Entity Familiar" FREE
 
-.DEFINE _gfxptr.1 loword(entity_custom.1)
-.DEFINE _gfxptr.2 loword(entity_custom.1+1)
-.DEFINE _familiar_parent loword(entity_custom.2)
-.DEFINE _palette loword(entity_custom.2+1)
-.DEFINE _spritebuffer loword(entity_custom.3)
+.DEFINE _gfxptr.1 loword(entity_custom.0)
+.DEFINE _gfxptr.2 loword(entity_custom.0+1)
+.DEFINE _familiar_parent loword(entity_custom.1)
+.DEFINE _palette loword(entity_custom.1+1)
+.DEFINE _spritebuffer loword(entity_custom.2)
 .DEFINE _shoot_timer entity_timer
 
 .DEFINE FAMILIAR_FOLLOW_DISTANCE 20
@@ -67,7 +67,7 @@
     pea $7F7F
     lda.w _spritebuffer,Y
     tax
-    lda.w loword(spriteTableValue.1.spritemem),X
+    lda.w loword(spriteTableValue.0.spritemem),X
     and #$00FF
     xba
     lsr
@@ -89,7 +89,7 @@
     pea $7F7F
     lda.w _spritebuffer,Y
     tax
-    lda.w loword(spriteTableValue.1.spritemem),X
+    lda.w loword(spriteTableValue.0.spritemem),X
     and #$00FF
     xba
     lsr
@@ -224,25 +224,25 @@
     ; write data
     .OX_Get
     lda.b $01
-    sta.w objectData.2.tileid,X
+    sta.w objectData.1.tileid,X
     lda.w entity_posx + 1,Y
+    sta.w objectData.0.pos_x,X
     sta.w objectData.1.pos_x,X
-    sta.w objectData.2.pos_x,X
     lda.w entity_posy + 1,Y
     clc
     adc #8
-    sta.w objectData.2.pos_y,X
+    sta.w objectData.1.pos_y,X
     sec
     sbc #16
-    sta.w objectData.1.pos_y,X
+    sta.w objectData.0.pos_y,X
     ; flags
     lda.w _palette,Y
     .PaletteIndexToPaletteSpriteA
     ora #%00100001
-    sta.w objectData.2.flags,X
     sta.w objectData.1.flags,X
+    sta.w objectData.0.flags,X
     lda.b $00
-    sta.w objectData.1.tileid,X
+    sta.w objectData.0.tileid,X
     ; inc object index
     .ForceSetAX 16, 16
     .OX_Next_S

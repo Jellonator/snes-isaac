@@ -5,10 +5,10 @@
 .BANK $02 SLOT "ROM"
 .SECTION "Entity Effect" SUPERFREE
 
-.define effect_header_ptr loword(entity_custom.1)
-.define effect_frame_ptr loword(entity_custom.2)
-.define array_ptr loword(entity_custom.3)
-.define effect_tile_ptr loword(entity_custom.4)
+.define effect_header_ptr loword(entity_custom.0)
+.define effect_frame_ptr loword(entity_custom.1)
+.define array_ptr loword(entity_custom.2)
+.define effect_tile_ptr loword(entity_custom.3)
 .define effect_palette_ptr loword(entity_velocx)
 .define effect_palette_value loword(entity_velocy)
 
@@ -265,19 +265,19 @@ EntityEffectTypes:
         tax
         lda.l SpriteSlotIndexTable,X
         .OY_Get
-        sta.w objectData.1.tileid,Y
+        sta.w objectData.0.tileid,Y
         ldx.b TILE
         lda.l bankaddr(EntityEffectTypes) + entityeffect_tile_t.offx,X
         clc
         adc.b POSX+1
-        sta.w objectData.1.pos_x,Y
+        sta.w objectData.0.pos_x,Y
         lda.l bankaddr(EntityEffectTypes) + entityeffect_tile_t.offy,X
         clc
         adc.b POSY+1
-        sta.w objectData.1.pos_y,Y
+        sta.w objectData.0.pos_y,Y
         lda.l bankaddr(EntityEffectTypes) + entityeffect_tile_t.flags,X
         ora.b PALETTE
-        sta.w objectData.1.flags,Y
+        sta.w objectData.0.flags,Y
         ; increment tile
         inx
         inx

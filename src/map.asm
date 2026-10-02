@@ -35,7 +35,7 @@
     plx
     cmp #ROOM_TILE_WIDTH - 1
     beq @skip_right
-    lda.l roomSlotTiles.1.tileTypeTable + 1,X
+    lda.l roomSlotTiles.0.tileTypeTable + 1,X
     bne @skip_right
         lda #$01
         tsb.b $0B
@@ -44,7 +44,7 @@
     lda.b $0C
     cmp #ROOM_TILE_COUNT - ROOM_TILE_WIDTH
     bcs @skip_down
-    lda.l roomSlotTiles.1.tileTypeTable + ROOM_TILE_WIDTH,X
+    lda.l roomSlotTiles.0.tileTypeTable + ROOM_TILE_WIDTH,X
     bne @skip_down
         lda #$02
         tsb.b $0B
@@ -58,7 +58,7 @@
     plx
     cmp #0
     beq @skip_left
-    lda.l roomSlotTiles.1.tileTypeTable - 1,X
+    lda.l roomSlotTiles.0.tileTypeTable - 1,X
     bne @skip_left
         lda #$04
         tsb.b $0B
@@ -67,7 +67,7 @@
     lda.b $0C
     cmp #ROOM_TILE_WIDTH
     bcc @skip_up
-    lda.l roomSlotTiles.1.tileTypeTable - ROOM_TILE_WIDTH,X
+    lda.l roomSlotTiles.0.tileTypeTable - ROOM_TILE_WIDTH,X
     bne @skip_up
         lda #$08
         tsb.b $0B
@@ -101,9 +101,9 @@ InitializeRoomSlot:
     sta.b $0D ; store pointer for later use
     tax
     lda $04,s
-    sta.l roomSlotTiles.1.roomDefinition,X
+    sta.l roomSlotTiles.0.roomDefinition,X
     lda $05,s
-    sta.l roomSlotTiles.1.roomDefinition+1,X
+    sta.l roomSlotTiles.0.roomDefinition+1,X
     .ForceSetA 8
     ; write tile position
     lda $08,s
@@ -114,9 +114,9 @@ InitializeRoomSlot:
     ldy #roomdefinition_t.tileData
     @tile_copy_loop: ; do {
         lda [$0A],Y
-        sta.l roomSlotTiles.1.tileTypeTable,X
+        sta.l roomSlotTiles.0.tileTypeTable,X
         lda #0
-        sta.l roomSlotTiles.1.tileVariantTable,X
+        sta.l roomSlotTiles.0.tileVariantTable,X
         ; while (++Y != ROOM_TILE_COUNT);
         iny
         inx
@@ -124,12 +124,12 @@ InitializeRoomSlot:
         bne @tile_copy_loop
     ; set extra tiles
     lda #BLOCK_HOLE
-    sta.l roomSlotTiles.1.tileTypeTable,X
+    sta.l roomSlotTiles.0.tileTypeTable,X
     lda #BLOCK_IMPERVIOUS
-    sta.l roomSlotTiles.1.tileTypeTable+1,X
+    sta.l roomSlotTiles.0.tileTypeTable+1,X
     lda #0
-    sta.l roomSlotTiles.1.tileVariantTable,X
-    sta.l roomSlotTiles.1.tileVariantTable+1,X
+    sta.l roomSlotTiles.0.tileVariantTable,X
+    sta.l roomSlotTiles.0.tileVariantTable+1,X
 ; set tile variants
     .SetAX 8, 16
     ldx.b $0D
@@ -137,10 +137,10 @@ InitializeRoomSlot:
     sta.b $0A
     stz.b $0C
 @variant_set_loop:
-        lda.l roomSlotTiles.1.tileTypeTable,X
+        lda.l roomSlotTiles.0.tileTypeTable,X
         .call "Map.DetermineTileVariant"
         .ASSERT (D_FLAG_A == 8) && (D_FLAG_X == 16)
-        sta.l roomSlotTiles.1.tileVariantTable,X
+        sta.l roomSlotTiles.0.tileVariantTable,X
         ; next
         inx
         inc.b $0C
@@ -150,14 +150,14 @@ InitializeRoomSlot:
     ldx.b $0D
     lda #0
     .REPT ENTITY_STORE_COUNT INDEX i
-        sta.l roomSlotTiles.1.entityStoreTable.{i+1}.type,X
+        sta.l roomSlotTiles.0.entityStoreTable.{i}.type,X
     .ENDR
     ; set room rng
     .ForceSetAX 16, 16
     .call "Random.Stage.Update32"
-    sta.l roomSlotTiles.1.rng,X
+    sta.l roomSlotTiles.0.rng,X
     tya
-    sta.l roomSlotTiles.1.rng+2,X
+    sta.l roomSlotTiles.0.rng+2,X
     rtl
 
 .MACRO .CopyGroundAddr ARGS addr
@@ -190,9 +190,9 @@ LoadRoomSlotIntoLevel:
     sta.b $10
     .MultiplyIndexByRoomSizeA P_DIR, $10
     tax
-    lda.l roomSlotTiles.1.roomDefinition,X
+    lda.l roomSlotTiles.0.roomDefinition,X
     sta.b currentRoomDefinition ; $0A: roomDefinition
-    lda.l roomSlotTiles.1.roomDefinition+1,X
+    lda.l roomSlotTiles.0.roomDefinition+1,X
     sta.b currentRoomDefinition+1
     txa
     clc
@@ -601,7 +601,7 @@ HandleTileChanged:
     asl
     tax
     lda ($00),Y ; A now contains the actual tile value
-    sta.l vqueueMiniOps.1.data,X
+    sta.l vqueueMiniOps.0.data,X
     phx
     lda $03,S
     asl
@@ -610,7 +610,7 @@ HandleTileChanged:
     clc
     adc.w gameRoomBG2Offset
     plx
-    sta.l vqueueMiniOps.1.vramAddr,X
+    sta.l vqueueMiniOps.0.vramAddr,X
     inc.w vqueueNumMiniOps
     ply
     .PopBank
@@ -631,14 +631,14 @@ UpdateDoorTileNorth:
     lda.w gameRoomBG2Offset
     clc
     adc #7
-    sta.l vqueueMiniOps.1.vramAddr,X
+    sta.l vqueueMiniOps.0.vramAddr,X
     inc A
-    sta.l vqueueMiniOps.2.vramAddr,X
+    sta.l vqueueMiniOps.1.vramAddr,X
     clc
     adc #32 - 1
-    sta.l vqueueMiniOps.3.vramAddr,X
+    sta.l vqueueMiniOps.2.vramAddr,X
     inc A
-    sta.l vqueueMiniOps.4.vramAddr,X
+    sta.l vqueueMiniOps.3.vramAddr,X
     ; set up tile values
     lda [mapDoorNorth]
     and #$0F
@@ -646,18 +646,18 @@ UpdateDoorTileNorth:
     asl
     tay
     lda.w DoorTileTopperTable_TOP,Y
-    sta.l vqueueMiniOps.1.data,X
+    sta.l vqueueMiniOps.0.data,X
     lda.w DoorTileTopperTable_TOP+2,Y
-    sta.l vqueueMiniOps.2.data,X
+    sta.l vqueueMiniOps.1.data,X
     lda [mapDoorNorth]
     and #$F0
     lsr
     lsr
     tay
     lda.w DoorTileBaseTable_TOP,Y
-    sta.l vqueueMiniOps.3.data,X
+    sta.l vqueueMiniOps.2.data,X
     lda.w DoorTileBaseTable_TOP+2,Y
-    sta.l vqueueMiniOps.4.data,X
+    sta.l vqueueMiniOps.3.data,X
     ; Return
     rtl
 
@@ -676,14 +676,14 @@ UpdateDoorTileSouth:
     lda.w gameRoomBG2Offset
     clc
     adc #10*32+7
-    sta.l vqueueMiniOps.1.vramAddr,X
+    sta.l vqueueMiniOps.0.vramAddr,X
     inc A
-    sta.l vqueueMiniOps.2.vramAddr,X
+    sta.l vqueueMiniOps.1.vramAddr,X
     clc
     adc #32 - 1
-    sta.l vqueueMiniOps.3.vramAddr,X
+    sta.l vqueueMiniOps.2.vramAddr,X
     inc A
-    sta.l vqueueMiniOps.4.vramAddr,X
+    sta.l vqueueMiniOps.3.vramAddr,X
     ; set up tile values
     lda [mapDoorSouth]
     and #$0F
@@ -692,10 +692,10 @@ UpdateDoorTileSouth:
     tay
     lda.w DoorTileTopperTable_TOP,Y
     ora #$8000
-    sta.l vqueueMiniOps.3.data,X
+    sta.l vqueueMiniOps.2.data,X
     lda.w DoorTileTopperTable_TOP+2,Y
     ora #$8000
-    sta.l vqueueMiniOps.4.data,X
+    sta.l vqueueMiniOps.3.data,X
     lda [mapDoorSouth]
     and #$F0
     lsr
@@ -703,10 +703,10 @@ UpdateDoorTileSouth:
     tay
     lda.w DoorTileBaseTable_TOP,Y
     ora #$8000
-    sta.l vqueueMiniOps.1.data,X
+    sta.l vqueueMiniOps.0.data,X
     lda.w DoorTileBaseTable_TOP+2,Y
     ora #$8000
-    sta.l vqueueMiniOps.2.data,X
+    sta.l vqueueMiniOps.1.data,X
     ; Return
     rtl
 
@@ -725,14 +725,14 @@ UpdateDoorTileWest:
     lda.w gameRoomBG2Offset
     clc
     adc #5*32
-    sta.l vqueueMiniOps.1.vramAddr,X
+    sta.l vqueueMiniOps.0.vramAddr,X
     inc A
-    sta.l vqueueMiniOps.2.vramAddr,X
+    sta.l vqueueMiniOps.1.vramAddr,X
     clc
     adc #32 - 1
-    sta.l vqueueMiniOps.3.vramAddr,X
+    sta.l vqueueMiniOps.2.vramAddr,X
     inc A
-    sta.l vqueueMiniOps.4.vramAddr,X
+    sta.l vqueueMiniOps.3.vramAddr,X
     ; set up tile values
     lda [mapDoorWest]
     and #$0F
@@ -740,18 +740,18 @@ UpdateDoorTileWest:
     asl
     tay
     lda.w DoorTileTopperTable_LEFT,Y
-    sta.l vqueueMiniOps.1.data,X
+    sta.l vqueueMiniOps.0.data,X
     lda.w DoorTileTopperTable_LEFT+2,Y
-    sta.l vqueueMiniOps.3.data,X
+    sta.l vqueueMiniOps.2.data,X
     lda [mapDoorWest]
     and #$F0
     lsr
     lsr
     tay
     lda.w DoorTileBaseTable_LEFT,Y
-    sta.l vqueueMiniOps.2.data,X
+    sta.l vqueueMiniOps.1.data,X
     lda.w DoorTileBaseTable_LEFT+2,Y
-    sta.l vqueueMiniOps.4.data,X
+    sta.l vqueueMiniOps.3.data,X
     ; Return
     rtl
 
@@ -770,14 +770,14 @@ UpdateDoorTileEast:
     lda.w gameRoomBG2Offset
     clc
     adc #5*32+14
-    sta.l vqueueMiniOps.1.vramAddr,X
+    sta.l vqueueMiniOps.0.vramAddr,X
     inc A
-    sta.l vqueueMiniOps.2.vramAddr,X
+    sta.l vqueueMiniOps.1.vramAddr,X
     clc
     adc #32 - 1
-    sta.l vqueueMiniOps.3.vramAddr,X
+    sta.l vqueueMiniOps.2.vramAddr,X
     inc A
-    sta.l vqueueMiniOps.4.vramAddr,X
+    sta.l vqueueMiniOps.3.vramAddr,X
     ; set up tile values
     lda [mapDoorEast]
     and #$0F
@@ -786,10 +786,10 @@ UpdateDoorTileEast:
     tay
     lda.w DoorTileTopperTable_LEFT,Y
     eor #$4000
-    sta.l vqueueMiniOps.2.data,X
+    sta.l vqueueMiniOps.1.data,X
     lda.w DoorTileTopperTable_LEFT+2,Y
     eor #$4000
-    sta.l vqueueMiniOps.4.data,X
+    sta.l vqueueMiniOps.3.data,X
     lda [mapDoorEast]
     and #$F0
     lsr
@@ -797,10 +797,10 @@ UpdateDoorTileEast:
     tay
     lda.w DoorTileBaseTable_LEFT,Y
     eor #$4000
-    sta.l vqueueMiniOps.1.data,X
+    sta.l vqueueMiniOps.0.data,X
     lda.w DoorTileBaseTable_LEFT+2,Y
     eor #$4000
-    sta.l vqueueMiniOps.3.data,X
+    sta.l vqueueMiniOps.2.data,X
     ; Return
     rtl
 
@@ -1116,12 +1116,12 @@ _transition_ground_horizontal:
     ; set mini ops for tiles in loop
     @loop:
         lda.b ADDR
-        sta.l vqueueMiniOps.1.vramAddr,X
+        sta.l vqueueMiniOps.0.vramAddr,X
         clc
         adc #$0020
         sta.b ADDR
         lda.b TILE
-        sta.l vqueueMiniOps.1.data,X
+        sta.l vqueueMiniOps.0.data,X
         clc
         adc #$0018
         sta.b TILE
@@ -1205,10 +1205,10 @@ _transition_ground_vertical:
     ; set mini ops for tiles in loop
     @loop:
         lda.b ADDR
-        sta.l vqueueMiniOps.1.vramAddr,X
+        sta.l vqueueMiniOps.0.vramAddr,X
         inc.b ADDR
         lda.b TILE
-        sta.l vqueueMiniOps.1.data,X
+        sta.l vqueueMiniOps.0.data,X
         inc.b TILE
         inx
         inx
@@ -1269,16 +1269,16 @@ _transition_update_and_upload_sprites:
         sec
         sbc.b HORIZONTAL_OFFSET
         sta.l objectBufferFullX,X
-        sta.w objectData.1.pos_x,Y
+        sta.w objectData.0.pos_x,Y
         lda.l objectBufferFullY,X
         sec
         sbc.b VERTICAL_OFFSET
         sta.l objectBufferFullY,X
         cmp #224
         bcs @loop ; skip if y is not in page
-        sta.w objectData.1.pos_y,Y
+        sta.w objectData.0.pos_y,Y
         lda.l objectBufferTile,X
-        sta.w objectData.1.tileid,Y
+        sta.w objectData.0.tileid,Y
         lda.l objectBufferS,X
         beq @dont_set_s
             lda.b TEMP2
@@ -1313,7 +1313,7 @@ _transition_update_and_upload_sprites:
     cpy #512
     bcs +
         lda #SPRITE_Y_DISABLED
-        sta.w objectData.1.pos_y,Y
+        sta.w objectData.0.pos_y,Y
     +:
     rts
 
@@ -1433,19 +1433,19 @@ _copy_objects_to_object_buffer:
             lda #%10
             sta.b TEMP
     @loop_enter:
-        lda.w objectData.1.pos_y,Y
+        lda.w objectData.0.pos_y,Y
         and #$00FF
         cmp #SPRITE_Y_DISABLED
         beq @loop
         clc
         adc.b VERTICAL_OFFSET
         sta.l objectBufferFullY,X
-        lda.w objectData.1.pos_x,Y
+        lda.w objectData.0.pos_x,Y
         and #$00FF
         clc
         adc.b HORIZONTAL_OFFSET
         sta.l objectBufferFullX,X
-        lda.w objectData.1.tileid,Y
+        lda.w objectData.0.tileid,Y
         sta.l objectBufferTile,X ; tile and flags
         ; get size flag
         lda (TEMP2)

@@ -191,7 +191,7 @@ _ExplosionTileHandlerTable:
                 ; handle entities
                 .ForceSetAX 8, 8
                 .REPT SPATIAL_LAYER_COUNT INDEX i
-                    ldy.w spatial_partition.{i+1},X
+                    ldy.w spatial_partition.{i},X
                     beql @no_ent_{ix}_{iy} ; no entities found; skip
                     lda.w entity_mask,Y
                     and #ENTITY_MASK_BOMBABLE & $FF
@@ -376,13 +376,13 @@ _ExplosionTileHandlerTable:
         lda #BOMB2
     @frame_end:
     .OX_Get
-    sta.w objectData.1.tileid,X
+    sta.w objectData.0.tileid,X
     ; X position
     .ForceSetA 8
     lda.w entity_box_x1,Y
     sec
     sbc #4
-    sta.w objectData.1.pos_x,X
+    sta.w objectData.0.pos_x,X
     clc
     adc #12
     sta.w entity_box_x2,Y
@@ -390,7 +390,7 @@ _ExplosionTileHandlerTable:
     lda.w entity_box_y1,Y
     sec
     sbc #6
-    sta.w objectData.1.pos_y,X
+    sta.w objectData.0.pos_y,X
     clc
     adc #10
     sta.w loword(entity_ysort),Y

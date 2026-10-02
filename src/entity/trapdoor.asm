@@ -9,14 +9,14 @@ true_entity_trapdoor_tick:
     ; tile ID
     lda #$20A4
     .OX_Get
-    sta.w objectData.1.tileid,X
+    sta.w objectData.0.tileid,X
     ; X position
     .ForceSetA 8
     lda.w entity_posx + 1,Y
-    sta.w objectData.1.pos_x,X
+    sta.w objectData.0.pos_x,X
     ; Y position
     lda.w entity_posy + 1,Y
-    sta.w objectData.1.pos_y,X
+    sta.w objectData.0.pos_y,X
     sta.w loword(entity_ysort),Y
     .OX_Next_S
     .SetAX 8, 16

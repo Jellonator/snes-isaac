@@ -366,7 +366,7 @@
     beq @@@@@\.\@pos
 @@@@@\.\@neg:
     plx
-    lda.w objectData.1.pos_x,X
+    lda.w objectData.0.pos_x,X
     and #$FF
     clc
     adc #256
@@ -376,7 +376,7 @@
     bra @@@@@\.\@end
 @@@@@\.\@pos:
     plx
-    lda.w objectData.1.pos_x,X
+    lda.w objectData.0.pos_x,X
     and #$FF
 @@@@@\.\@end:
     ply
@@ -415,7 +415,7 @@
     ; adc #1
     .ForceSetA 8
     plx
-    sta.w objectData.1.pos_x,X
+    sta.w objectData.0.pos_x,X
     .ForceSetA 16
     bra @@@@@\.\@end
 @@@@@\.\@pos:
@@ -427,7 +427,7 @@
     lda $03,S
     .ForceSetA 8
     plx
-    sta.w objectData.1.pos_x,X
+    sta.w objectData.0.pos_x,X
     .ForceSetA 16
 @@@@@\.\@end:
     pla

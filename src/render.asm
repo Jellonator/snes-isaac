@@ -1257,7 +1257,7 @@ ClearSpriteTable:
     .ForceSetA 8
     lda #SPRITE_Y_DISABLED
     .REPT 128 INDEX i
-        sta.w objectData.{i+1}.pos_y
+        sta.w objectData.{i}.pos_y
     .ENDR
     rtl
 

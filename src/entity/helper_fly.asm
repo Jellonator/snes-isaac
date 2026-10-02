@@ -4,8 +4,8 @@
 .DEFINE MAX_HELPER_FLY_BUFFER_COUNT 128
 .DEFINE MAX_HELPER_FLY_ACTIVE_COUNT 8
 
-.DEFINE _position_angle_index loword(entity_custom.1)
-.DEFINE _target_entity_verification loword(entity_custom.2)
+.DEFINE _position_angle_index loword(entity_custom.0)
+.DEFINE _target_entity_verification loword(entity_custom.1)
 
 .BANK ROMBANK_ENTITYCODE SLOT "ROM"
 .SECTION "Entity Helper Fly" FREE
@@ -247,15 +247,15 @@ _target_player_base_angle:
     clc
     adc #$AE
     .OX_Get
-    sta.w objectData.1.tileid,X
+    sta.w objectData.0.tileid,X
     ; FLAG
     lda #%00100000
-    sta.w objectData.1.flags,X
+    sta.w objectData.0.flags,X
     ; POSITION
     lda.w entity_posx+1,Y
     sec
     sbc #4
-    sta.w objectData.1.pos_x,X
+    sta.w objectData.0.pos_x,X
     lda.w entity_timer,Y
     lsr
     lsr
@@ -272,7 +272,7 @@ _target_player_base_angle:
     adc.w entity_posy+1,Y
     sta.w loword(entity_ysort),Y
     sbc #12
-    sta.w objectData.1.pos_y,X
+    sta.w objectData.0.pos_y,X
     .OX_Next
     .EntityTickEnd
 .endproc

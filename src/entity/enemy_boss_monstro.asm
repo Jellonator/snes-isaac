@@ -51,7 +51,7 @@
             .call "Spriteman.GetRawSlot"
             .SetAX 16, 16
             txa
-            sta.w loword(entity_char_custom.{iy * 4 + ix + 1}),Y
+            sta.w loword(entity_char_custom.{iy * 4 + ix}),Y
             ; write to slot
             pea bankbyte(spritedata.boss_monstro) * $0101 ; >2
             pea loword(spritedata.boss_monstro) + (64 * ix + 128 * 4 * iy) ; >2
@@ -106,7 +106,7 @@
             adc #16
         .ENDIF
         .REPT 3 INDEX iy
-            sta.w objectData.{iy * 4 + ix + 1}.pos_x,X
+            sta.w objectData.{iy * 4 + ix}.pos_x,X
         .ENDR
     .ENDR
     ; Y pos
@@ -119,7 +119,7 @@
             adc #16
         .ENDIF
         .REPT 4 INDEX ix
-            sta.w objectData.{iy * 4 + ix + 1}.pos_y,X
+            sta.w objectData.{iy * 4 + ix}.pos_y,X
         .ENDR
     .ENDR
     ; Flags
@@ -136,7 +136,7 @@
     xba
     .REPT 3 INDEX iy
         .REPT 4 INDEX ix
-            sta.w objectData.{iy * 4 + ix + 1}.flags,X
+            sta.w objectData.{iy * 4 + ix}.flags,X
         .ENDR
     .ENDR
     ; Tile
@@ -145,10 +145,10 @@
     xba
     .REPT 3 INDEX iy
         .REPT 4 INDEX ix
-            ldx.w loword(entity_char_custom.{iy * 4 + ix + 1}),Y
+            ldx.w loword(entity_char_custom.{iy * 4 + ix}),Y
             lda.l SpriteSlotIndexTable,X
             ldx.b $02
-            sta.w objectData.{iy * 4 + ix + 1}.tileid,X
+            sta.w objectData.{iy * 4 + ix}.tileid,X
         .ENDR
     .ENDR
     ; inc object index
@@ -231,7 +231,7 @@
     ; free mem
     .REPT 12 INDEX i
         .phy
-        ldx.w loword(entity_char_custom.{i+1}),Y
+        ldx.w loword(entity_char_custom.{i}),Y
         .SetAX 8, 8
         .call "Spriteman.FreeRawSlot"
         .SetAX 16, 16

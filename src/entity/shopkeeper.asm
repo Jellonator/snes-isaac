@@ -31,38 +31,38 @@
 ; draw
     .SetX 16
     .REPT 4 INDEX i
-        ldx.w loword(entity_custom.{i+1}),Y
+        ldx.w loword(entity_custom.{i}),Y
         lda.w loword(spriteTableValue + spritetab_t.spritemem),X
         tax
         lda.l SpriteSlotIndexTable,X
         .OX_Get
-        sta.w objectData.{i+1}.tileid,X
+        sta.w objectData.{i}.tileid,X
     .ENDR
     lda.w entity_box_x1,Y
     sec
     sbc #8
-    sta.w objectData.1.pos_x,X
-    sta.w objectData.3.pos_x,X
+    sta.w objectData.0.pos_x,X
+    sta.w objectData.2.pos_x,X
     clc
     adc #16
-    sta.w objectData.2.pos_x,X
-    sta.w objectData.4.pos_x,X
+    sta.w objectData.1.pos_x,X
+    sta.w objectData.3.pos_x,X
     lda.w entity_box_y1,Y
     sec
     sbc #8
+    sta.w objectData.0.pos_y,X
     sta.w objectData.1.pos_y,X
-    sta.w objectData.2.pos_y,X
     clc
     adc #16
+    sta.w objectData.2.pos_y,X
     sta.w objectData.3.pos_y,X
-    sta.w objectData.4.pos_y,X
     lda.w _palette,Y
     .PaletteIndexToPaletteSpriteA
     ora #%00100001
+    sta.w objectData.0.flags,X
     sta.w objectData.1.flags,X
     sta.w objectData.2.flags,X
     sta.w objectData.3.flags,X
-    sta.w objectData.4.flags,X
     .OX_Next_S
     .OX_Next_S
     .OX_Next_S
@@ -108,7 +108,7 @@
         .SetAX 16, 16
         ply
         txa
-        sta.w loword(entity_custom.{i+1}),Y
+        sta.w loword(entity_custom.{i}),Y
     .ENDR
     rtl
 .endproc
@@ -133,7 +133,7 @@
     ; free sprite
     .REPT 4 INDEX i
         phy
-        ldx.w loword(entity_custom.{i+1}),Y
+        ldx.w loword(entity_custom.{i}),Y
         .callsetup "Spriteman.UnrefSprite", SETUP_FLAGS
         .call "Spriteman.UnrefSprite"
         .SetAX 16, 16

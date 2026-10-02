@@ -182,7 +182,7 @@
     .ELIF method == P_DIR_X
         \1.b arg,X
     .ELIF method == P_DIR_Y
-        \1.b arg,Y
+        \1.b 0+arg,Y
     .ELIF method == P_DIR_IND
         \1.b (arg)
     .ELIF method == P_DIR_INDL

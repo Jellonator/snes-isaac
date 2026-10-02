@@ -1155,7 +1155,7 @@ _directtargetposition_y_is_zero:
     tax
     .REPT SPATIAL_LAYER_COUNT INDEX i
         ; get tile at X
-        ldy.w spatial_partition.{i+1},X
+        ldy.w spatial_partition.{i},X
         bne +
             ; no more tiles; exit early
             ldy #0
@@ -1206,15 +1206,15 @@ _directtargetposition_y_is_zero:
         lda.w entity_posy+1,Y
         clc
         adc stk(p_offset_y),S
-        sta.w objectData.1.pos_y,X
+        sta.w objectData.0.pos_y,X
         lda.w entity_posx+1,Y
         clc
         adc stk(p_offset_x),S
-        sta.w objectData.1.pos_x,X
+        sta.w objectData.0.pos_x,X
         lda #$A0
-        sta.w objectData.1.tileid,X
+        sta.w objectData.0.tileid,X
         lda #%00011000
-        sta.w objectData.1.flags,X
+        sta.w objectData.0.flags,X
     @skipShadow:
     rtl
 .endproc
@@ -1241,22 +1241,22 @@ _directtargetposition_y_is_zero:
         lda.w entity_posy+1,Y
         clc
         adc stk(p_offset_y),S
+        sta.w objectData.0.pos_y,X
         sta.w objectData.1.pos_y,X
-        sta.w objectData.2.pos_y,X
         lda.w entity_posx+1,Y
         clc
         adc stk(p_offset_x),S
         clc
-        sta.w objectData.1.pos_x,X
+        sta.w objectData.0.pos_x,X
         adc #16
-        sta.w objectData.2.pos_x,X
+        sta.w objectData.1.pos_x,X
         lda #$A2
+        sta.w objectData.0.tileid,X
         sta.w objectData.1.tileid,X
-        sta.w objectData.2.tileid,X
         lda #%00011000
-        sta.w objectData.1.flags,X
+        sta.w objectData.0.flags,X
         lda #%01011000
-        sta.w objectData.2.flags,X
+        sta.w objectData.1.flags,X
         ; now, need to make sprites big
         .SetA 16
         ; phy
@@ -1315,7 +1315,7 @@ _directtargetposition_y_is_zero:
         clc
         adc stk(p_offset_y),S
         .REPT 3 INDEX i
-            sta.w objectData.{i+1}.pos_y,X
+            sta.w objectData.{i}.pos_y,X
         .ENDR
         lda.w entity_posx+1,Y
         clc
@@ -1325,19 +1325,19 @@ _directtargetposition_y_is_zero:
             .IF i > 0
                 adc #16
             .ENDIF
-            sta.w objectData.{i+1}.pos_x,X
+            sta.w objectData.{i}.pos_x,X
         .ENDR
         lda #$A2
-        sta.w objectData.1.tileid,X
-        sta.w objectData.3.tileid,X
-        inc A
-        inc A
+        sta.w objectData.0.tileid,X
         sta.w objectData.2.tileid,X
+        inc A
+        inc A
+        sta.w objectData.1.tileid,X
         lda #%00011000
+        sta.w objectData.0.flags,X
         sta.w objectData.1.flags,X
-        sta.w objectData.2.flags,X
         lda #%01011000
-        sta.w objectData.3.flags,X
+        sta.w objectData.2.flags,X
         ; now, need to make sprites big
         .SetA 16
         ; phy

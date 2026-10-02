@@ -64,7 +64,7 @@
     floor_current_index dw
     ; room data
     num_rooms db
-    rooms INSTANCEOF savestate_room_t MAX_MAP_SLOTS
+    rooms INSTANCEOF savestate_room_t MAX_MAP_SLOTS STARTFROM 0
     ; room locations
     roomslot_star db
     roomslot_boss db
@@ -73,7 +73,7 @@
     roomslot_secret1 db
     roomslot_secret2 db
     ; entity data
-    entities INSTANCEOF savestate_entity_t SAVE_ENTITY_LIMIT
+    entities INSTANCEOF savestate_entity_t SAVE_ENTITY_LIMIT STARTFROM 0
 .ENDST
 
 .DEFINE SAVESLOT_STATE_IN_USE 1

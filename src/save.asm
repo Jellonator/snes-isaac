@@ -288,42 +288,42 @@ Save.WriteSaveState:
 Save.WriteRoom:
     .ForceSetAX 16, 16
 ; room def
-    lda.l roomSlotTiles.1.roomDefinition,X
-    sta.w savestate.0.rooms.1.definition,Y
-    lda.l roomSlotTiles.1.roomDefinition+1,X
-    sta.w savestate.0.rooms.1.definition+1,Y
+    lda.l roomSlotTiles.0.roomDefinition,X
+    sta.w savestate.0.rooms.0.definition,Y
+    lda.l roomSlotTiles.0.roomDefinition+1,X
+    sta.w savestate.0.rooms.0.definition+1,Y
 ; RNG
-    lda.l roomSlotTiles.1.rng.low,X
-    sta.w savestate.0.rooms.1.rng.low,Y
-    lda.l roomSlotTiles.1.rng.high,X
-    sta.w savestate.0.rooms.1.rng.high,Y
+    lda.l roomSlotTiles.0.rng.low,X
+    sta.w savestate.0.rooms.0.rng.low,Y
+    lda.l roomSlotTiles.0.rng.high,X
+    sta.w savestate.0.rooms.0.rng.high,Y
 ; tiles
     ; ignore variants, for now
     .REPT (ROOM_TILE_COUNT/2) INDEX i
-        lda.l roomSlotTiles.1.tileTypeTable + i*2,X
-        sta.w savestate.0.rooms.1.tiles + i*2,Y
+        lda.l roomSlotTiles.0.tileTypeTable + i*2,X
+        sta.w savestate.0.rooms.0.tiles + i*2,Y
     .ENDR
 ; room type
     ldx.b $00
     .ForceSetA 8
     lda.l roomSlotRoomType,X
-    sta.w savestate.0.rooms.1.roomtype,Y
+    sta.w savestate.0.rooms.0.roomtype,Y
 ; room location
     lda #0
     xba
     lda.l roomSlotMapPos,X
-    sta.w savestate.0.rooms.1.maptile_pos,Y
+    sta.w savestate.0.rooms.0.maptile_pos,Y
     tax
 ; map values
     lda.l mapTileTypeTable,X
-    sta.w savestate.0.rooms.1.maptile_type,Y
+    sta.w savestate.0.rooms.0.maptile_type,Y
     lda.l mapTileFlagsTable,X
-    sta.w savestate.0.rooms.1.maptile_flags,Y
+    sta.w savestate.0.rooms.0.maptile_flags,Y
 ; door values
     lda.l mapDoorHorizontal,X
-    sta.w savestate.0.rooms.1.door_east,Y
+    sta.w savestate.0.rooms.0.door_east,Y
     lda.l mapDoorVertical,X
-    sta.w savestate.0.rooms.1.door_south,Y
+    sta.w savestate.0.rooms.0.door_south,Y
     rtl
 
 _end_write_entities:
@@ -340,7 +340,7 @@ Save.WriteRoomEntities:
     dec.b $02
     bmi _end_write_entities
     ; check type is non-zero
-    lda.l roomSlotTiles.1.entityStoreTable.1.type,X
+    lda.l roomSlotTiles.0.entityStoreTable.0.type,X
     bit #$00FF
     beq _end_write_entities
     ; write null entities, if needed
@@ -368,17 +368,17 @@ Save.WriteRoomEntities:
         jmp @try_null_ent
 @no_null_ent:
     ; type+variant
-    lda.l roomSlotTiles.1.entityStoreTable.1.type,X
+    lda.l roomSlotTiles.0.entityStoreTable.0.type,X
     sta.w $0000,Y
     iny
     iny
     ; X,Y,room
     stz.b $00
-    lda.l roomSlotTiles.1.entityStoreTable.1.posx,X
+    lda.l roomSlotTiles.0.entityStoreTable.0.posx,X
     and #$00FC
     .ShiftLeft 4
     tsb.b $00
-    lda.l roomSlotTiles.1.entityStoreTable.1.posy,X
+    lda.l roomSlotTiles.0.entityStoreTable.0.posy,X
     and #$00FC
     .ShiftRight 2
     tsb.b $00
@@ -394,7 +394,7 @@ Save.WriteRoomEntities:
     lda.b $14
     sta.b $16
     ; state,timer 
-    lda.l roomSlotTiles.1.entityStoreTable.1.state,X
+    lda.l roomSlotTiles.0.entityStoreTable.0.state,X
     sta.w $0000,Y
     ; next entity
     iny
@@ -531,7 +531,7 @@ Save.ReadSaveState:
         bne @loop_copy_room
 ; copy entities
     ldy #savestate.0.entities
-    ldx #roomSlotTiles.1.entityStoreTable
+    ldx #roomSlotTiles.0.entityStoreTable
     lda #0
     sta.b $10
     @loop_copy_entities:
@@ -550,7 +550,7 @@ Save.ReadSaveState:
             ; figure out new X
             .MultiplyIndexByRoomSizeA P_DIR, $10
             clc
-            adc #roomSlotTiles.1.entityStoreTable
+            adc #roomSlotTiles.0.entityStoreTable
             tax
         @skip_inc_room:
         ; type+variant
@@ -596,7 +596,7 @@ Save.ReadSaveState:
         ; figure out new X
         .MultiplyIndexByRoomSizeA P_DIR, $10
         clc
-        adc #roomSlotTiles.1.entityStoreTable
+        adc #roomSlotTiles.0.entityStoreTable
         tax
         iny
         iny
@@ -634,20 +634,20 @@ Save.ReadSaveState:
 Save.ReadRoom:
     .ForceSetAX 16, 16
 ; room def
-    lda.w savestate.0.rooms.1.definition,Y
-    sta.l roomSlotTiles.1.roomDefinition,X
-    lda.w savestate.0.rooms.1.definition+1,Y
-    sta.l roomSlotTiles.1.roomDefinition+1,X
+    lda.w savestate.0.rooms.0.definition,Y
+    sta.l roomSlotTiles.0.roomDefinition,X
+    lda.w savestate.0.rooms.0.definition+1,Y
+    sta.l roomSlotTiles.0.roomDefinition+1,X
 ; RNG
-    lda.w savestate.0.rooms.1.rng.low,Y
-    sta.l roomSlotTiles.1.rng.low,X
-    lda.w savestate.0.rooms.1.rng.high,Y
-    sta.l roomSlotTiles.1.rng.high,X
+    lda.w savestate.0.rooms.0.rng.low,Y
+    sta.l roomSlotTiles.0.rng.low,X
+    lda.w savestate.0.rooms.0.rng.high,Y
+    sta.l roomSlotTiles.0.rng.high,X
 ; tiles
     ; copy tiles
     .REPT (ROOM_TILE_COUNT/2) INDEX i
-        lda.w savestate.0.rooms.1.tiles + i*2,Y
-        sta.l roomSlotTiles.1.tileTypeTable + i*2,X
+        lda.w savestate.0.rooms.0.tiles + i*2,Y
+        sta.l roomSlotTiles.0.tileTypeTable + i*2,X
     .ENDR
     ; determine variants
     .SetA 8
@@ -656,10 +656,10 @@ Save.ReadRoom:
     stz.b $0C
     phx
     @variant_set_loop:
-        lda.l roomSlotTiles.1.tileTypeTable,X
+        lda.l roomSlotTiles.0.tileTypeTable,X
         .call "Map.DetermineTileVariant"
         .ASSERT (D_FLAG_A == 8) && (D_FLAG_X == 16)
-        sta.l roomSlotTiles.1.tileVariantTable,X
+        sta.l roomSlotTiles.0.tileVariantTable,X
         ; next
         inx
         inc.b $0C
@@ -670,30 +670,30 @@ Save.ReadRoom:
     .SetA 16
     lda #0
     .REPT ENTITY_STORE_COUNT INDEX i
-        sta.l roomSlotTiles.1.entityStoreTable.{i+1}.type,X
+        sta.l roomSlotTiles.0.entityStoreTable.{i}.type,X
     .ENDR
 ; room type
     ldx.b $00
     .ForceSetA 8
-    lda.w savestate.0.rooms.1.roomtype,Y
+    lda.w savestate.0.rooms.0.roomtype,Y
     sta.l roomSlotRoomType,X
 ; room location
     lda #0
     xba
-    lda.w savestate.0.rooms.1.maptile_pos,Y
+    lda.w savestate.0.rooms.0.maptile_pos,Y
     sta.l roomSlotMapPos,X
     tax
     lda.b $00
     sta.l mapTileSlotTable,X
 ; map values
-    lda.w savestate.0.rooms.1.maptile_type,Y
+    lda.w savestate.0.rooms.0.maptile_type,Y
     sta.l mapTileTypeTable,X
-    lda.w savestate.0.rooms.1.maptile_flags,Y
+    lda.w savestate.0.rooms.0.maptile_flags,Y
     sta.l mapTileFlagsTable,X
 ; door values
-    lda.w savestate.0.rooms.1.door_east,Y
+    lda.w savestate.0.rooms.0.door_east,Y
     sta.l mapDoorHorizontal,X
-    lda.w savestate.0.rooms.1.door_south,Y
+    lda.w savestate.0.rooms.0.door_south,Y
     sta.l mapDoorVertical,X
     rtl
 

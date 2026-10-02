@@ -8,12 +8,12 @@
 ; steal state and timer, since they are serialized
 .define pickup_price entity_state
 .define consumable_type entity_timer
-.define has_put_text loword(entity_custom.3 + 1)
-.define pickup_prevention_timer loword(entity_custom.2) ; top byte is pickup prevention flag
-.define anim_timer loword(entity_custom.3)
-.define loaded_sprite loword(entity_custom.4)
-.define loaded_palette loword(entity_custom.4 + 1)
-.define sprite_tile loword(entity_custom.1)
+.define has_put_text loword(entity_custom.2 + 1)
+.define pickup_prevention_timer loword(entity_custom.1) ; top byte is pickup prevention flag
+.define anim_timer loword(entity_custom.2)
+.define loaded_sprite loword(entity_custom.3)
+.define loaded_palette loword(entity_custom.3 + 1)
+.define sprite_tile loword(entity_custom.0)
 
 .SoftSetAX 16, 16
 .SoftSetBank $7E
@@ -532,16 +532,16 @@ PickupTable_RoomReward:
     .ForceSetA 16
     lda.w sprite_tile,Y
     .OX_Get
-    sta.w objectData.1.tileid,X
+    sta.w objectData.0.tileid,X
     ; X position
     .ForceSetA 8
     lda.w entity_posx + 1,Y
-    sta.w objectData.1.pos_x,X
+    sta.w objectData.0.pos_x,X
     ; Y position
     lda.w entity_posy + 1,Y
     clc
     adc.b $00
-    sta.w objectData.1.pos_y,X
+    sta.w objectData.0.pos_y,X
     sta.w loword(entity_ysort),Y
     .OX_Next_S
 ; collision detection
@@ -624,11 +624,11 @@ PickupTable_RoomReward:
         ; set vram address
         lda.b $00
         dec A
+        sta.l vqueueMiniOps.0.vramAddr,X
+        inc A
         sta.l vqueueMiniOps.1.vramAddr,X
         inc A
         sta.l vqueueMiniOps.2.vramAddr,X
-        inc A
-        sta.l vqueueMiniOps.3.vramAddr,X
         ; set data
         lda.w pickup_price,Y
         and #$00F0
@@ -639,13 +639,13 @@ PickupTable_RoomReward:
             lsr
             ora #deft(TILE_TEXT_UINUMBER_BASE,5) | T_HIGHP
         +:
-        sta.l vqueueMiniOps.1.data,X
+        sta.l vqueueMiniOps.0.data,X
         lda.w pickup_price,Y
         and #$000F
         ora #deft(TILE_TEXT_UINUMBER_BASE,5) | T_HIGHP
-        sta.l vqueueMiniOps.2.data,X
+        sta.l vqueueMiniOps.1.data,X
         lda #deft(TILE_TEXT_UINUMBER_BASE+10,5) | T_HIGHP
-        sta.l vqueueMiniOps.3.data,X
+        sta.l vqueueMiniOps.2.data,X
 @no_put_price_text:
 ; indicate that this pickup may be bombed
     .SetAX 8, 8
@@ -882,16 +882,16 @@ PickupTable_RoomReward:
         ; set vram address
         lda.b $00
         dec A
+        sta.l vqueueMiniOps.0.vramAddr,X
+        inc A
         sta.l vqueueMiniOps.1.vramAddr,X
         inc A
         sta.l vqueueMiniOps.2.vramAddr,X
-        inc A
-        sta.l vqueueMiniOps.3.vramAddr,X
         ; set data
         lda #0
+        sta.l vqueueMiniOps.0.data,X
         sta.l vqueueMiniOps.1.data,X
         sta.l vqueueMiniOps.2.data,X
-        sta.l vqueueMiniOps.3.data,X
 @no_erase_price_text:
     rtl
 .endproc

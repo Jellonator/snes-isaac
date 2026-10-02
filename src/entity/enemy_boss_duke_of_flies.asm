@@ -8,8 +8,8 @@
 .DEFINE BOSS_TILE_X_OFFS -8
 .DEFINE BOSS_TILE_Y_OFFS -16
 
-.DEFINE duke_target_velocx loword(entity_char_custom.10)
-.DEFINE duke_target_velocy loword(entity_char_custom.11)
+.DEFINE duke_target_velocx loword(entity_char_custom.9)
+.DEFINE duke_target_velocy loword(entity_char_custom.10)
 
 .DEFINE TARGET_VELOC $060
 .DEFINE ACCEL_VELOC $0002
@@ -143,7 +143,7 @@ _duke_state_funcs:
             adc #16
         .ENDIF
         .REPT 3 INDEX iy
-            sta.w objectData.{iy * 3 + ix + 1}.pos_x,X
+            sta.w objectData.{iy * 3 + ix}.pos_x,X
         .ENDR
     .ENDR
     ; Y pos
@@ -156,7 +156,7 @@ _duke_state_funcs:
             adc #16
         .ENDIF
         .REPT 3 INDEX ix
-            sta.w objectData.{iy * 3 + ix + 1}.pos_y,X
+            sta.w objectData.{iy * 3 + ix}.pos_y,X
         .ENDR
     .ENDR
     ; Flags
@@ -173,7 +173,7 @@ _duke_state_funcs:
     xba
     .REPT 3 INDEX iy
         .REPT 3 INDEX ix
-            sta.w objectData.{iy * 3 + ix + 1}.flags,X
+            sta.w objectData.{iy * 3 + ix}.flags,X
         .ENDR
     .ENDR
     ; Tile
@@ -182,10 +182,10 @@ _duke_state_funcs:
     xba
     .REPT 3 INDEX iy
         .REPT 3 INDEX ix
-            ldx.w loword(entity_char_custom.{iy * 3 + ix + 1}),Y
+            ldx.w loword(entity_char_custom.{iy * 3 + ix}),Y
             lda.l SpriteSlotIndexTable,X
             ldx.b $02
-            sta.w objectData.{iy * 3 + ix + 1}.tileid,X
+            sta.w objectData.{iy * 3 + ix}.tileid,X
         .ENDR
     .ENDR
     ; inc object index
@@ -335,7 +335,7 @@ _duke_state_funcs:
             .ForceSetAX 16, 16
             txa
             ldy.b _tmp_entityid
-            sta.w loword(entity_char_custom.{iy * 3 + ix + 1}),Y
+            sta.w loword(entity_char_custom.{iy * 3 + ix}),Y
             ; write to slot
             pea bankbyte(spritedata.boss_duke_of_flies) * $0101 ; >2
             pea loword(spritedata.boss_duke_of_flies) + (64 * ix + 128 * 3 * iy) ; >2
@@ -390,7 +390,7 @@ _duke_state_funcs:
     .REPT 9 INDEX i
         .phy
         .PushP
-        ldx.w loword(entity_char_custom.{i+1}),Y
+        ldx.w loword(entity_char_custom.{i}),Y
         .SetAX 8, 8
         .call "Spriteman.FreeRawSlot"
         .PopP

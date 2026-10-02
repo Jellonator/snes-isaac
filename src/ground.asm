@@ -133,14 +133,14 @@ _AddTileToQueue:
     adc #BG3_TILE_BASE_ADDR
     clc
     adc #32*8+4
-    sta.w vqueueMiniOps.1.vramAddr,X
+    sta.w vqueueMiniOps.0.vramAddr,X
     lda.b bytei
     lsr
     lsr
     lsr
     lsr
     ora.b tmp
-    sta.w vqueueMiniOps.1.data,X
+    sta.w vqueueMiniOps.0.data,X
 ; Add character data to vqueue
     ; get vqueue index
     .VQueueOpToA

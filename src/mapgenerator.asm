@@ -15,8 +15,8 @@
     mapgenNumAvailableTiles db
     mapgenNumUsedTiles db
     mapgenNumAvailableEndpointTiles db
-    mapgenAvailableTiles INSTANCEOF maptilepos_t MAX_MAP_SLOTS
-    mapgenUsedTiles INSTANCEOF maptilepos_t MAX_MAP_SLOTS
+    mapgenAvailableTiles INSTANCEOF maptilepos_t MAX_MAP_SLOTS STARTFROM 0
+    mapgenUsedTiles INSTANCEOF maptilepos_t MAX_MAP_SLOTS STARTFROM 0
     currentRoomPoolBase dl
     chapterDefPtr dw
 .ENDE

@@ -1,12 +1,12 @@
 .include "base.inc"
 .include "spriteslot.inc"
 
-.DEFINE _zombie_gfxptr.1 loword(entity_char_custom.1)
-.DEFINE _zombie_gfxptr.2 loword(entity_char_custom.2)
-.DEFINE _zombie_body_frame loword(entity_char_custom.16)
-.DEFINE _zombie_body_flags loword(entity_char_custom.16+1)
-.DEFINE _zombie_walk_frame loword(entity_char_custom.15)
-.DEFINE _zombie_walk_timer loword(entity_char_custom.14)
+.DEFINE _zombie_gfxptr.1 loword(entity_char_custom.0)
+.DEFINE _zombie_gfxptr.2 loword(entity_char_custom.1)
+.DEFINE _zombie_body_frame loword(entity_char_custom.15)
+.DEFINE _zombie_body_flags loword(entity_char_custom.15+1)
+.DEFINE _zombie_walk_frame loword(entity_char_custom.14)
+.DEFINE _zombie_walk_timer loword(entity_char_custom.13)
 
 .DEFINE ZOMBIE_ACCEL 4
 .DEFINE WALK_TIMER_FRAME_DELAY $0400
@@ -136,21 +136,21 @@ _entity_zombie_default_tick:
     ; write data
     .OX_Get
     lda.b $01
-    sta.w objectData.2.tileid,X
+    sta.w objectData.1.tileid,X
     lda.w entity_posx + 1,Y
+    sta.w objectData.0.pos_x,X
     sta.w objectData.1.pos_x,X
-    sta.w objectData.2.pos_x,X
     lda.w entity_posy + 1,Y
-    sta.w objectData.2.pos_y,X
+    sta.w objectData.1.pos_y,X
     sec
     sbc #10
-    sta.w objectData.1.pos_y,X
+    sta.w objectData.0.pos_y,X
     lda.b $02
-    sta.w objectData.2.flags,X
-    and #%00111111
     sta.w objectData.1.flags,X
+    and #%00111111
+    sta.w objectData.0.flags,X
     lda.b $00
-    sta.w objectData.1.tileid,X
+    sta.w objectData.0.tileid,X
     ; inc object index
     .OX_Next_S
     .OX_Next_S
@@ -163,8 +163,8 @@ _entity_zombie_default_free:
 
 ; HEADLESS
 
-.DEFINE _zombie_headless_target_angle loword(entity_char_custom.8)
-.DEFINE _zombie_headless_timer loword(entity_char_custom.8+1)
+.DEFINE _zombie_headless_target_angle loword(entity_char_custom.7)
+.DEFINE _zombie_headless_timer loword(entity_char_custom.7+1)
 
 _entity_zombie_headless_init:
     .SoftSetA 16
@@ -285,13 +285,13 @@ _entity_zombie_headless_tick:
     ; write data
     .OX_Get
     lda.b $01
-    sta.w objectData.1.tileid,X
+    sta.w objectData.0.tileid,X
     lda.w entity_posx + 1,Y
-    sta.w objectData.1.pos_x,X
+    sta.w objectData.0.pos_x,X
     lda.w entity_posy + 1,Y
-    sta.w objectData.1.pos_y,X
+    sta.w objectData.0.pos_y,X
     lda.b $02
-    sta.w objectData.1.flags,X
+    sta.w objectData.0.flags,X
     ; inc object index
     .OX_Next_S
     rtl

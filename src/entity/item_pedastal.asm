@@ -4,12 +4,12 @@
 .include "item.inc"
 .include "spriteslot.inc"
 
-.DEFINE _item_gfxptr_pedastal loword(entity_char_custom.1)
-.DEFINE _item_gfxptr_item loword(entity_char_custom.2)
-.DEFINE _item_palette loword(entity_char_custom.3)
-.DEFINE _item_anim_timer loword(entity_char_custom.4)
-.DEFINE _has_put_text loword(entity_char_custom.5)
-.DEFINE _item_state loword(entity_char_custom.6)
+.DEFINE _item_gfxptr_pedastal loword(entity_char_custom.0)
+.DEFINE _item_gfxptr_item loword(entity_char_custom.1)
+.DEFINE _item_palette loword(entity_char_custom.2)
+.DEFINE _item_anim_timer loword(entity_char_custom.3)
+.DEFINE _has_put_text loword(entity_char_custom.4)
+.DEFINE _item_state loword(entity_char_custom.5)
 
 ; hijack entity_timer for price as it is serialized
 .DEFINE _item_price entity_timer
@@ -196,21 +196,21 @@ _draw_normal:
     tax
     lda.l SpriteSlotIndexTable,X
     .OX_Get
-    sta.w objectData.1.tileid,X
+    sta.w objectData.0.tileid,X
     ; tile ID 2
     ldx.w _item_gfxptr_pedastal,Y
     lda.w loword(spriteTableValue + spritetab_t.spritemem),X
     tax
     lda.l SpriteSlotIndexTable,X
     .OX_Get
-    sta.w objectData.2.tileid,X
+    sta.w objectData.1.tileid,X
     ; X position
     lda.w entity_posx + 1,Y
+    sta.w objectData.0.pos_x,X
     sta.w objectData.1.pos_x,X
-    sta.w objectData.2.pos_x,X
     ; Y position
     lda.w entity_posy + 1,Y
-    sta.w objectData.2.pos_y,X
+    sta.w objectData.1.pos_y,X
     lda.w _item_anim_timer,Y
     inc A
     sta.w _item_anim_timer,Y
@@ -228,16 +228,16 @@ _draw_normal:
     adc.w entity_posy + 1,Y
     sec
     sbc #12
-    sta.w objectData.1.pos_y,X
+    sta.w objectData.0.pos_y,X
     adc #20
     sta.w loword(entity_ysort),Y
     ; flags
     lda #%00100001
-    sta.w objectData.2.flags,X
+    sta.w objectData.1.flags,X
     lda.w _item_palette,Y
     .PaletteIndexToPaletteSpriteA
     ora #%00100001
-    sta.w objectData.1.flags,X
+    sta.w objectData.0.flags,X
     ; increment object index
     .OX_Next_S
     .OX_Next_S
@@ -255,13 +255,13 @@ _draw_no_pedastal:
     tax
     lda.l SpriteSlotIndexTable,X
     .OX_Get
-    sta.w objectData.1.tileid,X
+    sta.w objectData.0.tileid,X
     ; X position
     lda.w entity_posx + 1,Y
-    sta.w objectData.1.pos_x,X
+    sta.w objectData.0.pos_x,X
     ; Y position
     lda.w entity_posy + 1,Y
-    sta.w objectData.1.pos_y,X
+    sta.w objectData.0.pos_y,X
     clc
     adc #12
     sta.w loword(entity_ysort),Y
@@ -269,7 +269,7 @@ _draw_no_pedastal:
     lda.w _item_palette,Y
     .PaletteIndexToPaletteSpriteA
     ora #%00100001
-    sta.w objectData.1.flags,X
+    sta.w objectData.0.flags,X
     ; increment object index
     .OX_Next_S
     rts
@@ -287,10 +287,10 @@ _set_text_with_hearts:
     @pal_blue:
         lda #deft(0, 6) | T_HIGHP
     @pal_end:
+    sta.l vqueueMiniOps.0.data,X
     sta.l vqueueMiniOps.1.data,X
     sta.l vqueueMiniOps.2.data,X
     sta.l vqueueMiniOps.3.data,X
-    sta.l vqueueMiniOps.4.data,X
     ; put heart tiles
     lda.w _item_price,Y
     and #$000F
@@ -302,20 +302,20 @@ _set_text_with_hearts:
     beq @three
 ;four:
     lda #deft($30, 0)
-    ora.l vqueueMiniOps.1.data,X
-    sta.l vqueueMiniOps.1.data,X
+    ora.l vqueueMiniOps.0.data,X
+    sta.l vqueueMiniOps.0.data,X
 @three:
-    lda #deft($30, 0)
-    ora.l vqueueMiniOps.4.data,X
-    sta.l vqueueMiniOps.4.data,X
-@two:
     lda #deft($30, 0)
     ora.l vqueueMiniOps.3.data,X
     sta.l vqueueMiniOps.3.data,X
-@one:
+@two:
     lda #deft($30, 0)
     ora.l vqueueMiniOps.2.data,X
     sta.l vqueueMiniOps.2.data,X
+@one:
+    lda #deft($30, 0)
+    ora.l vqueueMiniOps.1.data,X
+    sta.l vqueueMiniOps.1.data,X
     rts
 
 true_item_pedastal_tick_base:
@@ -372,13 +372,13 @@ true_item_pedastal_tick_base:
         ; set vram address
         lda.b $00
         dec A
+        sta.l vqueueMiniOps.0.vramAddr,X
+        inc A
         sta.l vqueueMiniOps.1.vramAddr,X
         inc A
         sta.l vqueueMiniOps.2.vramAddr,X
         inc A
         sta.l vqueueMiniOps.3.vramAddr,X
-        inc A
-        sta.l vqueueMiniOps.4.vramAddr,X
         ; set data
         lda.w _item_price,Y
         and #$00FF
@@ -396,15 +396,15 @@ true_item_pedastal_tick_base:
             lsr
             ora #deft(TILE_TEXT_UINUMBER_BASE,5) | T_HIGHP
         +:
-        sta.l vqueueMiniOps.1.data,X
+        sta.l vqueueMiniOps.0.data,X
         lda.w _item_price,Y
         and #$000F
         ora #deft(TILE_TEXT_UINUMBER_BASE,5) | T_HIGHP
-        sta.l vqueueMiniOps.2.data,X
+        sta.l vqueueMiniOps.1.data,X
         lda #deft(TILE_TEXT_UINUMBER_BASE+10,5) | T_HIGHP
-        sta.l vqueueMiniOps.3.data,X
+        sta.l vqueueMiniOps.2.data,X
         lda #0
-        sta.l vqueueMiniOps.4.data,X
+        sta.l vqueueMiniOps.3.data,X
 @skip_set_text:
     .ForceSetAX 16, 16
     lda #0
@@ -564,19 +564,19 @@ true_item_pedastal_tick_pickup:
     tax
     lda.l SpriteSlotIndexTable,X
     .OX_Get
-    sta.w objectData.1.tileid,X
+    sta.w objectData.0.tileid,X
     ; X position
     lda.w player_box_x1
-    sta.w objectData.1.pos_x,X
+    sta.w objectData.0.pos_x,X
     ; Y position
     lda.w player_box_y1
     sec
     sbc #28
-    sta.w objectData.1.pos_y,X
+    sta.w objectData.0.pos_y,X
     lda.w _item_palette,Y
     .PaletteIndexToPaletteSpriteA
     ora #%00100001
-    sta.w objectData.1.flags,X
+    sta.w objectData.0.flags,X
     ; increment index
     .OX_Next_S
     .SetAX 8, 16
@@ -596,16 +596,16 @@ true_item_pedastal_tick_empty:
     tax
     lda.l SpriteSlotIndexTable,X
     .OX_Get
-    sta.w objectData.1.tileid,X
+    sta.w objectData.0.tileid,X
     ; X position
     lda.w entity_posx + 1,Y
-    sta.w objectData.1.pos_x,X
+    sta.w objectData.0.pos_x,X
     ; Y position
     lda.w entity_posy + 1,Y
-    sta.w objectData.1.pos_y,X
+    sta.w objectData.0.pos_y,X
     ; flags
     lda #%00100001
-    sta.w objectData.1.flags,X
+    sta.w objectData.0.flags,X
     .OX_Next_S
 @skip:
     .EntityTickEnd
@@ -689,16 +689,16 @@ _check_and_erase_text:
         ; set vram address
         lda.b $00
         dec A
+        sta.l vqueueMiniOps.0.vramAddr,X
+        inc A
         sta.l vqueueMiniOps.1.vramAddr,X
         inc A
         sta.l vqueueMiniOps.2.vramAddr,X
-        inc A
-        sta.l vqueueMiniOps.3.vramAddr,X
         ; set data
         lda #0
+        sta.l vqueueMiniOps.0.data,X
         sta.l vqueueMiniOps.1.data,X
         sta.l vqueueMiniOps.2.data,X
-        sta.l vqueueMiniOps.3.data,X
 @no_erase_price_text:
     rts
 

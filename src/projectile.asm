@@ -27,22 +27,22 @@ _big_projectile_update_sprite:
     asl
     clc
     adc #$30 - 16
-    sta.w objectData.1.tileid,Y
+    sta.w objectData.0.tileid,Y
     lda.w entity_posx+1,X
     sbc #3 ; we know that carry should always be clear, so just substract 3
-    sta.w objectData.1.pos_x,Y
+    sta.w objectData.0.pos_x,Y
     lda.w entity_posy+1,X
     ; sec
     sbc.w loword(projectile_height)+1,X
     sbc #4
-    sta.w objectData.1.pos_y,Y
+    sta.w objectData.0.pos_y,Y
     lda #%00100000
-    sta.w objectData.1.flags,Y
+    sta.w objectData.0.flags,Y
     ; lda.w projectile_type,X
     ; bpl +
     ;     ; different gfx for enemy projectile
     ;     lda #%00101110
-    ;     sta.w objectData.1.flags,Y
+    ;     sta.w objectData.0.flags,Y
     ; +:
     .OY_Next_S
     ; special handling for projectile shadows
@@ -56,13 +56,13 @@ _big_projectile_update_sprite:
         dey
         sty.b objectIndexShadow
         lda.w entity_posy+1,X
-        sta.w objectData.1.pos_y,Y
+        sta.w objectData.0.pos_y,Y
         lda.w entity_posx+1,X
-        sta.w objectData.1.pos_x,Y
+        sta.w objectData.0.pos_x,Y
         lda #$A1
-        sta.w objectData.1.tileid,Y
+        sta.w objectData.0.tileid,Y
         lda #%00011000
-        sta.w objectData.1.flags,Y
+        sta.w objectData.0.flags,Y
     @skipShadow:
     rts
 
@@ -79,20 +79,20 @@ _projectile_update_sprite:
     +:
     clc
     adc #$20
-    sta.w objectData.1.tileid,Y
+    sta.w objectData.0.tileid,Y
     lda.w entity_posx+1,X
-    sta.w objectData.1.pos_x,Y
+    sta.w objectData.0.pos_x,Y
     lda.w entity_posy+1,X
     sec
     sbc.w loword(projectile_height)+1,X
-    sta.w objectData.1.pos_y,Y
+    sta.w objectData.0.pos_y,Y
     lda #%00100000
-    sta.w objectData.1.flags,Y
+    sta.w objectData.0.flags,Y
     ; lda.w projectile_type,X
     ; bpl +
     ;     ; different gfx for enemy projectile
     ;     lda #%00101110
-    ;     sta.w objectData.1.flags,Y
+    ;     sta.w objectData.0.flags,Y
     ; +:
     .OY_Next
     .SetAX 8, 16
@@ -106,13 +106,13 @@ _projectile_update_sprite:
         dey
         sty.b objectIndexShadow
         lda.w entity_posy+1,X
-        sta.w objectData.1.pos_y,Y
+        sta.w objectData.0.pos_y,Y
         lda.w entity_posx+1,X
-        sta.w objectData.1.pos_x,Y
+        sta.w objectData.0.pos_x,Y
         lda #$A1
-        sta.w objectData.1.tileid,Y
+        sta.w objectData.0.tileid,Y
         lda #%00011000
-        sta.w objectData.1.flags,Y
+        sta.w objectData.0.flags,Y
     @skipShadow:
     rts
 

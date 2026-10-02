@@ -451,9 +451,9 @@ PlayerInit:
     .ForceSetAX 8, 8
     stz.w player_signal
     lda #HEALTH_REDHEART_FULL
+    sta.w playerData.healthSlots.0
     sta.w playerData.healthSlots.1
     sta.w playerData.healthSlots.2
-    sta.w playerData.healthSlots.3
     jsl UI.update_all_hearts
     jsl Item.reset_items
     jsl Player.reset_stats
@@ -1612,7 +1612,7 @@ _player_handle_brimstone_damage_tick:
             @skip_tile2:
             ; handle entity collisions
             .REPT SPATIAL_LAYER_COUNT INDEX i
-                ldx.w spatial_partition.{i+1},Y
+                ldx.w spatial_partition.{i},Y
                 beql @spatial_end
                     ; found entity, check mask
                     lda.w entity_mask,X
@@ -2088,7 +2088,7 @@ _player_render_brimstone_homing:
             @skip_tile:
             ; damage all entities at tile
             .REPT SPATIAL_LAYER_COUNT INDEX i
-                ldy.w spatial_partition.{i+1},X
+                ldy.w spatial_partition.{i},X
                 beql @spatial_end
                     ; found entity, check mask
                     lda.w entity_mask,Y
@@ -2243,22 +2243,22 @@ _player_handle_shoot_brimstone:
     bnel @invis_frame
         .OX_Get
         lda.w player_posx+1
+        sta.w objectData.0.pos_x,X
         sta.w objectData.1.pos_x,X
-        sta.w objectData.2.pos_x,X
         lda.w player_posy+1
-        sta.w objectData.2.pos_y,X
+        sta.w objectData.1.pos_y,X
         sec
         sbc #10
         clc
         adc.w playerData.head_offset_y
-        sta.w objectData.1.pos_y,X
-        stz.w objectData.1.tileid,X
+        sta.w objectData.0.pos_y,X
+        stz.w objectData.0.tileid,X
         lda #2
-        sta.w objectData.2.tileid,X
+        sta.w objectData.1.tileid,X
         lda.w playerData.head_flags
-        sta.w objectData.1.flags,X
+        sta.w objectData.0.flags,X
         lda.w playerData.body_flags
-        sta.w objectData.2.flags,X
+        sta.w objectData.1.flags,X
         .OX_Next_S
         .OX_Next_S
 @invis_frame:

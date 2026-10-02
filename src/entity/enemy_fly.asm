@@ -4,8 +4,8 @@
 .BANK ROMBANK_ENTITYCODE SLOT "ROM"
 .SECTION "Entity Enemy Fly" FREE
 
-.DEFINE _fly_fgxptr.1 loword(entity_char_custom.1)
-.DEFINE _fly_fgxptr.2 loword(entity_char_custom.2)
+.DEFINE _fly_fgxptr.1 loword(entity_char_custom.0)
+.DEFINE _fly_fgxptr.2 loword(entity_char_custom.1)
 
 .DEFINE BASE_HEALTH 24
 
@@ -143,13 +143,13 @@
     tax
     lda.l SpriteSlotIndexTable,X
     .OX_Get
-    sta.w objectData.1.tileid,X
+    sta.w objectData.0.tileid,X
     lda.w entity_posx + 1,Y
-    sta.w objectData.1.pos_x,X
+    sta.w objectData.0.pos_x,X
     lda.w entity_posy + 1,Y
     sec
     sbc #8
-    sta.w objectData.1.pos_y,X
+    sta.w objectData.0.pos_y,X
     lda #%00100001
     xba
     lda.w loword(entity_damageflash),Y
@@ -161,7 +161,7 @@
         xba
     +:
     xba
-    sta.w objectData.1.flags,X
+    sta.w objectData.0.flags,X
     ; set some flags
     lda #ENTITY_MASKSET_ENEMY
     sta.w entity_mask,Y

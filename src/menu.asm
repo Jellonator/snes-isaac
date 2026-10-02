@@ -746,9 +746,9 @@ _menu_main_tick:
         asl
         tax
         lda #deft($00, 3) | T_HIGHP
-        sta.l vqueueMiniOps.1.data,X
+        sta.l vqueueMiniOps.0.data,X
         lda #deft($04, 3) | T_HIGHP
-        sta.l vqueueMiniOps.2.data,X
+        sta.l vqueueMiniOps.1.data,X
         lda.b $02
         and #$00FF
         .MultiplyStatic 64
@@ -756,7 +756,7 @@ _menu_main_tick:
         adc #textpos(10, 8) + MENU_BG1_TILE_BASE_ADDR
         clc
         adc.b menuBG1Offset
-        sta.l vqueueMiniOps.1.vramAddr,X
+        sta.l vqueueMiniOps.0.vramAddr,X
         lda.w selection
         and #$00FF
         .MultiplyStatic 64
@@ -764,7 +764,7 @@ _menu_main_tick:
         adc #textpos(10, 8) + MENU_BG1_TILE_BASE_ADDR
         clc
         adc.b menuBG1Offset
-        sta.l vqueueMiniOps.2.vramAddr,X
+        sta.l vqueueMiniOps.1.vramAddr,X
 @no_change_select:
     ; action
     .ForceSetAX 16, 16

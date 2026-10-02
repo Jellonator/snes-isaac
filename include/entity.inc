@@ -212,9 +212,9 @@
 ; ACCU should be 8b
 .MACRO .InsertHitboxLite_X
     .REPT SPATIAL_LAYER_COUNT INDEX i
-        ldy.w spatial_partition.{i+1},X
+        ldy.w spatial_partition.{i},X
         bne +++++
-        sta.w spatial_partition.{i+1},X
+        sta.w spatial_partition.{i},X
         jmp @@@@@\.\@
         +++++:
     .ENDR
@@ -225,9 +225,9 @@
 ; ACCU should be 8b
 .MACRO .InsertHitboxLite_Y
     .REPT SPATIAL_LAYER_COUNT INDEX i
-        ldx.w spatial_partition.{i+1},Y
+        ldx.w spatial_partition.{i},Y
         bne +++++
-        sta.w spatial_partition.{i+1},Y
+        sta.w spatial_partition.{i},Y
         jmp @@@@@\.\@
         +++++:
     .ENDR

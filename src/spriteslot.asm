@@ -135,7 +135,7 @@ SpriteSlotMemTable:
     .PushContext
     .SetA 8
     ; value already existed, increment ref and return
-    inc.w loword(spriteTableValue.1.count),X
+    inc.w loword(spriteTableValue.0.count),X
     rtl
     .PopContextSoft
 @did_insert:
@@ -147,9 +147,9 @@ SpriteSlotMemTable:
     txa
     .SetX 16
     ldy.b SPRITE_TABLE_INDEX
-    sta.w loword(spriteTableValue.1.spritemem),Y
+    sta.w loword(spriteTableValue.0.spritemem),Y
     lda.b #1
-    sta.w loword(spriteTableValue.1.count),Y
+    sta.w loword(spriteTableValue.0.count),Y
 ; write sprite data
     .SetAX 16, 16
     .VQueueOpToA
@@ -161,7 +161,7 @@ SpriteSlotMemTable:
     sta.l vqueueOp_ModeBank.0,X ; both param and bAddr
     sta.l vqueueOp_ModeBank.1,X
 ; vramaddr[0] = spritemem.x * 32 + spritemem.y * 64 + SPRITE2_BASE_ADDR
-    lda loword(spriteTableValue.1.spritemem),Y
+    lda loword(spriteTableValue.0.spritemem),Y
     and #$00FF
     asl
     .phx
@@ -251,7 +251,7 @@ SpriteSlotMemTable:
     cpy #0
     beq @did_insert
     ; value already existed, increment ref and return
-    inc.w loword(spriteTableValue.1.count),X
+    inc.w loword(spriteTableValue.0.count),X
     lda #0
     rtl
 @did_insert:
@@ -263,9 +263,9 @@ SpriteSlotMemTable:
     txa
     .SetX 16
     ldx.b SPRITE_TABLE_INDEX
-    sta.w loword(spriteTableValue.1.spritemem),X
+    sta.w loword(spriteTableValue.0.spritemem),X
     lda.b #1
-    sta.w loword(spriteTableValue.1.count),X
+    sta.w loword(spriteTableValue.0.count),X
     .SetAX 16, 16
     lda #1
     rtl
@@ -311,7 +311,7 @@ _newspriteref_upload_lz4:
 .SoftSetBank $7E
 .SoftSetDirect $0000
 .procimpll "Spriteman.IncRef"
-    inc.w loword(spriteTableValue.1.count),X
+    inc.w loword(spriteTableValue.0.count),X
     rtl
 .endproc
 
@@ -319,13 +319,13 @@ _newspriteref_upload_lz4:
 .SoftSetBank $7E
 .SoftSetDirect $0000
 .procimpll "Spriteman.UnrefSprite"
-    dec.w loword(spriteTableValue.1.count),X
+    dec.w loword(spriteTableValue.0.count),X
     beq @remove
         ; --X->count > 0
         rtl
 @remove:
     stx.b $00
-    lda.w loword(spriteTableValue.1.spritemem),X
+    lda.w loword(spriteTableValue.0.spritemem),X
     tax
     .SetAX 8, 8
     .spriteman_free_raw_slot_lite
@@ -484,7 +484,7 @@ _spriteman_allocbuffer_fail:
     cpy #0
     beq @did_insert
     ; value already existed, increment ref and return
-    inc.w loword(spriteTableValue.1.count),X
+    inc.w loword(spriteTableValue.0.count),X
     rtl
 @did_insert:
     stx.b SPRITE_TABLE_INDEX
@@ -507,9 +507,9 @@ _spriteman_allocbuffer_fail:
     ; write buffer index to spritemem, and set count to 1
     .SetX 16
     ldy.b SPRITE_TABLE_INDEX
-    sta.w loword(spriteTableValue.1.spritemem),Y
+    sta.w loword(spriteTableValue.0.spritemem),Y
     lda #1
-    sta.w loword(spriteTableValue.1.count),Y
+    sta.w loword(spriteTableValue.0.count),Y
 ; copy sprite data into buffer.
     .SetAX 16, 16
     ldx.b SPRITE_DEF_PTR
@@ -562,7 +562,7 @@ _newbufferref_upload_direct:
     lsr
     sta.l DMA0_SIZE
     ; WMADDL = index*128 + spriteAllocBuffer
-    lda.w loword(spriteTableValue.1.spritemem)-1,Y
+    lda.w loword(spriteTableValue.0.spritemem)-1,Y
     and #$FF00
     lsr
     adc #loword(spriteAllocBuffer) ; carry should be cleared by lsr
@@ -596,7 +596,7 @@ _newbufferref_upload_lz4:
     and #$00FF
     sta.b NUM_TILES
     ; dest
-    lda.w loword(spriteTableValue.1.spritemem)-1,Y
+    lda.w loword(spriteTableValue.0.spritemem)-1,Y
     and #$FF00
     lsr
     adc #loword(spriteAllocBuffer) ; carry should be cleared by lsr
@@ -624,13 +624,13 @@ _newbufferref_upload_lz4:
 .SoftSetBank $7E
 .SoftSetDirect $0000
 .procimpll "Spriteman.UnrefBuffer"
-    dec.w loword(spriteTableValue.1.count),X
+    dec.w loword(spriteTableValue.0.count),X
     beq @remove
         ; --X->count > 0
         rtl
 @remove:
     stx.b $00
-    lda.w loword(spriteTableValue.1.spritemem),X
+    lda.w loword(spriteTableValue.0.spritemem),X
     tax
     .SetAX 8, 8
     .call "Spriteman.FreeRawBuffer"

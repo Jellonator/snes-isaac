@@ -7,17 +7,17 @@
 
 .DEFINE BASE_HEALTH 72
 
-.DEFINE _gfxptr.1 loword(entity_char_custom.1)
-.DEFINE _gfxptr.2 loword(entity_char_custom.2)
-.DEFINE _gfxptr.3 loword(entity_char_custom.3)
-.DEFINE _gfxptr.4 loword(entity_char_custom.4)
+.DEFINE _gfxptr.1 loword(entity_char_custom.0)
+.DEFINE _gfxptr.2 loword(entity_char_custom.1)
+.DEFINE _gfxptr.3 loword(entity_char_custom.2)
+.DEFINE _gfxptr.4 loword(entity_char_custom.3)
 
-.DEFINE _current_frame loword(entity_char_custom.5)
-.DEFINE _current_direction loword(entity_char_custom.6)
-.DEFINE _current_rotation loword(entity_char_custom.7)
-.DEFINE _palette loword(entity_char_custom.8)
+.DEFINE _current_frame loword(entity_char_custom.4)
+.DEFINE _current_direction loword(entity_char_custom.5)
+.DEFINE _current_rotation loword(entity_char_custom.6)
+.DEFINE _palette loword(entity_char_custom.7)
 
-.DEFINE _spritebuffer loword(entity_char_custom.9)
+.DEFINE _spritebuffer loword(entity_char_custom.8)
 
 .DEFINE _tmp_entityid $10
 
@@ -129,7 +129,7 @@ enemycube_midframes_by_direction:
     pea $7F7F
     lda.w _spritebuffer,Y
     tax
-    lda.w loword(spriteTableValue.1.spritemem)-1,X
+    lda.w loword(spriteTableValue.0.spritemem)-1,X
     and #$FF00
     lsr
     adc #loword(spriteAllocBuffer)
@@ -256,7 +256,7 @@ _state_idle:
         tay
         lda #ENTITY_FLAGS_BLOCKING
         .REPT SPATIAL_LAYER_COUNT INDEX i
-            ldx.w spatial_partition.{i+1},Y
+            ldx.w spatial_partition.{i},Y
             beq @valid_dir
             bit.w loword(entity_flags),X
             bne @invalid_h
@@ -274,7 +274,7 @@ _state_idle:
         tay
         lda #ENTITY_FLAGS_BLOCKING
         .REPT SPATIAL_LAYER_COUNT INDEX i
-            ldx.w spatial_partition.{i+1},Y
+            ldx.w spatial_partition.{i},Y
             beq @valid_dir
             bit.w loword(entity_flags),X
             bne @not_valid
@@ -447,12 +447,12 @@ _funclist_state:
     lda.w entity_box_x1,Y
     sec
     sbc #3
-    sta.w objectData.1.pos_x,X
-    sta.w objectData.3.pos_x,X
+    sta.w objectData.0.pos_x,X
+    sta.w objectData.2.pos_x,X
     clc
     adc #16
-    sta.w objectData.2.pos_x,X
-    sta.w objectData.4.pos_x,X
+    sta.w objectData.1.pos_x,X
+    sta.w objectData.3.pos_x,X
     ; y pos
     lda.w _current_frame,Y
     cmp #8
@@ -464,12 +464,12 @@ _funclist_state:
     @lower_y:
         lda.w entity_box_y1,Y
     @upper_y:
+    sta.w objectData.2.pos_y,X
     sta.w objectData.3.pos_y,X
-    sta.w objectData.4.pos_y,X
     sec
     sbc #16
+    sta.w objectData.0.pos_y,X
     sta.w objectData.1.pos_y,X
-    sta.w objectData.2.pos_y,X
     ; flags
     lda.w _palette,Y
     .PaletteIndexToPaletteSpriteA
@@ -484,17 +484,17 @@ _funclist_state:
         xba
     +:
     xba
+    sta.w objectData.0.flags,X
     sta.w objectData.1.flags,X
     sta.w objectData.2.flags,X
     sta.w objectData.3.flags,X
-    sta.w objectData.4.flags,X
     ; tiles
     stx.b $02
     .REPT 4 INDEX i
         ldx.w _gfxptr.{i+1},Y
         lda.l SpriteSlotIndexTable,X
         ldx.b $02
-        sta.w objectData.{i+1}.tileid,X
+        sta.w objectData.{i}.tileid,X
     .ENDR
     .ForceSetAX 16, 16
     .REPT 4

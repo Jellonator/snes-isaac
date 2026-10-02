@@ -18,9 +18,9 @@ UI.update_money_display:
     inc.w vqueueNumMiniOps
     ; first, determine offset
     lda #BG1_TILE_BASE_ADDR + $46
-    sta.l vqueueMiniOps.1.vramAddr,X
+    sta.l vqueueMiniOps.0.vramAddr,X
     lda #BG1_TILE_BASE_ADDR + $47
-    sta.l vqueueMiniOps.2.vramAddr,X
+    sta.l vqueueMiniOps.1.vramAddr,X
     ; now, determine character
     lda.w playerData.money
     and #$00F0
@@ -30,12 +30,12 @@ UI.update_money_display:
     lsr
     clc
     adc #deft(TILE_TEXT_UINUMBER_BASE,5) | T_HIGHP
-    sta.l vqueueMiniOps.1.data,X
+    sta.l vqueueMiniOps.0.data,X
     lda.w playerData.money
     and #$000F
     clc
     adc #deft(TILE_TEXT_UINUMBER_BASE,5) | T_HIGHP
-    sta.l vqueueMiniOps.2.data,X
+    sta.l vqueueMiniOps.1.data,X
     rtl
 
 UI.update_bomb_display:
@@ -49,9 +49,9 @@ UI.update_bomb_display:
     inc.w vqueueNumMiniOps
     ; first, determine offset
     lda #BG1_TILE_BASE_ADDR + $66
-    sta.l vqueueMiniOps.1.vramAddr,X
+    sta.l vqueueMiniOps.0.vramAddr,X
     lda #BG1_TILE_BASE_ADDR + $67
-    sta.l vqueueMiniOps.2.vramAddr,X
+    sta.l vqueueMiniOps.1.vramAddr,X
     ; now, determine character
     lda.w playerData.bombs
     and #$00F0
@@ -61,12 +61,12 @@ UI.update_bomb_display:
     lsr
     clc
     adc #deft(TILE_TEXT_UINUMBER_BASE,5) | T_HIGHP
-    sta.l vqueueMiniOps.1.data,X
+    sta.l vqueueMiniOps.0.data,X
     lda.w playerData.bombs
     and #$000F
     clc
     adc #deft(TILE_TEXT_UINUMBER_BASE,5) | T_HIGHP
-    sta.l vqueueMiniOps.2.data,X
+    sta.l vqueueMiniOps.1.data,X
     rtl
 
 UI.update_key_display:
@@ -80,9 +80,9 @@ UI.update_key_display:
     inc.w vqueueNumMiniOps
     ; first, determine offset
     lda #BG1_TILE_BASE_ADDR + $86
-    sta.l vqueueMiniOps.1.vramAddr,X
+    sta.l vqueueMiniOps.0.vramAddr,X
     lda #BG1_TILE_BASE_ADDR + $87
-    sta.l vqueueMiniOps.2.vramAddr,X
+    sta.l vqueueMiniOps.1.vramAddr,X
     ; now, determine character
     lda.w playerData.keys
     and #$00F0
@@ -92,12 +92,12 @@ UI.update_key_display:
     lsr
     clc
     adc #deft(TILE_TEXT_UINUMBER_BASE,5) | T_HIGHP
-    sta.l vqueueMiniOps.1.data,X
+    sta.l vqueueMiniOps.0.data,X
     lda.w playerData.keys
     and #$000F
     clc
     adc #deft(TILE_TEXT_UINUMBER_BASE,5) | T_HIGHP
-    sta.l vqueueMiniOps.2.data,X
+    sta.l vqueueMiniOps.1.data,X
     rtl
 
 _PlayerHealthTileValueTable:
@@ -130,7 +130,7 @@ UI.update_single_heart:
     sta.b $00
     clc
     adc #BG1_TILE_BASE_ADDR + 8 + 64
-    sta.l vqueueMiniOps.1.vramAddr,X
+    sta.l vqueueMiniOps.0.vramAddr,X
     ; now, determine character
     lda.w playerData.healthSlots,Y
     and #$00FF
@@ -139,7 +139,7 @@ UI.update_single_heart:
     tax
     lda.l _PlayerHealthTileValueTable,X
     plx
-    sta.l vqueueMiniOps.1.data,X
+    sta.l vqueueMiniOps.0.data,X
     rtl
 
 UI.update_all_hearts:
@@ -363,9 +363,9 @@ UI.update_charge_display:
     .REPT 8 INDEX iy
         .REPT 4 INDEX ix
             lda #BG1_TILE_BASE_ADDR + ix+2 + (iy+5)*32
-            sta.l vqueueMiniOps.{iy*4 + ix + 1}.vramAddr,X
+            sta.l vqueueMiniOps.{iy*4 + ix}.vramAddr,X
             lda #0
-            sta.l vqueueMiniOps.{iy*4 + ix + 1}.data,X
+            sta.l vqueueMiniOps.{iy*4 + ix}.data,X
         .ENDR
     .ENDR
     ; get player charge
@@ -438,7 +438,7 @@ UI.update_charge_display:
             ldx.b TILE
             lda.l BatteryTileMap,X
             plx
-            sta.l vqueueMiniOps.{iy*4 + ix + 1}.data,X
+            sta.l vqueueMiniOps.{iy*4 + ix}.data,X
             ; subtract
             dec.b TMP_PLAYER_CHARGE
             dec.b TMP_PLAYER_CHARGE

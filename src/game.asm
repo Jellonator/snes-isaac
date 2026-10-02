@@ -512,13 +512,13 @@ Pause.Begin:
     asl
     tax
     lda #deft($AF, 6) | T_HIGHP
-    sta.l vqueueMiniOps.1.data,X
+    sta.l vqueueMiniOps.0.data,X
     lda.w pauseSelect
     and #$00FF
     .MultiplyStatic 64
     clc
     adc #textpos(21, 8) + BG1_TILE_BASE_ADDR + $0400
-    sta.l vqueueMiniOps.1.vramAddr,X
+    sta.l vqueueMiniOps.0.vramAddr,X
     rts
 
 Pause.PageStats:
@@ -990,21 +990,21 @@ Pause.Update:
         asl
         tax
         lda #deft($B1, 6) | T_HIGHP
-        sta.l vqueueMiniOps.1.data,X
+        sta.l vqueueMiniOps.0.data,X
         lda #deft($AF, 6) | T_HIGHP
-        sta.l vqueueMiniOps.2.data,X
+        sta.l vqueueMiniOps.1.data,X
         lda.b $02
         and #$00FF
         .MultiplyStatic 64
         clc
         adc #textpos(21, 8) + BG1_TILE_BASE_ADDR + $0400
-        sta.l vqueueMiniOps.1.vramAddr,X
+        sta.l vqueueMiniOps.0.vramAddr,X
         lda.w pauseSelect
         and #$00FF
         .MultiplyStatic 64
         clc
         adc #textpos(21, 8) + BG1_TILE_BASE_ADDR + $0400
-        sta.l vqueueMiniOps.2.vramAddr,X
+        sta.l vqueueMiniOps.1.vramAddr,X
     +:
     ; perform action
     .ForceSetA 16
@@ -1117,17 +1117,17 @@ _pause_update_cheats_page:
         .MultiplyStatic 64
         clc
         adc #textpos(3, 40) + BG1_TILE_BASE_ADDR
-        sta.l vqueueMiniOps.1.vramAddr
+        sta.l vqueueMiniOps.0.vramAddr
         lda #deft($B1, 6)
-        sta.l vqueueMiniOps.1.data
+        sta.l vqueueMiniOps.0.data
         lda.b cheatActionSelect
         and #$00FF
         .MultiplyStatic 64
         clc
         adc #textpos(3, 40) + BG1_TILE_BASE_ADDR
-        sta.l vqueueMiniOps.2.vramAddr
+        sta.l vqueueMiniOps.1.vramAddr
         lda #deft($AF, 6)
-        sta.l vqueueMiniOps.2.data
+        sta.l vqueueMiniOps.1.data
         ; clear display
         jsr _cheat_clear_display
         ; begin action
@@ -1166,21 +1166,21 @@ _cheat_write_decimal_view:
     tax
     ; put characters
     .GetDecimalAsTilePause P_DIR, $00, 0
-    sta.l vqueueMiniOps.1.data,X
+    sta.l vqueueMiniOps.0.data,X
     .GetDecimalAsTilePause P_DIR, $00, 1
-    sta.l vqueueMiniOps.2.data,X
+    sta.l vqueueMiniOps.1.data,X
     .GetDecimalAsTilePause P_DIR, $00, 2
-    sta.l vqueueMiniOps.3.data,X
+    sta.l vqueueMiniOps.2.data,X
     .GetDecimalAsTilePause P_DIR, $00, 3
-    sta.l vqueueMiniOps.4.data,X
+    sta.l vqueueMiniOps.3.data,X
     lda #textpos(18, 40) + BG1_TILE_BASE_ADDR
-    sta.l vqueueMiniOps.4.vramAddr,X
-    inc A
     sta.l vqueueMiniOps.3.vramAddr,X
     inc A
     sta.l vqueueMiniOps.2.vramAddr,X
     inc A
     sta.l vqueueMiniOps.1.vramAddr,X
+    inc A
+    sta.l vqueueMiniOps.0.vramAddr,X
     rts
 
 ; write string in [$00] to string display

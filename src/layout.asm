@@ -109,13 +109,13 @@
     ; number of room slots currently in use
     numUsedMapSlots db
     ; type of each map tile (by location). See the 'ROOMTYPE' enum
-    mapTileTypeTable INSTANCEOF byte_t MAP_MAX_SIZE
+    mapTileTypeTable ds MAP_MAX_SIZE
     ; flags for each map tile (by location). See the 'MAPTILE' enum
-    mapTileFlagsTable INSTANCEOF byte_t MAP_MAX_SIZE
+    mapTileFlagsTable ds MAP_MAX_SIZE
 ; player ext data
     playerData INSTANCEOF playerextdata_t
 ; OAM data
-    objectData INSTANCEOF object_t 128
+    objectData INSTANCEOF object_t 128 STARTFROM 0
     objectDataExt dsb 32 ; 2 bits per object: Xs
 ; Palette allocation data
     ; pointer to currently loaded palette
@@ -162,7 +162,7 @@
     private_base_entity_combined_type_variant dsw ENTITY_TOTAL_MAX
     ; Spatial partition used for faster entity collision lookups.
     ; Arranged as 4 layers of 16x16 tiles. Each layer can hold one entity.
-    spatial_partition INSTANCEOF spatialpartitionlayer_t SPATIAL_LAYER_COUNT
+    spatial_partition INSTANCEOF spatialpartitionlayer_t SPATIAL_LAYER_COUNT STARTFROM 0
     ; Number of enemies in the current room.
     currentRoomEnemyCount dw
     ; Set to 'true' on room load if it spawns entities, indicating that this room
@@ -215,13 +215,13 @@
 .RAMSECTION "7E" BANK $7E SLOT "ExtraMemory" ORGA $2000 FORCE
 ; map data
     ; maps [maptilepos_t] -> [room slot]
-    mapTileSlotTable INSTANCEOF byte_t MAP_MAX_SIZE
+    mapTileSlotTable ds MAP_MAX_SIZE
     ; full info for each room
-    roomSlotTiles INSTANCEOF roominfo_t MAX_MAP_SLOTS
+    roomSlotTiles INSTANCEOF roominfo_t MAX_MAP_SLOTS STARTFROM 0
     ; door mask of each room, determines how it connects to nearby rooms
     roomSlotDoorMask ds MAX_MAP_SLOTS
     ; maps [room slot] -> [maptilepos_t]
-    roomSlotMapPos INSTANCEOF maptilepos_t MAX_MAP_SLOTS
+    roomSlotMapPos ds MAX_MAP_SLOTS
     ; room type (by slot). See the 'ROOMTYPE' enum
     roomSlotRoomType ds MAX_MAP_SLOTS
     ; room door data
@@ -236,7 +236,7 @@
     ; black-box ptr table for the sprite hash table
     spriteTablePtr dsw SPRITE_TABLE_TOTAL_SIZE
     ; managed sprite table values (VRAM index and reference count)
-    spriteTableValue INSTANCEOF spritetab_t SPRITE_TABLE_TOTAL_SIZE
+    spriteTableValue INSTANCEOF spritetab_t SPRITE_TABLE_TOTAL_SIZE STARTFROM 0
     ; circular queue used for allocating raw VRAM slots. Used directly for
     ; animated sprites.
     spriteQueueTabNext ds SPRITE_QUEUE_SIZE+1
@@ -260,11 +260,11 @@
     ; Y-sort of entities and flash timer
     private_base_entity_combined_ysort_flash dsw ENTITY_TOTAL_MAX
     ; Custom data per entity
-    private_entity_custom INSTANCEOF entitycustomdata_t 4
+    private_entity_custom INSTANCEOF entitycustomdata_t 4 STARTFROM 0
     ; Custom data per character
-    private_entity_char_custom INSTANCEOF entitycharactercustomdata_t 16
+    private_entity_char_custom INSTANCEOF entitycharactercustomdata_t 16 STARTFROM 0
     ; status effects of entities
-    private_entity_char_statfx INSTANCEOF entitycharacterstatuseffectdata_t 2
+    private_entity_char_statfx INSTANCEOF entitycharacterstatuseffectdata_t 2 STARTFROM 0
     ; entity flags
     private_base_entity_flags dsw ENTITY_TOTAL_MAX
     ; contiguous data storage for various purposes
@@ -332,7 +332,7 @@
     ; Number of bytes to copy.
     vqueueOp_Size INSTANCEOF word_t VQUEUE_MAX_SIZE STARTFROM 0
     ; List of vqueueMiniOps - These are direct uploads of single words to VRAM
-    vqueueMiniOps INSTANCEOF vqueueminiop_t 255
+    vqueueMiniOps INSTANCEOF vqueueminiop_t 255 STARTFROM 0
     ; Vqueue register operations. The address and value are both 1B.
     ; The memory location written to will be `$2100 | Addr`
     vqueueRegOps_Addr ds 65

@@ -27,11 +27,11 @@
 .define entity_char_max_health ($7E0000 | (private_entity_char_maximum_health-2))
 
 .REPT 4 INDEX i
-    .define entity_custom.{i+1} ($7E0000 | (private_entity_custom.{i+1}-2))
+    .define entity_custom.{i} ($7E0000 | (private_entity_custom.{i}-2))
 .ENDR
 
 .REPT 16 INDEX i
-    .define entity_char_custom.{i+1} ($7E0000 | (private_entity_char_custom.{i+1}-2))
+    .define entity_char_custom.{i} ($7E0000 | (private_entity_char_custom.{i}-2))
 .ENDR
 
 ; player data (from entity tables)
@@ -49,12 +49,12 @@
 .define player_damageflag (ENTITY_INDEX_PLAYER + entity_health)
 
 ; projectile data
-.define projectile_size entity_custom.1
+.define projectile_size entity_custom.0
 .define projectile_type entity_variant ; repurposed variant
 .define projectile_lifetime entity_health ; repurposed health
-.define projectile_flags entity_custom.2
-.define projectile_height entity_custom.3
-.define projectile_velocz entity_custom.4
+.define projectile_flags entity_custom.1
+.define projectile_height entity_custom.2
+.define projectile_velocz entity_custom.3
 .define projectile_damage (private_base_entity_combined_state_timer - 2)
 
 ; pathfinding data

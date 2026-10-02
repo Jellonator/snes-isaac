@@ -58,10 +58,10 @@
     ; two extra tiles:
     ; tile[96] is a gap
     ; tile[97] is a solid block
-    tileTypeTable INSTANCEOF byte_t ROOM_TILE_COUNT + 2
-    tileVariantTable INSTANCEOF byte_t ROOM_TILE_COUNT + 2
+    tileTypeTable ds (ROOM_TILE_COUNT + 2)
+    tileVariantTable ds (ROOM_TILE_COUNT + 2)
     roomDefinition dl
-    entityStoreTable INSTANCEOF entitystore_t ENTITY_STORE_COUNT
+    entityStoreTable INSTANCEOF entitystore_t ENTITY_STORE_COUNT STARTFROM 0
     rng INSTANCEOF rng_t
 .ENDST
 

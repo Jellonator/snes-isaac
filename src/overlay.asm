@@ -40,6 +40,7 @@ String.len:
     tya
     rtl
 
+.SoftSetBank D_BANK_MIRROR_LOWRAM
 Overlay.clear:
     .ForceSetAX 16, 16
     lda.l textLines
@@ -72,9 +73,11 @@ Overlay.clear:
     .VQueueOpIncX
     .VQueueOpStoreX
     rtl
+    .ClearContext
 
 ; Put string of characters onto overlay
 ; String is in X, with appropriate data bank
+.SoftSetBank D_BANK_MIRROR_LOWRAM
 Overlay.putline:
     .DEFINE PREFIX_LEN $00
     .DEFINE STRING_LEN $01
@@ -201,5 +204,6 @@ Overlay.putline:
     lda #120
     sta.l textDisplayTimer
     rtl
+.ClearContext
 
 .ENDS

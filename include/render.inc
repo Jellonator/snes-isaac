@@ -436,16 +436,24 @@
 
 ; Store current vqueue operation pointer in A
 .MACRO .VQueueOpToA
+    .ASSERT is_bank_lowram(D_BANK)
     lda.w vqueueOpIndex
+.ENDM
+
+; Store current vqueue operation pointer in A
+.MACRO .VQueueOpToALong
+    lda.l vqueueOpIndex
 .ENDM
 
 ; Store current vqueue operation pointer in X
 .MACRO .VQueueOpToX
+    .ASSERT is_bank_lowram(D_BANK)
     ldx.w vqueueOpIndex
 .ENDM
 
 ; Store current vqueue operation pointer in Y
 .MACRO .VQueueOpToY
+    .ASSERT is_bank_lowram(D_BANK)
     ldy.w vqueueOpIndex
 .ENDM
 
@@ -478,26 +486,36 @@
 
 ; Store vqueue operation pointer in A
 .MACRO .VQueueOpStoreA
+    .ASSERT is_bank_lowram(D_BANK)
     sta.w vqueueOpIndex
+.ENDM
+
+; Store vqueue operation pointer in A
+.MACRO .VQueueOpStoreALong
+    sta.l vqueueOpIndex
 .ENDM
 
 ; Store vqueue operation pointer in X
 .MACRO .VQueueOpStoreX
+    .ASSERT is_bank_lowram(D_BANK)
     stx.w vqueueOpIndex
 .ENDM
 
 ; Store vqueue operation pointer in Y
 .MACRO .VQueueOpStoreY
+    .ASSERT is_bank_lowram(D_BANK)
     sty.w vqueueOpIndex
 .ENDM
 
 ; Copy vqueue bin pointer to X
 .MACRO .VQueueBinToX
+    .ASSERT is_bank_lowram(D_BANK)
     ldx.w vqueueBinOffset
 .ENDM
 
 ; Increments vqueue bin pointer by 'amount'
 .MACRO .VQueuePushBinA ARGS method, amount
+    .ASSERT is_bank_lowram(D_BANK)
     lda.w vqueueBinOffset
     sec
     .g_instruction sbc, method, amount

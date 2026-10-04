@@ -16,7 +16,7 @@ SPRITE_TABLE_SIZE,SPRITE_TABLE_CELLAR_SIZE,"_sprite"
     ; initialize sprite queue
     .ForceSetAX 8, 8
     lda #64
-    sta.w loword(spiteTableAvailableSlots)
+    sta.w loword(spriteTableAvailableSlots)
     ldx #SPRITE_TABLE_SIZE
 @loop:
     txa

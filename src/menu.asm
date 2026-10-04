@@ -72,6 +72,7 @@ _MenuLayout_Main:
     selection dw
 .ENDE
 
+.SoftSetBank $80
 _Menu.StateEnterTable:
     .dw _menu_start_init ; start
     .dw _menu_main_init ; main
@@ -273,7 +274,7 @@ _Menu.PutTextBG1:
 
 ; Enter menu
 Menu.Begin:
-    .ChangeDataBank $80
+    .SetBank $80
     ; Disable rendering temporarily
     .DisableINT
     ; Disable interrupts

@@ -45,7 +45,7 @@
     tagline ds 29
     sprite_big_ptr dl
     sprite_big_palette dw
-    sprite_entity_ptr dl
+    sprite_entity_id dw
     sprite_entity_palette dw
     sprite_entity_palette_depth db
     on_use dw

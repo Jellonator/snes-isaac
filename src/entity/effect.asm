@@ -128,7 +128,7 @@ EntityEffectTypes:
     sta.w entity_health,Y
     .ForceSetA 8
     lda.l bankaddr(EntityEffectTypes) + entityeffect_header_t.tile_alloc,X
-    cmp.w spiteTableAvailableSlots
+    cmp.w spriteTableAvailableSlots
     bcc +
     beq +
         .ForceSetA 16

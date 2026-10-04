@@ -240,7 +240,7 @@
     ; circular queue used for allocating raw VRAM slots. Used directly for
     ; animated sprites.
     spriteQueueTabNext ds SPRITE_QUEUE_SIZE+1
-    spiteTableAvailableSlots dw
+    spriteTableAvailableSlots dw
 ; RAM sprite allocation data, indexed [1,255] (0 is NULL)
     ; 1 if block is allocated, 0 otherwise
     private_spriteAllocTabActive ds SPRITE_ALLOC_NUM_TILES

@@ -61,7 +61,7 @@ _variant_init:
     .dw _handle_null     ; 6 - battery
     .dw _handle_null     ; 7 - heart
     .dw _handle_null     ; 8 - soul heart
-    .dw _handle_null     ; 9 - consumable
+    .dw _init_consumable ; 9 - consumable
     .dw _init_trinket    ; A - trinket
 
 _variant_free:
@@ -74,7 +74,7 @@ _variant_free:
     .dw _handle_null     ; 6 - battery
     .dw _handle_null     ; 7 - heart
     .dw _handle_null     ; 8 - soul heart
-    .dw _handle_null     ; 9 - consumable
+    .dw _free_trinket    ; 9 - consumable
     .dw _free_trinket    ; A - trinket
 
 .DEFINE SPAWN_ANIM_FRAMES 22
@@ -495,21 +495,106 @@ PickupTable_RoomReward:
 .SoftSetAX 16, 16
 .SoftSetBank $7E
 .SoftSetDirect $0000
+.procdefines "_init_consumable", "IVariantHandler"
+    ; get item definition for trinket
+    lda.w consumable_type,Y
+    and #$00FF
+    asl
+    tax
+    lda.l Consumable.consumables,X
+    .pha "consumable_ptr"
+    ; load palette for trinket
+    lda stk(consumable_ptr),S
+    tax
+    lda.l bankaddr(Consumable.consumables) | consumable_t.sprite_entity_palette,X
+    bne +
+        ; indicate that palette is not allocated
+        .SetA 8
+        lda #$FF
+        sta.w loaded_palette,Y
+        .SetA 16
+        ldx #0
+        stz.b $14
+        jmp @skip_upload_palette
+    +:
+    .phy
+    tay
+    lda.l bankaddr(Consumable.consumables) | consumable_t.sprite_entity_palette_depth,X
+    and #$00FF
+    jsl Palette.find_or_upload_opaque
+    .ForceSetAX 16, 16
+    .ply
+    txa
+    .ForceSetA 8
+    sta.w loaded_palette,Y
+    ; set flags
+    .PaletteIndexToPaletteSpriteA
+    ora #%00100001
+    sta.w sprite_tile+1,Y
+    .ForceSetAX 16, 16
+    ; set swizzle
+    .PaletteIndex_X_ToSpriteDef_A
+    sta.b $14
+@skip_upload_palette:
+    ; load sprite for consumable
+    .ForceSetAX 16, 16
+    lda stk(consumable_ptr),S
+    tax
+    lda.l bankaddr(Consumable.consumables) | consumable_t.sprite_entity_id,X
+    bne +
+        ; indicate that sprite is not allocated
+        .SetA 8
+        lda #$FF
+        sta.w loaded_sprite,Y
+        .SetA 16
+        jmp @skip_upload_sprite
+    +:
+    ora.b $14
+    .phy
+    .call "Spriteman.NewSpriteRef"
+    .ForceSetAX 16, 16
+    .ply
+    txa
+    .ForceSetA 8
+    sta.w loaded_sprite,Y
+    ; set tile
+    lda.w loword(spriteTableValue + spritetab_t.spritemem),X
+    tax
+    lda.l SpriteSlotIndexTable,X
+    sta.w sprite_tile,Y
+@skip_upload_sprite:
+    .plx
+    rts
+.endproc
+
+.SoftSetAX 16, 16
+.SoftSetBank $7E
+.SoftSetDirect $0000
 .procdefines "_free_trinket", "IVariantHandler"
     .SetAX 16, 16
-    phy
+; maybe free sprite
     lda.w loaded_sprite,Y
     and #$00FF
+    cmp #$FF
+    beq @skip_free_sprite
     tax
+    phy
     .callsetup "Spriteman.UnrefSprite", SETUP_FLAGS
     .call "Spriteman.UnrefSprite"
     .SetAX 16, 16
     ply
-    ldx.w loaded_palette,Y
+@skip_free_sprite:
+; maybe free palette
+    lda.w loaded_palette,Y
+    and #$00FF
+    cmp #$FF
+    beq @skip_free_palette
+    tax
     phy
     jsl Palette.free
     .ForceSetAX 16, 16
     ply
+@skip_free_palette:
     rts
 .endproc
 

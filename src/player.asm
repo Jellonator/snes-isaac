@@ -538,6 +538,7 @@ PlayerInitPostLoad:
     rtl
 
 ; Set head frame to A
+.SoftSetBank D_BANK_MIRROR_LOWRAM
 Player.set_head_frame:
     .ForceSetAX 8, 8
     cmp.w playerData.active_head_frame
@@ -580,8 +581,10 @@ Player.set_head_frame:
     sta.l vqueueOp_Size.1,X
 ; end upload
     rtl
+.ClearContext
 
 ; Set body frame to A
+.SoftSetBank D_BANK_MIRROR_LOWRAM
 Player.set_body_frame:
     .ForceSetAX 8, 8
     cmp.w playerData.active_body_frame
@@ -625,6 +628,7 @@ Player.set_body_frame:
     sta.l vqueueOp_Size.1,X
 ; end upload
     rtl
+.ClearContext
 
 .DEFINE PLAYER_WALK_TIMER_FRAME_DELAY $0900
 

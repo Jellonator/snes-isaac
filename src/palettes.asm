@@ -253,6 +253,7 @@ Palette.free:
     rtl
 
 ; Queue for palette at [Y] to be uploaded into slot [X]
+.SoftSetBank D_BANK_MIRROR_LOWRAM
 Palette.queue_upload:
     .ForceSetAX 16, 16
     ; set palette pointer
@@ -295,6 +296,7 @@ Palette.queue_upload:
     @skip_{i}:
     .ENDR
     rtl
+.ClearContext
 
 ; Search for a palette that has [Y] uploaded.
 ; if no such palette exists, allocates an opaque palette.

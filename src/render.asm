@@ -1330,6 +1330,7 @@ CopyPalette:
 ;   palette index  [db] $07
 ;   source bank    [db] $06
 ;   source address [dw] $04
+.SoftSetBank D_BANK_MIRROR_LOWRAM
 CopyPaletteVQueue:
     .ForceSetAX 16, 16
     .VQueueOpToX
@@ -1347,6 +1348,7 @@ CopyPaletteVQueue:
     .VQueueOpIncX
     .VQueueOpStoreX
     rtl
+.ClearContext
 
 ; Copy sprite data to VRAM
 ; Use this method if the sprite occupies an entire row in width,
@@ -1417,8 +1419,9 @@ CopyVMEM:
 ;   num tiles      [dw] $07
 ;   source bank    [db] $06
 ;   source address [dw] $04
+.SoftSetBank D_BANK_MIRROR_LOWRAM
 CopySpriteVQueue:
-    phb
+    .PushBank
     .ForceSetAX 16, 16
     .VQueueOpToY
     lda 1+$07,S
@@ -1427,7 +1430,7 @@ CopySpriteVQueue:
     asl
     asl
     asl
-    .ChangeDataBank $7F
+    .SetBank $7F
     sta.w loword(vqueueOp_Size),Y ; number of bytes
     lda 1+$04,S
     sta.w loword(vqueueOp_SrcAddr),Y ; source address
@@ -1437,10 +1440,11 @@ CopySpriteVQueue:
     and #$FF00
     ora #VQUEUE_MODE_VRAM
     sta.w loword(vqueueOp_ModeBank),Y ; source bank
-    plb
+    .PopBank
     .VQueueOpIncY
     .VQueueOpStoreY
     rtl
+.ClearContext
 
 ; Copy partial sprite data to VRAM.
 ; Use this method if the sprite occupies more than 1 tile height and does not
@@ -1583,6 +1587,7 @@ BossBar.ReRender:
     sta.w boss_health_need_rerender
     rtl
 
+.SoftSetBank D_BANK_MIRROR_LOWRAM
 _bossbar_no_contributors:
     ; clear boss bar
     .ForceSetAX 16, 16
@@ -1602,7 +1607,9 @@ _bossbar_no_contributors:
     sta.l vqueueOp_ModeBank.1,X
     plb
     rtl
+.ClearContext
 
+.SoftSetBank D_BANK_MIRROR_LOWRAM
 BossBar.Update:
     .ForceSetAX 8, 8
     ; check need re-render
@@ -1611,8 +1618,8 @@ BossBar.Update:
         rtl
     +:
     ; switch data bank
-    phb
-    .ChangeDataBank $7E
+    .PushBank
+    .SetBank $7E
     stz.w boss_health_need_rerender
     ; check contributor cound
     ldx.w boss_contributor_count
@@ -1775,7 +1782,8 @@ BossBar.Update:
     sta.l vqueueOp_ModeBank.0,X
     sta.l vqueueOp_ModeBank.1,X
 ; end
-    plb
+    .PopBank
     rtl
+.ClearContext
 
 .ENDS

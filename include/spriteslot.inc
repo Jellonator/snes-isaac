@@ -137,7 +137,7 @@
 .MACRO .spriteman_get_raw_slot_lite
     .ASSERT D_BANK == $7E
     .SetAX 8, 8
-    dec.w loword(spiteTableAvailableSlots)
+    dec.w loword(spriteTableAvailableSlots)
     ; ret = *begin->next
     ldx.w loword(spriteQueueTabNext)+SPRITE_LIST_BEGIN
     lda.w loword(spriteQueueTabNext),X
@@ -151,7 +151,7 @@
     .ASSERT D_BANK == $7E
     .SetAX 8, 8
     ; TODO: handle when queue is empty
-    inc.w loword(spiteTableAvailableSlots)
+    inc.w loword(spriteTableAvailableSlots)
     ; tmp = *end
     lda.w loword(spriteQueueTabNext)+SPRITE_LIST_END
     ; *end = X

@@ -79,6 +79,10 @@ SpriteDefs:
     "spritedata.trinkets_small", 1, 256\
     SPRITEALLOCMODE_COMPRESSED_LZ4
 
+.DefineSpriteSplit "sprite.pills",\
+    "spritedata.pills", 1, 3\
+    SPRITEALLOCMODE_COMPRESSED_LZ4
+
 .DefineSpriteSplit "sprite.item_active",\
     "spritedata.items_active", 1, 256\
     SPRITEALLOCMODE_COMPRESSED_LZ4

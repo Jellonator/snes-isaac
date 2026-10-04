@@ -143,10 +143,10 @@ _AddTileToQueue:
     sta.w vqueueMiniOps.0.data,X
 ; Add character data to vqueue
     ; get vqueue index
-    .VQueueOpToA
+    .VQueueOpToALong
     tay
     .VQueueOpAddA 1
-    .VQueueOpStoreA
+    .VQueueOpStoreALong
     ; set bank and mode
     lda #joinword(VQUEUE_MODE_VRAM, $7F)
     sta.w vqueueOp_ModeBank,Y

@@ -11,7 +11,7 @@
     tagline: .ASCSTR "May you find a real card", 0
     sprite_big_ptr: .dl spritedata.tarot_cards_big.22
     sprite_big_palette: .dw 0
-    sprite_entity_ptr: .dl 0
+    sprite_entity_id: .dw 0
     sprite_entity_palette: .dw 0
     sprite_entity_palette_depth: .db 0
     on_use: .dw _empty_use
@@ -22,7 +22,7 @@
     tagline: .ASCSTR "Where journey begins", 0
     sprite_big_ptr: .dl spritedata.tarot_cards_big.0
     sprite_big_palette: .dw loword(palettes.tarot_cards1)
-    sprite_entity_ptr: .dl 0
+    sprite_entity_id: .dw 0
     sprite_entity_palette: .dw 0
     sprite_entity_palette_depth: .db 0
     on_use: .dw _tarot_fool
@@ -33,7 +33,7 @@
     tagline: .ASCSTR "May you never miss your goal", 0
     sprite_big_ptr: .dl spritedata.tarot_cards_big.1
     sprite_big_palette: .dw loword(palettes.tarot_cards_magician)
-    sprite_entity_ptr: .dl 0
+    sprite_entity_id: .dw 0
     sprite_entity_palette: .dw 0
     sprite_entity_palette_depth: .db 0
     on_use: .dw _empty_use
@@ -44,7 +44,7 @@
     tagline: .ASCSTR "Mother is watching you", 0
     sprite_big_ptr: .dl spritedata.tarot_cards_big.2
     sprite_big_palette: .dw loword(palettes.tarot_cards_high_priestess)
-    sprite_entity_ptr: .dl 0
+    sprite_entity_id: .dw 0
     sprite_entity_palette: .dw 0
     sprite_entity_palette_depth: .db 0
     on_use: .dw _empty_use
@@ -55,7 +55,7 @@
     tagline: .ASCSTR "May your rage bring power", 0
     sprite_big_ptr: .dl spritedata.tarot_cards_big.3
     sprite_big_palette: .dw loword(palettes.tarot_cards_empress)
-    sprite_entity_ptr: .dl 0
+    sprite_entity_id: .dw 0
     sprite_entity_palette: .dw 0
     sprite_entity_palette_depth: .db 0
     on_use: .dw _empty_use
@@ -66,7 +66,7 @@
     tagline: .ASCSTR "Challenge me!", 0
     sprite_big_ptr: .dl spritedata.tarot_cards_big.4
     sprite_big_palette: .dw loword(palettes.tarot_cards_emperor)
-    sprite_entity_ptr: .dl 0
+    sprite_entity_id: .dw 0
     sprite_entity_palette: .dw 0
     sprite_entity_palette_depth: .db 0
     on_use: .dw _tarot_emperor
@@ -77,7 +77,7 @@
     tagline: .ASCSTR "Two prayers for the lost", 0
     sprite_big_ptr: .dl spritedata.tarot_cards_big.5
     sprite_big_palette: .dw loword(palettes.tarot_cards_hierophant)
-    sprite_entity_ptr: .dl 0
+    sprite_entity_id: .dw 0
     sprite_entity_palette: .dw 0
     sprite_entity_palette_depth: .db 0
     on_use: .dw _tarot_hierophant
@@ -88,7 +88,7 @@
     tagline: .ASCSTR "May you prosper", 0
     sprite_big_ptr: .dl spritedata.tarot_cards_big.6
     sprite_big_palette: .dw loword(palettes.tarot_cards_lovers)
-    sprite_entity_ptr: .dl 0
+    sprite_entity_id: .dw 0
     sprite_entity_palette: .dw 0
     sprite_entity_palette_depth: .db 0
     on_use: .dw _tarot_lovers
@@ -99,7 +99,7 @@
     tagline: .ASCSTR "May nothing stand before you", 0
     sprite_big_ptr: .dl spritedata.tarot_cards_big.7
     sprite_big_palette: .dw loword(palettes.tarot_cards_chariot)
-    sprite_entity_ptr: .dl 0
+    sprite_entity_id: .dw 0
     sprite_entity_palette: .dw 0
     sprite_entity_palette_depth: .db 0
     on_use: .dw _empty_use
@@ -110,7 +110,7 @@
     tagline: .ASCSTR "May your power bring rage", 0
     sprite_big_ptr: .dl spritedata.tarot_cards_big.8
     sprite_big_palette: .dw loword(palettes.tarot_cards_strength)
-    sprite_entity_ptr: .dl 0
+    sprite_entity_id: .dw 0
     sprite_entity_palette: .dw 0
     sprite_entity_palette_depth: .db 0
     on_use: .dw _empty_use
@@ -121,7 +121,7 @@
     tagline: .ASCSTR "May you find solace", 0
     sprite_big_ptr: .dl spritedata.tarot_cards_big.9
     sprite_big_palette: .dw loword(palettes.tarot_cards_hermit)
-    sprite_entity_ptr: .dl 0
+    sprite_entity_id: .dw 0
     sprite_entity_palette: .dw 0
     sprite_entity_palette_depth: .db 0
     on_use: .dw _tarot_hermit
@@ -132,7 +132,7 @@
     tagline: .ASCSTR "Spin the wheel of destiny", 0
     sprite_big_ptr: .dl spritedata.tarot_cards_big.10
     sprite_big_palette: .dw loword(palettes.tarot_cards_wheel_of_fortune)
-    sprite_entity_ptr: .dl 0
+    sprite_entity_id: .dw 0
     sprite_entity_palette: .dw 0
     sprite_entity_palette_depth: .db 0
     on_use: .dw _empty_use
@@ -143,7 +143,7 @@
     tagline: .ASCSTR "May your future be balanced", 0
     sprite_big_ptr: .dl spritedata.tarot_cards_big.11
     sprite_big_palette: .dw loword(palettes.tarot_cards_justice)
-    sprite_entity_ptr: .dl 0
+    sprite_entity_id: .dw 0
     sprite_entity_palette: .dw 0
     sprite_entity_palette_depth: .db 0
     on_use: .dw _tarot_justice
@@ -154,7 +154,7 @@
     tagline: .ASCSTR "May you find enlightenment", 0
     sprite_big_ptr: .dl spritedata.tarot_cards_big.12
     sprite_big_palette: .dw loword(palettes.tarot_cards_hanged_man)
-    sprite_entity_ptr: .dl 0
+    sprite_entity_id: .dw 0
     sprite_entity_palette: .dw 0
     sprite_entity_palette_depth: .db 0
     on_use: .dw _empty_use
@@ -165,7 +165,7 @@
     tagline: .ASCSTR "Lay waste to your opponents", 0
     sprite_big_ptr: .dl spritedata.tarot_cards_big.13
     sprite_big_palette: .dw loword(palettes.tarot_cards_death)
-    sprite_entity_ptr: .dl 0
+    sprite_entity_id: .dw 0
     sprite_entity_palette: .dw 0
     sprite_entity_palette_depth: .db 0
     on_use: .dw _empty_use
@@ -176,7 +176,7 @@
     tagline: .ASCSTR "May you be pure in heart", 0
     sprite_big_ptr: .dl spritedata.tarot_cards_big.14
     sprite_big_palette: .dw loword(palettes.tarot_cards1)
-    sprite_entity_ptr: .dl 0
+    sprite_entity_id: .dw 0
     sprite_entity_palette: .dw 0
     sprite_entity_palette_depth: .db 0
     on_use: .dw _tarot_temperance
@@ -187,7 +187,7 @@
     tagline: .ASCSTR "Revel in dark power", 0
     sprite_big_ptr: .dl spritedata.tarot_cards_big.15
     sprite_big_palette: .dw loword(palettes.tarot_cards_devil)
-    sprite_entity_ptr: .dl 0
+    sprite_entity_id: .dw 0
     sprite_entity_palette: .dw 0
     sprite_entity_palette_depth: .db 0
     on_use: .dw _empty_use
@@ -198,7 +198,7 @@
     tagline: .ASCSTR "Destruction brings creation", 0
     sprite_big_ptr: .dl spritedata.tarot_cards_big.16
     sprite_big_palette: .dw loword(palettes.tarot_cards_tower)
-    sprite_entity_ptr: .dl 0
+    sprite_entity_id: .dw 0
     sprite_entity_palette: .dw 0
     sprite_entity_palette_depth: .db 0
     on_use: .dw _empty_use
@@ -209,7 +209,7 @@
     tagline: .ASCSTR "May you find what you desire", 0
     sprite_big_ptr: .dl spritedata.tarot_cards_big.17
     sprite_big_palette: .dw loword(palettes.tarot_cards_star)
-    sprite_entity_ptr: .dl 0
+    sprite_entity_id: .dw 0
     sprite_entity_palette: .dw 0
     sprite_entity_palette_depth: .db 0
     on_use: .dw _tarot_star
@@ -220,7 +220,7 @@
     tagline: .ASCSTR "May you find what you lost", 0
     sprite_big_ptr: .dl spritedata.tarot_cards_big.18
     sprite_big_palette: .dw loword(palettes.tarot_cards_moon)
-    sprite_entity_ptr: .dl 0
+    sprite_entity_id: .dw 0
     sprite_entity_palette: .dw 0
     sprite_entity_palette_depth: .db 0
     on_use: .dw _tarot_moon
@@ -231,7 +231,7 @@
     tagline: .ASCSTR "Bask in the healing light", 0
     sprite_big_ptr: .dl spritedata.tarot_cards_big.19
     sprite_big_palette: .dw loword(palettes.tarot_cards1)
-    sprite_entity_ptr: .dl 0
+    sprite_entity_id: .dw 0
     sprite_entity_palette: .dw 0
     sprite_entity_palette_depth: .db 0
     on_use: .dw _empty_use
@@ -242,7 +242,7 @@
     tagline: .ASCSTR "Judge lest ye be judged", 0
     sprite_big_ptr: .dl spritedata.tarot_cards_big.20
     sprite_big_palette: .dw loword(palettes.tarot_cards1)
-    sprite_entity_ptr: .dl 0
+    sprite_entity_id: .dw 0
     sprite_entity_palette: .dw 0
     sprite_entity_palette_depth: .db 0
     on_use: .dw _empty_use
@@ -253,7 +253,7 @@
     tagline: .ASCSTR "May you find your way", 0
     sprite_big_ptr: .dl spritedata.tarot_cards_big.21
     sprite_big_palette: .dw loword(palettes.tarot_cards_world)
-    sprite_entity_ptr: .dl 0
+    sprite_entity_id: .dw 0
     sprite_entity_palette: .dw 0
     sprite_entity_palette_depth: .db 0
     on_use: .dw _empty_use
@@ -265,9 +265,9 @@
         tagline: .ASCSTR "Could be anything", 0
         sprite_big_ptr: .dl spritedata.pills_big.{i # 3}
         sprite_big_palette: .dw loword(palettes.pills.{i / 3})
-        sprite_entity_ptr: .dl spritedata.pills.{i # 3}
+        sprite_entity_id: .dw sprite.pills.{i # 3}
         sprite_entity_palette: .dw loword(palettes.pills.{i / 3})
-        sprite_entity_palette_depth: .db 4
+        sprite_entity_palette_depth: .db 8
         on_use: .dw _empty_use
     .ENDST
 .ENDR

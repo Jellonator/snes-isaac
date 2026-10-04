@@ -635,9 +635,9 @@ Projectile.AddAngleVelocity:
         .NEG_A8
     +:
     sta.l MULTU_B
-    nop ; 2 cycles
+    .ForceSetA 16 ; 3
+    .WAIT 8-7
 ; veloc.y = sign(sin(θ)) * length·sin(θ)
-    .ForceSetA 16
     lda.l MULTU_RESULT ; 4 cycles before load
     bit.b $30-1
     bpl +
@@ -652,9 +652,9 @@ Projectile.AddAngleVelocity:
         .NEG_A8
     +:
     sta.l MULTU_B
-    nop ; 2 cycles
+    .ForceSetA 16 ; 3
+    .WAIT 8-7
 ; veloc.x = sign(cos(θ)) * cos(θ)
-    .ForceSetA 16
     lda.l MULTU_RESULT ; 4 cycles before load
     bit.b $31-1
     bpl +

@@ -398,7 +398,7 @@
 ; Cheap multiplication (A * num)
 ; only works if 'num' is a power of 2
 .MACRO .MultiplyStatic ARGS num
-    .IF num == 0
+    .IF num == 1
     .ELIF IS_POW2(num)
         .ShiftLeft round(log2(num))
     .ELSE
@@ -410,13 +410,35 @@
 ; only works if 'num' is a power of 2
 ; Rounds down
 .MACRO .DivideStatic ARGS num
-    .IF num == 0
+    .IF num == 1
     .ELIF IS_POW2(num)
         .ShiftRight round(log2(num))
     .ELSE
         .FAIL "DivideStatic: invalid num"
     .ENDIF
 .ENDM
+
+; TODO
+; Cheap multiplication (value * num)
+; May insert many instructions, O(log(num))
+; .MACRO .MultiplyStaticAny ARGS num
+;     .IF num == 0
+;         lda #0
+;     .ELIF num == 1
+;         .g_instruction lda, method, addr
+;     .ELIF IS_POW2(num)
+;         .ShiftLeft(round(log2(num)))
+;     .ELSE
+;         clc
+;         .g_instruction lda, method, addr
+;         asl
+;         .DEFINE __temp__ num
+;         .IF (num # 2) == 1
+;             .g_instruction adc, method, addr
+;         .ENDIF
+;         .REDEFINE __temp__ (__temp__ >> 1)
+;     .ENDIF
+; .ENDM
 
 ; Signed right-shift of accumulator (A >> num)
 ; e.g. (-16 >> 2) => -4
@@ -503,6 +525,24 @@
         tsc
         adc #NUM
         tcs
+    .ENDIF
+.ENDM
+
+.MACRO .WAIT ARGS num
+    .IF num == 0 ; 0 => do nothing
+    .ELIF num <= 2 ; 1/2 => single nop
+        nop
+    .ELIF num == 3 ; 3 => sep
+        sep #0
+    .ELIF (num # 2) == 0 ; 4+ evens => [nop...]
+        .REPT (num / 2)
+            nop
+        .ENDR
+    .ELSE ; 5+ odds => sep : [nop...]
+        sep #0
+        .REPT ((num - 3) / 2)
+            nop
+        .ENDR
     .ENDIF
 .ENDM
 

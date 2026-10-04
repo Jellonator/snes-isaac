@@ -250,5 +250,21 @@
     {
         "name": "trinket.fish_head",
         "src": "assets/palettes/trinket/trinket_fish_head.hex"
+    },
+    {
+        "name": "pills.0",
+        "src": "assets/palettes/pills/yellow.hex"
+    },
+    {
+        "name": "pills.1",
+        "src": "assets/palettes/pills/red.hex"
+    },
+    {
+        "name": "pills.2",
+        "src": "assets/palettes/pills/blue.hex"
+    },
+    {
+        "name": "pills.3",
+        "src": "assets/palettes/pills/cyan.hex"
     }
 ]

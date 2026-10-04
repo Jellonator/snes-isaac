@@ -576,10 +576,8 @@ _use_deck_of_cards:
     .ForceSetAX 8, 8
     lda #(CONSUMABLEID_TAROT_LAST - CONSUMABLEID_TAROT_FIRST) + 1
     sta.l DIVU_DIVISOR
-    .REPT 8
-        nop
-    .ENDR
-    lda.l DIVU_REMAINDER
+    .WAIT 16 - 4
+    lda.l DIVU_REMAINDER ; 4
     clc
     adc #CONSUMABLEID_TAROT_FIRST
     jsl Consumable.pickup
@@ -778,15 +776,12 @@ Item.PickItemFromPool:
     .call "Random.Stage.Update16"
     sta.l DIVU_DIVIDEND
     .SetA 8
+    .ASSERT D_FLAG_X == 16
     lda.b WEIGHTSUM
     sta.l DIVU_DIVISOR
-    ldy #0 ; +3 = 3
-    nop ; +2 = 5
-    nop ; +2 = 7
-    nop ; +2 = 9
-    nop ; +2 = 11
-    nop ; +2 = 13
-    lda.l DIVU_REMAINDER ; +4 = 17
+    ldy #0 ; 3
+    .WAIT 16 - 7
+    lda.l DIVU_REMAINDER ; 4
 ; loop through items until A is zero
     @loop_determine_item:
         ; check if subtracted would result in negative number

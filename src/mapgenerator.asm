@@ -754,11 +754,9 @@ _CmpRoomsByAvailableEndpointTiles:
 ; Apply RNG (rand() % X)
     txa
     sta.l DIVU_DIVISOR
-    .REPT 8
-        NOP ; (8 * 2 cycle)
-    .ENDR
-    .SetA 16
-    lda.l DIVU_REMAINDER ; index into tempData
+    .SetA 16 ; 3
+    .WAIT 16 - 7
+    lda.l DIVU_REMAINDER ; (4) index into tempData
     tax
     stz.w loword(tempData_7E)+1,X ; Need to make next byte 0 so that it doesn't get added to 16b result
     lda.w loword(tempData_7E),X
@@ -1098,10 +1096,8 @@ _CmpRoomsByAvailableEndpointTiles:
         @dontUseAllTiles:
             sta.l DIVU_DIVISOR
             ; Have to wait 16 cycles for division to finish
-            .REPT 8
-                nop
-            .ENDR
-            lda.l DIVU_REMAINDER ; Only need low byte
+            .WAIT 16 - 4
+            lda.l DIVU_REMAINDER ; (4) Only need low byte
             ; .ChangeDataBank $7E
         sta $04 ; $04 is index into mapgenAvailableTiles
         ; Get tilepos_t

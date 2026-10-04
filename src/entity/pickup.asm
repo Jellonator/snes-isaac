@@ -7,7 +7,7 @@
 
 ; steal state and timer, since they are serialized
 .define pickup_price entity_state
-.define consumable_type entity_timer
+.define consumable_type entity_timer ; consumable or trinket type
 .define has_put_text loword(entity_custom.2 + 1)
 .define pickup_prevention_timer loword(entity_custom.1) ; top byte is pickup prevention flag
 .define anim_timer loword(entity_custom.2)
@@ -708,7 +708,9 @@ PickupTable_RoomReward:
         inc.b $04
     +:
     lda.w entity_variant,Y
-    bpl @no_randomize
+    bpl @no_pool_randomize
+    cmp #$C0
+    bcs @no_pool_randomize
         ; get table
         .ForceSetAX 16, 16
         and #$7F
@@ -725,7 +727,9 @@ PickupTable_RoomReward:
         .ForceSetA 8
         xba
         sta.w entity_variant,Y
-@no_randomize:
+@no_pool_randomize:
+    .SetAX 8, 8
+; set price if this is a shop item
     lda #0
     xba
     lda.b $04
@@ -735,44 +739,82 @@ PickupTable_RoomReward:
         lda.l PickupVariantPrices,X
         sta.w pickup_price,Y
 @no_set_price:
-    ; choose consumable type if this is a consumable
+; subtype randomization
     lda.w entity_variant,Y
+    ; choose tarot card type if this is a random tarot card
+    .SoftSetAX 8, 8
+    cmp #ENTITY_PICKUP_RANDOM_CARD
+    bne @dont_set_random_card
+        ; setup division
+        ldx #NUM_CARDS
+        jsr _setup_division ; 6 (rts)
+        ; variant = consumable
+        lda #ENTITY_PICKUP_VARIANT_CONSUMABLE ; 2
+        sta entity_variant,Y ; 5
+        ; starting index = cards
+        lda #CARDS_FIRST_ID ; 2
+        jmp @add_subtype ; 3 + 6
+        ; = 24 ≥ 16
+@dont_set_random_card:
+    ; choose pill type if this is a random pill
+    .SoftSetAX 8, 8
+    cmp #ENTITY_PICKUP_RANDOM_PILL
+    bne @dont_set_random_pill
+        ; setup division
+        ldx #NUM_PILLS
+        jsr _setup_division ; 6 (rts)
+        ; variant = consumable
+        lda #ENTITY_PICKUP_VARIANT_CONSUMABLE ; 2
+        sta entity_variant,Y ; 5
+        ; starting index = pills
+        lda #PILLS_FIRST_ID ; 2
+        jmp @add_subtype ; 3 + 6
+        ; = 24 ≥ 16
+@dont_set_random_pill:
+    ; choose consumable type if this is a consumable
+    .SoftSetAX 8, 8
     cmp #ENTITY_PICKUP_VARIANT_CONSUMABLE
     bne @dont_set_consumable_type
-        .ForceSetAX 16, 16
-        jsl Random.Room.Update8
-        .SoftSetA 16
-        sta.l DIVU_DIVIDEND
-        .ForceSetAX 8, 8
-        lda #CONSUMABLE_COUNT-1
-        sta.l DIVU_DIVISOR
-        .REPT 8
-            nop
-        .ENDR
-        lda.l DIVU_REMAINDER
-        inc A
-        sta.w consumable_type,Y
+        ; setup division
+        ldx #CONSUMABLE_COUNT-1
+        jsr _setup_division ; 6 (rts)
+        ; starting index = 1
+        lda #1 ; 2
+        jmp @add_subtype ; 3 + 6
+        ; = 17 ≥ 16
 @dont_set_consumable_type:
     ; choose trinket type if this is a trinket
-    lda.w entity_variant,Y
+    .SoftSetAX 8, 8
     cmp #ENTITY_PICKUP_VARIANT_TRINKET
     bne @dont_set_trinket_type
-        .ForceSetAX 16, 16
-        jsl Random.Room.Update8
-        .SoftSetA 16
-        sta.l DIVU_DIVIDEND
-        .ForceSetAX 8, 8
-        lda #TRINKET_COUNT-1
-        sta.l DIVU_DIVISOR
-        .REPT 8
-            nop
-        .ENDR
-        lda.l DIVU_REMAINDER
-        inc A
-        sta.w consumable_type,Y
+        ; setup division
+        ldx #TRINKET_COUNT-1
+        jsr _setup_division ; 6 (rts)
+        ; starting index = 1
+        lda #1 ; 2
+        jmp @add_subtype ; 3 + 6
+        ; = 17 ≥ 16
+@add_subtype:
+    .SoftSetAX 8, 8
+    clc ; 2
+    adc.l DIVU_REMAINDER ; 4
+    sta.w consumable_type,Y
 @dont_set_trinket_type:
     rtl
 .endproc
+
+    .ClearContext
+    .SoftSetBank $7E
+_setup_division:
+    .SoftSetAX 8, 8
+    .SetA 16
+    .call "Random.Room.Update8"
+    sta.l DIVU_DIVIDEND
+    .SetA 8
+    txa
+    sta.l DIVU_DIVISOR
+    rts
+    .ClearContext
 
 .SoftSetAX 16, 16
 .SoftSetBank $7E

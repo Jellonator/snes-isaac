@@ -157,6 +157,21 @@
         "splitframes": true
     },
     {
+        "name": "pills",
+        "src": "assets/sprites/pills.raw",
+        "depth": 16,
+        "size": [2, 2],
+        "splitframes": true
+    },
+    {
+        "name": "pills_big",
+        "src": "assets/sprites/pills_big.raw",
+        "depth": 16,
+        "size": [4, 4],
+        "compression": "lz4",
+        "splitframes": true
+    },
+    {
         "name": "tilesprite_fire",
         "src": "assets/sprites/tilesprite_fire.raw",
         "depth": 16,

@@ -9,186 +9,268 @@
 .DSTRUCT Consumable.definitions.null INSTANCEOF consumable_t VALUES
     name: .ASCSTR "null", 0
     tagline: .ASCSTR "May you find a real card", 0
-    sprite_ptr: .dl spritedata.tarot_cards_big.22
-    sprite_palette: .dw 0
-    on_use: .dl _empty_use
+    sprite_big_ptr: .dl spritedata.tarot_cards_big.22
+    sprite_big_palette: .dw 0
+    sprite_entity_ptr: .dl 0
+    sprite_entity_palette: .dw 0
+    sprite_entity_palette_depth: .db 0
+    on_use: .dw _empty_use
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_fool INSTANCEOF consumable_t VALUES
     name: .ASCSTR "The Fool", 0
     tagline: .ASCSTR "Where journey begins", 0
-    sprite_ptr: .dl spritedata.tarot_cards_big.0
-    sprite_palette: .dw loword(palettes.tarot_cards1)
-    on_use: .dl _tarot_fool
+    sprite_big_ptr: .dl spritedata.tarot_cards_big.0
+    sprite_big_palette: .dw loword(palettes.tarot_cards1)
+    sprite_entity_ptr: .dl 0
+    sprite_entity_palette: .dw 0
+    sprite_entity_palette_depth: .db 0
+    on_use: .dw _tarot_fool
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_magician INSTANCEOF consumable_t VALUES
     name: .ASCSTR "The Magician", 0
     tagline: .ASCSTR "May you never miss your goal", 0
-    sprite_ptr: .dl spritedata.tarot_cards_big.1
-    sprite_palette: .dw loword(palettes.tarot_cards_magician)
-    on_use: .dl _empty_use
+    sprite_big_ptr: .dl spritedata.tarot_cards_big.1
+    sprite_big_palette: .dw loword(palettes.tarot_cards_magician)
+    sprite_entity_ptr: .dl 0
+    sprite_entity_palette: .dw 0
+    sprite_entity_palette_depth: .db 0
+    on_use: .dw _empty_use
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_high_priestess INSTANCEOF consumable_t VALUES
     name: .ASCSTR "The High priestess", 0
     tagline: .ASCSTR "Mother is watching you", 0
-    sprite_ptr: .dl spritedata.tarot_cards_big.2
-    sprite_palette: .dw loword(palettes.tarot_cards_high_priestess)
-    on_use: .dl _empty_use
+    sprite_big_ptr: .dl spritedata.tarot_cards_big.2
+    sprite_big_palette: .dw loword(palettes.tarot_cards_high_priestess)
+    sprite_entity_ptr: .dl 0
+    sprite_entity_palette: .dw 0
+    sprite_entity_palette_depth: .db 0
+    on_use: .dw _empty_use
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_empress INSTANCEOF consumable_t VALUES
     name: .ASCSTR "The Empress", 0
     tagline: .ASCSTR "May your rage bring power", 0
-    sprite_ptr: .dl spritedata.tarot_cards_big.3
-    sprite_palette: .dw loword(palettes.tarot_cards_empress)
-    on_use: .dl _empty_use
+    sprite_big_ptr: .dl spritedata.tarot_cards_big.3
+    sprite_big_palette: .dw loword(palettes.tarot_cards_empress)
+    sprite_entity_ptr: .dl 0
+    sprite_entity_palette: .dw 0
+    sprite_entity_palette_depth: .db 0
+    on_use: .dw _empty_use
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_emperor INSTANCEOF consumable_t VALUES
     name: .ASCSTR "The Emperor", 0
     tagline: .ASCSTR "Challenge me!", 0
-    sprite_ptr: .dl spritedata.tarot_cards_big.4
-    sprite_palette: .dw loword(palettes.tarot_cards_emperor)
-    on_use: .dl _tarot_emperor
+    sprite_big_ptr: .dl spritedata.tarot_cards_big.4
+    sprite_big_palette: .dw loword(palettes.tarot_cards_emperor)
+    sprite_entity_ptr: .dl 0
+    sprite_entity_palette: .dw 0
+    sprite_entity_palette_depth: .db 0
+    on_use: .dw _tarot_emperor
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_hierophant INSTANCEOF consumable_t VALUES
     name: .ASCSTR "The Hierophant", 0
     tagline: .ASCSTR "Two prayers for the lost", 0
-    sprite_ptr: .dl spritedata.tarot_cards_big.5
-    sprite_palette: .dw loword(palettes.tarot_cards_hierophant)
-    on_use: .dl _tarot_hierophant
+    sprite_big_ptr: .dl spritedata.tarot_cards_big.5
+    sprite_big_palette: .dw loword(palettes.tarot_cards_hierophant)
+    sprite_entity_ptr: .dl 0
+    sprite_entity_palette: .dw 0
+    sprite_entity_palette_depth: .db 0
+    on_use: .dw _tarot_hierophant
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_lovers INSTANCEOF consumable_t VALUES
     name: .ASCSTR "The Lovers", 0
     tagline: .ASCSTR "May you prosper", 0
-    sprite_ptr: .dl spritedata.tarot_cards_big.6
-    sprite_palette: .dw loword(palettes.tarot_cards_lovers)
-    on_use: .dl _tarot_lovers
+    sprite_big_ptr: .dl spritedata.tarot_cards_big.6
+    sprite_big_palette: .dw loword(palettes.tarot_cards_lovers)
+    sprite_entity_ptr: .dl 0
+    sprite_entity_palette: .dw 0
+    sprite_entity_palette_depth: .db 0
+    on_use: .dw _tarot_lovers
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_chariot INSTANCEOF consumable_t VALUES
     name: .ASCSTR "The Chariot", 0
     tagline: .ASCSTR "May nothing stand before you", 0
-    sprite_ptr: .dl spritedata.tarot_cards_big.7
-    sprite_palette: .dw loword(palettes.tarot_cards_chariot)
-    on_use: .dl _empty_use
+    sprite_big_ptr: .dl spritedata.tarot_cards_big.7
+    sprite_big_palette: .dw loword(palettes.tarot_cards_chariot)
+    sprite_entity_ptr: .dl 0
+    sprite_entity_palette: .dw 0
+    sprite_entity_palette_depth: .db 0
+    on_use: .dw _empty_use
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_strength INSTANCEOF consumable_t VALUES
     name: .ASCSTR "Strength", 0
     tagline: .ASCSTR "May your power bring rage", 0
-    sprite_ptr: .dl spritedata.tarot_cards_big.8
-    sprite_palette: .dw loword(palettes.tarot_cards_strength)
-    on_use: .dl _empty_use
+    sprite_big_ptr: .dl spritedata.tarot_cards_big.8
+    sprite_big_palette: .dw loword(palettes.tarot_cards_strength)
+    sprite_entity_ptr: .dl 0
+    sprite_entity_palette: .dw 0
+    sprite_entity_palette_depth: .db 0
+    on_use: .dw _empty_use
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_hermit INSTANCEOF consumable_t VALUES
     name: .ASCSTR "The Hermit", 0
     tagline: .ASCSTR "May you find solace", 0
-    sprite_ptr: .dl spritedata.tarot_cards_big.9
-    sprite_palette: .dw loword(palettes.tarot_cards_hermit)
-    on_use: .dl _tarot_hermit
+    sprite_big_ptr: .dl spritedata.tarot_cards_big.9
+    sprite_big_palette: .dw loword(palettes.tarot_cards_hermit)
+    sprite_entity_ptr: .dl 0
+    sprite_entity_palette: .dw 0
+    sprite_entity_palette_depth: .db 0
+    on_use: .dw _tarot_hermit
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_wheel_of_fortune INSTANCEOF consumable_t VALUES
     name: .ASCSTR "Wheel of Fortune", 0
     tagline: .ASCSTR "Spin the wheel of destiny", 0
-    sprite_ptr: .dl spritedata.tarot_cards_big.10
-    sprite_palette: .dw loword(palettes.tarot_cards_wheel_of_fortune)
-    on_use: .dl _empty_use
+    sprite_big_ptr: .dl spritedata.tarot_cards_big.10
+    sprite_big_palette: .dw loword(palettes.tarot_cards_wheel_of_fortune)
+    sprite_entity_ptr: .dl 0
+    sprite_entity_palette: .dw 0
+    sprite_entity_palette_depth: .db 0
+    on_use: .dw _empty_use
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_justice INSTANCEOF consumable_t VALUES
     name: .ASCSTR "Justice", 0
     tagline: .ASCSTR "May your future be balanced", 0
-    sprite_ptr: .dl spritedata.tarot_cards_big.11
-    sprite_palette: .dw loword(palettes.tarot_cards_justice)
-    on_use: .dl _tarot_justice
+    sprite_big_ptr: .dl spritedata.tarot_cards_big.11
+    sprite_big_palette: .dw loword(palettes.tarot_cards_justice)
+    sprite_entity_ptr: .dl 0
+    sprite_entity_palette: .dw 0
+    sprite_entity_palette_depth: .db 0
+    on_use: .dw _tarot_justice
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_hanged_man INSTANCEOF consumable_t VALUES
     name: .ASCSTR "The Hanged Man", 0
     tagline: .ASCSTR "May you find enlightenment", 0
-    sprite_ptr: .dl spritedata.tarot_cards_big.12
-    sprite_palette: .dw loword(palettes.tarot_cards_hanged_man)
-    on_use: .dl _empty_use
+    sprite_big_ptr: .dl spritedata.tarot_cards_big.12
+    sprite_big_palette: .dw loword(palettes.tarot_cards_hanged_man)
+    sprite_entity_ptr: .dl 0
+    sprite_entity_palette: .dw 0
+    sprite_entity_palette_depth: .db 0
+    on_use: .dw _empty_use
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_death INSTANCEOF consumable_t VALUES
     name: .ASCSTR "Death", 0
     tagline: .ASCSTR "Lay waste to your opponents", 0
-    sprite_ptr: .dl spritedata.tarot_cards_big.13
-    sprite_palette: .dw loword(palettes.tarot_cards_death)
-    on_use: .dl _empty_use
+    sprite_big_ptr: .dl spritedata.tarot_cards_big.13
+    sprite_big_palette: .dw loword(palettes.tarot_cards_death)
+    sprite_entity_ptr: .dl 0
+    sprite_entity_palette: .dw 0
+    sprite_entity_palette_depth: .db 0
+    on_use: .dw _empty_use
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_temperance INSTANCEOF consumable_t VALUES
     name: .ASCSTR "Temperance", 0
     tagline: .ASCSTR "May you be pure in heart", 0
-    sprite_ptr: .dl spritedata.tarot_cards_big.14
-    sprite_palette: .dw loword(palettes.tarot_cards1)
-    on_use: .dl _empty_use
+    sprite_big_ptr: .dl spritedata.tarot_cards_big.14
+    sprite_big_palette: .dw loword(palettes.tarot_cards1)
+    sprite_entity_ptr: .dl 0
+    sprite_entity_palette: .dw 0
+    sprite_entity_palette_depth: .db 0
+    on_use: .dw _tarot_temperance
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_devil INSTANCEOF consumable_t VALUES
     name: .ASCSTR "The Devil", 0
     tagline: .ASCSTR "Revel in dark power", 0
-    sprite_ptr: .dl spritedata.tarot_cards_big.15
-    sprite_palette: .dw loword(palettes.tarot_cards_devil)
-    on_use: .dl _empty_use
+    sprite_big_ptr: .dl spritedata.tarot_cards_big.15
+    sprite_big_palette: .dw loword(palettes.tarot_cards_devil)
+    sprite_entity_ptr: .dl 0
+    sprite_entity_palette: .dw 0
+    sprite_entity_palette_depth: .db 0
+    on_use: .dw _empty_use
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_tower INSTANCEOF consumable_t VALUES
     name: .ASCSTR "The Tower", 0
     tagline: .ASCSTR "Destruction brings creation", 0
-    sprite_ptr: .dl spritedata.tarot_cards_big.16
-    sprite_palette: .dw loword(palettes.tarot_cards_tower)
-    on_use: .dl _empty_use
+    sprite_big_ptr: .dl spritedata.tarot_cards_big.16
+    sprite_big_palette: .dw loword(palettes.tarot_cards_tower)
+    sprite_entity_ptr: .dl 0
+    sprite_entity_palette: .dw 0
+    sprite_entity_palette_depth: .db 0
+    on_use: .dw _empty_use
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_star INSTANCEOF consumable_t VALUES
     name: .ASCSTR "The Stars", 0
     tagline: .ASCSTR "May you find what you desire", 0
-    sprite_ptr: .dl spritedata.tarot_cards_big.17
-    sprite_palette: .dw loword(palettes.tarot_cards_star)
-    on_use: .dl _tarot_star
+    sprite_big_ptr: .dl spritedata.tarot_cards_big.17
+    sprite_big_palette: .dw loword(palettes.tarot_cards_star)
+    sprite_entity_ptr: .dl 0
+    sprite_entity_palette: .dw 0
+    sprite_entity_palette_depth: .db 0
+    on_use: .dw _tarot_star
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_moon INSTANCEOF consumable_t VALUES
     name: .ASCSTR "The Moon", 0
     tagline: .ASCSTR "May you find what you lost", 0
-    sprite_ptr: .dl spritedata.tarot_cards_big.18
-    sprite_palette: .dw loword(palettes.tarot_cards_moon)
-    on_use: .dl _tarot_moon
+    sprite_big_ptr: .dl spritedata.tarot_cards_big.18
+    sprite_big_palette: .dw loword(palettes.tarot_cards_moon)
+    sprite_entity_ptr: .dl 0
+    sprite_entity_palette: .dw 0
+    sprite_entity_palette_depth: .db 0
+    on_use: .dw _tarot_moon
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_sun INSTANCEOF consumable_t VALUES
     name: .ASCSTR "The Sun", 0
     tagline: .ASCSTR "Bask in the healing light", 0
-    sprite_ptr: .dl spritedata.tarot_cards_big.19
-    sprite_palette: .dw loword(palettes.tarot_cards1)
-    on_use: .dl _empty_use
+    sprite_big_ptr: .dl spritedata.tarot_cards_big.19
+    sprite_big_palette: .dw loword(palettes.tarot_cards1)
+    sprite_entity_ptr: .dl 0
+    sprite_entity_palette: .dw 0
+    sprite_entity_palette_depth: .db 0
+    on_use: .dw _empty_use
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_judgement INSTANCEOF consumable_t VALUES
     name: .ASCSTR "Judgement", 0
     tagline: .ASCSTR "Judge lest ye be judged", 0
-    sprite_ptr: .dl spritedata.tarot_cards_big.20
-    sprite_palette: .dw loword(palettes.tarot_cards1)
-    on_use: .dl _empty_use
+    sprite_big_ptr: .dl spritedata.tarot_cards_big.20
+    sprite_big_palette: .dw loword(palettes.tarot_cards1)
+    sprite_entity_ptr: .dl 0
+    sprite_entity_palette: .dw 0
+    sprite_entity_palette_depth: .db 0
+    on_use: .dw _empty_use
 .ENDST
 
 .DSTRUCT Consumable.definitions.tarot_world INSTANCEOF consumable_t VALUES
     name: .ASCSTR "The World", 0
     tagline: .ASCSTR "May you find your way", 0
-    sprite_ptr: .dl spritedata.tarot_cards_big.21
-    sprite_palette: .dw loword(palettes.tarot_cards_world)
-    on_use: .dl _empty_use
+    sprite_big_ptr: .dl spritedata.tarot_cards_big.21
+    sprite_big_palette: .dw loword(palettes.tarot_cards_world)
+    sprite_entity_ptr: .dl 0
+    sprite_entity_palette: .dw 0
+    sprite_entity_palette_depth: .db 0
+    on_use: .dw _empty_use
 .ENDST
+
+.REPT NUM_PILLS INDEX i
+    .DSTRUCT Consumable.definitions.pill_{i} INSTANCEOF consumable_t VALUES
+        name: .ASCSTR "Pill", 0
+        tagline: .ASCSTR "Could be anything", 0
+        sprite_big_ptr: .dl spritedata.pills_big.{i # 3}
+        sprite_big_palette: .dw loword(palettes.pills.{i / 3})
+        sprite_entity_ptr: .dl spritedata.pills.{i # 3}
+        sprite_entity_palette: .dw loword(palettes.pills.{i / 3})
+        sprite_entity_palette_depth: .db 4
+        on_use: .dw _empty_use
+    .ENDST
+.ENDR
 
 Consumable.consumables:
     .dw Consumable.definitions.null
@@ -214,7 +296,10 @@ Consumable.consumables:
     .dw Consumable.definitions.tarot_sun
     .dw Consumable.definitions.tarot_judgement
     .dw Consumable.definitions.tarot_world
-    .REPT 256-23
+    .REPT NUM_PILLS INDEX i
+        .dw Consumable.definitions.pill_{i}
+    .ENDR
+    .REPT 256 - CONSUMABLE_COUNT
         .dw Consumable.definitions.null
     .ENDR
 
@@ -395,6 +480,15 @@ _tarot_justice:
     jsl CreateEntityNearPlayer
     rts
 
+_tarot_temperance:
+    .ForceSetAX 16, 16
+    lda #entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_RANDOM_PILL)
+    jsl CreateEntityNearPlayer
+    .ForceSetAX 16, 16
+    lda #entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_RANDOM_PILL)
+    jsl CreateEntityNearPlayer
+    rts
+
 ; Set current consumable to 'A'
 ; May spawn a pickup if the player currently has a card in their inventory
 Consumable.pickup:
@@ -444,9 +538,9 @@ Consumable.update_display:
     phx
     ; decompress sprite
     ldy #tempTileData ; decompress into tempTileData; sprite is $200B/$800B
-    lda.l bankaddr(Consumable.consumables) | consumable_t.sprite_ptr,X
+    lda.l bankaddr(Consumable.consumables) | consumable_t.sprite_big_ptr,X
     pha
-    lda.l bankaddr(Consumable.consumables) | consumable_t.sprite_ptr+2,X
+    lda.l bankaddr(Consumable.consumables) | consumable_t.sprite_big_ptr+2,X
     and #$00FF
     ora #$7F00
     plx
@@ -485,7 +579,7 @@ Consumable.update_display:
     phx
     pea 32
     pea $7000 | bankbyte(palettes.palette0.w)
-    lda.l bankaddr(Consumable.consumables) | consumable_t.sprite_palette,X
+    lda.l bankaddr(Consumable.consumables) | consumable_t.sprite_big_palette,X
     pha
     jsl CopyPaletteVQueue
     .ForceSetAX 16, 16
@@ -531,9 +625,9 @@ Consumable.update_display_no_overlay:
     phx
     ; decompress sprite
     ldy #tempTileData ; decompress into tempTileData; sprite is $200B/$800B
-    lda.l bankaddr(Consumable.consumables) | consumable_t.sprite_ptr,X
+    lda.l bankaddr(Consumable.consumables) | consumable_t.sprite_big_ptr,X
     pha
-    lda.l bankaddr(Consumable.consumables) | consumable_t.sprite_ptr+2,X
+    lda.l bankaddr(Consumable.consumables) | consumable_t.sprite_big_ptr+2,X
     and #$00FF
     ora #$7F00
     plx
@@ -572,7 +666,7 @@ Consumable.update_display_no_overlay:
     phx
     pea 32
     pea $7000 | bankbyte(palettes.palette0.w)
-    lda.l bankaddr(Consumable.consumables) | consumable_t.sprite_palette,X
+    lda.l bankaddr(Consumable.consumables) | consumable_t.sprite_big_palette,X
     pha
     jsl CopyPaletteVQueue
     .ForceSetAX 16, 16

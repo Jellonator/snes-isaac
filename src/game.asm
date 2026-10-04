@@ -695,12 +695,9 @@ Pause.PageStats:
     .ForceSetA 8
     lda #15
     sta.l DIVU_DIVISOR
-    .ForceSetA 16
-    .ForceSetA 16
-    .REPT 5
-        nop
-    .ENDR
-    lda.l DIVU_QUOTIENT
+    .ForceSetA 16 ; 3
+    .WAIT 16 - 7
+    lda.l DIVU_QUOTIENT ; 4
     sta.b $02
     .ForceSetAX 8, 8
     and #$00FF

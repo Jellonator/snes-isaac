@@ -17,12 +17,9 @@ ConvertBinaryToDecimalU16:
         .ForceSetA 8
         lda #10
         sta.l DIVU_DIVISOR
-        .ForceSetA 16
-        .ForceSetA 16
-        .REPT 5
-            nop
-        .ENDR
-        lda.l DIVU_REMAINDER
+        .ForceSetA 16 ; 3
+        .WAIT 16 - 7
+        lda.l DIVU_REMAINDER ; 4
         .IF i == 0
             sta.b RESULT
         .ELIF i == 1
@@ -66,10 +63,8 @@ ConvertBinaryToDecimalU8:
         sta.l DIVU_DIVIDEND
         lda #10
         sta.l DIVU_DIVISOR
-        .REPT 8
-            nop
-        .ENDR
-        lda.l DIVU_REMAINDER
+        .WAIT 16 - 4
+        lda.l DIVU_REMAINDER ; 4
         .IF i == 0
             sta.b RESULT
         .ELSE

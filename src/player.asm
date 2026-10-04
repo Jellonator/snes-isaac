@@ -1326,11 +1326,9 @@ _player_handle_shoot_chocolate_milk:
     sta.w MULTU_A
     lda.w playerData.tear_timer+1
     sta.w MULTU_B
-    nop ; +2 | 2
-    nop ; +2 | 4
-    nop ; +2 | 6
-    .ForceSetA 16
-    lda.w MULTU_RESULT
+    .WAIT 8 - 6
+    .ForceSetA 16 ; 3
+    lda.w MULTU_RESULT ; 3
     sta.b $00
     ; top byte of damage
     .ForceSetA 8
@@ -1338,11 +1336,9 @@ _player_handle_shoot_chocolate_milk:
     sta.w MULTU_A
     lda.w playerData.tear_timer+1
     sta.w MULTU_B
-    nop ; +2 | 2
-    nop ; +2 | 4
-    nop ; +2 | 6
-    .ForceSetA 16
-    lda.w MULTU_RESULT
+    .WAIT 8 - 6
+    .ForceSetA 16 ; 3
+    lda.w MULTU_RESULT ; 3
     sta.b $02
     ; divide low byte properly
     lda.b $00

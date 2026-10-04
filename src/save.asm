@@ -159,7 +159,22 @@ Save.WriteSaveState:
         dex
         bpl @loop_copy_trinket
 ; copy player data
-    .ForceSetA 8
+    .SetA 16
+    lda.l playerData.statadd_accel
+    sta.w savestate.0.player_statadd_accel
+    lda.l playerData.statadd_tears
+    sta.w savestate.0.player_statadd_tears
+    lda.l playerData.statadd_accel
+    sta.w savestate.0.player_statadd_speed
+    lda.l playerData.statadd_tear_lifetime
+    sta.w savestate.0.player_statadd_tearlife
+    lda.l playerData.statadd_tear_speed
+    sta.w savestate.0.player_statadd_tearspeed
+    .REPT HEALTHSLOT_COUNT/2 INDEX i
+        lda.l playerData.healthSlots+i*2
+        sta.w savestate.0.player_health+i*2
+    .ENDR
+    .SetA 8
     lda.l playerData.money
     sta.w savestate.0.player_money
     lda.l playerData.keys
@@ -176,10 +191,6 @@ Save.WriteSaveState:
     sta.w savestate.0.floors_since_devil_deal
     lda.l devil_deal_flags
     sta.w savestate.0.devil_deal_flags
-    .REPT HEALTHSLOT_COUNT INDEX i
-        lda.l playerData.healthSlots+i
-        sta.w savestate.0.player_health+i
-    .ENDR
     lda.l player_posx+1
     sta.w savestate.0.player_posx
     lda.l player_posy+1
@@ -201,15 +212,15 @@ Save.WriteSaveState:
 ; copy current room slot
     lda.l currentRoomSlot
     sta.w savestate.0.room_current_slot
-    .ForceSetA 16
+    .SetA 16
     lda.l currentFloorIndex
     sta.w savestate.0.floor_current_index
-    .ForceSetA 8
+    .SetA 8
 ; copy rooms
     lda.l numUsedMapSlots
     sta.w savestate.0.num_rooms
     sta.b $10
-    .ForceSetAX 16, 16
+    .SetAX 16, 16
     stz.b $11
     lda #0
     sta.b $12
@@ -261,7 +272,7 @@ Save.WriteSaveState:
     sta.w $0002,Y
     sta.w $0004,Y
 ; copy roomslots
-    .ForceSetA 8
+    .SetA 8
     lda.l roomslot_star
     sta.w savestate.0.roomslot_star
     lda.l roomslot_boss
@@ -275,7 +286,7 @@ Save.WriteSaveState:
     lda.l roomslot_secret2
     sta.w savestate.0.roomslot_secret2
 ; end
-    .ForceSetA 8
+    .SetA 8
     lda #SAVESTATE_STATE_IN_USE
     sta.w savestate.0.state
     plb
@@ -441,13 +452,31 @@ Save.ReadSaveState:
         dex
         bpl @loop_copy_trinket
 ; copy player data
-    .ForceSetA 8
+    .SetA 16
+    lda.w savestate.0.player_statadd_accel
+    sta.l playerData.statadd_accel
+    lda.w savestate.0.player_statadd_tears
+    sta.l playerData.statadd_tears
+    lda.w savestate.0.player_statadd_speed
+    sta.l playerData.statadd_accel
+    lda.w savestate.0.player_statadd_tearlife
+    sta.l playerData.statadd_tear_lifetime
+    lda.w savestate.0.player_statadd_tearspeed
+    sta.l playerData.statadd_tear_speed
     lda.w savestate.0.player_money
+    and #$00FF
     sta.l playerData.money
     lda.w savestate.0.player_keys
+    and #$00FF
     sta.l playerData.keys
     lda.w savestate.0.player_bombs
+    and #$00FF
     sta.l playerData.bombs
+    .REPT HEALTHSLOT_COUNT/2 INDEX i
+        lda.w savestate.0.player_health+i*2
+        sta.l playerData.healthSlots+i*2
+    .ENDR
+    .SetA 8
     lda.w savestate.0.player_consumable
     sta.l playerData.current_consumable
     lda.w savestate.0.player_active_item
@@ -458,10 +487,6 @@ Save.ReadSaveState:
     sta.l floors_since_devil_deal
     lda.w savestate.0.devil_deal_flags
     sta.l devil_deal_flags
-    .REPT HEALTHSLOT_COUNT INDEX i
-        lda.w savestate.0.player_health+i
-        sta.l playerData.healthSlots+i
-    .ENDR
     lda.w savestate.0.player_posx
     sta.l player_posx+1
     lda.w savestate.0.player_posy
@@ -621,7 +646,7 @@ Save.ReadSaveState:
     lda.w savestate.0.roomslot_secret2
     sta.l roomslot_secret2
 ; end
-    .ForceSetA 8
+    .SetA 8
     lda #SAVESTATE_STATE_EMPTY
     sta.w savestate.0.state
     plb

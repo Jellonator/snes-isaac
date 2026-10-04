@@ -489,6 +489,36 @@ _tarot_temperance:
     .ForceSetAX 16, 16
     lda #entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_RANDOM_PILL)
     jsl CreateEntityNearPlayer
+    .ForceSetAX 16, 16
+    lda #entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_RANDOM_PILL)
+    jsl CreateEntityNearPlayer
+    .ForceSetAX 16, 16
+    lda #entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_RANDOM_PILL)
+    jsl CreateEntityNearPlayer
+    .ForceSetAX 16, 16
+    lda #entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_RANDOM_PILL)
+    jsl CreateEntityNearPlayer
+    .ForceSetAX 16, 16
+    lda #entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_RANDOM_PILL)
+    jsl CreateEntityNearPlayer
+    .ForceSetAX 16, 16
+    lda #entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_RANDOM_PILL)
+    jsl CreateEntityNearPlayer
+    .ForceSetAX 16, 16
+    lda #entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_RANDOM_PILL)
+    jsl CreateEntityNearPlayer
+    .ForceSetAX 16, 16
+    lda #entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_RANDOM_PILL)
+    jsl CreateEntityNearPlayer
+    .ForceSetAX 16, 16
+    lda #entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_RANDOM_PILL)
+    jsl CreateEntityNearPlayer
+    .ForceSetAX 16, 16
+    lda #entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_RANDOM_PILL)
+    jsl CreateEntityNearPlayer
+    .ForceSetAX 16, 16
+    lda #entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_RANDOM_PILL)
+    jsl CreateEntityNearPlayer
     rts
 
 ; Set current consumable to 'A'
@@ -761,7 +791,7 @@ _pill_speed_down:
     .SoftSetAX 16, 16
     lda.w playerData.statadd_accel
     sec
-    sbc #PILL_SPEED_ADD
+    sbc #PILL_SPEED_SUBTRACT
     sta.w playerData.statadd_accel
     lda #PLAYER_FLAG_INVALIDATE_ITEM_CACHE
     tsb.w playerData.flags
@@ -773,7 +803,7 @@ _pill_range_up:
     .SoftSetAX 16, 16
     lda.w playerData.statadd_tear_lifetime
     clc
-    adc #PILL_SPEED_ADD
+    adc #PILL_TEARLIFE_ADD
     sta.w playerData.statadd_tear_lifetime
     lda #PLAYER_FLAG_INVALIDATE_ITEM_CACHE
     tsb.w playerData.flags
@@ -785,7 +815,7 @@ _pill_range_down:
     .SoftSetAX 16, 16
     lda.w playerData.statadd_tear_lifetime
     sec
-    sbc #PILL_SPEED_ADD
+    sbc #PILL_TEARLIFE_SUBTRACT
     sta.w playerData.statadd_tear_lifetime
     lda #PLAYER_FLAG_INVALIDATE_ITEM_CACHE
     tsb.w playerData.flags
@@ -795,10 +825,10 @@ _pill_shotspeed_up_text:
     .ASCSTR "Shot Speed Up", 0
 _pill_shotspeed_up:
     .SoftSetAX 16, 16
-    lda.w playerData.statadd_tear_lifetime
+    lda.w playerData.statadd_tear_speed
     clc
-    adc #PILL_SPEED_ADD
-    sta.w playerData.statadd_tear_lifetime
+    adc #PILL_TEARSPEED_ADD
+    sta.w playerData.statadd_tear_speed
     lda #PLAYER_FLAG_INVALIDATE_ITEM_CACHE
     tsb.w playerData.flags
     rts
@@ -807,10 +837,10 @@ _pill_shotspeed_down_text:
     .ASCSTR "Shot Speed Down", 0
 _pill_shotspeed_down:
     .SoftSetAX 16, 16
-    lda.w playerData.statadd_tear_lifetime
+    lda.w playerData.statadd_tear_speed
     sec
-    sbc #PILL_SPEED_ADD
-    sta.w playerData.statadd_tear_lifetime
+    sbc #PILL_TEARSPEED_SUBTRACT
+    sta.w playerData.statadd_tear_speed
     lda #PLAYER_FLAG_INVALIDATE_ITEM_CACHE
     tsb.w playerData.flags
     rts

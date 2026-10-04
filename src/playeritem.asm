@@ -213,15 +213,15 @@ Item.check_and_recalculate:
     lda.w playerData.stat_tear_lifetime
     clc
     adc.w playerData.statadd_tear_lifetime
-    .AMINU P_IMM TEAR_LIFE_MAXIMUM
-    .AMAXU P_IMM TEAR_LIFE_MINIMUM
+    .AMIN P_IMM TEAR_LIFE_MAXIMUM
+    .AMAX P_IMM TEAR_LIFE_MINIMUM
     sta.w playerData.stat_tear_lifetime
 ; TEAR SPEED
     lda.w playerData.stat_tear_speed
     clc
     adc.w playerData.statadd_tear_speed
-    .AMINU P_IMM TEAR_SPEED_MAXIMUM
-    .AMAXU P_IMM TEAR_SPEED_MINIMUM
+    .AMIN P_IMM TEAR_SPEED_MAXIMUM
+    .AMAX P_IMM TEAR_SPEED_MINIMUM
     sta.w playerData.stat_tear_speed
 ; tear flags
     lda #0

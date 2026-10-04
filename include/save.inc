@@ -56,6 +56,11 @@
     player_posy db
     player_trinketslot ds 2
     player_trinketeffects ds 32
+    player_statadd_tears dw
+    player_statadd_accel dw
+    player_statadd_tearlife dw
+    player_statadd_tearspeed dw
+    player_statadd_speed dw
     ; devil deal info
     floors_since_devil_deal db
     devil_deal_flags db

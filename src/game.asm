@@ -278,6 +278,7 @@ tile_data_loop:
         jmp @end_load
     @normal_load:
     ; new game
+        jsl Consumable.ShufflePills
         jsl Floor.Init
     @end_load:
     ; Clear sprites

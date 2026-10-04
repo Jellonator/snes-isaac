@@ -148,6 +148,11 @@ Save.WriteSaveState:
     sta.w savestate.0.seed_stage.low
     lda.l stageSeed.high
     sta.w savestate.0.seed_stage.high
+; copy pill effect list
+    .REPT NUM_PILLS INDEX i
+        lda.l pillEffectList + i*2
+        sta.w savestate.0.pill_effect_list + i*2
+    .ENDR
 ; copy player trinkets
     lda.l playerData.trinketslot
     sta.w savestate.0.player_trinketslot
@@ -441,6 +446,11 @@ Save.ReadSaveState:
     sta.l stageSeed.low
     lda.w savestate.0.seed_stage.high
     sta.l stageSeed.high
+; copy pill effect list
+    .REPT NUM_PILLS INDEX i
+        lda.w savestate.0.pill_effect_list + i*2
+        sta.l pillEffectList + i*2
+    .ENDR
 ; copy player trinkets
     lda.w savestate.0.player_trinketslot
     sta.l playerData.trinketslot

@@ -20,8 +20,10 @@ VBlank2:
     lda.w blockVQueueMutex
     beq @continuevblank
     phx
+    phy
     jsl Render.UpdateHDMA
     .ForceSetAX 16, 16
+    ply
     plx
     pla
     plb
@@ -74,6 +76,7 @@ VBlank2:
     bne @skipUpdateAllTiles
         stz.w numTilesToUpdate
         jsr UpdateEntireMinimap
+        .ForceSetA 8
 @skipUpdateAllTiles:
 ; Process HDMA
     .SoftSetA 8

@@ -230,6 +230,8 @@
     mapDoorHorizontal ds MAP_MAX_SIZE ; For index i: Connects room i with room i+1
     private_mapDoorVerticalEmptyBuf ds MAP_MAX_WIDTH
     mapDoorVertical ds MAP_MAX_SIZE ; For index i: Connects room i with room i+MAP_MAX_WIDTH
+; pill map
+    pillEffectList ds NUM_PILLS
 ; VRAM sprite allocation data
     ; managed sprite table keys (sprite id + palette)
     spriteTableKey dsw SPRITE_TABLE_TOTAL_SIZE

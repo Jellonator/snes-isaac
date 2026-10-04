@@ -2,6 +2,7 @@
 .include "room.inc"
 .include "consumables.inc"
 .include "player.inc"
+.include "rng.inc"
 
 .BANK $01 SLOT "ROM"
 .SECTION "Pathing" FREE
@@ -489,36 +490,6 @@ _tarot_temperance:
     .ForceSetAX 16, 16
     lda #entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_RANDOM_PILL)
     jsl CreateEntityNearPlayer
-    .ForceSetAX 16, 16
-    lda #entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_RANDOM_PILL)
-    jsl CreateEntityNearPlayer
-    .ForceSetAX 16, 16
-    lda #entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_RANDOM_PILL)
-    jsl CreateEntityNearPlayer
-    .ForceSetAX 16, 16
-    lda #entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_RANDOM_PILL)
-    jsl CreateEntityNearPlayer
-    .ForceSetAX 16, 16
-    lda #entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_RANDOM_PILL)
-    jsl CreateEntityNearPlayer
-    .ForceSetAX 16, 16
-    lda #entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_RANDOM_PILL)
-    jsl CreateEntityNearPlayer
-    .ForceSetAX 16, 16
-    lda #entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_RANDOM_PILL)
-    jsl CreateEntityNearPlayer
-    .ForceSetAX 16, 16
-    lda #entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_RANDOM_PILL)
-    jsl CreateEntityNearPlayer
-    .ForceSetAX 16, 16
-    lda #entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_RANDOM_PILL)
-    jsl CreateEntityNearPlayer
-    .ForceSetAX 16, 16
-    lda #entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_RANDOM_PILL)
-    jsl CreateEntityNearPlayer
-    .ForceSetAX 16, 16
-    lda #entityvariant(ENTITY_TYPE_PICKUP, ENTITY_PICKUP_RANDOM_PILL)
-    jsl CreateEntityNearPlayer
     rts
 
 ; Set current consumable to 'A'
@@ -921,6 +892,9 @@ _pill_effect_table:
     .dw _pill_health_down
     .dw _pill_full_heal
     .dw _pill_hurt
+    @end:
+
+.DEFINE NUM_PILL_EFFECTS ((_pill_effect_table@end - _pill_effect_table) / 2)
 
 _pill_name_table:
     .dw _pill_tears_up_text
@@ -938,14 +912,24 @@ _pill_name_table:
 
 .SoftSetAX 16, 16
 _pill_use:
+    ; get pill effect index
     sec
     sbc #PILLS_FIRST_ID
+    tax
+    ; indicate that pill has been used
+    lda.l pillEffectList,X
+    ora #$0080
+    sta.l pillEffectList,X
+    ; get pill name
+    and #$007F
     asl
     tax
     lda.l _pill_name_table,X
     .pha
+    ; call pill effect
     jsr (_pill_effect_table,X)
     .ForceSetAX 16, 16
+    ; show pill text
     .plx
     .PushBank
     phk
@@ -953,6 +937,52 @@ _pill_use:
     jsl Overlay.putline
     .PopBank
     rts
+.ClearContext
+
+.SoftSetBank $80
+Consumable.ShufflePills:
+    .DEFINE pill_effect_list_size $00
+    .ForceSetAX 16, 16
+; initialize effect list
+    .SetA 8
+    ldx #NUM_PILL_EFFECTS
+    stx.b pill_effect_list_size
+    @loop_init_list:
+        dex
+        txa
+        sta.w tempData_shared,X
+        bne @loop_init_list
+    .SetA 16
+; pick random effects from effect list
+    ldx #0
+    @loop_randomize:
+    ; set random number
+        .call "Random.Stage.Update8" ; A = rng
+        sta.w DIVU_DIVIDEND
+    ; set divisor to remaining size of effect list
+        .SetA 8
+        lda.b pill_effect_list_size
+        sta.w DIVU_DIVISOR
+    ; perform increment
+        dec.b pill_effect_list_size ; 5
+        inx ; 2
+        .WAIT 16-10
+    ; set value
+        ldy.w DIVU_REMAINDER ; 3, get array index
+        lda.w tempData_shared,Y ; get value from array
+        sta.l pillEffectList-1,X ; compensate for inx
+    ; remove value from array (array[index] = array[len-1])
+        .phy
+        ldy.b pill_effect_list_size
+        lda.w tempData_shared,Y
+        .ply
+        sta.w tempData_shared,Y 
+    ; check if end of list
+        .SetA 16 ; 3
+        cpx #NUM_PILLS
+        bcc @loop_randomize
+; end
+    rtl
 .ClearContext
 
 .ENDS

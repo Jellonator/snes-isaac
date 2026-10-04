@@ -1,6 +1,7 @@
 .include "player.inc"
 .include "room.inc"
 .include "map.inc"
+.include "consumables.inc"
 
 .STRUCT savestate_room_t
     roomtype db
@@ -42,6 +43,8 @@
     seed_game INSTANCEOF rng_t
     seed_game_stored INSTANCEOF rng_t
     seed_stage INSTANCEOF rng_t
+    ; global data
+    pill_effect_list ds NUM_PILLS
     ; player data
     player_money db
     player_bombs db

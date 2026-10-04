@@ -40,7 +40,6 @@ String.len:
     tya
     rtl
 
-.SoftSetBank D_BANK_MIRROR_LOWRAM
 Overlay.clear:
     .ForceSetAX 16, 16
     lda.l textLines
@@ -48,7 +47,8 @@ Overlay.clear:
         rtl
     +:
     ; get vqueue ptr
-    .VQueueOpToX
+    .VQueueOpToALong
+    tax
     ; put info
     .SetAX 16, 16
     lda.l textLines
@@ -71,13 +71,12 @@ Overlay.clear:
     sta.l textLines
     ; increment pointer
     .VQueueOpIncX
-    .VQueueOpStoreX
+    txa
+    .VQueueOpStoreALong
     rtl
-    .ClearContext
 
 ; Put string of characters onto overlay
 ; String is in X, with appropriate data bank
-.SoftSetBank D_BANK_MIRROR_LOWRAM
 Overlay.putline:
     .DEFINE PREFIX_LEN $00
     .DEFINE STRING_LEN $01
@@ -175,7 +174,8 @@ Overlay.putline:
 ; write to vqueue
     ; get vqueue ptr
     .ForceSetAX 16, 16
-    .VQueueOpToX
+    .VQueueOpToALong
+    tax
     ; put info
     lda.l vqueueBinOffset
     sta.l vqueueOp_SrcAddr,X
@@ -194,7 +194,8 @@ Overlay.putline:
     lda #joinword(VQUEUE_MODE_VRAM, $7F)
     sta.l vqueueOp_ModeBank,X
     .VQueueOpIncX
-    .VQueueOpStoreX
+    txa
+    .VQueueOpStoreALong
     .ForceSetA 8
     ; increment line
     lda.l textLines

@@ -268,7 +268,7 @@
         sprite_entity_id: .dw sprite.pills.{i # 3}
         sprite_entity_palette: .dw loword(palettes.pills.{i / 3})
         sprite_entity_palette_depth: .db 8
-        on_use: .dw _empty_use
+        on_use: .dw _pill_use
     .ENDST
 .ENDR
 
@@ -425,6 +425,8 @@ _tarot_fool:
     jsl TeleportToRoom
 _empty_use: ; put here to save 1 byte
     rts
+_empty_text:
+    .ASCSTR "null", 0
 
 _tarot_star:
     .ForceSetAX 8, 8
@@ -691,6 +693,8 @@ Consumable.use:
     lda.l bankaddr(Consumable.consumables) | consumable_t.on_use,X
     sta.w $0000
     pea @next-1
+    lda.w playerData.current_consumable
+    and #$00FF
     jmp ($0000)
 @next:
     ; set consumable to 0
@@ -701,5 +705,224 @@ Consumable.use:
     jml Consumable.update_display_no_overlay
 @skip:
     rtl
+
+; PILL FUNCTIONS
+
+.DEFINE PILL_TEAR_ADD 3
+.DEFINE PILL_TEAR_SUBTRACT 3
+.DEFINE PILL_SPEED_ADD 3
+.DEFINE PILL_SPEED_SUBTRACT 3
+.DEFINE PILL_TEARSPEED_ADD $0020
+.DEFINE PILL_TEARSPEED_SUBTRACT $0020
+.DEFINE PILL_TEARLIFE_ADD 10
+.DEFINE PILL_TEARLIFE_SUBTRACT 8
+
+.DEFINE STK_TEXT $03
+
+_pill_tears_up_text:
+    .ASCSTR "Tears Up", 0
+_pill_tears_up:
+    .SoftSetAX 16, 16
+    lda.w playerData.statadd_tears
+    clc
+    adc #PILL_TEAR_ADD
+    sta.w playerData.statadd_tears
+    lda #PLAYER_FLAG_INVALIDATE_ITEM_CACHE
+    tsb.w playerData.flags
+    rts
+
+_pill_tears_down_text:
+    .ASCSTR "Tears Down", 0
+_pill_tears_down:
+    .SoftSetAX 16, 16
+    lda.w playerData.statadd_tears
+    sec
+    sbc #PILL_TEAR_SUBTRACT
+    sta.w playerData.statadd_tears
+    lda #PLAYER_FLAG_INVALIDATE_ITEM_CACHE
+    tsb.w playerData.flags
+    rts
+
+_pill_speed_up_text:
+    .ASCSTR "Speed Up", 0
+_pill_speed_up:
+    .SoftSetAX 16, 16
+    lda.w playerData.statadd_accel
+    clc
+    adc #PILL_SPEED_ADD
+    sta.w playerData.statadd_accel
+    lda #PLAYER_FLAG_INVALIDATE_ITEM_CACHE
+    tsb.w playerData.flags
+    rts
+
+_pill_speed_down_text:
+    .ASCSTR "Speed Down", 0
+_pill_speed_down:
+    .SoftSetAX 16, 16
+    lda.w playerData.statadd_accel
+    sec
+    sbc #PILL_SPEED_ADD
+    sta.w playerData.statadd_accel
+    lda #PLAYER_FLAG_INVALIDATE_ITEM_CACHE
+    tsb.w playerData.flags
+    rts
+
+_pill_range_up_text:
+    .ASCSTR "Range Up", 0
+_pill_range_up:
+    .SoftSetAX 16, 16
+    lda.w playerData.statadd_tear_lifetime
+    clc
+    adc #PILL_SPEED_ADD
+    sta.w playerData.statadd_tear_lifetime
+    lda #PLAYER_FLAG_INVALIDATE_ITEM_CACHE
+    tsb.w playerData.flags
+    rts
+
+_pill_range_down_text:
+    .ASCSTR "Range Down", 0
+_pill_range_down:
+    .SoftSetAX 16, 16
+    lda.w playerData.statadd_tear_lifetime
+    sec
+    sbc #PILL_SPEED_ADD
+    sta.w playerData.statadd_tear_lifetime
+    lda #PLAYER_FLAG_INVALIDATE_ITEM_CACHE
+    tsb.w playerData.flags
+    rts
+
+_pill_shotspeed_up_text:
+    .ASCSTR "Shot Speed Up", 0
+_pill_shotspeed_up:
+    .SoftSetAX 16, 16
+    lda.w playerData.statadd_tear_lifetime
+    clc
+    adc #PILL_SPEED_ADD
+    sta.w playerData.statadd_tear_lifetime
+    lda #PLAYER_FLAG_INVALIDATE_ITEM_CACHE
+    tsb.w playerData.flags
+    rts
+
+_pill_shotspeed_down_text:
+    .ASCSTR "Shot Speed Down", 0
+_pill_shotspeed_down:
+    .SoftSetAX 16, 16
+    lda.w playerData.statadd_tear_lifetime
+    sec
+    sbc #PILL_SPEED_ADD
+    sta.w playerData.statadd_tear_lifetime
+    lda #PLAYER_FLAG_INVALIDATE_ITEM_CACHE
+    tsb.w playerData.flags
+    rts
+
+_pill_health_up_text:
+    .ASCSTR "Health Up", 0
+_pill_health_up:
+    .SoftSetAX 16, 16
+    lda #0
+    jsl Player.health_up
+    rts
+
+_pill_health_down_text:
+    .ASCSTR "Health Down", 0
+_pill_health_down:
+    .SoftSetAX 16, 16
+    ; health down becomes health up when player has at most one red heart
+    jsl Player.count_red_heart_slots
+    .SoftSetAX 8, 8
+    cmp #2
+    bcs +
+        ; player has 0 or 1 red hearts, add one instead
+        lda #0
+        jsl Player.health_up
+        ; change text
+        .ForceSetAX 16, 16
+        lda #_pill_health_up_text
+        sta STK_TEXT,S
+        rts
+    +:
+    ; player has 2+ red hearts, remove one
+    jsl Player.take_heart_container
+    rts
+
+_pill_full_heal_text:
+    .ASCSTR "Full Health", 0
+_pill_full_heal:
+    .SoftSetAX 16, 16
+    jsl Player.HealFull
+    rts
+
+_pill_hurt_text:
+    .ASCSTR "Bad Trip", 0
+_pill_hurt:
+    .SoftSetAX 16, 16
+    ; if first health slot is a half or empty red heart,
+    ; or player's effective health is at most 2,
+    ; then perform a full heal instead.
+    lda.w playerData.healthSlots.0
+    cmp #HEALTH_REDHEART_HALF
+    beq @fullheal
+    cmp #HEALTH_REDHEART_EMPTY
+    beq @fullheal
+    jsl Player.get_effective_health
+    .SoftSetAX 8, 8
+    cmp #3
+    bcc @fullheal
+    lda #2
+    jsl Player.ForceTakeDamage
+    rts
+@fullheal:
+    .ForceSetAX 16, 16
+    lda #_pill_full_heal_text
+    sta STK_TEXT,S
+    jsl Player.HealFull
+    rts
+
+_pill_effect_table:
+    .dw _pill_tears_up
+    .dw _pill_tears_down
+    .dw _pill_speed_up
+    .dw _pill_speed_down
+    .dw _pill_range_up
+    .dw _pill_range_down
+    .dw _pill_shotspeed_up
+    .dw _pill_shotspeed_down
+    .dw _pill_health_up
+    .dw _pill_health_down
+    .dw _pill_full_heal
+    .dw _pill_hurt
+
+_pill_name_table:
+    .dw _pill_tears_up_text
+    .dw _pill_tears_down_text
+    .dw _pill_speed_up_text
+    .dw _pill_speed_down_text
+    .dw _pill_range_up_text
+    .dw _pill_range_down_text
+    .dw _pill_shotspeed_up_text
+    .dw _pill_shotspeed_down_text
+    .dw _pill_health_up_text
+    .dw _pill_health_down_text
+    .dw _pill_full_heal_text
+    .dw _pill_hurt_text
+
+.SoftSetAX 16, 16
+_pill_use:
+    sec
+    sbc #PILLS_FIRST_ID
+    asl
+    tax
+    lda.l _pill_name_table,X
+    .pha
+    jsr (_pill_effect_table,X)
+    .ForceSetAX 16, 16
+    .plx
+    .PushBank
+    phk
+    plb
+    jsl Overlay.putline
+    .PopBank
+    rts
+.ClearContext
 
 .ENDS

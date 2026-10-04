@@ -149,6 +149,23 @@ Player.Heal:
     txa
     rtl
 
+; Give the player full health
+Player.HealFull:
+    .ForceSetAX 8, 8
+    ldy #0
+    @loop:
+        ldx.w playerData.healthSlots,Y
+        lda.l _PlayerHealthIsRedHeartTable,X
+        beq @end ; not a red heart - end
+        ; is a red health slot, put a full heart
+        lda #HEALTH_REDHEART_FULL
+        sta.w playerData.healthSlots,Y
+        iny
+        cpy #HEALTHSLOT_COUNT
+        bne @loop ; loop while Y < HEALTHSLOT_COUNT
+    @end:
+    jmp UI.update_all_hearts
+
 ; Returns true (A=1) if player has space for at least one half soul heart
 Player.CanAddSoulHeart:
     .ForceSetAX 8, 8
@@ -247,7 +264,7 @@ _PlayerTakeHealth:
         lda.w playerData.healthSlots,Y
         cmp #HEALTH_REDHEART_HALF
         bcs @foundHealth
-    dey
+    dey ; all health slots were empty, fallthrough
     bpl @loop
 ; player has died; eventually handle
 @died:
@@ -308,8 +325,27 @@ _PlayerHandleDamaged:
     +:
     rtl
 
+; Force player to lose [A] health (half hearts)
+Player.ForceTakeDamage
+    .ForceSetA 8
+@loop:
+    dec A
+    bmi @end
+    .pha
+    jsl _PlayerTakeHealth
+    .ForceSetA 8
+    .pla
+    jmp @loop
+@end:
+    jsl Hook.PlayerDamage
+    rtl
+
+; grants the player a health up.
+; [A] determines how full the heart is: 0, 1, or 2
 Player.health_up:
+; move all health slots over one
     .ForceSetAX 8, 8
+    .pha
     ldy #HEALTHSLOT_COUNT-1
     @loop:
         ; move health slots over one
@@ -320,9 +356,64 @@ Player.health_up:
         dey
         jmp @loop
 @end:
-    lda #HEALTH_REDHEART_FULL
+; set bottom health slot
+    .pla
+    inc A
+    bne +
+        ; heart would be null => empty heart
+        lda #HEALTH_REDHEART_EMPTY
+    +:
+    cmp #HEALTH_REDHEART_FULL+1
+    bcc +
+        ; heart would be other heart type => empty heart
+        lda #HEALTH_REDHEART_EMPTY
+    +:
     sta.w playerData.healthSlots,Y
-    jmp UI.update_all_hearts
+; propagate health down
+_Health_Propagate_Down:
+    ldy #0
+    jmp @loop_propagate_enter
+    @loop_propagate:
+        iny
+        cpy #HEALTHSLOT_COUNT
+        bcs @end_propagate
+    @loop_propagate_enter:
+        lda.w playerData.healthSlots,Y
+        cmp #HEALTH_REDHEART_EMPTY
+        beq @heart_empty
+        cmp #HEALTH_REDHEART_HALF
+        beq @heart_half
+        cmp #HEALTH_REDHEART_FULL
+        beq @loop_propagate
+        ; found a non-red heart, end
+    @end_propagate:
+    ; update ui
+        jmp UI.update_all_hearts
+    @heart_empty:
+        ldx.w playerData.healthSlots+1,Y
+        lda.w _PlayerHealthIsRedHeartTable,X
+        beq +
+            ; set current heart to value of next heart
+            txa
+            sta.w playerData.healthSlots,Y
+            ; set next heart to empty
+            lda #HEALTH_REDHEART_EMPTY
+            sta.w playerData.healthSlots+1,Y
+        +:
+        jmp @loop_propagate
+    @heart_half:
+        ldx.w playerData.healthSlots+1,Y
+        lda.w _PlayerHealthIsRedHeartTable,X
+        beq +
+            txa
+            dec A
+            beq + ; heart was empty, skip
+            ; drain next heart by one, set this heart to jull
+            sta.w playerData.healthSlots+1,Y
+            lda #HEALTH_REDHEART_FULL
+            sta.w playerData.healthSlots,Y
+        +:
+        jmp @loop_propagate
 
 Player.get_effective_health:
     .ForceSetAX 8, 8
@@ -439,6 +530,11 @@ PlayerInit:
     stz.w playerData.helperFlyBufferCount
     stz.w playerData.helperFlyActiveCount
     stz.w playerData.helperFlyPositionMask
+    stz.w playerData.statadd_accel
+    stz.w playerData.statadd_damage
+    stz.w playerData.statadd_tear_lifetime
+    stz.w playerData.statadd_tear_speed
+    stz.w playerData.statadd_tears
     lda #0
     jsl Item.set_active
     jsl UI.update_charge_display

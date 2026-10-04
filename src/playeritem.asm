@@ -142,10 +142,14 @@ Item.tear_rate_base_table:
         .dw $3C00 * sqrt(i + 3.0) * 2.5 / 240.0
     .ENDR
 
-.DEFINE PLAYER_TEAR_RATE_INDEX_MAXIMUM 64
+.DEFINE PLAYER_TEAR_RATE_INDEX_MAXIMUM 64 ; about 5 per second
 .DEFINE PLAYER_TEAR_RATE_VALUE_MINIMUM ($3C00 / 240.0)
 .DEFINE PLAYER_SPEED_MAXIMUM 48
 .DEFINE PLAYER_SPEED_MINIMUM 12
+.DEFINE TEAR_SPEED_MINIMUM $0040 ; 0.25px/s
+.DEFINE TEAR_SPEED_MAXIMUM $0100 * 8 ; 8px/s
+.DEFINE TEAR_LIFE_MINIMUM 15 ; 0.25 seconds
+.DEFINE TEAR_LIFE_MAXIMUM 240 ; 4 seconds
 Item.check_and_recalculate:
     .ForceSetA 16
     lda #PLAYER_FLAG_INVALIDATE_ITEM_CACHE
@@ -164,6 +168,8 @@ Item.check_and_recalculate:
     lda #PLAYER_STATBASE_TEAR_RATE_INDEX
     .ADDMULTITEM ITEMID_SAD_ONION, P_IMM, 4
     .ADDMULTITEM ITEMID_WIRE_COAT_HANGER, P_IMM, 4
+    clc
+    adc.w playerData.statadd_tears
     .AMIN P_IMM PLAYER_TEAR_RATE_INDEX_MAXIMUM
     asl
     tax
@@ -178,6 +184,8 @@ Item.check_and_recalculate:
     lda.w playerData.stat_damage
     .ADDMULTITEM ITEMID_GROWTH_HORMONES, P_IMM, 5
     .ADDMULTITEM ITEMID_POLYPHEMUS, P_IMM, 6
+    clc
+    adc.w playerData.statadd_damage
     .AMAX P_IMM 1 ; always at least 1 damage
     sta.b $00
     .ADDMULTITEM ITEMID_POLYPHEMUS, P_DIR, $00
@@ -185,6 +193,8 @@ Item.check_and_recalculate:
 ; SPEED
     lda.w playerData.stat_accel
     .ADDMULTITEM ITEMID_GROWTH_HORMONES, P_IMM, 4
+    clc
+    adc.w playerData.statadd_accel
     .AMAX P_IMM PLAYER_SPEED_MINIMUM
     .AMIN P_IMM PLAYER_SPEED_MAXIMUM
     sta.w playerData.stat_accel
@@ -199,6 +209,20 @@ Item.check_and_recalculate:
         asl.w playerData.stat_speed
         lsr.w playerData.stat_accel
     +:
+; TEAR LIFETIME
+    lda.w playerData.stat_tear_lifetime
+    clc
+    adc.w playerData.statadd_tear_lifetime
+    .AMINU P_IMM TEAR_LIFE_MAXIMUM
+    .AMAXU P_IMM TEAR_LIFE_MINIMUM
+    sta.w playerData.stat_tear_lifetime
+; TEAR SPEED
+    lda.w playerData.stat_tear_speed
+    clc
+    adc.w playerData.statadd_tear_speed
+    .AMINU P_IMM TEAR_SPEED_MAXIMUM
+    .AMAXU P_IMM TEAR_SPEED_MINIMUM
+    sta.w playerData.stat_tear_speed
 ; tear flags
     lda #0
     ldx.w playerData.playerItemStackNumber + ITEMID_POLYPHEMUS
@@ -214,6 +238,8 @@ Item.check_and_recalculate:
     ; rtl
 
 _health_up_pickup:
+    .ForceSetA 8
+    lda #2
     jsl Player.health_up
 _use_empty: ; here to save 1 byte
 _pickup_empty:

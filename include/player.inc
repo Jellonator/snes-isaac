@@ -87,6 +87,12 @@
     stat_tear_lifetime dw
     ; Damage of tears
     stat_damage dw
+; permanent stat upgrades
+    statadd_damage dw
+    statadd_tears dw
+    statadd_accel dw ; speed = accel × 16
+    statadd_tear_lifetime dw
+    statadd_tear_speed dw
 ; pickups
     money dw
     keys dw

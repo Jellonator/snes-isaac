@@ -355,10 +355,10 @@ _Game.Loop:
         jsl Entity.RefreshHitboxes
         jsr PlayerUpdate
         .ForceSetAX 8, 8
-        phb
-        .ChangeDataBank $7E
+        .PushBank
+        .SetBank $7E
         jsl Entity.TickAll
-        plb
+        .PopBank
         jsl Room_Tick
         jsl Floor.Tick
         jsr _UpdateUsables
